@@ -1,10 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
+* {
+  user-select: none;
+}
+
 :root {
-  --accent-1: #67BC2A;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -29,14 +33,22 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: #FFFFFF;
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
+  /* --sidebar-accent: oklch(0.967 0.001 286.375); */
+  --sidebar-accent: #67BC2A;
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  --accent-1: #67BC2A;
+  --accent-2: #FF1D1D;
+  --comp-1: #F8F8F8;
+  --comp-2: #FAFAFA;
+  --dark-1: #000000;
+  --dark-2: #82867E;
 }
 
 @theme inline {
@@ -79,28 +91,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-.container {
-  max-width: 1200px;
-  margin-inline: auto;
-  padding-inline: 20px;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  line-height: 1.2;
-  font-weight: 900;
-}
-
-button,
-a {
-  line-height: 1.1;
-  cursor: pointer;
-}
-
 .dark {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
@@ -139,7 +129,38 @@ a {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+button,
+a {
+  line-height: 1.1;
+  cursor: pointer;
 }
