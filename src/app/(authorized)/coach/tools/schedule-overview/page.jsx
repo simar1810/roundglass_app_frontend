@@ -8,12 +8,12 @@ export default function schedule() {
         <h1 className="text-2xl font-semibold mb-6">Workout Library</h1>
 
         <div className="flex items-center gap-3 mb-6 overflow-x-auto">
-          <div className="flex items-center gap-2 px-4 py-2 text-green-600 border-[1.5px] border-green-600 rounded-full text-sm">
+          <div className="flex items-center gap-2 px-4 py-2 text-green-600 border-[1.5px] border-[var(--accent-1)] rounded-full text-sm">
             <Filter className="w-4 h-4" />
             Filter
           </div>
 
-          <div className="px-4 py-2 rounded-full text-sm whitespace-nowrap bg-green-600 text-white">
+          <div className="px-4 py-2 rounded-full text-sm whitespace-nowrap bg-[var(--accent-1)] text-white">
             Cardio
           </div>
           <div className="px-4 py-2 rounded-full text-sm whitespace-nowrap text-gray-500 bg-gray-100">
@@ -98,11 +98,12 @@ export default function schedule() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <div className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full text-sm font-medium">
+          <div className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-1)] text-white rounded-full text-sm font-medium">
             Assign Workout
           </div>
         </div>
       </div>
     </main>
+    
   );
 }
