@@ -1,4 +1,4 @@
-import ClientListItemStatus from "@/components/common/client/ClientListItemStatus";
+import ClientListItemStatus from "@/components/pages/coach/client/ClientListItemStatus";
 
 export default function Page() {
   return <div className="mt-8">
