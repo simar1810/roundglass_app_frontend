@@ -96,19 +96,19 @@ export const sidebar__coachContent = [
     id: 5,
     title: "Feed",
     icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/portfolio"
+    url: "/coach/feed"
   },
   {
     id: 6,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/portfolio"
+    url: "/coach/workouts"
   },
   {
     id: 7,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/portfolio",
+    url: "/coach/club",
     items: [
       {
         id: 1,
@@ -146,7 +146,7 @@ export const sidebar__coachContent = [
     id: 8,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/portfolio"
+    url: "/coach/tools"
   },
 ]
 
