@@ -1,5 +1,5 @@
 import DashboardInfoCard from "@/components/cards/DashboardInfoCard";
-import ClientList from "@/components/common/client/ClientList";
+import ClientList from "@/components/pages/coach/client/ClientList";
 import Tools from "@/components/pages/coach/Tools";
 
 export default function Page() {

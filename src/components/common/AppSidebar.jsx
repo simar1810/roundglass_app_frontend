@@ -39,7 +39,7 @@ export default function AppSidebar() {
         alt="WellnessZ logo landscape"
         className="w-[200px] h-[64px] mx-auto mt-2 object-contain"
       />
-      <div className="relative mt-8 mb-4">
+      <div className="relative mt-3 mb-4">
         <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
         <Input
           placeholder="Search Client..."
@@ -90,11 +90,11 @@ function SidebarItemWithItems({ item }) {
       <DropdownMenuContent
         side={isMobile ? "bottom" : "right"}
         align={isMobile ? "end" : "start"}
-        className="min-w-56 rounded-lg px-2 py-2"
+        className="min-w-56 bg-[var(--accent-1)] rounded-none px-2 py-2"
       >
         {item.items.map((item) => (<DropdownMenuItem
           asChild key={item.title}
-          className={`!text-[var(--dark-1)]/25 hover:!text-white hover:!bg-[var(--accent-1)] text-[16px] mb-[2px] gap-2 ${pathname.includes(item.url) && "bg-[var(--accent-1)] !text-white"}`}
+          className={`text-white [&_.icon]:!text-white hover:[&_.icon]:!text-[var(--accent-1)] hover:!text-white hover:!bg-white hover:!text-[var(--accent-1)] text-[16px] mb-[2px] gap-2 ${pathname.includes(item.url) && "bg-white !text-[var(--accent-1)] [&_.icon]:!text-[var(--accent-1)]"}`}
         >
           <Link href={item.url}>
             {item.icon}

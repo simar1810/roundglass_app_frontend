@@ -1,4 +1,25 @@
-import { CircleAlert, CircleDollarSign, Gem, Headset, Home, Link as LinkIcon, Newspaper, PanelsTopLeft, Presentation, User, Users } from "lucide-react";
+import {
+  CircleAlert,
+  CircleDollarSign,
+  ClipboardPlus,
+  ContactRound,
+  FileText,
+  Headset,
+  Home,
+  LayoutDashboard,
+  Link,
+  Logs,
+  Newspaper,
+  PersonStanding,
+  PlusCircle,
+  Projector,
+  Settings,
+  Soup,
+  User,
+  UserPlus,
+  Users,
+  Video
+} from "lucide-react";
 
 export const sidebar__coachContent = [
   {
@@ -15,48 +36,118 @@ export const sidebar__coachContent = [
   },
   {
     id: 3,
-    title: "Tools",
-    icon: <PanelsTopLeft className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/tools",
+    title: "Clients",
+    icon: <Users className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/clients",
     items: [
       {
         id: 1,
-        icon: <PanelsTopLeft className="min-w-[20px] min-h-[20px]" />,
-        title: "Schedule Overview",
-        url: "/coach/schedule-overview"
+        icon: <Users className="icon min-w-[20px] min-h-[20px]" />,
+        title: "All Clients",
+        url: "/coach/clients"
       },
       {
         id: 2,
-        icon: <Users className="min-w-[20px] min-h-[20px]" />,
-        title: "Clients",
+        icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Add Clients with Checkup",
+        url: "/coach/schedule-overview"
+      },
+      {
+        id: 3,
+        icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
+        title: "View Clients & Followup",
+        url: "/coach/tools/clients"
+      },
+      {
+        id: 4,
+        icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Quick Add",
+        url: "/coach/tools/link-generator"
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "Meals & Recipes",
+    icon: <Soup className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/meals",
+    items: [
+      {
+        id: 1,
+        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+        title: "View Meal Plans",
+        url: "/coach/meals"
+      },
+      {
+        id: 2,
+        icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Add Meal Plan",
         url: "/coach/tools/clients"
       },
       {
         id: 3,
-        icon: <LinkIcon className="min-w-[20px] min-h-[20px]" />,
+        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Recipes",
+        url: "/coach/tools/link-generator"
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Feed",
+    icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/portfolio"
+  },
+  {
+    id: 6,
+    title: "Workout",
+    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/portfolio"
+  },
+  {
+    id: 7,
+    title: "Club",
+    icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/portfolio",
+    items: [
+      {
+        id: 1,
+        icon: <Projector className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Meetings",
+        url: "/coach/schedule-overview"
+      },
+      {
+        id: 2,
+        icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
         title: "Link Generator",
+        url: "/coach/tools/clients"
+      },
+      {
+        id: 3,
+        icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Membership",
         url: "/coach/tools/link-generator"
       },
       {
         id: 4,
-        icon: <Presentation className="min-w-[20px] min-h-[20px]" />,
-        title: "Meetings",
-        url: "/coach/tools/meetings"
+        icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Zoom Settings",
+        url: "/coach/tools/link-generator"
       },
       {
         id: 5,
-        icon: <Gem className="min-w-[20px] min-h-[20px]" />,
-        title: "Free Trial Clients",
-        url: "/coach/tools/free-trial-clients"
-      },
-      {
-        id: 6,
-        icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
-        title: "Feed",
-        url: "/coach/tools/feed"
+        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Free Trial",
+        url: "/coach/tools/link-generator"
       }
     ]
-  }
+  },
+  {
+    id: 8,
+    title: "Other Tools",
+    icon: <Settings className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/portfolio"
+  },
 ]
 
 export const sidebar__coachFooter = [
