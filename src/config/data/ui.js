@@ -76,19 +76,19 @@ export const sidebar__coachContent = [
         id: 1,
         icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
         title: "View Meal Plans",
-        url: "/coach/meals"
+        url: "/coach/meals/list"
       },
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
         title: "Add Meal Plan",
-        url: "/coach/tools/clients"
+        url: "/coach/meals/add-plan"
       },
       {
         id: 3,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
         title: "Recipes",
-        url: "/coach/tools/link-generator"
+        url: "/coach/meals/recipes"
       }
     ]
   },
@@ -114,31 +114,31 @@ export const sidebar__coachContent = [
         id: 1,
         icon: <Projector className="icon min-w-[20px] min-h-[20px]" />,
         title: "Meetings",
-        url: "/coach/schedule-overview"
+        url: "/coach/club/meetings"
       },
       {
         id: 2,
         icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
         title: "Link Generator",
-        url: "/coach/tools/clients"
+        url: "/coach/club/link-generator"
       },
       {
         id: 3,
         icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
         title: "Membership",
-        url: "/coach/tools/link-generator"
+        url: "/coach/club/membership"
       },
       {
         id: 4,
         icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
         title: "Zoom Settings",
-        url: "/coach/tools/link-generator"
+        url: "/coach/club/zoom-settings"
       },
       {
         id: 5,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
         title: "Free Trial",
-        url: "/coach/tools/link-generator"
+        url: "/coach/club/free-trial"
       }
     ]
   },
