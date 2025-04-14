@@ -1,3 +1,4 @@
+import ZoomConnectNowModal from "@/components/modals/club/ZoomConnectNowModal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,10 +26,7 @@ export default function first() {
       />
       <div className="mt-10 flex items-center justify-center gap-4">
         <div className="flex items-center border-1 border-[var(--accent-1)] rounded-[10px]">
-          <Button variant="wz_outline" className="text-black h-auto border-0">
-            <span className="w-[28px] text-[#0B5CFF] text-[8px] text-center leading-[28px] aspect-square rounded-full border-1">zoom</span>
-            <span>With Zoom Meetings</span>
-          </Button>
+          <ZoomConnectNowModal />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <EllipsisVertical className="w-[18px] ml-1 mr-2 cursor-pointer" />
