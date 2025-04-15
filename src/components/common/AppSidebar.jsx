@@ -27,7 +27,7 @@ import {
 import {
   sidebar__coachContent,
   sidebar__coachFooter
-} from "@/config/data/ui";
+} from "@/config/data/sidebar";
 
 export default function AppSidebar() {
   return (

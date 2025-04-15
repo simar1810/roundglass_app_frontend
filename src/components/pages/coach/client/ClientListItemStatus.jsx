@@ -29,7 +29,7 @@ export default function ClientListItemStatus({
       ? <Badge className="text-white font-semibold bg-[var(--accent-1)] border-[var(--accent-1)]">Active</Badge>
       : <Badge
         variant="outline"
-        className="text-[var(--accent-1)] font-semibold border-[var(--accent-1)]"
+        className="text-[var(--accent-2)] font-semibold border-[var(--accent-2)]"
       >In Active</Badge>}
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
