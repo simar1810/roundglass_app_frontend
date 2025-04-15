@@ -1,3 +1,4 @@
+import GlobalStateProvider from "@/providers/GlobalStateProvider";
 import "./globals.css";
 
 export const metadata = {
@@ -9,7 +10,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <GlobalStateProvider>
+          {children}
+        </GlobalStateProvider>
       </body>
     </html>
   );

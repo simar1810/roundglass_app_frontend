@@ -1,6 +1,5 @@
 import { Input } from "../ui/input";
 import {
-  Bell,
   ChevronDown,
   Search
 } from "lucide-react";
@@ -16,6 +15,7 @@ import {
   AvatarFallback,
   AvatarImage
 } from "../ui/avatar";
+import NotificationModal from "../modals/NotificationModal";
 
 export default function AppNavbar() {
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[10]">
@@ -26,7 +26,7 @@ export default function AppNavbar() {
         className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
       />
     </div>
-    <Bell fill="#67BC2A" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
+    <NotificationModal />
     <Menubar className="p-0">
       <MenubarMenu>
         <MenubarTrigger className="flex items-center gap-2">
