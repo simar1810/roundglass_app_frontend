@@ -9,7 +9,7 @@ import {
 export default function AddClientModal() {
   return (
     <Dialog>
-      <DialogTrigger className="bg-green-600 text-white font-bold px-4 py-2 rounded-full">
+      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
         add client modal
       </DialogTrigger>
       <DialogContent className="!max-w-[656px] h-[600px] border-0 p-0 overflow-auto">

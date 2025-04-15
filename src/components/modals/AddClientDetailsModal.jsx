@@ -7,20 +7,21 @@ import {
 } from "@/components/ui/dialog";
 import { CalendarIcon } from "lucide-react";
 
-
 import FormControl from "../FormControl";
 import Image from "next/image";
 
 export default function AddClientDetailsModal() {
   return (
     <Dialog>
-      <DialogTrigger className="bg-green-600 text-white font-bold px-4 py-2 rounded-full">
+      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
         Add Client details
       </DialogTrigger>
 
       <DialogContent className="!max-w-[656px] h-[600px] border-0 p-0 overflow-auto">
         <DialogHeader className="bg-gray-300 py-6 h-[56px]">
-          <DialogTitle className="text-black text-sm ml-5">Add Client</DialogTitle>
+          <DialogTitle className="text-black text-sm ml-5">
+            Add Client
+          </DialogTitle>
         </DialogHeader>
 
         <div className="p-6 pt-4">
@@ -32,15 +33,15 @@ export default function AddClientDetailsModal() {
 
           <div className="flex items-center gap-6 mb-6">
             <div>
-            <p className="font-semibold text-sm">Select Customer type</p>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="type" value="New" />
-              New
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="type" value="Existing" />
-              Existing
-            </label>
+              <p className="font-semibold text-sm">Select Customer type</p>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="type" value="New" />
+                New
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="type" value="Existing" />
+                Existing
+              </label>
             </div>
           </div>
 
@@ -49,8 +50,7 @@ export default function AddClientDetailsModal() {
               label="Client Name"
               type="text"
               placeholder="Enter Name"
-            />  
-            
+            />
 
             <div className="relative">
               <FormControl
@@ -72,9 +72,8 @@ export default function AddClientDetailsModal() {
                 </button>
               </div>
             </div>
-            
-            
-            <div className="relative flex items-center"> 
+
+            <div className="relative flex items-center">
               <FormControl
                 label="Date of Joining"
                 type="text"
@@ -83,8 +82,7 @@ export default function AddClientDetailsModal() {
               />
               <CalendarIcon className="absolute right-3 top-10 w-4 h-4 text-gray-500" />
             </div>
-              
-      
+
             <div>
               <span className="label font-[600] block mb-1">Height</span>
               <div className="flex items-center gap-4 text-sm mb-2">
@@ -103,7 +101,7 @@ export default function AddClientDetailsModal() {
                 <FormControl type="text" placeholder="In" className="w-full" />
               </div>
             </div>
-            <div >
+            <div>
               <span className="label font-[600] block mb-2">Weight</span>
               <div className="flex gap-3 text-sm mb-2">
                 <label className="flex items-center gap-1">
@@ -132,7 +130,12 @@ export default function AddClientDetailsModal() {
                 {/* Slim */}
                 <div className="border rounded p-3 text-center cursor-pointer w-24">
                   <div className="w-[83px] h-[106px] mx-auto mb-1 flex items-center justify-center overflow-hidden">
-                  <Image src="/svgs/slim.svg" width={60} height={60} alt="Slim SVG" />
+                    <Image
+                      src="/svgs/slim.svg"
+                      width={60}
+                      height={60}
+                      alt="Slim SVG"
+                    />
                   </div>
                   <p className="text-xs">Slim</p>
                 </div>
@@ -140,7 +143,12 @@ export default function AddClientDetailsModal() {
                 {/* Medium */}
                 <div className="border rounded p-3 text-center cursor-pointer w-24">
                   <div className="w-[83px] h-[106px] mx-auto mb-1 flex items-center justify-center overflow-hidden">
-                  <Image src="/svgs/medium.svg" width={50} height={60} alt="Medium SVG" />
+                    <Image
+                      src="/svgs/medium.svg"
+                      width={50}
+                      height={60}
+                      alt="Medium SVG"
+                    />
                   </div>
                   <p className="text-xs">Medium</p>
                 </div>
@@ -148,13 +156,17 @@ export default function AddClientDetailsModal() {
                 {/* Fat */}
                 <div className="border rounded p-3 text-center cursor-pointer w-24">
                   <div className="w-[83px] h-[106px] mx-auto mb-1 flex items-center justify-center overflow-hidden">
-                  <Image src="/svgs/fat.svg" width={150} height={150} alt="Fat SVG" />
+                    <Image
+                      src="/svgs/fat.svg"
+                      width={150}
+                      height={150}
+                      alt="Fat SVG"
+                    />
                   </div>
                   <p className="text-xs">Fat</p>
                 </div>
               </div>
             </div>
-            
           </div>
 
           <button className="bg-[var(--accent-1)] text-white font-bold w-[50%] items-center text-center ml-[150px] px-4 py-3 rounded-[4px] mt-6">

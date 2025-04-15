@@ -10,7 +10,7 @@ import { Camera } from "lucide-react";
 export default function ProfileModal() {
   return (
     <Dialog>
-      <DialogTrigger className="bg-green-600 text-white font-bold px-4 py-2 rounded-full">
+      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
         Profile
       </DialogTrigger>
       <DialogContent className="!max-w-[656px] h-[692px] border-0 p-0 overflow-clip">
@@ -27,7 +27,7 @@ export default function ProfileModal() {
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             />
-            <label className="absolute bottom-0 right-0 bg-green-500 p-1 rounded-full cursor-pointer">
+            <label className="absolute bottom-0 right-0 bg-[var(--accent-1)] p-1 rounded-full cursor-pointer">
               <Camera size={16} color="white" />
               <input type="file" className="hidden" />
             </label>
@@ -97,7 +97,7 @@ export default function ProfileModal() {
             </div>
           </div>
 
-          <button className="bg-green-500 hover:bg-green-600 text-white font-bold w-[236px] py-3 rounded mt-2">
+          <button className="bg-[var(--accent-1)] hover:bg-[var(--accent-1)] text-white font-bold w-[236px] py-3 rounded mt-2">
             Next
           </button>
         </div>
