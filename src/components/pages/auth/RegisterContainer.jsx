@@ -22,7 +22,7 @@ export default function RegisterContainer() {
       }
       const response = await sendData("app/register", data)
     } catch (error) {
-      toast(error.message)
+      toast.error(error.message)
     }
   }
 

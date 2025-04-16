@@ -24,7 +24,7 @@ export default function InputMobileNumber() {
         }
       });
     } catch (error) {
-      toast(error.message || " Please try again Later!")
+      toast.error(error.message || " Please try again Later!")
     }
   }
 

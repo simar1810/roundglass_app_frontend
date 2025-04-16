@@ -1,19 +1,38 @@
+"use client"
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
+import MeetingAttendanceRow from "@/components/pages/coach/club/meeting/MeetingAttendanceRow";
 import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { getMeeting } from "@/lib/fetchers/club";
+import { format, parse } from "date-fns";
 import { Upload } from "lucide-react";
+import { useParams } from "next/navigation";
+import useSWR from "swr";
 
 export default function Page() {
+  const { id } = useParams()
+  const { isLoading, error, data } = useSWR(`getMeeting/${id}`, () => getMeeting(id))
+
+  if (isLoading) return <ContentLoader />
+
+  if (!data.success || error) return <ContentError title={data.message || error} />
+
+  const meeting = data.data;
+
   return <div className="content-container">
     <div className="text-[20px] mb-4 flex items-center justify-between gap-4">
       <h4>Meet Link</h4>
-      <div>Date:&nbsp;{"01/01/2025"}</div>
+      {meeting.schedulueDate && <div>
+        Date:&nbsp;
+        {format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), "dd-MM-yyyy")}
+      </div>}
     </div>
     <div className="py-4 flex items-center justify-between gap-2 border-t-1">
       <span>{7} Records Available</span>
@@ -31,24 +50,17 @@ export default function Page() {
             <TableHead>Client ID</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Joining Time</TableHead>
-            <TableHead>Leaving Time</TableHead>
+            <TableHead>Joining Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: 4 }, (_, i) => i).map(item => <MeetingDetailRow key={item} />)}
+          {meeting.attendenceList.map((attendance, index) => <MeetingAttendanceRow
+            key={attendance._id}
+            index={index}
+            attendance={attendance}
+          />)}
         </TableBody>
       </Table>
     </div>
   </div>
-}
-
-function MeetingDetailRow() {
-  return <TableRow>
-    <TableCell>1</TableCell>
-    <TableCell>Dnyaneshwar</TableCell>
-    <TableCell>dk411</TableCell>
-    <TableCell>dnyaneshwar@gmail.com</TableCell>
-    <TableCell>10:00 AM</TableCell>
-    <TableCell>10:22 AM</TableCell>
-  </TableRow>
 }

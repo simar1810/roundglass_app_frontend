@@ -45,7 +45,7 @@ export default function AppSidebar() {
       dispatchRedux(destroy());
       router.push("/login");
     } catch (error) {
-      toast(error.message || "Please try again later")
+      toast.error(error.message || "Please try again later")
     }
   }
 

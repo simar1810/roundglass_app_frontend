@@ -11,11 +11,11 @@ const counterSlice = createSlice({
   reducers: {
     store: function (state, action) {
       state.isLoggedIn = true;
-      state.coach = action.payload
+      state.data = { ...action.payload, clubSystem: 2 }
     },
     destroy: function (state) {
       state.isLoggedIn = false;
-      state.coach = null;
+      state.data = null;
     }
   },
 })

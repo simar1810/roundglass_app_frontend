@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="antialiased">
-        <Toaster />
+        <Toaster richColors />
         <GlobalStateProvider>
           {children}
         </GlobalStateProvider>

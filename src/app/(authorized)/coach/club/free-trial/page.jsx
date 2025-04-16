@@ -1,25 +1,31 @@
-import FormControl from "@/components/FormControl";
-import { Button } from "@/components/ui/button";
+"use client";
+import FreeTrialCustomerRow from "@/components/pages/coach/club/free-trial/FreeTrialCustomerRow";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
-  Eye,
-  FolderInput,
-  FolderOutput,
-  Forward
-} from "lucide-react";
+import FreeTrialCustomerHeader from "./FreeTrialCustomerHeader";
+import useSWR from "swr";
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
+import { getFreeTrialUsers } from "@/lib/fetchers/club";
 
 export default function Page() {
+  const { isLoading, error, data } = useSWR("free-trial-users", () => getFreeTrialUsers());
+
+  if (isLoading) return <ContentLoader />
+
+  if (!data.success || error) return <ContentError title={error || data.message} />
+
+  const customers = data.payload;
+
   return <div className="content-container">
-    <Header />
+    <FreeTrialCustomerHeader />
     <div className="w-[calc(100vw-68px)] md:w-[calc(100vw-344px)] overflow-x-auto">
-      <Table className="bordered-table">
+      <Table className="bordered-table [&_th]:font-bold [&_th]:text-center">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Sr. No</TableHead>
@@ -34,56 +40,13 @@ export default function Page() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: 4 }, (_, i) => i).map(item => <FreeTrialCustomerRow key={item} />)}
+          {customers.map((customer, index) => <FreeTrialCustomerRow
+            key={customer._id}
+            index={index}
+            customer={customer}
+          />)}
         </TableBody>
       </Table>
     </div>
   </div>
-}
-
-function FreeTrialCustomerRow() {
-  return <TableRow>
-    <TableCell>1</TableCell>
-    <TableCell>Dnyaneshwar</TableCell>
-    <TableCell>9067183889</TableCell>
-    <TableCell>dk411</TableCell>
-    <TableCell>Virat Kohli</TableCell>
-    <TableCell>20/05/2003</TableCell>
-    <TableCell>Pune</TableCell>
-    <TableCell>
-      <Button size="sm" variant="wz_outline">Add</Button>
-    </TableCell>
-    <TableCell>
-      <Eye className="w-[16px]" />
-    </TableCell>
-  </TableRow>
-}
-
-function Header() {
-  return <>
-    <div className="mb-4 flex items-center gap-4">
-      <h4>Free Trial</h4>
-      <FormControl
-        className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
-        placeholder="Search Client.."
-      />
-      <Button size="sm" variant="wz">
-        <Forward />
-        Onboarding Form
-      </Button>
-    </div>
-    <div className="py-4 flex items-center justify-end gap-2 border-t-1">
-      <Button size="sm" variant="wz_outline">
-        <FolderInput />
-        Import Data
-      </Button>
-      <Button size="sm" variant="wz_outline">
-        <FolderOutput />
-        Export Data
-      </Button>
-      <Button size="sm" variant="wz_outline">
-        Demo
-      </Button>
-    </div>
-  </>
 }

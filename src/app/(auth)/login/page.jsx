@@ -7,7 +7,7 @@ import { CurrentStateProvider } from "@/providers/CurrentStateContext";
 export default function Page() {
   return <CurrentStateProvider
     reducer={reducer}
-    initialStae={state}
+    state={state}
   >
     <LoginContainer />
   </CurrentStateProvider>

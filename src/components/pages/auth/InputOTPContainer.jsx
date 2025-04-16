@@ -35,21 +35,21 @@ export default function InputOTPContainer() {
         response.status_code !== 200 &&
         !response.success
       ) throw new Error(response.error);
-      toast(response.message);
+      toast.success(response.message);
 
       const authHeaderResponse = await fetch("/api/login", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken })
+        body: JSON.stringify({ refreshToken, _id: user._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
       dispatchRedux(store(user));
       router.push("/coach/dashboard");
     } catch (error) {
-      toast(error.message || "Please try again Later!");
+      toast.error(error.message || "Please try again Later!");
     }
   }
 

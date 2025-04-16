@@ -10,10 +10,10 @@ const CurrentStateContext = createContext();
 export function CurrentStateProvider({
   children,
   reducer,
-  initialStae
+  state
 }) {
-  const [state, dispatch] = useReducer(reducer, initialStae);
-  return <CurrentStateContext.Provider value={{ ...state, dispatch }}>
+  const [currentState, dispatch] = useReducer(reducer, state);
+  return <CurrentStateContext.Provider value={{ ...currentState, dispatch }}>
     {children}
   </CurrentStateContext.Provider>
 }

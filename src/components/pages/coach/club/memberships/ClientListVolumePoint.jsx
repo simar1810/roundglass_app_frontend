@@ -1,0 +1,43 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { vpDaysPending } from "@/lib/utils";
+import { CircleAlert, CircleArrowRight } from "lucide-react";
+import Link from "next/link";
+
+export default function ClientListVolumePoint({
+  client,
+  activePoints
+}) {
+  const daysRemaining = vpDaysPending(activePoints);
+
+  return <div className="mb-1 px-4 py-2 flex items-center gap-4">
+    <Avatar className="w-[48px] h-[48px] !rounded-[8px]">
+      <AvatarImage className="rounded-[8px]" src={client.profilePhoto || "/"} />
+      <AvatarFallback className="rounded-[8px] uppercase">
+        {client.name.split(" ").slice(0, 2).map(word => word?.at(0)).join("")}
+      </AvatarFallback>
+    </Avatar>
+    <div className="grow">
+      <div className="flex items-center gap-2">
+        <p className="text-[14px] font-semibold">{client.name}</p>
+        {daysRemaining > 5
+          ? <div className="text-[10px] font-semibold text-[var(--accent-1)]">
+            {activePoints}&nbsp;Points Remaining |&nbsp;{daysRemaining}&nbsp;Days Remaining
+          </div>
+          : <div className="text-[var(--accent-2)] flex items-center gap-2">
+            <CircleAlert fill="#FF1D1D" className="w-[14px] h-[14px] text-white" />
+            <div className="text-[10px] font-semibold">
+              {activePoints}&nbsp;Points Remaining |&nbsp;{daysRemaining}&nbsp;Days Remaining
+            </div>
+          </div>}
+      </div>
+      <Progress value={daysRemaining} className="w-full mt-2 [&_.progress-bar]:bg-[var(--accent-1)]" />
+    </div>
+    <Link
+      className="text-[12px] text-[var(--accent-1)] font-semibold ml-auto"
+      href={"/coach/clients/" + client._id}
+    >
+      <CircleArrowRight className="w-[20px]" />
+    </Link>
+  </div>
+}

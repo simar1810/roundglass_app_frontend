@@ -1,12 +1,26 @@
 "use client"
-
-import { useAppSelector } from "@/providers/global/hooks"
+import { useAppDispatch } from "@/providers/global/hooks"
 import { redirect } from "next/navigation"
+import { useEffect } from "react";
+import useSWR from "swr";
+import ContentLoader from "./ContentLoader";
+import { getCoachProfile } from "@/lib/fetchers/app";
+import { store } from "@/providers/global/slices/coach";
 
-export default function Guardian({ children }) {
-  const { coach, isLoggedIn } = useAppSelector(state => state.coach)
+export default function Guardian({
+  children,
+  _id
+}) {
+  const { isLoading, error, data } = useSWR("/coach", () => getCoachProfile(_id))
+  const dispatchRedux = useAppDispatch();
 
-  if (!coach || !isLoggedIn) redirect("/login");
+  useEffect(function () {
+    if (data && data.status_code === 200) dispatchRedux(store(data.data));
+  }, [isLoading]);
 
-  return children
+  if (isLoading) return <ContentLoader />
+
+  if (error) redirect("/login");
+
+  return children;
 }
