@@ -1,5 +1,6 @@
 import GlobalStateProvider from "@/providers/GlobalStateProvider";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "WellnessZ",
@@ -10,6 +11,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="antialiased">
+        <Toaster />
         <GlobalStateProvider>
           {children}
         </GlobalStateProvider>

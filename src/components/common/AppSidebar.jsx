@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Input } from "../ui/input";
 import {
   Search,
@@ -28,8 +28,27 @@ import {
   sidebar__coachContent,
   sidebar__coachFooter
 } from "@/config/data/sidebar";
+import { toast } from "sonner";
+import { useAppDispatch } from "@/providers/global/hooks";
+import { destroy } from "@/providers/global/slices/coach";
 
 export default function AppSidebar() {
+  const dispatchRedux = useAppDispatch();
+
+  const router = useRouter();
+
+  async function expireUserSession() {
+    try {
+      const response = await fetch("/api/logout", { method: "DELETE" });
+      const data = await response.json();
+      if (data.status_code !== 200) throw new Error(data.message);
+      dispatchRedux(destroy());
+      router.push("/login");
+    } catch (error) {
+      toast(error.message || "Please try again later")
+    }
+  }
+
   return (
     <Sidebar className="bg-white px-2 border-r-1">
       <Image
@@ -63,7 +82,10 @@ export default function AppSidebar() {
               key={item.id}
             />)}
             <SidebarMenuItem>
-              <SidebarMenuButton className="bg-[var(--comp-1)] font-[500] text-[16px] text-[var(--accent-2)] px-4 py-4 mt-2 border-1 border-[#EFEFEF] hover:bg-[var(--comp-1)] hover:text-[var(--accent-2)]">
+              <SidebarMenuButton
+                onClick={expireUserSession}
+                className="bg-[var(--comp-1)] font-[500] text-[16px] text-[var(--accent-2)] px-4 py-4 mt-2 border-1 border-[#EFEFEF] hover:bg-[var(--comp-1)] hover:text-[var(--accent-2)]"
+              >
                 <LogOut />
                 <span>Logout</span>
               </SidebarMenuButton>

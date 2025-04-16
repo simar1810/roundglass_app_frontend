@@ -8,5 +8,5 @@ export default function Guardian({ children }) {
 
   if (!coach || !isLoggedIn) redirect("/login");
 
-  return { children }
+  return children
 }

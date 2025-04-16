@@ -6,16 +6,14 @@ import UpgradeSubscriptionAlert from "@/components/common/UpgradeSubscriptionAle
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function Layout({ children }) {
-  return <Guardian>
-    <SidebarProvider className="!bg-white">
-      <AppSidebar className="!min-w-[250px]" />
-      <div className="grow">
-        <AppNavbar />
-        <div className="bg-[var(--comp-2)] p-4">
-          <UpgradeSubscriptionAlert />
-          {children}
-        </div>
+  return <SidebarProvider className="!bg-white">
+    <AppSidebar className="!min-w-[250px]" />
+    <div className="grow">
+      <AppNavbar />
+      <div className="bg-[var(--comp-2)] p-4">
+        <UpgradeSubscriptionAlert />
+        {children}
       </div>
-    </SidebarProvider>
-  </Guardian>
+    </div>
+  </SidebarProvider>
 }
