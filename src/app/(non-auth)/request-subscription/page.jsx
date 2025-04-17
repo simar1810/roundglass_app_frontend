@@ -1,7 +1,7 @@
 "use client";
 import FormControl from "@/components/FormControl";
 import { Button } from "@/components/ui/button";
-import { reviewVPFormControls } from "@/config/data/forms";
+import { requestSubscriptionFormControls } from "@/config/data/forms";
 import { membershipState } from "@/config/state-data/request-membership";
 import { membershipReducer, onChangeField } from "@/config/state-reducers/request-membership";
 import { sendDataWithFormData } from "@/lib/api";
@@ -16,23 +16,22 @@ export default function Page() {
     state={membershipState}
     reducer={membershipReducer}
   >
-    <MembershipVpContainer />
+    <MembershipSubscriptionContainer />
   </CurrentStateProvider>
 }
 
-const formFields = ["rollno", "date", "points", "file"]
-
-function MembershipVpContainer() {
+const formFields = ["rollno", "date", "amount", "file"]
+function MembershipSubscriptionContainer() {
   const { dispatch, ...state } = useCurrentStateContext();
 
-  async function requestVolumePoints(e) {
+  async function requestSubscription(e) {
     try {
       e.preventDefault();
       const data = new FormData()
       for (const name of formFields) {
         data.append(name, state[name]);
       }
-      const response = await sendDataWithFormData("reqVolumePoints", data)
+      const response = await sendDataWithFormData("reqSubscription", data)
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       dispatch({ type: "RESET_STATE" })
@@ -41,7 +40,7 @@ function MembershipVpContainer() {
     }
   }
 
-  return <div className="container min-h-screen mb-20 flex flex-col gap-6">
+  return <div className="container h-screen flex flex-col">
     <Image
       src="/wz-landscape.png"
       height={200}
@@ -52,10 +51,10 @@ function MembershipVpContainer() {
     <div className="max-w-[500px] w-full bg-[var(--comp-1)] py-6 px-8 mx-auto my-auto border-1 shadow-2xl rounded-[8px]">
       <h3 className="text-[24px] text-center">
         <span className="text-[var(--accent-1)]">WellnessZ</span>&nbsp;
-        <span>Volume Point Form</span>
+        <span>Subscription Form</span>
       </h3>
-      <form onSubmit={requestVolumePoints} className="mt-8">
-        {reviewVPFormControls.map(field => <FormControl
+      <form onSubmit={requestSubscription} className="mt-8">
+        {requestSubscriptionFormControls.map(field => <FormControl
           key={field.id}
           className="[&_.input]:mb-4"
           value={state[field.name]}
@@ -66,6 +65,7 @@ function MembershipVpContainer() {
           type="file"
           onChange={e => dispatch(onChangeField("file", e.target.files[0]))}
           label="Select Screenshot"
+          accept="image/*"
         />}
         {state.file && <div className="relative">
           <Image

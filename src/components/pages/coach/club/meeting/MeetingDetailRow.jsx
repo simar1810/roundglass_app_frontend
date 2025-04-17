@@ -1,7 +1,9 @@
+import DeleteMeetingModal from "@/components/modals/club/DeleteMeetingModal";
 import EditMeetingModal from "@/components/modals/club/EditMeetingModal";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { copyText } from "@/lib/utils";
-import { Clipboard, Eye, Pen, Trash2 } from "lucide-react";
+import { format, parse } from "date-fns";
+import { Clipboard, Eye } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -20,8 +22,16 @@ export default function MeetingDetailRow({
       <span>{meeting.wellnessZLink}</span>
       <Clipboard onClick={copyLink} className="min-w-[16px] cursor-pointer" />
     </TableCell>
-    <TableCell>01/01/2025</TableCell>
-    <TableCell>10:00 AM</TableCell>
+    <TableCell>
+      {meeting.schedulueDate
+        ? format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'yyyy-MM-dd')
+        : <>-</>}
+    </TableCell>
+    <TableCell>
+      {meeting.schedulueDate
+        ? format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'HH:mm')
+        : <>-</>}
+    </TableCell>
     <TableCell>
       <Link
         className="flex items-start justify-center gap-2"
@@ -35,8 +45,8 @@ export default function MeetingDetailRow({
     <TableCell>{meeting.clubType}</TableCell>
     <TableCell>-</TableCell>
     <TableCell className="flex items-start justify-center gap-2">
-      <EditMeetingModal />
-      <Trash2 className="text-[var(--accent-2)] w-[16px]" />
+      <EditMeetingModal meeting={meeting} />
+      <DeleteMeetingModal _id={meeting._id} />
     </TableCell>
   </TableRow>
 }

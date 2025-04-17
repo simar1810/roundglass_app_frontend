@@ -12,3 +12,7 @@ export function copyText(text) {
 export function vpDaysPending(points, monthly = 100) {
   return (points / monthly) * 30;
 }
+
+export function getObjectUrl(file) {
+  return file ? URL.createObjectURL(file) : null;
+}

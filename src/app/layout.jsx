@@ -1,6 +1,7 @@
 import GlobalStateProvider from "@/providers/GlobalStateProvider";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { SWRConfig } from "swr";
 
 export const metadata = {
   title: "WellnessZ",
@@ -13,7 +14,9 @@ export default function RootLayout({ children }) {
       <body className="antialiased">
         <Toaster richColors />
         <GlobalStateProvider>
-          {children}
+          <SWRConfig value={{ revalidateOnFocus: false, revalidateIfStale: false }}>
+            {children}
+          </SWRConfig>
         </GlobalStateProvider>
       </body>
     </html>

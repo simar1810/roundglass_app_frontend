@@ -4,5 +4,4 @@ export const dashboardCards = [
   { id: 3, title: "Plans Created", icon: "/svgs/cutlery.svg" },
   { id: 4, title: "Orders Created", icon: "/svgs/checklist.svg" },
   { id: 5, title: "Orders Created", icon: "/svgs/checklist.svg", isSubscribed: true },
-  // / Users / dnyaneshwar / Downloads / checklist.svg / Users / dnyaneshwar / Downloads / cutlery.svg / Users / dnyaneshwar / Downloads / person.svg
-]
+];

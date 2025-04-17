@@ -23,3 +23,11 @@ export function getClubClientVolumePoints() {
 export function getClubClientSubscriptions() {
   return fetchData("getAllClubSubscriptions")
 }
+
+export function getMeetingZoomEvents(_id) {
+  return fetchData(`zoom/${_id}/event`);
+}
+
+export function getRequestVolumePoints() {
+  return fetchData("getReqVpByClients");
+}

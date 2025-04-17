@@ -7,6 +7,10 @@ import ContentLoader from "./ContentLoader";
 import { getCoachProfile } from "@/lib/fetchers/app";
 import { store } from "@/providers/global/slices/coach";
 
+async function logout() {
+  await fetch("/api/logout", { method: "DELETE" });
+}
+
 export default function Guardian({
   children,
   _id
@@ -18,9 +22,12 @@ export default function Guardian({
     if (data && data.status_code === 200) dispatchRedux(store(data.data));
   }, [isLoading]);
 
-  if (isLoading) return <ContentLoader />
+  if (error || data?.status_code === 400 || data?.success === false) {
+    logout();
+    redirect("/login")
+  };
 
-  if (error) redirect("/login");
+  if (isLoading) return <ContentLoader />
 
   return children;
 }

@@ -7,6 +7,7 @@ import { getClubClientVolumePoints } from "@/lib/fetchers/club";
 import { copyText } from "@/lib/utils";
 import { toast } from "sonner";
 import ClientListVolumePoint from "./ClientListVolumePoint";
+import RequestedVPModal from "@/components/modals/club/RequestedVPModal";
 
 export default function VolumePointModeClientsList() {
   const { isLoading, error, data } = useSWR(`membership`, getClubClientVolumePoints);
@@ -46,11 +47,6 @@ function Header() {
       <Forward className="w-[16px]" />
       Volume Point Form
     </Button>
-    <Button
-      size="sm"
-      variant="wz"
-    >
-      Requested Volume Points
-    </Button>
+    <RequestedVPModal />
   </div>
 }

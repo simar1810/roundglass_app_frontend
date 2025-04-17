@@ -13,6 +13,12 @@ export async function DELETE() {
       path: '/',
       maxAge: 0,
     });
+    response.cookies.set('_id', "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 0,
+    });
 
     return response;
   } catch (error) {

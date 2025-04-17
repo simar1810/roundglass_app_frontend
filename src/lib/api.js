@@ -47,7 +47,7 @@ export async function sendData(endpoint, data, method = "POST") {
   }
 }
 
-export async function sendDataWithFormData(endpoint, method = "POST", formData) {
+export async function sendDataWithFormData(endpoint, formData, method = "POST") {
   try {
     if (typeof method !== "string") {
       throw new Error("HTTP method must be a string");
