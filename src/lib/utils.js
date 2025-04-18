@@ -14,5 +14,5 @@ export function vpDaysPending(points, monthly = 100) {
 }
 
 export function getObjectUrl(file) {
-  return file ? URL.createObjectURL(file) : null;
+  return file instanceof File ? URL.createObjectURL(file) : null;
 }

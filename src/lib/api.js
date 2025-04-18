@@ -65,7 +65,6 @@ export async function sendDataWithFormData(endpoint, formData, method = "POST") 
       body: formData,
       cache: "no-store",
     });
-
     const retrievedData = await response.json();
     return retrievedData;
   } catch (error) {

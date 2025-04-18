@@ -63,12 +63,12 @@ export default function ReviewVPModal({ vp }) {
           {...field}
         />)}
         <h5>Screenshot</h5>
-        {true && <Image
-          src="/"
+        {vp.screenShot && <Image
+          src={vp.screenShot}
           alt=""
           height={400}
           width={400}
-          className="w-full max-h-[280px] bg-black mt-2 mb-8"
+          className="w-full max-h-[280px] mt-2 mb-8 object-contain"
         />}
         <div className="flex gap-2">
           <Button onClick={() => acceptRejectVP(0)} disabled={loading} className="grow" variant="destructive">Reject</Button>

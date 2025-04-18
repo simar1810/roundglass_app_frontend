@@ -35,3 +35,7 @@ export function getRecipes() {
 export function getPlans() {
   return fetchData("app/plans")
 }
+
+export function getOrganisation() {
+  return fetchData("app/getOrganisation")
+}

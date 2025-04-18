@@ -1,10 +1,10 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import { Button } from "@/components/ui/button";
+import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
+import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
 import { getCoachSocialLinks } from "@/lib/fetchers/app";
-import { Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
@@ -39,8 +39,9 @@ function CoachSMLinks() {
     <ContentLoader />
   </TabsContent>
 
-  if (error || data.status_code !== 200) return <TabsContent>
-    <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200) return <TabsContent value="links">
+    <p className="text-center mt-4">{error || data.message} </p>
+    <UpdateCoachSocialsModal socialLinks={{}} />
   </TabsContent>
 
   const socialLinks = data.data;
@@ -57,7 +58,7 @@ function CoachSMLinks() {
           <Link target="_blank" href={socialLinks[social.name]}>{socialLinks[social.name]}</Link>
         </div>)}
     </div>
-    <Button className="block mx-auto mt-10" variant="wz">Edit</Button>
+    <UpdateCoachSocialsModal socialLinks={socialLinks} />
   </TabsContent>
 }
 
@@ -65,10 +66,7 @@ function CoachAwards({ awards }) {
   return <TabsContent value="awards">
     <div className="flex items-center gap-2 justify-between">
       <h4>4 Awards Available</h4>
-      <Button variant="wz">
-        <Trophy />
-        Add Award
-      </Button>
+      <UpdateCoachAwardModal />
     </div>
     <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4">
       {awards.map(award => <div key={award._id} className="flex items-center gap-4">

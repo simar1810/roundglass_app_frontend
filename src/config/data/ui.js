@@ -29,3 +29,10 @@ export const coachPortfolioSocialLinks = [
   { id: 5, social: "Youtube", name: "youtubeLink", icon: <FaYoutube className="min-w-[24px] min-h-[24px] text-[var(--accent-2)]" /> },
   { id: 6, social: "Support", name: "supportNumber", icon: <MdContactSupport className="min-w-[24px] min-h-[24px]" /> },
 ]
+
+export const coachDetailsFields = [
+  { id: 1, label: "Name", name: "name" },
+  { id: 2, label: "Mobile No.", name: "mobileNumber" },
+  { id: 3, label: "Email ID", name: "email" },
+  { id: 4, label: "No. of Clients", name: "expectedNoOfClients" },
+]
