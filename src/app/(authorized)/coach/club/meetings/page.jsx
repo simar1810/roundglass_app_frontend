@@ -1,19 +1,28 @@
-import { Label } from "@/components/ui/label";
-import {
-  RadioGroup,
-  RadioGroupItem
-} from "@/components/ui/radio-group";
+"use client";
+
+import ClubSystemOptions from "@/components/pages/coach/club/meeting/ClubSystemOptions";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Clipboard, Eye, Pen, Trash2 } from "lucide-react";
+import MeetingDetailRow from "@/components/pages/coach/club/meeting/MeetingDetailRow";
+import useSWR from "swr";
+import { getMeetings } from "@/lib/fetchers/club";
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
 
 export default function Page() {
+  const { isLoading, error, data: allData } = useSWR("getMeetings", () => getMeetings());
+
+  if (isLoading) return <ContentLoader />
+
+  if (!allData.status || error) return <ContentError title={error || allData.message} />
+
+  const data = allData.data;
+
   return <div className="content-container">
     <div className="mb-8 flex items-center justify-between gap-4">
       <h4>Meeting Details</h4>
@@ -36,62 +45,13 @@ export default function Page() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: 4 }, (_, i) => i).map(item => <MeetingDetailRow key={item} />)}
+          {data.map((meeting, index) => <MeetingDetailRow
+            key={meeting._id}
+            meeting={meeting}
+            index={index}
+          />)}
         </TableBody>
       </Table>
     </div>
   </div>
-}
-
-function MeetingDetailRow() {
-  return <TableRow>
-    <TableCell>1</TableCell>
-    <TableCell>https://club.wellnessz.in/meeting/67e695f950bac36d3b6e3c83/zoom-events</TableCell>
-    <TableCell className="flex items-start gap-2">
-      <span>https://club.wellnessz.in/meet/62f4fcb9-b81f-4ad6-aa0a-447240087c42</span>
-      <Clipboard className="w-[16px]" />
-    </TableCell>
-    <TableCell>01/01/2025</TableCell>
-    <TableCell>10:00 AM</TableCell>
-    <TableCell className="flex items-start gap-2">
-      <span>1</span>
-      <Eye className="w-[16px]" />
-    </TableCell>
-    <TableCell>Scheduled</TableCell>
-    <TableCell>Morning Club</TableCell>
-    <TableCell>-</TableCell>
-    <TableCell className="flex items-start gap-2">
-      <Pen className="w-[16px]" />
-      <Trash2 className="text-[var(--accent-2)] w-[16px]" />
-    </TableCell>
-  </TableRow>
-}
-
-function ClubSystemOptions() {
-  return <RadioGroup defaultValue="option-one" className="flex items-center gap-4">
-    <div className="flex items-center space-x-2">
-      <RadioGroupItem
-        value="option-one"
-        id="option-one"
-        className="w-[20px] h-[20px] relative after:absolute after:w-[28px] after:h-[28px] after:top-[-5px] after:left-[-5px] data-[state=checked]:after:border-2 after:rounded-full after:border-[var(--accent-1)] data-[state=checked]:border-[var(--accent-1)] data-[state=checked]:bg-[var(--accent-1)]"
-      />
-      <Label htmlFor="option-one">Free</Label>
-    </div>
-    <div className="flex items-center space-x-2">
-      <RadioGroupItem
-        value="option-two"
-        id="option-two"
-        className="w-[20px] h-[20px] relative after:absolute after:w-[28px] after:h-[28px] after:top-[-5px] after:left-[-5px] data-[state=checked]:after:border-2 after:rounded-full after:border-[var(--accent-1)] data-[state=checked]:border-[var(--accent-1)] data-[state=checked]:bg-[var(--accent-1)]"
-      />
-      <Label htmlFor="option-two">Subscription</Label>
-    </div>
-    <div className="flex items-center space-x-2">
-      <RadioGroupItem
-        value="option-three"
-        id="option-three"
-        className="w-[20px] h-[20px] relative after:absolute after:w-[28px] after:h-[28px] after:top-[-5px] after:left-[-5px] data-[state=checked]:after:border-2 after:rounded-full after:border-[var(--accent-1)] data-[state=checked]:border-[var(--accent-1)] data-[state=checked]:bg-[var(--accent-1)]"
-      />
-      <Label htmlFor="option-three">Volume Points</Label>
-    </div>
-  </RadioGroup>
 }

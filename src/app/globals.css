@@ -144,7 +144,7 @@
   }
 
   .bordered-table {
-    @apply border-1 border-r-0 overflow-x-auto [&_th]:border-r-1 [&_td]:border-r-1 [&_thead]:bg-[var(--comp-1)] [&_thead]:border-b-1
+    @apply text-center [&_th]:text-center border-1 border-r-0 overflow-x-auto [&_th]:border-r-1 [&_td]:border-r-1 [&_thead]:bg-[var(--comp-1)] [&_thead]:border-b-1
   }
 }
 
