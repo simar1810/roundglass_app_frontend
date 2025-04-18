@@ -9,7 +9,6 @@ import Tools from "@/components/pages/coach/Tools";
 import { getCoachHome } from "@/lib/fetchers/app";
 import useSWR from "swr";
 
-
 export default function Page() {
   const { isLoading, error, data } = useSWR("coachHomeTrial", getCoachHome);
 

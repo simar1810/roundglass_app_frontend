@@ -20,6 +20,10 @@ export function getCoachNotifications() {
   return fetchData('app/notification?person=coach');
 }
 
+export function getCoachSocialLinks() {
+  return fetchData('app/sm');
+}
+
 export function getMeals() {
   return fetchData("app/getMeal");
 }
