@@ -10,7 +10,7 @@ import Image from "next/image";
 export default function ClientCreatedNotiModal() {
   return (
     <Dialog>
-      <DialogTrigger className="bg-green-600 text-white font-bold px-4 py-2 rounded-full">
+      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
         client created notify
       </DialogTrigger>
       <DialogContent className="!max-w-[656px] h-[692px] border-0 p-0 overflow-clip">
@@ -25,12 +25,14 @@ export default function ClientCreatedNotiModal() {
             Client Added Successfully
           </h2>
           <p className="text-[14px] text-center mt-10 text-gray-400 font-semibold">
-          Your Client Account has been created
+            Your Client Account has been created
             <br /> with Client ID #123456
           </p>
         </div>
         <div className="flex flex-col gap-0 mb-[100px]">
-          <label className="text-sm font-semibold ml-[40px] ml-[190px]">Client Link</label>
+          <label className="text-sm font-semibold ml-[40px] ml-[190px]">
+            Client Link
+          </label>
           <div className="flex items-center border w-[309px] h-[45px] border-gray-300 rounded-lg mx-auto ">
             <input
               type="text"
@@ -38,7 +40,9 @@ export default function ClientCreatedNotiModal() {
               readOnly
               className=" text-gray-500 text-sm flex-1 outline-none"
             />
-            <button className="bg-green-500 rounded-md text-white px-4 py-[16px] text-sm font-medium hover:bg-green-600 transition">Copy</button>
+            <button className="bg-[var(--accent-1)] rounded-md text-white px-4 py-[16px] text-sm font-medium hover:bg-[var(--accent-1)] transition">
+              Copy
+            </button>
           </div>
         </div>
       </DialogContent>

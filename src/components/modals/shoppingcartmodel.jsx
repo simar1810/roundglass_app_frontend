@@ -1,15 +1,23 @@
 import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ShoppingCartModal() {
   return (
     <Dialog>
-        <DialogTrigger className="bg-green-600 text-white font-bold px-4 py-2 rounded-full">
-            <p>cart</p>
-        </DialogTrigger>
+      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
+        <p>cart</p>
+      </DialogTrigger>
       <DialogContent className="!max-w-[600px] border-0 p-0">
         <DialogHeader className="py-4 px-6 border-b">
-          <DialogTitle className="text-lg font-semibold">Shopping Cart</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">
+            Shopping Cart
+          </DialogTitle>
         </DialogHeader>
 
         <div className="px-6 py-4 space-y-4">
@@ -25,7 +33,9 @@ export default function ShoppingCartModal() {
               />
               <div>
                 <h3 className="text-sm font-semibold">MuscleBlaze Bulk</h3>
-                <p className="text-xs text-gray-500 mt-2">Lorem Ipsum odor Selamat</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Lorem Ipsum odor Selamat
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <button className="border px-2 rounded text-sm">−</button>
                   <span className="text-sm">1</span>
@@ -48,7 +58,9 @@ export default function ShoppingCartModal() {
               />
               <div>
                 <h3 className="text-sm font-semibold">MuscleBlaze Bulk</h3>
-                <p className="text-xs text-gray-500 mt-2">Lorem Ipsum odor Selamat</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Lorem Ipsum odor Selamat
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <button className="border px-2 rounded text-sm">−</button>
                   <span className="text-sm">1</span>
