@@ -15,19 +15,21 @@ import {
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 
-export default function MealDisplayCard() {
+export default function MealDisplayCard({ plan }) {
   return <Card className="p-0 rounded-[4px] shadow-none gap-2">
     <CardHeader className="relative aspect-video">
       <Image
         fill
-        src="/"
+        src={plan.image || "/"}
         alt=""
         className="object-cover bg-black"
       />
-      <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Custom</Badge>
+      {plan.tag === "ADMIN"
+        ? <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Admin</Badge>
+        : <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Custom</Badge>}
       <DropdownMenu>
         <DropdownMenuTrigger asChild className="text-white w-[16px] !absolute top-2 right-2">
-          <EllipsisVertical className="cursor-pointer" />
+          {!plan.admin && <EllipsisVertical className="cursor-pointer" />}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="font-semibold">
           <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
@@ -41,12 +43,12 @@ export default function MealDisplayCard() {
       </DropdownMenu>
     </CardHeader>
     <CardContent className="p-2">
-      <div className="flex items-center">
-        <h5 className="text-[12px]">Roasted Sweet Potato & Eggplant Pitas Meal</h5>
+      <div className="flex items-start justify-between gap-1">
+        <h5 className="text-[12px]">{plan.name}</h5>
         <Button variant="wz" size="sm" className="h-auto p-1">Assign</Button>
       </div>
-      <p className="text-[14px] text-[var(--dark-1)]/25 mt-2">
-        Lorem ipsum dolor sit.
+      <p className="text-[14px] text-[var(--dark-1)]/25 leading-tight mt-2">
+        {plan.description}
       </p>
     </CardContent>
   </Card>

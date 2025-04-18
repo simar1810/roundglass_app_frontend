@@ -1,4 +1,4 @@
-export default function ContentLoader() {
+export default function ContentLoader({ className }) {
   return <div className="content-container min-h-[400px] flex items-center justify-center">
     <div
       style={{ clipPath: "polygon(0% 0%, 100% 100%, 0% 100%)" }}

@@ -34,16 +34,14 @@ export default function ReviewVPModal({ vp }) {
         points: formData.points
       }
       const response = await sendData(`acceptRejectVpPost?`, data, "POST");
-      console.log(response)
+
       if (response.success === false || response.status_code !== 200) {
-        console.log(!response.success || response.status_code !== 200, !response.success, response.status_code !== 200)
         throw new Error(response.message);
       }
       toast.success(response.message);
       closeBtnRef.current.click();
       mutate("getRequestVolumePoints")
     } catch (error) {
-      console.error(error)
       toast.error(error.message);
     } finally {
       setLoading(false);

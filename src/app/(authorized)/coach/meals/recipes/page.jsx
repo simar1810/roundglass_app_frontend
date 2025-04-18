@@ -1,9 +1,19 @@
+"use client";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
 import MealDisplayCard from "@/components/pages/coach/meals/MealDisplayCard";
 import { Button } from "@/components/ui/button";
+import { getRecipes } from "@/lib/fetchers/app";
 import { FolderInput, FolderOutput, Forward } from "lucide-react";
+import useSWR from "swr";
 
 export default function Page() {
+  const { isLoading, error, data } = useSWR("getRecipes", getRecipes);
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || !data.success) return <ContentError title={error || data.message} />
   return <div className="mt-8">
     <Header />
     <div className="grid grid-cols-4 gap-4">

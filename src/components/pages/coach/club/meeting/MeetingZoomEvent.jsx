@@ -5,7 +5,6 @@ export default function MeetingZoomEvent({
   index,
   event
 }) {
-  console.log(event)
   const Component = selectEventComponent(event.event);
   return <Component index={index + 1} event={event} />
 }

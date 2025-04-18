@@ -1,3 +1,4 @@
+"use client"
 import { Input } from "../ui/input";
 import {
   ChevronDown,
@@ -16,8 +17,14 @@ import {
   AvatarImage
 } from "../ui/avatar";
 import NotificationModal from "../modals/NotificationModal";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function AppNavbar() {
+  const data = useAppSelector(state => state.coach.data)
+  if (!data) return <></>
+
+  const { profilePhoto, name } = data;
+
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[10]">
     <div className="md:max-w-[450px] w-full absolute left-1/2 translate-x-[-50%]">
       <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
@@ -31,10 +38,10 @@ export default function AppNavbar() {
       <MenubarMenu>
         <MenubarTrigger className="flex items-center gap-2">
           <Avatar className="w-[24px] h-[24px] bg-red-200">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>SP</AvatarFallback>
+            <AvatarImage src={profilePhoto} />
+            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
           </Avatar>
-          <span>Simarpreet Singh</span>
+          <span>{name}</span>
           <ChevronDown className="w-[16px] ml-2" />
         </MenubarTrigger>
         <MenubarContent sideOffset={10} align="center">
