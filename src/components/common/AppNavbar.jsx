@@ -1,16 +1,6 @@
 "use client"
 import { Input } from "../ui/input";
-import {
-  ChevronDown,
-  Search
-} from "lucide-react";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger
-} from "../ui/menubar";
+import { Search } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -34,24 +24,12 @@ export default function AppNavbar() {
       />
     </div>
     <NotificationModal />
-    <Menubar className="p-0">
-      <MenubarMenu>
-        <MenubarTrigger className="flex items-center gap-2">
-          <Avatar className="w-[24px] h-[24px] bg-red-200">
-            <AvatarImage src={profilePhoto} />
-            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
-          </Avatar>
-          <span>{name}</span>
-          <ChevronDown className="w-[16px] ml-2" />
-        </MenubarTrigger>
-        <MenubarContent sideOffset={10} align="center">
-          {Array.from({ length: 4 }, (_, i) => i).map(item => <MenubarItem
-            key={item}
-          >
-            Link-{item}
-          </MenubarItem>)}
-        </MenubarContent>
-      </MenubarMenu>
-    </Menubar>
+    <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
+      <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
+        <AvatarImage src={profilePhoto} />
+        <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
+      </Avatar>
+      <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+    </div>
   </nav>
 }

@@ -10,8 +10,6 @@ import NextImage from "next/image"
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 
-const formFields = ["awardTitle", "date", "points", "file"]
-
 export default function UpdateCoachAwardModal() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => ({ file: null, title: "" }));
@@ -28,7 +26,6 @@ export default function UpdateCoachAwardModal() {
       const data = new FormData(e.target);
       data.append("coachId", _id);
       const response = await sendDataWithFormData(`app/updateCoachProfile`, data, "POST");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("coachProfile");
