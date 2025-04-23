@@ -37,5 +37,22 @@ export function getPlans() {
 }
 
 export function getOrganisation() {
-  return fetchData("app/getOrganisation")
+  return fetchData("app/getOrganisation");
+}
+
+export function getAppClients(query) {
+  return fetchData(`app/allClient?page=${query.page}&limit=${query.limit}`);
+
+}
+
+export function getAppClientPortfolioDetails(_id) {
+  return fetchData(`app/clientProfile?id=` + _id);
+}
+
+export function getClientStatsForCoach(clientId) {
+  return fetchData(`app/clientStatsCoach?clientId=${clientId}`)
+}
+
+export function getClientOrderHistory(clientId) {
+  return fetchData(`app/client-order-history?clientId=${clientId}`)
 }

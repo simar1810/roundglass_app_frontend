@@ -1,0 +1,136 @@
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
+import { ChartContainer } from "@/components/ui/chart"
+import { TabsContent } from "@/components/ui/tabs";
+import { FilePen } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react";
+import {
+  PolarRadiusAxis,
+  RadialBar,
+  RadialBarChart,
+  Label
+} from "recharts"
+
+const chartConfig = {
+  visitors: {
+    label: "Visitors",
+  },
+  safari: {
+    label: "Safari",
+    color: "var(--accent-1)",
+  },
+}
+
+const chartData = [
+  { browser: "safari", title: "Healthy", visitors: 23.4, fill: "var(--color-safari)" },
+]
+
+export default function ClientStatisticsData({ clientStats }) {
+  const [selectedDate, setSelectedDate] = useState(clientStats?.at(0)?.createdDate);
+  const statisticsForData = clientStats.find(stat => stat.createdDate === selectedDate);
+
+  return <TabsContent value="statistics">
+    <div className="pb-4 flex items-center gap-2 border-b-1">
+      {clientStats.map((stat, index) => <Button
+        key={index}
+        variant={selectedDate === stat.createdDate ? "wz" : "outline"}
+        className={selectedDate !== stat.createdDate && "text-[var(--dark-1)]/25"}
+        onClick={() => setSelectedDate(stat.createdDate)}
+      >
+        {stat.createdDate}
+      </Button>)}
+    </div>
+    <StatisticsExportingOptions clientStats={clientStats} />
+    <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: 2 KG</h5>
+    <div className="aspect-video bg-[var(--dark-1)]/4 mt-4"></div>
+    <div className="mt-8 grid grid-cols-3 gap-5">
+      {Array.from({ length: 6 }, (_, i) => i).map(item => <Card className="bg-[var(--comp-1)] px-2 py-0 gap-2 shadow-none border-0" key={item}>
+        <CardHeader>
+          <CardTitle className="!font-[400] pt-2 flex items-center gap-2">
+            <Image
+              className=""
+              height={20}
+              width={20}
+              alt=""
+              src="/svgs/bmi.svg"
+            />
+            BMI
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-[12px] px-1">
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-[250px]"
+          >
+            <RadialBarChart
+              data={chartData}
+              startAngle={90}
+              endAngle={-125}
+              innerRadius={60}
+              outerRadius={110}
+              maxBarSize={10}
+            >
+              <RadialBar dataKey="visitors" background cornerRadius={10} />
+              <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      return (
+                        <text
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          <tspan
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            className="fill-foreground text-4xl font-bold"
+                          >
+                            {chartData[0].visitors.toLocaleString()}
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 24}
+                            className="fill-muted-foreground"
+                          >
+                            {chartData[0].title}
+                          </tspan>
+                        </text>
+                      )
+                    }
+                  }}
+                />
+              </PolarRadiusAxis>
+            </RadialBarChart>
+          </ChartContainer>
+          <p className="p-2">Optimal: 18 - 23</p>
+        </CardContent>
+      </Card>)}
+    </div>
+    <Button variant="wz" className="mx-auto mt-8 block">Send Analysis Reminder</Button>
+  </TabsContent>
+}
+
+function StatisticsExportingOptions({ clientStats }) {
+  return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
+    <Button variant="outline" className="text-[12px]">
+      <FilePen className="w-[14px]" />
+      Share & View Comparison PPT
+    </Button>
+    <Button variant="outline" className="text-[12px]">
+      <FilePen className="w-[14px]" />
+      Create & Share PDF
+    </Button>
+    <Button variant="outline" className="text-[12px]">
+      <FilePen className="w-[14px]" />
+      Share Statistics
+    </Button>
+  </div>
+}

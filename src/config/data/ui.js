@@ -36,3 +36,30 @@ export const coachDetailsFields = [
   { id: 3, label: "Email ID", name: "email" },
   { id: 4, label: "No. of Clients", name: "expectedNoOfClients" },
 ]
+
+export const clientPortfolioFields = [
+  { id: 1, title: "Email ID", name: "email" },
+  { id: 2, title: "Contact No.", name: "mobileNumber" },
+  { id: 3, title: "Joined", name: "joiningDate" },
+  { id: 4, title: "Client ID", name: "clientId" },
+  { id: 5, title: "DOB", name: "dob" },
+  { id: 6, title: "Age", name: "age" },
+  { id: 7, title: "Weight Lost Till Date", name: "age" },
+]
+
+export const clientDetailsFields = [
+  { id: 1, label: "Name", name: "name" },
+  { id: 2, label: "Mobile No.", name: "mobileNumber", type: "number" },
+  { id: 3, label: "Email", name: "email", type: "email" },
+  { id: 4, label: "DOB", name: "dob", type: "date", format: "dd-mm-yyyy" },
+  { id: 5, label: "Age", name: "age", type: "number" },
+  {
+    id: 6, label: "Gender", name: "gender", type: 4,
+    options: [
+      { id: 1, name: "Male", value: "Male" },
+      { id: 2, name: "Female", value: "Female" },
+    ]
+  },
+  { id: 7, label: "Weight", name: "weight", type: 3 },
+  { id: 8, label: "Height", name: "height", type: 2 },
+]
