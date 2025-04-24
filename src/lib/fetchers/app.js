@@ -60,3 +60,8 @@ export function getClientMealPlanById(_id) {
 export function getClientOrderHistory(clientId) {
   return fetchData(`app/client-order-history?clientId=${clientId}`);
 }
+
+export function getAppFeeds(state) {
+  const query = `page=${state.page}&type=${state.type}`;
+  return fetchData("app/feeds2?person=coach&" + query);
+}
