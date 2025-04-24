@@ -5,63 +5,81 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getClientOrderHistory, getClientStatsForCoach } from "@/lib/fetchers/app";
+import { getClientMealPlanById, getClientOrderHistory } from "@/lib/fetchers/app";
 import { Clock, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
 import ClientStatisticsData from "./ClientStatisticsData";
+import { useEffect, useState } from "react";
 
 export default function ClientData({
   _id,
   clientId
 }) {
-  const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
-  if (isLoading) return <ContentLoader />
-
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const clientStats = data.data;
   return <div className="bg-white p-4 rounded-[18px] border-1">
     <Tabs defaultValue="statistics">
       <Header />
-      <ClientStatisticsData clientStats={clientStats} />
-      <ClientMealData />
+      <ClientStatisticsData clientId={clientId} />
+      <ClientMealData _id={_id} />
       <ClientRetailData clientId={clientId} />
       <ClientClubDataComponent />
     </Tabs>
   </div>
 }
 
-function ClientMealData() {
+function ClientMealData({ _id }) {
+  const [selectedMeal, setSelectedMeal] = useState("")
+  const { isLoading, error, data } = useSWR(`app/getClientMealPlanById?clientId=${_id}`, () => getClientMealPlanById(_id));
+
+  const mealsData = data?.data;
+  const mealPlans = mealsData?.at(0)?.meals;
+  const mealsFromSelectedMealPlan = mealPlans?.find(plan => plan.mealType === selectedMeal);
+
+  useEffect(function () {
+    if (!isLoading && !error && data) {
+      setSelectedMeal(mealsData?.at(0)?.meals?.at(0)?.mealType)
+    }
+  }, [isLoading])
+
+  if (isLoading) return <ContentLoader />
+  if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <ContentError
+    title={error || data.message}
+  />
+
   return <TabsContent value="meal">
-    <div className="flex items-center gap-4">
-      <Button variant="wz">Before Breakfast</Button>
-      <Button variant="outline" className="text-[var(--dark-1)]/25">Breakfast</Button>
-      <Button variant="outline" className="text-[var(--dark-1)]/25">Lunch</Button>
-      <Button variant="outline" className="text-[var(--dark-1)]/25">Snacks</Button>
+    <div className="mb-4 flex items-center gap-4 overflow-x-auto custom-scrollbar">
+      {mealPlans.map((plan, index) => <Button
+        key={index}
+        variant={selectedMeal === plan.mealType ? "wz" : "outline"}
+        className={selectedMeal !== plan.mealType && "text-[var(--dark-1)]/25"}
+        onClick={() => setSelectedMeal(plan.mealType)}
+      >
+        {plan.mealType}
+      </Button>)}
     </div>
-    <Button
+    {/* <Button
       variant="outline"
       className="w-full text-[var(--dark-1)]/25 my-4"
     >
       View Meal Section
-    </Button>
-    {Array.from({ length: 4 }, (_, i) => i).map(item => <Card
-      key={item}
+    </Button> */}
+    {mealsFromSelectedMealPlan?.meals?.map((meal, index) => <Card
+      key={index}
       className="p-0 mb-8 shadow-none border-0 rounded-none overflow-clip"
     >
       <CardContent className="p-0">
         <Image
-          src="/"
+          src={meal.image || "/not-found.png"}
           height={400}
           width={240}
           alt=""
-          className="w-full bg-[var(--accent-1)] object-contain rounded-[10px] border-2 aspect-[8/3]"
+          className="w-full bg-[var(--accent-1)] object-cover object-center rounded-[10px] border-2 aspect-[8/4]"
         />
-        <CardTitle className="px-2 mt-2 mb-0">Roasted Sweet Potato & Eggplant Pitas</CardTitle>
+        <CardTitle className="px-2 mt-2 mb-0">{meal.name}</CardTitle>
         <div className="text-[var(--dark-1)]/25 text-[12px] px-2 flex items-center gap-2">
           <Clock className="w-[16px]" />
-          20 Minutes
+          {meal.meal_time}
         </div>
       </CardContent>
     </Card>)}

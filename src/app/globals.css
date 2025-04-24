@@ -180,3 +180,21 @@ a {
   line-height: 1.1;
   cursor: pointer;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #DEDEDE;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #00000020;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #00000020 #DEDEDE;
+}

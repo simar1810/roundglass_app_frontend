@@ -1,3 +1,5 @@
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -7,15 +9,18 @@ import {
 } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { TabsContent } from "@/components/ui/tabs";
+import { calculateBMI } from "@/lib/client/statistics";
+import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { FilePen } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
   Label
 } from "recharts"
+import useSWR from "swr";
 
 const chartConfig = {
   visitors: {
@@ -31,9 +36,25 @@ const chartData = [
   { browser: "safari", title: "Healthy", visitors: 23.4, fill: "var(--color-safari)" },
 ]
 
-export default function ClientStatisticsData({ clientStats }) {
-  const [selectedDate, setSelectedDate] = useState(clientStats?.at(0)?.createdDate);
+export default function ClientStatisticsData({ clientId }) {
+  const [selectedDate, setSelectedDate] = useState();
+
+  const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
+  const clientStats = data?.data;
+
+  useEffect(function () {
+    if (!isLoading && !error && data) {
+      setSelectedDate(clientStats?.at(0)?.createdDate)
+    }
+  }, [isLoading])
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200 || !selectedDate) return <ContentError title={error || data.message} />
+
   const statisticsForData = clientStats.find(stat => stat.createdDate === selectedDate);
+  const bmi = calculateBMI(statisticsForData)
+
+  const cards = generateStatsCardPayload(statisticsForData)
 
   return <TabsContent value="statistics">
     <div className="pb-4 flex items-center gap-2 border-b-1">
@@ -50,69 +71,7 @@ export default function ClientStatisticsData({ clientStats }) {
     <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: 2 KG</h5>
     <div className="aspect-video bg-[var(--dark-1)]/4 mt-4"></div>
     <div className="mt-8 grid grid-cols-3 gap-5">
-      {Array.from({ length: 6 }, (_, i) => i).map(item => <Card className="bg-[var(--comp-1)] px-2 py-0 gap-2 shadow-none border-0" key={item}>
-        <CardHeader>
-          <CardTitle className="!font-[400] pt-2 flex items-center gap-2">
-            <Image
-              className=""
-              height={20}
-              width={20}
-              alt=""
-              src="/svgs/bmi.svg"
-            />
-            BMI
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-[12px] px-1">
-          <ChartContainer
-            config={chartConfig}
-            className="mx-auto aspect-square max-h-[250px]"
-          >
-            <RadialBarChart
-              data={chartData}
-              startAngle={90}
-              endAngle={-125}
-              innerRadius={60}
-              outerRadius={110}
-              maxBarSize={10}
-            >
-              <RadialBar dataKey="visitors" background cornerRadius={10} />
-              <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                <Label
-                  content={({ viewBox }) => {
-                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            className="fill-foreground text-4xl font-bold"
-                          >
-                            {chartData[0].visitors.toLocaleString()}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
-                            className="fill-muted-foreground"
-                          >
-                            {chartData[0].title}
-                          </tspan>
-                        </text>
-                      )
-                    }
-                  }}
-                />
-              </PolarRadiusAxis>
-            </RadialBarChart>
-          </ChartContainer>
-          <p className="p-2">Optimal: 18 - 23</p>
-        </CardContent>
-      </Card>)}
+      <ClientStatisticCharts />
     </div>
     <Button variant="wz" className="mx-auto mt-8 block">Send Analysis Reminder</Button>
   </TabsContent>
@@ -133,4 +92,86 @@ function StatisticsExportingOptions({ clientStats }) {
       Share Statistics
     </Button>
   </div>
+}
+
+function ClientStatisticCharts() {
+  return <>
+    {Array.from({ length: 6 }, (_, i) => i).map(item => <Card className="bg-[var(--comp-1)] px-2 py-0 gap-2 shadow-none border-0" key={item}>
+      <CardHeader>
+        <CardTitle className="!font-[400] pt-2 flex items-center gap-2">
+          <Image
+            className=""
+            height={20}
+            width={20}
+            alt=""
+            src="/svgs/bmi.svg"
+          />
+          BMI
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="text-[12px] px-1">
+        <ChartContainer
+          config={chartConfig}
+          className="mx-auto aspect-square max-h-[250px]"
+        >
+          <RadialBarChart
+            data={chartData}
+            startAngle={90}
+            endAngle={-125}
+            innerRadius={60}
+            outerRadius={110}
+            maxBarSize={10}
+          >
+            <RadialBar dataKey="visitors" background cornerRadius={10} />
+            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-4xl font-bold"
+                        >
+                          {chartData[0].visitors.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          {chartData[0].title}
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </PolarRadiusAxis>
+          </RadialBarChart>
+        </ChartContainer>
+        <p className="p-2">Optimal: 18 - 23</p>
+      </CardContent>
+    </Card>)}
+  </>
+}
+
+const metrics = [
+  { metric: "bmi", type: 1 },
+  { metric: "muscle", type: 1 },
+  { metric: "bmi", type: 1 },
+  { metric: "bmi", type: 1 },
+  { metric: "bmi", type: 1 },
+]
+
+function generateStatsCardPayload(stats) {
+  for (const metric of ["bmi", "muscle", "fat",]) {
+
+  }
 }

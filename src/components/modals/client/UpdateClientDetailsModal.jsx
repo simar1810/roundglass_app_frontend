@@ -29,9 +29,6 @@ export default function UpdateClientDetailsModal({ clientData }) {
       for (const field of formFields) {
         data.append(field, formData[field])
       }
-      for (const [field, value] of data.entries()) {
-        console.log(field, value)
-      }
       throw new Error("this is error!")
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);

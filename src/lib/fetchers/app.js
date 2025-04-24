@@ -33,7 +33,7 @@ export function getRecipes() {
 }
 
 export function getPlans() {
-  return fetchData("app/plans")
+  return fetchData("app/plans");
 }
 
 export function getOrganisation() {
@@ -50,9 +50,13 @@ export function getAppClientPortfolioDetails(_id) {
 }
 
 export function getClientStatsForCoach(clientId) {
-  return fetchData(`app/clientStatsCoach?clientId=${clientId}`)
+  return fetchData(`app/clientStatsCoach?clientId=${clientId}`);
+}
+
+export function getClientMealPlanById(_id) {
+  return fetchData(`app/get-plan-by-id?clientId=${_id}`);
 }
 
 export function getClientOrderHistory(clientId) {
-  return fetchData(`app/client-order-history?clientId=${clientId}`)
+  return fetchData(`app/client-order-history?clientId=${clientId}`);
 }
