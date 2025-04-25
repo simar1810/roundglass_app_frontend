@@ -77,3 +77,7 @@ export function getRetail() {
 export function getOrderHistory() {
   return fetchData("app/order-history");
 }
+
+export function getNotes() {
+  return fetchData("app/notes?person=coach");
+}
