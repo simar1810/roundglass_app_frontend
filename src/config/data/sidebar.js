@@ -16,6 +16,7 @@ import {
   Projector,
   Settings,
   Soup,
+  Store,
   User,
   UserPlus,
   Users,
@@ -101,18 +102,24 @@ export const sidebar__coachContent = [
   },
   {
     id: 6,
+    title: "Retail",
+    icon: <Store className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/retail"
+  },
+  {
+    id: 7,
     title: "Chats",
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats"
   },
   {
-    id: 7,
+    id: 8,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/workouts"
   },
   {
-    id: 8,
+    id: 9,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/club",
@@ -150,7 +157,7 @@ export const sidebar__coachContent = [
     ]
   },
   {
-    id: 9,
+    id: 10,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools"

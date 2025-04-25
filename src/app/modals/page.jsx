@@ -10,7 +10,7 @@ import AddSelectClientModal from "@/components/modals/clientmodal";
 import CreateMealModal from "@/components/modals/CreateMealModal";
 import NewRecipeModal from "@/components/modals/NewRecipeModal";
 import OrderSuccessModal from "@/components/modals/ordersuccessmodal";
-import AddPostModal from "@/components/modals/postmodal";
+// import AddPostModal from "@/components/modals/AddPostmodal";
 import AddPostModalVideo from "@/components/modals/postmodalvideo";
 
 import ProfileModal from "@/components/modals/ProfileModal";
@@ -20,23 +20,23 @@ import ShoppingCartModal from "@/components/modals/shoppingcartmodel";
 
 export default function Page() {
   return <div className="p-20 flex items-center gap-2">
-    <AddClientModal/>
-    <ClientCreatedNotiModal/>
-    <ProfileModal/>
-    <AddClientDetailsModal/>
-    <AddPostModal/>
-    <AddPostModalVideo/>
-    <SelectClientModal/>
-    <ShoppingCartModal/>
-    <OrderSuccessModal/>
-    <AddSelectClientModal/>
-    <AssignWorkoutModal/>
-    <AssignWorkoutAddModal/>
-    <AssignMealModal/>
-    <RecipieSuccessModal/>
-    <NewRecipeModal/>
-    <AddPlanModal/>
-    <CreateMealModal/>
-    <AddRecipeModal/>
+    <AddClientModal />
+    <ClientCreatedNotiModal />
+    <ProfileModal />
+    <AddClientDetailsModal />
+    {/* <AddPostModal /> */}
+    <AddPostModalVideo />
+    <SelectClientModal />
+    <ShoppingCartModal />
+    <OrderSuccessModal />
+    <AddSelectClientModal />
+    <AssignWorkoutModal />
+    <AssignWorkoutAddModal />
+    <AssignMealModal />
+    <RecipieSuccessModal />
+    <NewRecipeModal />
+    <AddPlanModal />
+    <CreateMealModal />
+    <AddRecipeModal />
   </div>
 }
