@@ -3,6 +3,7 @@ import {
   CircleDollarSign,
   ClipboardPlus,
   ContactRound,
+  FileCheck,
   FileText,
   Headset,
   Home,
@@ -160,7 +161,39 @@ export const sidebar__coachContent = [
     id: 10,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/tools"
+    url: "/coach/tools",
+    items: [
+      {
+        id: 1,
+        icon: <FileCheck className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Notes",
+        url: "/coach/tools/notes"
+      },
+      {
+        id: 2,
+        icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Link Generator",
+        url: "/coach/club/link-generator"
+      },
+      {
+        id: 3,
+        icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Membership",
+        url: "/coach/club/membership"
+      },
+      {
+        id: 4,
+        icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Zoom Settings",
+        url: "/coach/club/zoom-settings"
+      },
+      {
+        id: 5,
+        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Free Trial",
+        url: "/coach/club/free-trial"
+      }
+    ]
   },
 ]
 
