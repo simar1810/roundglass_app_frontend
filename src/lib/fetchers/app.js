@@ -69,3 +69,11 @@ export function getAppFeeds(state) {
 export function getFeedComments(postId) {
   return fetchData(`app/get-comments?postId=${postId}`);
 }
+
+export function getRetail() {
+  return fetchData("app/coach-retail");
+}
+
+export function getOrderHistory() {
+  return fetchData("app/order-history");
+}
