@@ -65,3 +65,7 @@ export function getAppFeeds(state) {
   const query = `page=${state.page}&type=${state.type}`;
   return fetchData("app/feeds2?person=coach&" + query);
 }
+
+export function getFeedComments(postId) {
+  return fetchData(`app/get-comments?postId=${postId}`);
+}

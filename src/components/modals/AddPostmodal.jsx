@@ -34,7 +34,6 @@ export default function AddPostModal() {
       setLoading(true);
       const data = generateFormData(newPostFormData);
       const response = await sendDataWithFormData("app/addfeed", data, "POST");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message || "Some error occurred, Please try again Later!");
       toast.success(response.message);
       closeBtnRef.current.click();

@@ -15,7 +15,7 @@ export default function AppNavbar() {
 
   const { profilePhoto, name } = data;
 
-  return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[10]">
+  return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
     <div className="md:max-w-[450px] w-full absolute left-1/2 translate-x-[-50%]">
       <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
       <Input

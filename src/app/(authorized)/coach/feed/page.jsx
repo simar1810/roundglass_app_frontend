@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { feedDataInitialState } from "@/config/state-data/feed";
 import { changeDispalyedPostsType, changeFeedType, feedReducer } from "@/config/state-reducers/feed";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Bookmark, Globe, Images, Plus, Users } from "lucide-react";
+import { Bookmark, Globe, Images, Users } from "lucide-react";
 
 export default function Page() {
   return <CurrentStateProvider
@@ -61,6 +61,6 @@ function FeedContainer() {
         My Posts
       </Button>
     </div>
-    {<Feeds feeds={Array.from({ length: 4 }, (_, i) => i)} />}
+    <Feeds />
   </div>
 }

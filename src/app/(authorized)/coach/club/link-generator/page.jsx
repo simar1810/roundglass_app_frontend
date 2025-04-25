@@ -38,7 +38,8 @@ export default function first() {
 
 function ZoomMeetingOptions() {
   return <div className="flex items-center border-1 border-[var(--accent-1)] rounded-[10px]">
-    <ZoomConnectNowModal /><DropdownMenu>
+    <ZoomConnectNowModal />
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <EllipsisVertical className="w-[18px] ml-1 mr-2 cursor-pointer" />
       </DropdownMenuTrigger>
