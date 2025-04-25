@@ -198,3 +198,12 @@ a {
   scrollbar-width: thin;
   scrollbar-color: #00000020 #DEDEDE;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -2,6 +2,7 @@ import {
   CircleAlert,
   CircleDollarSign,
   ClipboardPlus,
+  Clock12,
   ContactRound,
   FileCheck,
   FileText,
@@ -171,9 +172,9 @@ export const sidebar__coachContent = [
       },
       {
         id: 2,
-        icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Link Generator",
-        url: "/coach/club/link-generator"
+        icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Reminders",
+        url: "/coach/tools/reminders"
       },
       {
         id: 3,

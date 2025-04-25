@@ -81,3 +81,7 @@ export function getOrderHistory() {
 export function getNotes() {
   return fetchData("app/notes?person=coach");
 }
+
+export function getReminders() {
+  return fetchData("app/getAllReminder?person=coach");
+}
