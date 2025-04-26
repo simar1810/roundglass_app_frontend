@@ -31,7 +31,7 @@ export default function Page() {
       <NoData message="No Reminders Available" />
     </div>
   </div>
-  console.log(reminders)
+
   return <div className="content-container content-height-screen">
     <NotesPageHeader />
     <DatesListing

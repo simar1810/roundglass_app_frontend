@@ -8,7 +8,7 @@ export function feedReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FEED_TYPE":
       if (!feedTypes.includes(action.payload)) return state;
-      return { ...state, type: action.payload }
+      return { ...state, type: action.payload, page: 1 }
 
     case "CHANGE_DISPLAYED_POST_TYPE":
       if (!displayedPostsType.includes(action.payload)) return state;
@@ -23,6 +23,12 @@ export function feedReducer(state, action) {
           [action.payload.name]: action.payload.value,
         }
       }
+
+    case "CHANGE_FEED_PAGE":
+      return { ...state, page: action.payload }
+
+    case "SET_PAGE_END_VALUE":
+      return { ...state, finalPage: action.payload, page: action.payload }
 
     default:
       break;
@@ -45,6 +51,14 @@ export function changeNewPostFormData(name, value) {
       value
     }
   }
+}
+
+export function paginate(page) {
+  return { type: "CHANGE_FEED_PAGE", payload: page }
+}
+
+export function pageEnd(page) {
+  return { type: "SET_PAGE_END_VALUE", payload: page }
 }
 
 function generateFields(contentType) {

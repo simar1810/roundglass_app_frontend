@@ -21,7 +21,7 @@ export default function Page() {
     data: ordersData
   } = useSWR("app/order-history", getOrderHistory);
   if (retailLoading || ordersLoading) return <ContentLoader />
-  console.log(ordersData, retailData)
+
   if (
     ordersError || retailError ||
     retailData.status_code !== 200 || ordersData.status_code !== 200
