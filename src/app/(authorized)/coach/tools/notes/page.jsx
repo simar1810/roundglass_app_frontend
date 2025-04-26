@@ -8,6 +8,7 @@ import AddNoteModal from "@/components/modals/tools/AddNoteModal";
 import UpdateNoteModal from "@/components/modals/tools/UpdateNoteModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { notesColors } from "@/config/data/other-tools";
 import useDebounce from "@/hooks/useDebounce";
 import { getNotes } from "@/lib/fetchers/app";
 import { Trash2 } from "lucide-react";
@@ -36,8 +37,9 @@ export default function Page() {
   return <div className="content-container content-height-screen">
     <NotesPageHeader setSearchQuery={setSearchQuery} />
     <div className="grid grid-cols-3 gap-4">
-      {notes.map(note => <Note
+      {notes.map((note, index) => <Note
         key={note._id}
+        index={index}
         note={note}
       />)}
     </div>
@@ -56,7 +58,7 @@ function NotesPageHeader({ setSearchQuery }) {
   </div>
 }
 
-function Note({ note }) {
+function Note({ index, note }) {
   const [loading, setLoading] = useState(false);
 
   async function deleteNote(
@@ -78,24 +80,24 @@ function Note({ note }) {
     }
   }
 
-  return <Card className="bg-[#FFD8F4] shadow-none py-2 px-0 gap-0">
+  return <Card style={{ backgroundColor: notesColors[index % 5] }} className="bg-[#FFD8F4] shadow-none py-2 px-0 gap-0">
     <CardHeader>
       <CardTitle className="text-[24px]">{note.title}</CardTitle>
     </CardHeader>
     <CardContent>
       <p className="leading-[1]">{note.description}</p>
-      <div className="my-2 flex gap-2">
+      <div className="my-2 flex gap-1">
         <UpdateNoteModal
           title={note.title}
           description={note.description}
           _id={note._id}
         />
         <DualOptionActionModal
-          description="You are deleting a note"
+          description="You are deleting the note!"
           action={(setLoading, btnRef) => deleteNote(setLoading, btnRef)}
         >
           <AlertDialogTrigger>
-            <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-1 rounded-[8px]" />
+            <Trash2 className="w-[20px] h-[20px] text-white bg-[var(--accent-2)] p-1 rounded-[4px]" />
           </AlertDialogTrigger>
         </DualOptionActionModal>
       </div>

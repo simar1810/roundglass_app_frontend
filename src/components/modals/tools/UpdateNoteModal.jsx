@@ -42,7 +42,7 @@ export default function UpdateNoteModal({
 
   return <Dialog>
     <DialogTrigger>
-      <PenLine className="w-[28px] h-[28px] bg-white p-1 rounded-[8px]" />
+      <PenLine className="w-[20px] h-[20px] bg-white p-1 rounded-[4px]" />
     </DialogTrigger>
     <DialogContent className="p-0">
       <DialogHeader className="p-4 border-b-1">

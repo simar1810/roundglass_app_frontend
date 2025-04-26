@@ -2,7 +2,7 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import NoData from "@/components/common/NoData";
-import AddNoteModal from "@/components/modals/tools/AddNoteModal";
+import AddReminderModal from "@/components/modals/tools/AddReminderModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getReminders } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
@@ -45,7 +45,7 @@ export default function Page() {
 function NotesPageHeader() {
   return <div className="w-full mb-4 flex items-center gap-4">
     <h4 className="mr-auto">Reminders</h4>
-    <AddNoteModal />
+    <AddReminderModal />
   </div>
 }
 
