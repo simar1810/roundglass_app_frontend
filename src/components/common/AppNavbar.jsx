@@ -9,6 +9,9 @@ import {
 import NotificationModal from "../modals/NotificationModal";
 import { useAppSelector } from "@/providers/global/hooks";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { useRouter } from "next/navigation";
 
 export default function AppNavbar() {
   const data = useAppSelector(state => state.coach.data)
@@ -17,13 +20,7 @@ export default function AppNavbar() {
   const { profilePhoto, name } = data;
 
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
-    <div className="md:max-w-[450px] w-full absolute left-1/2 translate-x-[-50%]">
-      <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
-      <Input
-        placeholder="Search..."
-        className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
-      />
-    </div>
+    <SearchBar />
     <NotificationModal />
     <Link href="/coach/portfolio" className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
       <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
@@ -33,4 +30,103 @@ export default function AppNavbar() {
       <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
     </Link>
   </nav>
+}
+
+const features = [
+  { id: 1, title: "Meal", link: "/coach/meals/list" },
+  { id: 2, title: "Recipees", link: "/coach/meals/recipes" },
+  { id: 3, title: "Meetings", link: "/coach/club/meetings" },
+  { id: 4, title: "Link Generator", link: "/coach/club/link-generator" },
+  { id: 5, title: "Notes", link: "/coach/tools/notes" },
+  { id: 6, title: "Reminders", link: "/coach/tools/reminders" },
+  { id: 7, title: "Calorie Counter", link: "/coach/tools/calorie-counter" },
+  { id: 8, title: "Ideal Weight", link: "/coach/tools/ideal-weight" },
+  { id: 9, title: "Workout", link: "/coach/tools/workouts" },
+  { id: 10, title: "Feed", link: "/coach/feed" },
+  { id: 11, title: "Clients", link: "/coach/clients" },
+]
+
+function SearchBar() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [previousSearches, setPreviousSearces] = useLocalStorage("searches");
+
+  const router = useRouter();
+  const containerRef = useRef();
+
+  const parsedDataLocalStorage = JSON.parse(previousSearches || "[]");
+
+  function storeInhistory(link, title) {
+    const newResults = parsedDataLocalStorage
+      .filter(feature => feature.link !== link)
+      .map((feature, index) => ({ ...feature, id: index }));
+    setPreviousSearces(JSON.stringify([...newResults, { id: parsedDataLocalStorage.length, title, link }]));
+    router.push(link);
+    setOpen(false);
+    setQuery("");
+  }
+
+  const queriedFeatures = features
+    .filter(feature => feature.title.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 5);
+
+  const localStorageSearches = parsedDataLocalStorage
+    .filter(feature => feature.title.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 5);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return <div className="grow">
+    <div ref={containerRef} className="md:max-w-[500px] w-full mx-auto relative z-[111] relative">
+      <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
+      <Input
+        onFocus={() => setOpen(true)}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search Feature..."
+        className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
+      />
+      {open && <div className="max-w-[450px] w-full bg-white absolute top-12 p-4 rounded-[8px] border-1">
+        {queriedFeatures.length > 0 && <h3 className="mb-2">Suggested</h3>}
+        {queriedFeatures.map(item => <SearchItem
+          key={item.id}
+          link={item.link}
+          title={item.title}
+          storeInhistory={storeInhistory}
+        />)}
+        {localStorageSearches.length > 0 && <h3 className="my-2">Previously Searched</h3>}
+        {localStorageSearches.map(item => <SearchItem
+          key={item.id}
+          link={item.link}
+          title={item.title}
+          storeInhistory={storeInhistory}
+        />)}
+        {queriedFeatures.length === 0 && localStorageSearches.length === 0 && <div className="min-h-[200px] font-bold flex items-center justify-center">
+          No Results Found!
+        </div>}
+      </div>}
+    </div>
+    {open && <div className="h-screen w-screen bg-[var(--dark-1)]/20 backdrop-blur-[4px] fixed top-0 left-0 z-[110]" />}
+  </div>
+}
+
+function SearchItem({
+  link,
+  title,
+  storeInhistory
+}) {
+  return <div
+    onClick={() => storeInhistory(link, title)}
+    className="text-[var(--dark-1)]/25 hover:text-[var(--dark-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
+  >
+    <Search className="w-[16px] h-[16px]" />
+    {title}
+  </div>
 }

@@ -59,7 +59,7 @@ function RecipesSearchResults({ fetchDishedData }) {
   const debouncedQuery = useDebounce(query, 1000)
 
   useEffect(function () {
-    ; (async function name() {
+    ; (async function () {
       try {
         setLoading(true)
         const response = await fetchData(`app/recipees?query=${debouncedQuery}`);
