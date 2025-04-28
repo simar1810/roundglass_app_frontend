@@ -90,3 +90,7 @@ export function getNotes() {
 export function getReminders() {
   return fetchData("app/getAllReminder?person=coach");
 }
+
+export function getRecipesCalorieCounter(query) {
+  return fetchData(`app/recipees?query=${query}`);
+}

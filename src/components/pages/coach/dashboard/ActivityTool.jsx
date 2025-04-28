@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -31,7 +32,7 @@ export default function ActivityTool({ activities }) {
 
   return <Card className="grow relative !bg-transparent py-0 border-0 shadow-none">
     <CardHeader className="w-full absolute top-0 px-0 flex translate-y-[-105%] items-center justify-between">
-      <CardTitle>Activity</CardTitle>
+      <CardTitle>Programs</CardTitle>
       {/* <Button variant="wz">+ Add</Button> */}
     </CardHeader>
     <CardContent className="pt-2 px-0">
@@ -40,14 +41,15 @@ export default function ActivityTool({ activities }) {
           {activities.map((activity, index) => <CarouselItem
             key={index}
             className="max-h-[180px] aspect-video relative"
-            onClick={activity.link ? () => router.push(activity.link) : () => { }}
           >
-            <Image
-              fill
-              src={activity.image}
-              alt=""
-              className="bg-gray-900 object-cover"
-            />
+            <Link href={activity.link || "#"} target="_blank">
+              <Image
+                fill
+                src={activity.image}
+                alt=""
+                className="bg-gray-900 object-cover"
+              />
+            </Link>
           </CarouselItem>)}
         </CarouselContent>
       </Carousel>

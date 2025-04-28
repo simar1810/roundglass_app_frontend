@@ -25,7 +25,7 @@ export default function Tools({
               src="/svgs/flame-icon.svg"
             />
           </Avatar>
-          <Link href="coach/calorie-counter" className="block text-center text-[var(--accent-1)] text-[14px] mt-2">Calculate Now</Link>
+          <Link href="/coach/tools/calorie-counter" className="block text-center text-[var(--accent-1)] text-[14px] mt-2">Calculate Now</Link>
         </CardContent>
       </Card>
 
@@ -38,7 +38,7 @@ export default function Tools({
               src="/svgs/weight-icon.svg"
             />
           </Avatar>
-          <Link href="/coach/weight" className="block text-center text-[var(--accent-1)] text-[14px] mt-2">Check Now</Link>
+          <Link href="/coach/tools/ideal-weight" className="block text-center text-[var(--accent-1)] text-[14px] mt-2">Check Now</Link>
         </CardContent>
       </Card>
       <CoachMatrices />

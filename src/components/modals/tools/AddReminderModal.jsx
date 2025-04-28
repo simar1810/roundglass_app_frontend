@@ -75,7 +75,6 @@ function ReminderFormContainer() {
     try {
       const data = generateReminderPayload({ other, ...state });
       const response = await getLink(1, data);
-      console.log(response)
       throw new Error("no functionality");
     } catch (error) {
       toast.error(error.message);

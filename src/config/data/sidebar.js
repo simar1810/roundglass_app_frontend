@@ -6,6 +6,7 @@ import {
   ContactRound,
   FileCheck,
   FileText,
+  Flame,
   Headset,
   Home,
   LayoutDashboard,
@@ -178,15 +179,15 @@ export const sidebar__coachContent = [
       },
       {
         id: 3,
-        icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Membership",
-        url: "/coach/club/membership"
+        icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Calorie Counter",
+        url: "/coach/tools/calorie-counter"
       },
       {
         id: 4,
         icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Zoom Settings",
-        url: "/coach/club/zoom-settings"
+        title: "Ideal Weight",
+        url: "/coach/tools/ideal-weight"
       },
       {
         id: 5,

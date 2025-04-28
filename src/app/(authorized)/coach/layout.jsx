@@ -17,7 +17,7 @@ export default async function Layout({ children }) {
     token={token}
   >
     <SidebarProvider className="!bg-white">
-      <AppSidebar className="!min-w-[250px]" />
+      <AppSidebar />
       <div className="grow">
         <AppNavbar />
         <div className="bg-[var(--comp-2)] p-4">
