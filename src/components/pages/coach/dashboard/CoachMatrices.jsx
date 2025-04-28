@@ -1,5 +1,4 @@
 import ContentError from "@/components/common/ContentError";
-import ContentLoader from "@/components/common/ContentLoader";
 import Loader from "@/components/common/Loader";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -61,7 +60,7 @@ export default function CoachMatrices() {
           </Avatar>
           <div>
             <h4 className="!text-[16px]">{steps.toFixed(2)}</h4>
-            <p className="text-[var(--dark-2)]">Moves</p>
+            <p className="text-[var(--dark-2)]">Steps</p>
           </div>
         </div>
       </div>

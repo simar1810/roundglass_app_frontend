@@ -1,11 +1,13 @@
 "use client";
 import AddPostModal from "@/components/modals/AddPostmodal";
 import Feeds from "@/components/pages/coach/feed/Feeds";
+import FeedsPersonal from "@/components/pages/coach/feed/FeedsPersonal";
 import { Button } from "@/components/ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { feedDataInitialState } from "@/config/state-data/feed";
-import { changeDispalyedPostsType, changeFeedType, feedReducer } from "@/config/state-reducers/feed";
+import { changeFeedType, feedReducer, paginate } from "@/config/state-reducers/feed";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Bookmark, Globe, Images, Users } from "lucide-react";
+import { CircleUserRound, Globe, Users } from "lucide-react";
 
 export default function Page() {
   return <CurrentStateProvider
@@ -15,6 +17,7 @@ export default function Page() {
     <div className="mt-8">
       <Header />
       <FeedContainer />
+      <FeedPagination />
     </div>
   </CurrentStateProvider>
 }
@@ -37,30 +40,49 @@ function Header() {
       <Globe />
       Global Community
     </Button>
+    <Button
+      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] ${type === "mine" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
+      onClick={() => dispatch(changeFeedType("mine"))}
+    >
+      <CircleUserRound />
+      My Posts
+    </Button>
     <AddPostModal />
   </div>
 }
 
 function FeedContainer() {
-  const { displayedPostsType, dispatch } = useCurrentStateContext()
-
+  const { type } = useCurrentStateContext()
   return <div className="max-w-[650px] bg-white mt-10 mx-auto relative border-1 border-b-0 rounded-t-[10px]">
-    <div className="sticky top-0 rounded-t-[10px] divide-x-1 border-b-1 border-[var(--dark-1)]/10 overflow-clip">
-      <Button
-        className={`w-1/2 text-center text-[12px] bg-transparent hover:bg-[var(--comp-1)] shadow-none rounded-none ${displayedPostsType === "all" ? "text-[var(--accent-1)]" : "text-[var(--dark-2)]"}`}
-        onClick={() => dispatch(changeDispalyedPostsType("all"))}
-      >
-        <Images />
-        My Posts
-      </Button>
-      <Button
-        className={`w-1/2 text-center text-[12px] bg-transparent hover:bg-[var(--comp-1)] shadow-none rounded-none ${displayedPostsType === "saved" ? "text-[var(--accent-1)]" : "text-[var(--dark-2)]"}`}
-        onClick={() => dispatch(changeDispalyedPostsType("saved"))}
-      >
-        <Bookmark />
-        My Posts
-      </Button>
-    </div>
-    <Feeds />
+    {type === "mine"
+      ? <FeedsPersonal />
+      : <Feeds />}
   </div>
+}
+
+function FeedPagination() {
+  const { page, finalPage, dispatch } = useCurrentStateContext();
+
+  function previous() {
+    if (page === 1) return;
+    dispatch(paginate(page - 1));
+  }
+
+  function next() {
+    if (page > finalPage) return;
+    dispatch(paginate(page + 1));
+  }
+  return <Pagination className="my-8">
+    <PaginationContent className="gap-4">
+      {page > 1 && <PaginationPrevious onClick={previous} />}
+      {page > 1 && <PaginationItem>{page - 1}</PaginationItem>}
+      <PaginationItem>
+        <PaginationLink isActive>
+          {page}
+        </PaginationLink>
+      </PaginationItem>
+      {page < finalPage && <PaginationItem>{page + 1}</PaginationItem>}
+      {page < finalPage && <PaginationNext onClick={next} />}
+    </PaginationContent>
+  </Pagination>
 }

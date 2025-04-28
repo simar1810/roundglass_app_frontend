@@ -66,6 +66,31 @@ export function getAppFeeds(state) {
   return fetchData("app/feeds2?person=coach&" + query);
 }
 
+export function getAppPersonalFeeds(state) {
+  const query = `page=${state.page}`;
+  return fetchData("app/my-posts?person=coach&" + query);
+}
+
 export function getFeedComments(postId) {
   return fetchData(`app/get-comments?postId=${postId}`);
+}
+
+export function getRetail() {
+  return fetchData("app/coach-retail");
+}
+
+export function getOrderHistory() {
+  return fetchData("app/order-history");
+}
+
+export function getNotes() {
+  return fetchData("app/notes?person=coach");
+}
+
+export function getReminders() {
+  return fetchData("app/getAllReminder?person=coach");
+}
+
+export function getRecipesCalorieCounter(query) {
+  return fetchData(`app/recipees?query=${query}`);
 }

@@ -8,12 +8,18 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+const payloadMutateFn = {
+  "global": generateMutatePayload1,
+  "our": generateMutatePayload1,
+  "mine": generateMutatePayload2
+}
+
 export default function FeedFooter({
   feeds,
   feed,
   setCommentsOpened
 }) {
-  const { page, type } = useCurrentStateContext();
+  const { page, type, displayedPostsType } = useCurrentStateContext();
 
   async function likeDislike(status) {
     try {
@@ -22,10 +28,7 @@ export default function FeedFooter({
         like: status
       }
       await sendData("app/feedActivity", data, "POST");
-      mutate(
-        `app/getAppFeeds?page=${page}&type=${type}`,
-        generateMutatePayload(feeds, feed.postId, "isLikedByMe")
-      )
+      mutate(...payloadMutateFn[type](page, type, feeds, feed.postId, "isLikedByMe", displayedPostsType))
     } catch (error) {
       toast.error(error.message || "Please try again later!");
     }
@@ -38,10 +41,7 @@ export default function FeedFooter({
         save: status
       }
       await sendData("app/feedActivity", data, "POST");
-      mutate(
-        `app/getAppFeeds?page=${page}&type=${type}`,
-        generateMutatePayload(feeds, feed.postId, "isSavedByMe")
-      )
+      mutate(...payloadMutateFn[type](page, type, feeds, feed.postId, "isSavedByMe", displayedPostsType))
     } catch (error) {
       toast.error(error.message || "Please try again later!");
     }
@@ -70,9 +70,25 @@ export default function FeedFooter({
   </div>
 }
 
-function generateMutatePayload(feeds, postId, field) {
-  return {
-    status_code: 200,
-    data: feeds.map(post => post.postId === postId ? { ...post, [field]: !post[field] } : post)
-  }
+function generateMutatePayload1(page, type, feeds, postId, field) {
+  return [
+    `app/getAppFeeds?page=${page}&type=${type}`,
+    {
+      status_code: 200,
+      data: feeds.map(post => post.postId === postId ? { ...post, [field]: !post[field] } : post)
+    }
+  ]
+}
+
+function generateMutatePayload2(page, _, feeds, postId, field, displayedPostsType) {
+  return [
+    `app/my-posts?page=${page}`,
+    {
+      status_code: 200,
+      data: {
+        ...feeds,
+        [displayedPostsType]: feeds[displayedPostsType].map(post => post.postId === postId ? { ...post, [field]: !post[field] } : post)
+      }
+    }
+  ]
 }

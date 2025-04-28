@@ -1,11 +1,12 @@
-export const feedTypes = ["global", "our", "both"];
-export const displayedPostsType = ["all", "saved"];
+export const feedTypes = ["global", "our", "both", "mine"];
+export const displayedPostsType = ["myPosts", "mySavedPosts"];
 export const newPostFields = ["file1", "video", "caption", "type", "contentType"];
 
 export const feedDataInitialState = {
   type: "global", // e.g. "global", "our", "both"
-  displayedPostsType: "all", // e.g. all, saved
+  displayedPostsType: "myPosts", // e.g. all, saved
   page: 1,
+  finalPage: Infinity,
   newPostFormData: {
     file1: null,
     caption: "",

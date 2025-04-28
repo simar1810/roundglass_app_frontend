@@ -2,8 +2,11 @@ import {
   CircleAlert,
   CircleDollarSign,
   ClipboardPlus,
+  Clock12,
   ContactRound,
+  FileCheck,
   FileText,
+  Flame,
   Headset,
   Home,
   LayoutDashboard,
@@ -22,6 +25,7 @@ import {
   Users,
   Video
 } from "lucide-react";
+import { FaWeightScale } from "react-icons/fa6";
 
 export const sidebar__coachContent = [
   {
@@ -160,7 +164,33 @@ export const sidebar__coachContent = [
     id: 10,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/tools"
+    url: "/coach/tools",
+    items: [
+      {
+        id: 1,
+        icon: <FileCheck className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Notes",
+        url: "/coach/tools/notes"
+      },
+      {
+        id: 2,
+        icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Reminders",
+        url: "/coach/tools/reminders"
+      },
+      {
+        id: 3,
+        icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Calorie Counter",
+        url: "/coach/tools/calorie-counter"
+      },
+      {
+        id: 4,
+        icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Ideal Weight",
+        url: "/coach/tools/ideal-weight"
+      }
+    ]
   },
 ]
 
