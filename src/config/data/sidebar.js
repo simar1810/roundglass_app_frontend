@@ -25,6 +25,7 @@ import {
   Users,
   Video
 } from "lucide-react";
+import { FaWeightScale } from "react-icons/fa6";
 
 export const sidebar__coachContent = [
   {
@@ -185,15 +186,9 @@ export const sidebar__coachContent = [
       },
       {
         id: 4,
-        icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
+        icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
         title: "Ideal Weight",
         url: "/coach/tools/ideal-weight"
-      },
-      {
-        id: 5,
-        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Free Trial",
-        url: "/coach/club/free-trial"
       }
     ]
   },
