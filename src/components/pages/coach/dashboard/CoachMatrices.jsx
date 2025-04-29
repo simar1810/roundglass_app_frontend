@@ -14,12 +14,9 @@ export default function CoachMatrices() {
 
   if (error || data.status_code !== 200) return <ContentError className="w-[400px] aspect- !min-h-[20px] !mt-0" title={error || data.message} />
 
-  const { calories, distance, steps } = data.data.dailyActivities
-    .reduce((acc, current) => ({
-      calories: current.calories + acc.calories || 0,
-      distance: current.distance + acc.distance || 0,
-      steps: current.steps + acc.steps || 0,
-    }), {})
+  const calories = data.data.dailyActivities[data.data.dailyActivities.length - 1].calories / 100;
+  const distance = data.data.dailyActivities[data.data.dailyActivities.length - 1].distance / 1000;
+  const steps = data.data.dailyActivities[data.data.dailyActivities.length - 1].steps / 100;
 
   return <Card className="w-[400px] border-0 !shadow-none gap-2 rounded-[10px]">
     <CardHeader className="text-[14px] font-semibold flex items-center justify-between gap-[4px]">

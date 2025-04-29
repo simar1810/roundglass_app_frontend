@@ -63,7 +63,6 @@ function RecipesSearchResults({ fetchDishedData }) {
       try {
         setLoading(true)
         const response = await fetchData(`app/recipees?query=${debouncedQuery}`);
-        console.log(response, `app/recipees?query=${debouncedQuery}`)
         if (!response.success) throw new Error(response.message || "Internal Server Error!");
         setData(response);
       } catch (error) {

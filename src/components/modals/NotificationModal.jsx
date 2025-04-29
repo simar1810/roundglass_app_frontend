@@ -5,6 +5,8 @@ import useSWR from "swr";
 import ContentError from "../common/ContentError";
 import { getCoachNotifications } from "@/lib/fetchers/app";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { navigateUserToFeature__notification } from "@/lib/utils";
 
 export default function NotificationModal() {
   const { isLoading, error, data } = useSWR("getCoachNotifications", getCoachNotifications);
@@ -49,7 +51,11 @@ export default function NotificationModal() {
 }
 
 function Notification({ notification }) {
-  return <div className="max-w-[96ch] min-w-[60ch] pb-2 mb-3 flex items-start gap-2">
+  const router = useRouter();
+  return <Link
+    href={navigateUserToFeature__notification(notification.notificationType)}
+    className="max-w-[96ch] min-w-[60ch] pb-2 mb-3 flex items-start gap-2 cursor-pointer"
+  >
     <Bell fill="#67BC2A" className="min-w-[32px] h-[32px] bg-[#90C844]/30 text-[var(--accent-1)] p-[6px] rounded-full" />
     <div>
       <h4 className="!text-[12px]">{notification.message}</h4>
@@ -58,5 +64,5 @@ function Notification({ notification }) {
         <p>{notification.createdDate.slice(11)}</p>
       </div>
     </div>
-  </div>
+  </Link>
 }
