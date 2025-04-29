@@ -94,3 +94,7 @@ export function getReminders() {
 export function getRecipesCalorieCounter(query) {
   return fetchData(`app/recipees?query=${query}`);
 }
+
+export function getAllChatClients() {
+  return fetchData("app/getAllChatClients");
+}

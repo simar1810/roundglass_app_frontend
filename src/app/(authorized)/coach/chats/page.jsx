@@ -1,96 +1,209 @@
+"use client";
+import Loader from "@/components/common/Loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EllipsisVertical, Paperclip, SendHorizontal } from "lucide-react";
+import { selectChatUser } from "@/config/state-reducers/chat-scoket";
+import useDebounce from "@/hooks/useDebounce";
+import { getRelativeTime, nameInitials } from "@/lib/formatter";
+import useChatSocketContext, { ChatSocketProvider } from "@/providers/ChatStateProvider";
+import { useAppSelector } from "@/providers/global/hooks";
+import { CheckCheck, EllipsisVertical, Paperclip, SendHorizontal } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Page() {
-  return <div className="content-conta iner bg-white p-4 rounded-md border-1">
-    {/* <h3>Chats</h3> */}
-    <div className="mt-4 content-height-screen flex">
-      <div className="w-[400px] content-height-screen pr-10">
-        <Input placeholder="Search messages" className="bg-[#F4F4F4]/25 mb-4" />
-        <div className="pb-4 flex items-center gap-2 border-b-1">
-          <Button variant="wz" size="sm" className="rounded-full">All Chats</Button>
-          <Button variant="wz" size="sm" className="rounded-full">Personal</Button>
-        </div>
-        <div className="py-4">
-          {Array.from({ length: 5 }, (_, i) => i).map(item => <ChatPersonSelect key={item} />)}
-        </div>
-      </div>
-      <div className="relative grow content-height-screen h-[200px] w-[200px] flex flex-col border-1">
-        <CurrentChatHeader />
-        <div className="text-[12px] font-semibold py-2 px-6">
-          <CurrentUserMessage />
-          <CompanionUserMessage />
-        </div>
-        <CurrentChatMessageBox />
-      </div>
-    </div>
+  return <div className="content-container bg-white p-4 pt-0 rounded-md border-1">
+    <ChatSocketProvider>
+      <ChatContainer />
+    </ChatSocketProvider>
   </div>
 }
 
-function ChatPersonSelect() {
-  return <div className="px-4 py-3 flex items-center gap-4 relative">
+function ChatContainer() {
+  const { currentChat } = useChatSocketContext();
+
+  return <div className="mt-4 flex">
+    <div className="w-[400px] pr-10">
+      {/* <div className="pb-4 flex items-center gap-2 border-b-1">
+        <Button variant="wz" size="sm" className="rounded-full">All Chats</Button>
+        <Button variant="wz" size="sm" className="rounded-full">Personal</Button>
+      </div> */}
+      <AllChatListings />
+    </div>
+    {currentChat
+      ? <SelectedChat />
+      : <div className="bg-[var(--comp-1)] content-height-screen grow flex items-center justify-center">
+        <h4>Please Select a Chat 😊</h4>
+      </div>}
+  </div>
+}
+
+function AllChatListings() {
+  const { chats, currentChat } = useChatSocketContext();
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 1000);
+
+  const selectedChats = useMemo(() => chats.filter(chat => chat.name.toLowerCase().includes(debouncedQuery.toLowerCase())));
+
+  return <>
+    <div className="mb-4 relative">
+      <Input
+        placeholder="Search messages"
+        className="bg-[#F4F4F4]/25"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+      {debouncedQuery !== query && <Loader className="!w-6 absolute right-2 top-1/2 translate-y-[-50%]" />}
+    </div>
+    <div className="pb-4 h-[450px] divide-y-2 divide-[var(--comp-1)] overflow-y-auto">
+      {selectedChats.map(chat => <ChatPersonCard
+        key={chat._id}
+        chat={chat}
+        selectedId={currentChat?._id}
+      />)}
+      {selectedChats.length === 0 && <div className="min-h-[400px] leading-[400px] font-bold text-center">No Chats Found!</div>}
+    </div>
+  </>
+}
+
+function ChatPersonCard({ chat, selectedId }) {
+  const { dispatch } = useChatSocketContext();
+  return <div
+    className={`px-4 py-3 py-1 flex items-center gap-4 relative cursor-pointer hover:bg-[var(--comp-1)] rounded-[8px] ${selectedId === chat._id && "bg-[var(--comp-1)]"}`}
+    onClick={() => dispatch(selectChatUser(chat))}
+  >
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
-      <AvatarImage src="/" className="rounded-[8px]" />
-      <AvatarFallback className="bg-gray-200 rounded-[8px]">SW</AvatarFallback>
+      <AvatarImage src={chat.profilePhoto} className="rounded-[8px]" />
+      <AvatarFallback className="rounded-[8px]">{nameInitials(chat.name)}</AvatarFallback>
     </Avatar>
     <div>
-      <p className="text-[16px] font-semibold mb-[2px]">Symond Write</p>
-      <p className="leading-[1] text-[#82867E] text-[12px]">Hi, How are you?</p>
+      <p className="text-[16px] font-semibold mb-[2px]">{chat.name}</p>
+      <p className="leading-[1] text-[#82867E] text-[12px]">{chat.latestMessage}</p>
     </div>
-    <span className="text-[11px] text-[#82867E] absolute top-4 right-2">10 min ago</span>
+    <span className="text-[11px] text-[#82867E] absolute top-4 right-2">{getRelativeTime(chat.latestMessageTime)}</span>
+  </div>
+}
+
+function SelectedChat() {
+  const { socket, currentChat, state } = useChatSocketContext();
+  useEffect(function () {
+    const data = {
+      coachId: currentChat.coachID,
+      clientId: currentChat.clientID,
+      person: "coach"
+    }
+    socket.emit("joinRoom", data);
+    socket.emit("seenMessages", data);
+  }, [currentChat._id]);
+
+  if (state === "joining-room") return <div className="bg-[var(--comp-1)] content-height-screen grow flex items-center justify-center">
+    <h4>Please Wait Opening Chat 😊</h4>
+  </div>
+
+  return <div className="relative grow w-[200px] flex flex-col border-1 overflow-x-clip">
+    <CurrentChatHeader />
+    <div className="text-[12px] font-semibold py-2 px-6">
+      <ChatMessages />
+    </div>
+    <CurrentChatMessageBox />
   </div>
 }
 
 function CurrentChatHeader() {
-  return <div className="px-4 py-4 flex items-center gap-4 relative border-b-1">
+  const { currentChat } = useChatSocketContext();
+  return <div className="bg-[var(--primary-1)] px-4 py-4 flex items-center gap-4 sticky top-0 z-[100] border-b-1">
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
-      <AvatarImage src="/" className="rounded-[8px]" />
-      <AvatarFallback className="bg-gray-200 rounded-[8px]">SW</AvatarFallback>
+      <AvatarImage src={currentChat.profilePhoto || "/"} className="rounded-[8px]" />
+      <AvatarFallback className="bg-gray-200 rounded-[8px]">{nameInitials(currentChat.name)}</AvatarFallback>
     </Avatar>
     <div>
-      <p className="text-[16px] font-semibold mb-[2px]">Symond Write</p>
+      <p className="text-[16px] font-semibold mb-[2px]">{currentChat.name}</p>
       <p className="leading-[1] text-[#82867E] text-[12px]">Active Now</p>
     </div>
     <EllipsisVertical className="ml-auto text-[#D9D9D9]" />
   </div>
 }
 
+function ChatMessages() {
+  const { currentChatMessages } = useChatSocketContext();
+  const messsageContainerRef = useRef();
+
+  useEffect(function () {
+    if (messsageContainerRef.current) {
+      messsageContainerRef.current.scrollTop = messsageContainerRef.current.scrollHeight;
+    }
+  }, [currentChatMessages.length])
+
+  return <div ref={messsageContainerRef} className="h-96 pr-4 overflow-y-auto">
+    {currentChatMessages.map(message => message.person === "coach"
+      ? <CurrentUserMessage key={message.createdAt} message={message} />
+      : <CompanionUserMessage key={message.createdAt} message={message} />)}
+  </div>
+}
+
 function CurrentChatMessageBox() {
+  const [message, setMessage] = useState("");
+  const { socket, currentChat } = useChatSocketContext();
+
+  const data = {
+    coachId: currentChat.coachID,
+    clientId: currentChat.clientID,
+    person: "coach",
+    message
+  }
+
+  function sendMessage() {
+    socket.emit("sendMessage", data);
+  }
+
   return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
     <Paperclip className="text-[#535353] w-[18px]" />
-    <Input placeholder="Write a Message" className="px-0 border-0 shadow-none focus:shadow-none" />
-    <Button variant="wz">
+    <Input
+      value={message}
+      onChange={e => setMessage(e.target.value)}
+      placeholder="Write a Message"
+      className="px-0 border-0 shadow-none focus:shadow-none"
+    />
+    <Button variant="wz" onClick={sendMessage}>
       <SendHorizontal />
       Send
     </Button>
   </div>
 }
 
-function CurrentUserMessage() {
+function CurrentUserMessage({ message }) {
+  const coach = useAppSelector(state => state.coach.data)
+  if (!message || !message?.message) return;
   return <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
     <div>
-      <div className="max-w-[80ch] bg-[var(--accent-1)] text-white px-4 py-2 rounded-[20px] rounded-br-0" style={{ borderBottomRightRadius: 0 }}>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type
+      <div
+        className="max-w-[80ch] bg-[var(--accent-1)] text-white relative px-4 py-2 rounded-[20px] rounded-br-0"
+        style={{ borderBottomRightRadius: 0 }}
+      >
+        {message?.message}
+        {message.seen && <CheckCheck className="w-3 h-3 text-[#0045CC] absolute bottom-[2px] right-[2px]" />}
       </div>
-      <p className="text-[var(--dark-1)]/25 mt-1 text-right">11:46 PM</p>
+      <p className="text-[var(--dark-1)]/25 mt-1 text-right">{getRelativeTime(message.createdAt)}</p>
+
     </div>
     <Avatar className="rounded-[4px] mt-1">
-      <AvatarImage src="/" />
-      <AvatarFallback className="rounded-[4px]">SN</AvatarFallback>
+      <AvatarImage src={coach.profilePhoto || "/"} />
+      <AvatarFallback className="rounded-[4px]">{nameInitials(coach.name)}</AvatarFallback>
     </Avatar>
   </div>
 }
 
-function CompanionUserMessage() {
+function CompanionUserMessage({ message }) {
+  const { currentChat } = useChatSocketContext();
+  if (!message || !message?.message) return;
   return <div className="mb-4 flex flex-wrap items-start justify-start gap-4">
     <Avatar className="rounded-[4px] mt-1">
-      <AvatarImage src="/" />
-      <AvatarFallback className="rounded-[4px]">SN</AvatarFallback>
+      <AvatarImage src={currentChat.profilePhoto || "/"} />
+      <AvatarFallback className="rounded-[4px]">{nameInitials(currentChat.name)}</AvatarFallback>
     </Avatar>
     <div>
-      <div className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0" style={{ borderBottomLeftRadius: 0 }}>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type </div>
-      <p className="text-[var(--dark-1)]/25 mt-1">11:46 PM</p>
+      <div className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0" style={{ borderBottomLeftRadius: 0 }}>{message?.message}</div>
+      <p className="text-[var(--dark-1)]/25 mt-1">{getRelativeTime(message.createdAt)}</p>
     </div>
   </div>
 }
