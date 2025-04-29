@@ -207,10 +207,10 @@ export const sidebar__coachFooter = [
     icon: <Headset className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/support"
   },
-  {
-    id: 3,
-    title: "About",
-    icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/about"
-  },
+  // {
+  //   id: 3,
+  //   title: "About",
+  //   icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/about"
+  // },
 ]

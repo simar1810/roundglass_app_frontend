@@ -1,3 +1,4 @@
+import { reminderInitialState } from "../state-data/reminder";
 
 export function reminderReducer(state, action) {
   switch (action.type) {
@@ -28,6 +29,21 @@ export function reminderReducer(state, action) {
     default:
       return state;
   }
+}
+
+export function init(data, type) {
+  if (type === "UPDATE") {
+    const payload = {
+      topic: data.topic,
+      agenda: data.agenda,
+      date: data.date,
+      time: data.time,
+      attendeeType: "none",
+      view: 1
+    }
+    return payload;
+  }
+  return reminderInitialState;
 }
 
 export function changeFieldValue(field, value) {

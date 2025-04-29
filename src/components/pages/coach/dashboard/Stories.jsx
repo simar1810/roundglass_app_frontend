@@ -9,7 +9,7 @@ export default function Stories({ stories }) {
 
   return <div className="mt-8">
     <h4 className="mb-4">Stories</h4>
-    <div className="max-w-[calc(100vw-250px-64px)] flex items-center gap-2">
+    <div className="max-w-[calc(100vw-204px-64px)] flex items-center gap-2 no-scrollbar">
       <div className="min-w-[64px] h-[64px] border-2 border-[var(--accent-1)] relative rounded-full">
         <Avatar className="w-full h-full p-3">
           <AvatarImage src="/logo.png" />
