@@ -33,3 +33,19 @@ export function navigateUserToFeature__notification(type) {
       return "#";
   }
 }
+
+export function zoomConnectionLink(coachId) {
+  return "https://zoom.us/oauth/authorize?client_id=" +
+    process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID +
+    "&response_type=code" +
+    "&state=" +
+    process.env.NEXT_PUBLIC_ZOOM_CLUB_ID +
+    "." +
+    coachId +
+    "&redirect_uri=" +
+    process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URL;
+}
+
+export function generateMeetingBaseLink(id) {
+  return `${process.env.NEXT_PUBLIC_CLIENT_ENDPOINT}/meet/${id}`;
+}

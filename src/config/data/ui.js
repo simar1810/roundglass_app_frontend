@@ -63,3 +63,21 @@ export const clientDetailsFields = [
   { id: 7, label: "Weight", name: "weight", type: 3 },
   { id: 8, label: "Height", name: "height", type: 2 },
 ]
+
+export const linkGeneratorFields = [
+  { id: 1, label: "Meeting Topic", inputtype: 1, placeholder: "Enter Topic", name: "topics" },
+  {
+    id: 2, label: "Meeting Type", inputtype: 2, name: "meetingType", options: [
+      { id: 1, title: "Quick", value: "quick" },
+      { id: 2, title: "Scheduled", value: "scheduled" },
+      { id: 3, title: "Reoccurring", value: "reocurr" },
+      { id: 4, title: "Event", value: "event" }
+    ]
+  },
+  { id: 3, label: "Date", type: "date", inputtype: 1, name: "date" },
+  { id: 4, label: "Time", type: "time", inputtype: 1, name: "time" },
+  { id: 5, label: "Repeat", inputtype: 4, name: "reOcurred" },
+  { id: 6, label: "Meeting Description", inputtype: 3, placeholder: "Enter Description", name: "description" },
+  { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
+  { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
+];
