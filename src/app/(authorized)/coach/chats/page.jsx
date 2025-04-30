@@ -154,6 +154,7 @@ function CurrentChatMessageBox() {
 
   function sendMessage() {
     socket.emit("sendMessage", data);
+    setMessage("");
   }
 
   return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
