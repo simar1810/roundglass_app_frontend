@@ -1,6 +1,6 @@
 "use client"
 import { Input } from "../ui/input";
-import { LogOut, Search } from "lucide-react";
+import { ChevronDown, LogOut, Search } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
+import PersonalBranding from "../modals/app/PersonalBranding";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -134,8 +135,8 @@ function SearchItem({
 }
 
 function UserOptions({ profilePhoto, name }) {
+  const [open, setOpen] = useState(false)
   const coachId = useAppSelector(state => state.coach.data.coachId);
-
   const dispatchRedux = useAppDispatch();
 
   const router = useRouter();
@@ -152,7 +153,7 @@ function UserOptions({ profilePhoto, name }) {
     }
   }
 
-  return <DropdownMenu>
+  return <DropdownMenu open={open}>
     <DropdownMenuTrigger>
       <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
         <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
@@ -160,17 +161,16 @@ function UserOptions({ profilePhoto, name }) {
           <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
         </Avatar>
         <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+        <ChevronDown className="w-[16px] h-[16px]" />
       </div>
     </DropdownMenuTrigger>
     <DropdownMenuContent>
       <DropdownMenuItem>
-        <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} className="w-full">
-          <DropdownMenuLabel className="text-[14px] py-0">
-            App personalisation
-          </DropdownMenuLabel>
-        </Link>
+        <DropdownMenuLabel className="text-[14px] py-0">
+          <PersonalBranding />
+        </DropdownMenuLabel>
       </DropdownMenuItem>
-      <DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setOpen(false)}>
         <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">
             Your Website

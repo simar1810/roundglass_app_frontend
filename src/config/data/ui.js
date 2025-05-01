@@ -81,3 +81,8 @@ export const linkGeneratorFields = [
   { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
 ];
+
+export const quickAddClientFormFields = [
+  { id: 1, label: "Client Name", name: "name", placeholder: "Enter Name" },
+  { id: 2, label: "Mobile Number", name: "mobileNumber", placeholder: " Mobile number" }
+]
