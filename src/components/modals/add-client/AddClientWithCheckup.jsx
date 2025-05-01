@@ -13,11 +13,9 @@ import CheckupStage2 from "../add-client/CheckupStage2";
 import CheckupStage3 from "../add-client/CheckupStage3";
 import ClientCreatedNotify from "../add-client/ClientCreatedNotify";
 
-export default function AddClientWithCheckup() {
-  return <Dialog>
-    <DialogTrigger>
-      Add Clients with Checkup
-    </DialogTrigger>
+export default function AddClientWithCheckup({ setModal }) {
+  return <Dialog open={true} onOpenChange={() => setModal()}>
+    <DialogTrigger />
     <CurrentStateProvider
       state={addClientCheckupInitialState}
       reducer={addClientCheckupReducer}
