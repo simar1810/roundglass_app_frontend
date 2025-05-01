@@ -14,8 +14,8 @@ export default function PersonalBranding() {
     </DialogTrigger>
     <DialogContent className="!max-w-[400px] w-full max-h-[70vh] border-0 p-0 overflow-auto">
       <DialogHeader className="bg-[var(--comp-1)] p-4 border-b-1">
-        <DialogTitle className="text-black text-sm ml-5">
-          Add Client
+        <DialogTitle className="">
+          App Personalization
         </DialogTitle>
       </DialogHeader>
       <div className="p-4"></div>
