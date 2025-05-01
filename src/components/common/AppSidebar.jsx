@@ -36,8 +36,10 @@ import useClickOutside from "@/hooks/useClickOutside";
 import ContentError from "./ContentError";
 
 export default function AppSidebar() {
+  const [Modal, setModal] = useState();;
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
+      {Modal || <></>}
       <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive">
         <Image
           src="/wellnessz-white.png"
@@ -52,11 +54,15 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarMenu className="px-0">
             {sidebar__coachContent.map((item) => item.items && item.items.length > 0
-              ? <SidebarItemWithItems item={item} key={item.id} />
+              ? <SidebarItemWithItems
+                key={item.id}
+                item={item}
+                Modal={Modal}
+                setModal={setModal}
+              />
               : <SidebarItem item={item} key={item.id} />)}
           </SidebarMenu>
         </SidebarGroup>
-
         <SidebarGroup>
           <SidebarMenu className="px-0">
             {sidebar__coachFooter.map((item) => <SidebarItem item={item} key={item.id} />)}
@@ -67,7 +73,7 @@ export default function AppSidebar() {
   )
 }
 
-function SidebarItemWithItems({ item }) {
+function SidebarItemWithItems({ Modal, setModal, item }) {
   const [open, setOpen] = useState(false);
   const { isMobile } = useSidebar()
   const pathname = usePathname()
@@ -75,7 +81,7 @@ function SidebarItemWithItems({ item }) {
     <SidebarMenuItem className="py-[8px]">
       <DropdownMenuTrigger
         onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
         asChild
         className="p-0 focus:border-nonefocus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
       >
@@ -91,12 +97,17 @@ function SidebarItemWithItems({ item }) {
         className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 relative rounded-r-[8px]"
         sideOffset={0}
         onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
       >
         <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
         {item.items.map(({ Component, ...item }) => (item.type === "modal"
-          ? <DropdownMenuItem key={item.title} >
-            <Component />
+          ? <DropdownMenuItem
+            key={item.title}
+            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)]`}
+            onClick={() => setModal(<Component setModal={setModal} />)}
+          >
+            {item.icon}
+            <span>{item.title}</span>
           </DropdownMenuItem>
           : <DropdownMenuItem
             asChild
