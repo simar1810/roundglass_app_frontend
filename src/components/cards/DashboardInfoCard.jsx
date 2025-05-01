@@ -14,7 +14,7 @@ import { Badge } from "../ui/badge";
 export default function DashboardInfoCard({
   icon = "/svgs/users-icon.svg",
   trendUp = false,
-  title = "Total Clients",
+  title,
   quantity = 100,
   isSubscribed
 }) {
@@ -27,9 +27,9 @@ export default function DashboardInfoCard({
             className="w-[40px] h-[40px] !rounded-none"
           />
         </Avatar>
-        {trendUp
+        {/* {trendUp
           ? <TrendingUp className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-          : <TrendingDown className="w-[16px] h-[16px] text-[var(--accent-2)]" />}
+          : <TrendingDown className="w-[16px] h-[16px] text-[var(--accent-2)]" />} */}
       </CardHeader>
       <CardContent>
         <div className="text-[20px] font-bold">{quantity}</div>

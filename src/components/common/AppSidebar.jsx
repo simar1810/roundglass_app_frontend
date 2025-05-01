@@ -34,9 +34,17 @@ import useDebounce from "@/hooks/useDebounce";
 import Loader from "./Loader";
 import useClickOutside from "@/hooks/useClickOutside";
 import ContentError from "./ContentError";
+import { permit } from "@/lib/permit";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function AppSidebar() {
-  const [Modal, setModal] = useState();;
+  const [Modal, setModal] = useState();
+  const roles = useAppSelector(state => state.coach.data.roles);
+
+  const clubFeaturesPermitted = permit("club", roles)
+  let sidebarItems = sidebar__coachContent;
+  if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 9)
+
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
       {Modal || <></>}
@@ -53,7 +61,7 @@ export default function AppSidebar() {
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 custom-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
-            {sidebar__coachContent.map((item) => item.items && item.items.length > 0
+            {sidebarItems.map((item) => item.items && item.items.length > 0
               ? <SidebarItemWithItems
                 key={item.id}
                 item={item}

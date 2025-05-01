@@ -3,6 +3,8 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { dashboardCards } from "@/config/data/ui";
 import { dashboardStatistics } from "@/lib/fetchers/app";
+import { permit } from "@/lib/permit";
+import { useAppSelector } from "@/providers/global/hooks";
 import useSWR from "swr";
 
 export default function StatisticsCards() {
@@ -20,5 +22,20 @@ export default function StatisticsCards() {
       quantity={statistics[item.name]}
       {...item}
     />)}
+    <ClubCards statistics={statistics} />
   </div>
+}
+
+function ClubCards({ statistics }) {
+  const roles = useAppSelector(state => state.coach.data.roles);
+  const subscribed = !permit("club", roles)
+  return <>
+    {dashboardCards.club.map(item => <DashboardInfoCard
+      key={item.id}
+      trendUp={Math.random() > 0.5}
+      quantity={statistics[item.name]}
+      isSubscribed={subscribed}
+      {...item}
+    />)}
+  </>
 }

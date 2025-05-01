@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
+import { permit } from "@/lib/permit";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -136,8 +137,10 @@ function SearchItem({
 
 function UserOptions({ profilePhoto, name }) {
   const [modal, setModal] = useState();
-  const coachId = useAppSelector(state => state.coach.data.coachId);
+  const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
+
+  const personalizationpermitted = permit("app-personalization", roles);
 
   const router = useRouter();
 
@@ -166,14 +169,14 @@ function UserOptions({ profilePhoto, name }) {
       </div>
     </DropdownMenuTrigger>
     <DropdownMenuContent>
-      <DropdownMenuItem>
+      {personalizationpermitted && <DropdownMenuItem>
         <DropdownMenuLabel
           onClick={() => setModal(<PersonalBranding setModal={setModal} />)}
           className="text-[14px] py-0"
         >
           App personalisation
         </DropdownMenuLabel>
-      </DropdownMenuItem>
+      </DropdownMenuItem>}
       <DropdownMenuItem>
         <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">

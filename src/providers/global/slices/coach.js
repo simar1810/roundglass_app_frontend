@@ -1,3 +1,4 @@
+import { permissions } from '@/config/data/permissions';
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
@@ -14,7 +15,8 @@ const counterSlice = createSlice({
       state.data = {
         ...action.payload,
         clubSystem: 2,
-        zoom_doc_ref: "123123123123"
+        zoom_doc_ref: "123123123123",
+        roles: permissions["basic"]
       }
     },
     destroy: function (state) {
