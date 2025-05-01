@@ -1,23 +1,21 @@
 "use client"
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Input } from "../ui/input";
 import {
   Search,
-  ChevronRight,
-  LogOut,
+  ChevronRight
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -30,8 +28,6 @@ import {
   sidebar__coachFooter
 } from "@/config/data/sidebar";
 import { toast } from "sonner";
-import { useAppDispatch } from "@/providers/global/hooks";
-import { destroy } from "@/providers/global/slices/coach";
 import { useEffect, useRef, useState } from "react";
 import { fetchData } from "@/lib/api";
 import useDebounce from "@/hooks/useDebounce";
@@ -40,22 +36,6 @@ import useClickOutside from "@/hooks/useClickOutside";
 import ContentError from "./ContentError";
 
 export default function AppSidebar() {
-  const dispatchRedux = useAppDispatch();
-
-  const router = useRouter();
-
-  async function expireUserSession() {
-    try {
-      const response = await fetch("/api/logout", { method: "DELETE" });
-      const data = await response.json();
-      if (data.status_code !== 200) throw new Error(data.message);
-      dispatchRedux(destroy());
-      router.push("/login");
-    } catch (error) {
-      toast.error(error.message || "Please try again later")
-    }
-  }
-
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
       <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive">
@@ -80,15 +60,6 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarMenu className="px-0">
             {sidebar__coachFooter.map((item) => <SidebarItem item={item} key={item.id} />)}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={expireUserSession}
-                className="bg-[var(--comp-1)] font-[500] text-[16px] text-[var(--accent-2)] px-4 py-4 mt-2 border-1 border-[#EFEFEF] hover:bg-[var(--comp-1)] hover:text-[var(--accent-2)]"
-              >
-                <LogOut />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -104,7 +75,7 @@ function SidebarItemWithItems({ item }) {
     <SidebarMenuItem className="py-[8px]">
       <DropdownMenuTrigger
         onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseLeave={() => setOpen(true)}
         asChild
         className="p-0 focus:border-nonefocus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
       >
@@ -120,18 +91,23 @@ function SidebarItemWithItems({ item }) {
         className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 relative rounded-r-[8px]"
         sideOffset={0}
         onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseLeave={() => setOpen(true)}
       >
         <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
-        {item.items.map((item) => (<DropdownMenuItem
-          asChild key={item.title}
-          className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "bg-white !bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
-        >
-          <Link href={item.url}>
-            {item.icon}
-            <span>{item.title}</span>
-          </Link>
-        </DropdownMenuItem>))}
+        {item.items.map(({ Component, ...item }) => (item.type === "modal"
+          ? <DropdownMenuItem key={item.title} >
+            <Component />
+          </DropdownMenuItem>
+          : <DropdownMenuItem
+            asChild
+            key={item.title}
+            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "bg-white !bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
+          >
+            <Link href={item.url}>
+              {item.icon}
+              <span>{item.title}</span>
+            </Link>
+          </DropdownMenuItem>))}
       </DropdownMenuContent>
     </SidebarMenuItem>
   </DropdownMenu>

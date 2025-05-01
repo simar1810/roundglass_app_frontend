@@ -2,25 +2,28 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import NoData from "@/components/common/NoData";
-import AddReminderModal from "@/components/modals/tools/AddReminderModal";
+import ReminderModal from "@/components/modals/tools/ReminderModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { getReminders } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
-import { addDays, format, set } from "date-fns";
-import { PenLine, Trash2 } from "lucide-react";
+import { addDays, format, parse, set } from "date-fns";
+import { PenLine, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 const dates = generateDatesPayload();
 
 export default function Page() {
-  const { isLoading, error, data } = useSWR("app//getAllReminder?person=coach", getReminders);
+  const { isLoading, error, data } = useSWR("app/getAllReminder?person=coach", getReminders);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "dd-MM-yyyy"));
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const reminders = data.data.filter(reminder => reminder.date === selectedDate)
+  const selectedDateFormat = format(parse(selectedDate, 'dd-MM-yyyy', new Date()), 'yyyy-MM-dd');
+  const reminders = data.data.filter(reminder => reminder.date === selectedDate || reminder.date === selectedDateFormat)
+
   if (reminders.length === 0) return <div className="content-container content-height-screen flex flex-col items-center justify-center">
     <NotesPageHeader />
     <DatesListing
@@ -45,7 +48,12 @@ export default function Page() {
 function NotesPageHeader() {
   return <div className="w-full mb-4 flex items-center gap-4">
     <h4 className="mr-auto">Reminders</h4>
-    <AddReminderModal />
+    <ReminderModal>
+      <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold px-2 py-1 flex items-center gap-1 rounded-[8px]">
+        <Plus className="w-[16px]" />
+        Create New
+      </DialogTrigger>
+    </ReminderModal>
   </div>
 }
 
@@ -55,20 +63,16 @@ function DatesListing({
 }) {
   const datesContainer = useRef();
 
-  useEffect(function () {
-    const handleResize = () => {
-      if (datesContainer.current) {
-        const containerWidth = datesContainer.current.offsetWidth;
-        datesContainer.current.scrollLeft = (containerWidth * 0.5) - 60;
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [])
+  useEffect(() => {
+    const container = datesContainer.current;
+    if (container) {
+      const scrollAmount = (container.scrollWidth - container.clientWidth) / 2;
+      container.scrollLeft = scrollAmount;
+    }
+  }, []);
 
   return <div ref={datesContainer} className="w-[calc(100vw-344px)] text-center overflow-auto no-scrollbar">
-    <div className="w-[calc(120px*30)] flex">
+    <div className="w-[calc(120px*30)] flex overflow-clip">
       {dates.map(date => <div
         key={date.id}
         className={`w-[120px] px-1 py-1 rounded-[8px] cursor-pointer ${selectedDate === date.date && "bg-[var(--accent-1)] text-white font-semibold"} `}
@@ -99,8 +103,15 @@ function Reminder({ reminder }) {
           <p className="text-white text-[16px] font-semibold">{reminder.agenda}</p>
           <p className="text-[12px] leading-[1]">{reminder.topic}</p>
         </div>
-        <PenLine className="w-[20px] h-[20px] bg-white p-1 rounded-[4px] cursor-pointer" />
-        <Trash2 className="w-[20px] h-[20px] text-[var(--accent-2)] bg-white p-1 rounded-[4px] cursor-pointer" />
+        <ReminderModal
+          type="UPDATE"
+          payload={reminder}
+        >
+          <DialogTrigger>
+            <PenLine className="w-[20px] h-[20px] bg-white p-1 rounded-[4px] cursor-pointer" />
+          </DialogTrigger>
+        </ReminderModal>
+        {/* <Trash2 className="w-[20px] h-[20px] text-[var(--accent-2)] bg-white p-1 rounded-[4px] cursor-pointer" /> */}
       </div>
       <Avatar>
         <AvatarFallback>{nameInitials(reminder.client.name || "N A")}</AvatarFallback>

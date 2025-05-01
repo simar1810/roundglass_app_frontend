@@ -21,6 +21,13 @@ export default function Page() {
     if (next * 50 < data.data.length) setPage(next);
   }
 
+  const types = new Set();
+  let index = 0
+  for (const notification of data.data) {
+    index++;
+    types.add(notification.notificationType)
+  }
+
   return <div className="content-container">
     <h4 className="pb-4 mb-4 border-b-1">Notifications</h4>
     <div className="grid grid-cols-2 gap-x-4">

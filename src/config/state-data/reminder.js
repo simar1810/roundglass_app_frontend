@@ -1,4 +1,4 @@
-export const attendeeTypes = ["wz_client", "other_client"];
+export const attendeeTypes = ["wz_client", "other_client", "none"];
 
 export const reminderInitialState = {
   topic: "",

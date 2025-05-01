@@ -11,7 +11,11 @@ const counterSlice = createSlice({
   reducers: {
     store: function (state, action) {
       state.isLoggedIn = true;
-      state.data = { ...action.payload, clubSystem: 2 }
+      state.data = {
+        ...action.payload,
+        clubSystem: 2,
+        zoom_doc_ref: "123123123123"
+      }
     },
     destroy: function (state) {
       state.isLoggedIn = false;

@@ -1,5 +1,6 @@
+import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
+import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import {
-  CircleAlert,
   CircleDollarSign,
   ClipboardPlus,
   Clock12,
@@ -56,7 +57,8 @@ export const sidebar__coachContent = [
         id: 2,
         icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
         title: "Add Clients with Checkup",
-        url: "/coach/schedule-overview"
+        type: "modal",
+        Component: AddClientWithCheckup
       },
       {
         id: 3,
@@ -68,7 +70,8 @@ export const sidebar__coachContent = [
         id: 4,
         icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
         title: "Quick Add",
-        url: "/coach/tools/link-generator"
+        type: "modal",
+        Component: QuickAddClient
       }
     ]
   },
@@ -207,10 +210,10 @@ export const sidebar__coachFooter = [
     icon: <Headset className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/support"
   },
-  {
-    id: 3,
-    title: "About",
-    icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/about"
-  },
+  // {
+  //   id: 3,
+  //   title: "About",
+  //   icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/about"
+  // },
 ]

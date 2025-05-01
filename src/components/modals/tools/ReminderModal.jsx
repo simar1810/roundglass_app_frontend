@@ -18,12 +18,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { reminderFormInputs } from "@/config/data/other-tools";
-import { reminderInitialState } from "@/config/state-data/reminder";
 import {
   changeClientQuery,
   changeFieldValue,
   changeView,
   generateReminderPayload,
+  init,
   reminderReducer,
   setAttendeeType
 } from "@/config/state-reducers/reminder";
@@ -32,72 +32,77 @@ import { getAppClients } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { RadioGroup } from "@radix-ui/react-dropdown-menu";
-import { Plus } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
-export default function AddReminderModal() {
+export default function ReminderModal({
+  children,
+  type,
+  payload
+}) {
   return <CurrentStateProvider
-    state={reminderInitialState}
+    state={init(payload, type)}
     reducer={reminderReducer}
   >
     <Dialog>
-      <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold px-2 py-1 flex items-center gap-1 rounded-[8px]">
-        <Plus className="w-[16px]" />
-        Create New
-      </DialogTrigger>
+      {children}
       <DialogContent className="!max-w-[450px] max-h-[65vh] w-full p-0 overflow-y-auto">
         <DialogHeader className="p-4 border-b-1">
-          <DialogTitle>New Reminder</DialogTitle>
+          <DialogTitle>Appointment</DialogTitle>
         </DialogHeader>
-        <ReminderFormContainer />
+        <ReminderFormContainer
+          type={type}
+          _id={payload?._id}
+        />
       </DialogContent>
     </Dialog>
   </CurrentStateProvider>
 }
 
-async function getLink(type, data) {
-  if (type === 1) {
-    return await sendData("app/addReminder", data);
+async function getLink(type, data, _id) {
+  if (type === "UPDATE") {
+    const response = await sendData("app/update-reminder?person=coach&id=" + _id, data, "PUT");
+    return response;
   } else {
-    return await sendData("app/update-reminder", data, "PUT");
+    const response = await sendData("app/addReminder?person=coach", data);
+    return response;
   }
 }
 
-function ReminderFormContainer() {
+function ReminderFormContainer({ type, _id }) {
   const [loading, setLoading] = useState(false);
 
-  const closeBtnRef = useRef();
   const { dispatch, other, view, ...state } = useCurrentStateContext();
+  const closeBtnRef = useRef();
 
   async function addReminder() {
     try {
+      setLoading(true);
       const data = generateReminderPayload({ other, ...state });
-      const response = await getLink(1, data);
-      throw new Error("no functionality");
+      const response = await getLink(type, data, _id)
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/getAllReminder?person=coach");
+      closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   }
+
   return <div className="p-4">
     {view === 1
       ? <div>
-        {reminderFormInputs.map(field => fieldComponent(field, {}, dispatch))}
-        <FormControl
-          className="text-[14px] block mt-4"
-          placeholder="Search client..."
-          value={other}
-          onChange={e => dispatch(changeClientQuery(e.target.value))}
-          onFocus={() => dispatch(changeView())}
-        />
+        {reminderFormInputs.map(field => fieldComponent(field, state, dispatch))}
         <Button
           disabled={loading}
           className="w-full mt-4"
           variant="wz"
           onClick={addReminder}
         >
-          Add Note
+          Save Appointment
         </Button>
       </div>
       : <SelectClients />}
@@ -147,7 +152,10 @@ function ReminderAgenda({ field }) {
 }
 
 function ReminderAttendeeType({ field }) {
-  const { attendeeType, dispatch } = useCurrentStateContext();
+  const { attendeeType, other, dispatch } = useCurrentStateContext();
+
+  if (attendeeType === "none") return <></>
+
   return <div className="mt-4">
     <p className="text-[14px] mb-2">{field.label}</p>
     <RadioGroup value={attendeeType} className="flex items-center gap-4">
@@ -165,6 +173,13 @@ function ReminderAttendeeType({ field }) {
         </Label>
       </div>)}
     </RadioGroup>
+    <FormControl
+      className="text-[14px] block mt-4"
+      placeholder="Search client..."
+      value={other}
+      onChange={e => dispatch(changeClientQuery(e.target.value))}
+      onFocus={() => dispatch(changeView())}
+    />
   </div>
 }
 

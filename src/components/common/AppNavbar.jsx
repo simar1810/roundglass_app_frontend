@@ -1,17 +1,23 @@
 "use client"
 import { Input } from "../ui/input";
-import { Search } from "lucide-react";
+import { ChevronDown, LogOut, Search } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage
 } from "../ui/avatar";
 import NotificationModal from "../modals/NotificationModal";
-import { useAppSelector } from "@/providers/global/hooks";
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useRouter } from "next/navigation";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { destroy } from "@/providers/global/slices/coach";
+import { toast } from "sonner";
+import PersonalBranding from "../modals/app/PersonalBranding";
+
+const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
 export default function AppNavbar() {
   const data = useAppSelector(state => state.coach.data)
@@ -22,13 +28,10 @@ export default function AppNavbar() {
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
     <SearchBar />
     <NotificationModal />
-    <Link href="/coach/portfolio" className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
-      <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
-        <AvatarImage src={profilePhoto} />
-        <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
-      </Avatar>
-      <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
-    </Link>
+    <UserOptions
+      profilePhoto={profilePhoto}
+      name={name}
+    />
   </nav>
 }
 
@@ -129,4 +132,64 @@ function SearchItem({
     <Search className="w-[16px] h-[16px]" />
     {title}
   </div>
+}
+
+function UserOptions({ profilePhoto, name }) {
+  const [open, setOpen] = useState(false)
+  const coachId = useAppSelector(state => state.coach.data.coachId);
+  const dispatchRedux = useAppDispatch();
+
+  const router = useRouter();
+
+  async function expireUserSession() {
+    try {
+      const response = await fetch("/api/logout", { method: "DELETE" });
+      const data = await response.json();
+      if (data.status_code !== 200) throw new Error(data.message);
+      dispatchRedux(destroy());
+      router.push("/login");
+    } catch (error) {
+      toast.error(error.message || "Please try again later")
+    }
+  }
+
+  return <DropdownMenu open={open}>
+    <DropdownMenuTrigger>
+      <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
+        <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
+          <AvatarImage src={profilePhoto} />
+          <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
+        </Avatar>
+        <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+        <ChevronDown className="w-[16px] h-[16px]" />
+      </div>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent>
+      <DropdownMenuItem>
+        <DropdownMenuLabel className="text-[14px] py-0">
+          <PersonalBranding />
+        </DropdownMenuLabel>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => setOpen(false)}>
+        <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
+          <DropdownMenuLabel className="text-[14px] py-0">
+            Your Website
+          </DropdownMenuLabel>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem>
+        <Link href="/coach/portfolio" className="w-full">
+          <DropdownMenuLabel className="text-[14px] py-0">
+            Portfolio
+          </DropdownMenuLabel>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={expireUserSession}>
+        <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
+          <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />
+          Logout
+        </DropdownMenuLabel>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 }

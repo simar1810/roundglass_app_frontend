@@ -10,11 +10,12 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { notesColors } from "@/config/data/other-tools";
 import useDebounce from "@/hooks/useDebounce";
+import { sendData } from "@/lib/api";
 import { getNotes } from "@/lib/fetchers/app";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("app/getNotes", getNotes);
@@ -59,19 +60,16 @@ function NotesPageHeader({ setSearchQuery }) {
 }
 
 function Note({ index, note }) {
-  const [loading, setLoading] = useState(false);
-
   async function deleteNote(
     setLoading,
     closeBtnRef
   ) {
     try {
       setLoading(true);
-      throw new Error("cannot delete the note!")
-      const response = await sendData(`app/updateClientActiveStatus?id=${_id}&status=${status}`, {}, "PUT");
+      const response = await sendData(`app/notes?id=${note._id}`, {}, "DELETE");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate("app/getNotes");
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
