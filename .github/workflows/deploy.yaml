@@ -28,6 +28,5 @@ jobs:
         git pull origin main && \
         npm install && \
         npm run build && \
-        npm start && \
         sudo systemctl restart app-front.service && \
         echo 'Deployment successful'" || echo 'Deployment failed'
