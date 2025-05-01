@@ -156,7 +156,6 @@ function ClientSearchBar() {
         if (debouncedQuery === "") return
         setLoading(true)
         const response = await fetchData(`app/allClient?limit=5&search=${debouncedQuery}`);
-        console.log(response)
         if (response.status_code !== 200) throw new Error(response.message || "Internal Server Error!");
         setData(response.data);
       } catch (error) {

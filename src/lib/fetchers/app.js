@@ -98,3 +98,7 @@ export function getRecipesCalorieCounter(query) {
 export function getAllChatClients() {
   return fetchData("app/getAllChatClients");
 }
+
+export function getPersonalBranding() {
+  return fetchData("app/list?person=coach");
+}

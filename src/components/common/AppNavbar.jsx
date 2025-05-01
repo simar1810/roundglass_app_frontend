@@ -135,7 +135,7 @@ function SearchItem({
 }
 
 function UserOptions({ profilePhoto, name }) {
-  const [open, setOpen] = useState(false)
+  const [modal, setModal] = useState();
   const coachId = useAppSelector(state => state.coach.data.coachId);
   const dispatchRedux = useAppDispatch();
 
@@ -153,7 +153,8 @@ function UserOptions({ profilePhoto, name }) {
     }
   }
 
-  return <DropdownMenu open={open}>
+  return <DropdownMenu>
+    {modal}
     <DropdownMenuTrigger>
       <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
         <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
@@ -166,11 +167,14 @@ function UserOptions({ profilePhoto, name }) {
     </DropdownMenuTrigger>
     <DropdownMenuContent>
       <DropdownMenuItem>
-        <DropdownMenuLabel className="text-[14px] py-0">
-          <PersonalBranding />
+        <DropdownMenuLabel
+          onClick={() => setModal(<PersonalBranding setModal={setModal} />)}
+          className="text-[14px] py-0"
+        >
+          App personalisation
         </DropdownMenuLabel>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => setOpen(false)}>
+      <DropdownMenuItem>
         <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">
             Your Website

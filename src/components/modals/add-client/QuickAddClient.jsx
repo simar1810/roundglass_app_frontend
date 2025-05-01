@@ -54,7 +54,6 @@ function FormContainer() {
         coachID: coachId
       }
       const response = await sendData("app/request-client", data);
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       dispatch(quickAddClientCreated(response?.data?.clientId))
