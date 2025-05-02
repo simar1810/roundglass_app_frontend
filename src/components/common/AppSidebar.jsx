@@ -5,18 +5,17 @@ import { usePathname } from "next/navigation";
 import { Input } from "../ui/input";
 import {
   Search,
-  ChevronRight,
-  LogOut,
+  ChevronRight
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -28,79 +27,106 @@ import {
   sidebar__coachContent,
   sidebar__coachFooter
 } from "@/config/data/sidebar";
+import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
+import { fetchData } from "@/lib/api";
+import useDebounce from "@/hooks/useDebounce";
+import Loader from "./Loader";
+import useClickOutside from "@/hooks/useClickOutside";
+import ContentError from "./ContentError";
+import { permit } from "@/lib/permit";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function AppSidebar() {
+  const [Modal, setModal] = useState();
+  const roles = useAppSelector(state => state.coach.data.roles);
+
+  const clubFeaturesPermitted = permit("club", roles);
+  let sidebarItems = sidebar__coachContent;
+  if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 9);
+
   return (
-    <Sidebar className="bg-white px-2 border-r-1">
-      <Image
-        src="/wz-landscape.png"
-        height={200}
-        width={400}
-        alt="WellnessZ logo landscape"
-        className="w-[200px] h-[64px] mx-auto mt-2 object-contain"
-      />
-      <div className="relative mt-3 mb-4">
-        <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
-        <Input
-          placeholder="Search Client..."
-          className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
+    <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
+      {Modal || <></>}
+      <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive">
+        <Image
+          src="/wellnessz-white.png"
+          alt="wellnessZ logo"
+          width={659}
+          height={125}
+          className="max-w-[10ch] mx-auto mt-4"
         />
-      </div>
-      <SidebarContent>
+      </SidebarHeader>
+      <ClientSearchBar />
+      <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 custom-scrollbar">
         <SidebarGroup>
-          <SidebarMenu>
-            {sidebar__coachContent.map((item) => item.items && item.items.length > 0
-              ? <SidebarItemWithItems item={item} key={item.id} />
+          <SidebarMenu className="px-0">
+            {sidebarItems.map((item) => item.items && item.items.length > 0
+              ? <SidebarItemWithItems
+                key={item.id}
+                item={item}
+                Modal={Modal}
+                setModal={setModal}
+              />
               : <SidebarItem item={item} key={item.id} />)}
           </SidebarMenu>
         </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
         <SidebarGroup>
-          <SidebarMenu>
-            {sidebar__coachFooter.map(item => <SidebarItem
-              item={item}
-              key={item.id}
-            />)}
-            <SidebarMenuItem>
-              <SidebarMenuButton className="bg-[var(--comp-1)] font-[500] text-[16px] text-[var(--accent-2)] px-4 py-4 mt-2 border-1 border-[#EFEFEF] hover:bg-[var(--comp-1)] hover:text-[var(--accent-2)]">
-                <LogOut />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          <SidebarMenu className="px-0">
+            {sidebar__coachFooter.map((item) => <SidebarItem item={item} key={item.id} />)}
           </SidebarMenu>
         </SidebarGroup>
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   )
 }
 
-function SidebarItemWithItems({ item }) {
+function SidebarItemWithItems({ Modal, setModal, item }) {
+  const [open, setOpen] = useState(false);
   const { isMobile } = useSidebar()
   const pathname = usePathname()
-  return <DropdownMenu key={item.id} className="mb-2">
-    <SidebarMenuItem>
-      <DropdownMenuTrigger asChild className="hover:text-white">
-        <SidebarMenuButton className={`w-full !text-[var(--dark-1)]/25 text-[16px] font-[500] hover:!text-white ${pathname.includes(item.url) && "bg-[var(--accent-1)] !text-white"}`}>
+  return <DropdownMenu open={open} key={item.id}>
+    <SidebarMenuItem className="py-[8px]">
+      <DropdownMenuTrigger
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        asChild
+        className="p-0 focus:border-nonefocus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
+      >
+        <SidebarMenuButton className={`w-full !text-[var(--comp-4)] text-[14px] font-[500] px-2 py-[8px] ${pathname.includes(item.url) ? "bg-[var(--accent-1)] !text-[var(--dark-1)]" : "hover:text-white hover:!bg-[var(--dark-1)]"}`}>
           {item.icon}
           <span>{item?.title}</span>
-          <ChevronRight className="ml-auto" />
+          <ChevronRight className="absolute right-2 top-1/2 translate-y-[-50%]" />
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side={isMobile ? "bottom" : "right"}
         align={isMobile ? "end" : "start"}
-        className="min-w-56 bg-[var(--accent-1)] rounded-none px-2 py-2"
+        className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 relative rounded-r-[8px]"
+        sideOffset={0}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
       >
-        {item.items.map((item) => (<DropdownMenuItem
-          asChild key={item.title}
-          className={`text-white [&_.icon]:!text-white hover:[&_.icon]:!text-[var(--accent-1)] hover:!text-white hover:!bg-white hover:!text-[var(--accent-1)] text-[16px] mb-[2px] gap-2 ${pathname.includes(item.url) && "bg-white !text-[var(--accent-1)] [&_.icon]:!text-[var(--accent-1)]"}`}
-        >
-          <Link href={item.url}>
+        <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
+        {item.items.map(({ Component, ...item }) => (item.type === "modal"
+          ? <DropdownMenuItem
+            key={item.title}
+            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)]`}
+            onClick={() => setModal(<Component setModal={setModal} />)}
+          >
             {item.icon}
             <span>{item.title}</span>
-          </Link>
-        </DropdownMenuItem>))}
+          </DropdownMenuItem>
+          : <DropdownMenuItem
+            asChild
+            key={item.title}
+            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "bg-white !bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
+          >
+            <Link href={item.url}>
+              {item.icon}
+              <span>{item.title}</span>
+            </Link>
+          </DropdownMenuItem>))}
       </DropdownMenuContent>
     </SidebarMenuItem>
   </DropdownMenu>
@@ -108,15 +134,78 @@ function SidebarItemWithItems({ item }) {
 
 function SidebarItem({ item }) {
   const pathname = usePathname()
-  return <SidebarMenuItem key={item.id} className="mb-[2px]">
+  return <SidebarMenuItem className="py-[8px]" key={item.id}>
     <SidebarMenuButton asChild>
       <Link
         href={item.url}
-        className={`!text-[var(--dark-1)]/25 !hover:bg-[var(--accent-1)] hover:!text-white text-[16px] font-[500] ${pathname === item.url && "bg-[var(--accent-1)] !text-white"}`}
+        className={`!text-[var(--comp-4)] text-[14px] font-[500] ${pathname === item.url ? "bg-[var(--accent-1)] !text-[var(--dark-1)]" : "hover:!bg-[var(--dark-1)] hover:!text-white"}`}
       >
         {item.icon}
-        <span>{item.title} </span>
+        <span>{item.title}</span>
       </Link>
     </SidebarMenuButton>
   </SidebarMenuItem>
+}
+
+function ClientSearchBar() {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [data, setData] = useState([]);
+
+  const containerRef = useRef();
+  useClickOutside(containerRef, () => setOpen(false))
+
+  const debouncedQuery = useDebounce(searchQuery);
+
+  useEffect(function () {
+    ; (async function () {
+      try {
+        if (debouncedQuery === "") return
+        setLoading(true)
+        const response = await fetchData(`app/allClient?limit=5&search=${debouncedQuery}`);
+        if (response.status_code !== 200) throw new Error(response.message || "Internal Server Error!");
+        setData(response.data);
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [debouncedQuery]);
+
+  return <div ref={containerRef} className="bg-[var(--dark-4)] relative pt-3 pb-4 pr-4 relative">
+    <Search className="w-[18px] h-[18px] bg-[var(--dark-1)] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
+    <Input
+      placeholder="Search Client..."
+      onFocus={() => setOpen(true)}
+      value={searchQuery}
+      onChange={e => setSearchQuery(e.target.value)}
+      className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 border-0 text-white !focus:outline-none"
+    />
+    {open && <div className="w-[calc(100%-16px)] bg-[var(--dark-1)] absolute top-16 left-0 px-2 py-2 rounded-[8px] z-[100] border-1 border-[var(--primary-1)]/40">
+      <SearchedResults loading={loading} data={data} />
+    </div>}
+  </div>
+}
+
+function SearchedResults({ loading, data }) {
+  if (loading) return <div className="h-[150px] flex items-center justify-center">
+    <Loader />
+  </div>
+
+  if (data.length === 0) return <ContentError
+    className="!bg-[var(--dark-1)] !min-h-[150px] text-white text-center mt-0 border-0"
+    title="No clients Founds!" />
+
+  return <div className="divide-y-1 divide-y-white">
+    {data.map(client => <Link
+      key={client._id}
+      href={`/coach/clients/${client._id}`}
+      className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
+    >
+      {client.name}
+      <ChevronRight className="w-[16px] h-[16px] ml-auto" />
+    </Link>)}
+  </div>
 }

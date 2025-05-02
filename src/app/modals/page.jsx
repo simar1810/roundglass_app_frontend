@@ -2,7 +2,6 @@ import AddClientDetailsModal from "@/components/modals/AddClientDetailsModal";
 import AddClientModal from "@/components/modals/AddClientModal";
 import AddPlanModal from "@/components/modals/AddPlanModal";
 import AddRecipeModal from "@/components/modals/AddRecipeModal";
-import AssignMealModal from "@/components/modals/Assignmealmodal";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import AssignWorkoutAddModal from "@/components/modals/AssignModeladd";
 import AssignNewAppointmentModal from "@/components/modals/AssignNewAppointmentModal";

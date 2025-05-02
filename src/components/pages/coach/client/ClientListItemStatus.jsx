@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export default function ClientListItemStatus({
   src,
@@ -36,6 +37,9 @@ export default function ClientListItemStatus({
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
+        <DropdownMenuLabel>
+          <Link href={`/coach/clients/${id}`}>Portfolio</Link>
+        </DropdownMenuLabel>
         <DropdownMenuLabel>Action 1</DropdownMenuLabel>
         <DropdownMenuLabel>Action 2</DropdownMenuLabel>
         <DropdownMenuSeparator />

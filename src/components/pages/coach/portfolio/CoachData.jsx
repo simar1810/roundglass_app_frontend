@@ -1,10 +1,15 @@
-import { Button } from "@/components/ui/button";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
+import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
+import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy } from "lucide-react";
+import { coachPortfolioSocialLinks } from "@/config/data/ui";
+import { getCoachSocialLinks } from "@/lib/fetchers/app";
 import Image from "next/image";
 import Link from "next/link";
+import useSWR from "swr";
 
-export default function CoachData() {
+export default function CoachData({ awards }) {
   return <div className="bg-white p-4 rounded-[18px] border-1">
     <Tabs defaultValue="links">
       <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-2 border-b-2 rounded-none">
@@ -22,51 +27,57 @@ export default function CoachData() {
         </TabsTrigger>
       </TabsList>
       <CoachSMLinks />
-      <CoachAwards />
+      <CoachAwards awards={awards} />
     </Tabs>
   </div>
 }
 
 function CoachSMLinks() {
+  const { isLoading, error, data } = useSWR("getCoachSocialLinks", () => getCoachSocialLinks());
+
+  if (isLoading) return <TabsContent value="links">
+    <ContentLoader />
+  </TabsContent>
+
+  if (error || data.status_code !== 200) return <TabsContent value="links">
+    <p className="text-center mt-4">{error || data.message} </p>
+    <UpdateCoachSocialsModal socialLinks={{}} />
+  </TabsContent>
+
+  const socialLinks = data.data;
+
   return <TabsContent value="links">
     <div>
-      {Array.from({ length: 5 }, (_, i) => i).map(item => <div
-        key={item}
-        className="px-4 mb-2 flex items-center gap-4"
-      >
-        <Image
-          src="/svgs/fb-icon.svg"
-          alt=""
-          height={32}
-          width={32}
-          className="object-contain"
-        />
-        <Link target="_blank" href="/">https://www.facebook.com/account</Link>
-      </div>)}
+      {coachPortfolioSocialLinks.map(social =>
+        socialLinks[social.name]
+        && <div
+          key={social.id}
+          className="px-4 mb-2 flex items-center gap-4"
+        >
+          {social.icon}
+          <Link target="_blank" href={socialLinks[social.name]}>{socialLinks[social.name]}</Link>
+        </div>)}
     </div>
-    <Button className="block mx-auto mt-10" variant="wz">Edit</Button>
+    <UpdateCoachSocialsModal socialLinks={socialLinks} />
   </TabsContent>
 }
 
-function CoachAwards() {
+function CoachAwards({ awards }) {
   return <TabsContent value="awards">
     <div className="flex items-center gap-2 justify-between">
       <h4>4 Awards Available</h4>
-      <Button variant="wz">
-        <Trophy />
-        Add Award
-      </Button>
+      <UpdateCoachAwardModal />
     </div>
     <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4">
-      {Array.from({ length: 4 }, (_, i) => i).map(item => <div key={item} className="flex items-center gap-4">
+      {awards.map(award => <div key={award._id} className="flex items-center gap-4">
         <Image
-          src="/illustrations/award.png"
+          src={award.image || "/illustrations/award.png"}
           alt=""
           height={64}
           width={64}
-          className="object-contain"
+          className="w-[64px] h-[64px] object-contain rounded-full border-2 border-[var(--accent-1)]"
         />
-        <p>Lorem ipsum dolor sit.</p>
+        <p>{award.title}</p>
       </div>)}
     </div>
   </TabsContent>

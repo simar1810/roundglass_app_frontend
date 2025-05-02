@@ -1,9 +1,13 @@
+import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
+import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import {
-  CircleAlert,
   CircleDollarSign,
   ClipboardPlus,
+  Clock12,
   ContactRound,
+  FileCheck,
   FileText,
+  Flame,
   Headset,
   Home,
   LayoutDashboard,
@@ -16,11 +20,13 @@ import {
   Projector,
   Settings,
   Soup,
+  Store,
   User,
   UserPlus,
   Users,
   Video
 } from "lucide-react";
+import { FaWeightScale } from "react-icons/fa6";
 
 export const sidebar__coachContent = [
   {
@@ -51,19 +57,21 @@ export const sidebar__coachContent = [
         id: 2,
         icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
         title: "Add Clients with Checkup",
-        url: "/coach/schedule-overview"
+        type: "modal",
+        Component: AddClientWithCheckup
       },
-      {
-        id: 3,
-        icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Clients & Followup",
-        url: "/coach/tools/clients"
-      },
+      // {
+      //   id: 3,
+      //   icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "View Clients & Followup",
+      //   url: "/coach/tools/clients"
+      // },
       {
         id: 4,
         icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
         title: "Quick Add",
-        url: "/coach/tools/link-generator"
+        type: "modal",
+        Component: QuickAddClient
       }
     ]
   },
@@ -101,18 +109,24 @@ export const sidebar__coachContent = [
   },
   {
     id: 6,
+    title: "Retail",
+    icon: <Store className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/retail"
+  },
+  {
+    id: 7,
     title: "Chats",
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats"
   },
   {
-    id: 7,
+    id: 8,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/workouts"
   },
   {
-    id: 8,
+    id: 9,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/club",
@@ -150,10 +164,36 @@ export const sidebar__coachContent = [
     ]
   },
   {
-    id: 9,
+    id: 10,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/tools"
+    url: "/coach/tools",
+    items: [
+      {
+        id: 1,
+        icon: <FileCheck className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Notes",
+        url: "/coach/tools/notes"
+      },
+      {
+        id: 2,
+        icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Reminders",
+        url: "/coach/tools/reminders"
+      },
+      {
+        id: 3,
+        icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Calorie Counter",
+        url: "/coach/tools/calorie-counter"
+      },
+      {
+        id: 4,
+        icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Ideal Weight",
+        url: "/coach/tools/ideal-weight"
+      }
+    ]
   },
 ]
 
@@ -170,10 +210,10 @@ export const sidebar__coachFooter = [
     icon: <Headset className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/support"
   },
-  {
-    id: 3,
-    title: "About",
-    icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/about"
-  },
+  // {
+  //   id: 3,
+  //   title: "About",
+  //   icon: <CircleAlert className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/about"
+  // },
 ]
