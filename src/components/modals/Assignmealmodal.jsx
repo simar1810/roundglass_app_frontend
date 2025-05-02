@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -7,155 +6,130 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import FormControl from "@/components/FormControl";
+import { Badge } from "../ui/badge";
+import useSWR, { mutate } from "swr";
+import { getClientForMeals } from "@/lib/fetchers/app";
+import ContentLoader from "../common/ContentLoader";
+import ContentError from "../common/ContentError";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { nameInitials } from "@/lib/formatter";
+import { useState } from "react";
+import { toast } from "sonner";
+import { sendData } from "@/lib/api";
+import { Button } from "../ui/button";
 
-export default function AssignMealModal() {
+export default function AssignMealModal({ planId }) {
   return (
     <Dialog>
-      <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
-        Assign Meal
+      <DialogTrigger className="p-0">
+        <Badge variant="wz_fill">Assign</Badge>
       </DialogTrigger>
-      <DialogContent className="!max-w-[500px] min-h-[500px] border-0 p-0 overflow-auto">
-        <DialogHeader className="py-4 px-6 border-b">
-          <DialogTitle className="text-lg font-semibold pb-1 w-fit h-[2px]">
+      <DialogContent className="!max-w-[650px] max-h-[70vh] border-0 p-0 overflow-auto gap-0">
+        <DialogHeader className="p-4 border-b-1">
+          <DialogTitle className="text-lg font-semibold">
             Assign Meal
           </DialogTitle>
         </DialogHeader>
-
-        <div className="px-6 pt-4 pb-6 text-sm space-y-6">
-          {/* Search */}
-          <div>
-            <FormControl
-              placeholder="Search Client here"
-              className="w-full bg-gray-50 rounded-lg"
-            />
-            <p className="mt-4 font-medium">23 Clients Available</p>
-          </div>
-
-          {/* Client Lists */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Plan Already Assigned */}
-            <div>
-              <h3 className="font-medium mb-4">Plan Already Assigned</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Symond Write"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Symond Write</span>
-                  <FormControl
-                    type="checkbox"
-                    checked
-                    disabled
-                    className="w-5 h-5"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Gavin Peterson"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Gavin Peterson</span>
-                  <FormControl
-                    type="checkbox"
-                    checked
-                    disabled
-                    className="w-5 h-5"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Denial Braine"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Denial Braine</span>
-                  <FormControl
-                    type="checkbox"
-                    checked
-                    disabled
-                    className="w-5 h-5"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Not Assigned */}
-            <div>
-              <h3 className="font-medium mb-4">Not Assigned</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Symond Write"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Symond Write</span>
-                  <FormControl
-                    type="checkbox"
-                    name="assign"
-                    value="symond"
-                    className="w-5 h-5"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Gavin Peterson"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Gavin Peterson</span>
-                  <FormControl
-                    type="checkbox"
-                    name="assign"
-                    value="gavin"
-                    className="w-5 h-5"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/illustrations/image.png"
-                    alt="Denial Braine"
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1">Denial Braine</span>
-                  <FormControl
-                    type="checkbox"
-                    name="assign"
-                    value="denial"
-                    className="w-5 h-5"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="text-center pt-4">
-            <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-full px-10 py-3 rounded-md">
-              Assign Meal
-            </button>
-          </div>
-        </div>
+        <AssignMealPlanContainer planId={planId} />
       </DialogContent>
     </Dialog>
   );
+}
+
+function AssignMealPlanContainer({ planId }) {
+  const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientForMeals(planId));
+  const [selectedClient, setSelectedClient] = useState();
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  async function assignMealPlan() {
+    try {
+      const response = await sendData("app/assign-plan", { planId, clientId: selectedClient })
+      if (response.status_code !== 200) throw new Error(response.error || response.message);
+      toast.success(response.message);
+      mutate(`getClientForMeals/${planId}`)
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
+  const assignedClients = data.data.assignedClients;
+  const unassignedClients = data.data.unassignedClients;
+
+  return <div className="p-4 text-sm space-y-6">
+    <div>
+      <FormControl
+        placeholder="Search Client here"
+        className="w-full bg-gray-50 rounded-lg"
+      />
+      <p className="mt-4 font-medium">23 Clients Available</p>
+    </div>
+    <div className="grid grid-cols-2 gap-6">
+      <div>
+        <h3 className="font-medium mb-4">Plan Already Assigned</h3>
+        <div className="space-y-4">
+          {assignedClients.map((client, index) => <SelectedClient
+            key={index}
+            client={client}
+          />)}
+        </div>
+      </div>
+      <div>
+        <h3 className="font-medium mb-4">Not Assigned</h3>
+        <div className="space-y-4">
+          {unassignedClients.map((client, index) => <SelectClient
+            key={index}
+            client={client}
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+          />)}
+        </div>
+      </div>
+    </div>
+    {selectedClient && <div className="bg-white sticky bottom-0 text-center py-2">
+      <Button onClick={assignMealPlan} variant="wz">
+        Assign Meal
+      </Button>
+    </div>}
+  </div>
+}
+
+function SelectedClient({ client }) {
+  return <div className="flex items-center gap-3">
+    <Avatar>
+      <AvatarImage src={client.profilePhoto || "/"} />
+      <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
+    </Avatar>
+    <span className="flex-1">{client.name}</span>
+    <FormControl
+      type="checkbox"
+      checked
+      disabled
+      className="w-5 h-5"
+    />
+  </div>
+}
+
+function SelectClient({
+  client,
+  selectedClient,
+  setSelectedClient
+}) {
+  return <div className="flex items-center gap-3">
+    <Avatar>
+      <AvatarImage src={client.profilePhoto || "/"} />
+      <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
+    </Avatar>
+    <span className="flex-1">{client.name}</span>
+    <FormControl
+      type="checkbox"
+      name="assign"
+      value="symond"
+      checked={selectedClient === client._id}
+      onChange={() => setSelectedClient(prev => prev === client._id ? undefined : client._id)}
+      className="w-5 h-5"
+    />
+  </div>
 }

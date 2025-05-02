@@ -102,3 +102,7 @@ export function getAllChatClients() {
 export function getPersonalBranding() {
   return fetchData("app/list?person=coach");
 }
+
+export function getClientForMeals(planId) {
+  return fetchData(`app/getClientForMeals?planId=${planId}`);
+}

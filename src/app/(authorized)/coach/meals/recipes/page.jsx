@@ -2,6 +2,7 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
+import NewRecipeModal from "@/components/modals/NewRecipeModal";
 import RecipeDisplayCard from "@/components/pages/coach/meals/RecipeDisplayCard";
 import { Button } from "@/components/ui/button";
 import { getRecipes } from "@/lib/fetchers/app";
@@ -33,8 +34,6 @@ function Header() {
       className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
       placeholder="Search Recipe.."
     />
-    <Button size="sm" variant="wz">
-      Add New Recipe
-    </Button>
+    <NewRecipeModal />
   </div>
 }

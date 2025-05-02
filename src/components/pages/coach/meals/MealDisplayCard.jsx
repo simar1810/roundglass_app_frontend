@@ -1,3 +1,4 @@
+import AssignMealModal from "@/components/modals/Assignmealmodal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +46,7 @@ export default function MealDisplayCard({ plan }) {
     <CardContent className="p-2">
       <div className="flex items-start justify-between gap-1">
         <h5 className="text-[12px]">{plan.name}</h5>
-        <Button variant="wz" size="sm" className="h-auto p-1">Assign</Button>
+        <AssignMealModal planId={plan._id} />
       </div>
       <p className="text-[14px] text-[var(--dark-1)]/25 leading-tight mt-2">
         {plan.description}

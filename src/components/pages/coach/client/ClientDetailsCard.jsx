@@ -15,7 +15,6 @@ import {
   MenubarTrigger
 } from "@/components/ui/menubar";
 import {
-  CalendarRange,
   ChevronDown,
   EllipsisVertical,
   Target,
@@ -37,6 +36,7 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { sendData } from "@/lib/api";
+import FollowUpModal from "@/components/modals/client/FollowUpModal";
 
 export default function ClientDetailsCard({ clientData }) {
   return <Card className="bg-white rounded-[18px] shadow-none">
@@ -47,15 +47,12 @@ export default function ClientDetailsCard({ clientData }) {
         <UpdateClientGoalModal defaultValue={clientData.goal} />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.goal}</p>
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-4">
         <Button className="grow" variant="wz">
           <Target />
           Edit Goal
         </Button>
-        <Button className="grow" variant="wz">
-          <CalendarRange />
-          Follow-up
-        </Button>
+        <FollowUpModal clientData={clientData} />
       </div>
       <div className="mt-4 p-4 rounded-[10px] border-1">
         <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">

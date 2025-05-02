@@ -60,12 +60,12 @@ export const sidebar__coachContent = [
         type: "modal",
         Component: AddClientWithCheckup
       },
-      {
-        id: 3,
-        icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Clients & Followup",
-        url: "/coach/tools/clients"
-      },
+      // {
+      //   id: 3,
+      //   icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "View Clients & Followup",
+      //   url: "/coach/tools/clients"
+      // },
       {
         id: 4,
         icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
