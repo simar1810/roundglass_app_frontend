@@ -24,7 +24,6 @@ export default function SelectClientModal() {
         </DialogHeader>
 
         <div className="px-6 pt-2 pb-4">
-          {/* Search Bar (static) */}
           <div className="flex items-center gap-2 mb-6  border-gray-200 rounded-md px-3 py-2 bg-white">
             <Search className="w-3 h-3 text-gray-400" />
             <FormControl
@@ -35,9 +34,7 @@ export default function SelectClientModal() {
             />
           </div>
 
-          {/* Two-column grid */}
           <div className="grid grid-cols-2 gap-6">
-            {/* LEFT COLUMN */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between border-b pb-2">
                 <div className="flex items-center gap-3">

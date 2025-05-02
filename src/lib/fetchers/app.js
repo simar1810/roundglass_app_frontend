@@ -41,7 +41,11 @@ export function getOrganisation() {
 }
 
 export function getAppClients(query) {
-  return fetchData(`app/allClient?page=${query.page}&limit=${query.limit}`);
+  let queries = ""
+  if (query?.page) queries += "page=" + query.page + "&";
+  if (query?.limit) queries += "limit=" + query.limit + "&";
+  if (query?.isActive) queries += "isActive=" + query.isActive + "&";
+  return fetchData(`app/allClient?${queries}`);
 
 }
 
@@ -105,4 +109,8 @@ export function getPersonalBranding() {
 
 export function getClientForMeals(planId) {
   return fetchData(`app/getClientForMeals?planId=${planId}`);
+}
+
+export function getProductByBrand(brandId) {
+  return fetchData(`app/getProductByBrand/${brandId}`);
 }

@@ -16,7 +16,7 @@ const counterSlice = createSlice({
         ...action.payload,
         clubSystem: 2,
         zoom_doc_ref: "123123123123",
-        roles: permissions["basic"]
+        roles: permissions["pro"]
       }
     },
     destroy: function (state) {
