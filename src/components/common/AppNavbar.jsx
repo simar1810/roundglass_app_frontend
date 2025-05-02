@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
+import { permit } from "@/lib/permit";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -135,9 +136,11 @@ function SearchItem({
 }
 
 function UserOptions({ profilePhoto, name }) {
-  const [open, setOpen] = useState(false)
-  const coachId = useAppSelector(state => state.coach.data.coachId);
+  const [modal, setModal] = useState();
+  const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
+
+  const personalizationpermitted = permit("app-personalization", roles);
 
   const router = useRouter();
 
@@ -153,7 +156,8 @@ function UserOptions({ profilePhoto, name }) {
     }
   }
 
-  return <DropdownMenu open={open}>
+  return <DropdownMenu>
+    {modal}
     <DropdownMenuTrigger>
       <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
         <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
@@ -165,12 +169,15 @@ function UserOptions({ profilePhoto, name }) {
       </div>
     </DropdownMenuTrigger>
     <DropdownMenuContent>
-      <DropdownMenuItem>
-        <DropdownMenuLabel className="text-[14px] py-0">
-          <PersonalBranding />
+      {personalizationpermitted && <DropdownMenuItem>
+        <DropdownMenuLabel
+          onClick={() => setModal(<PersonalBranding setModal={setModal} />)}
+          className="text-[14px] py-0"
+        >
+          App personalisation
         </DropdownMenuLabel>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => setOpen(false)}>
+      </DropdownMenuItem>}
+      <DropdownMenuItem>
         <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">
             Your Website

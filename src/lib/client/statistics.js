@@ -62,8 +62,7 @@ export function calculateBMI2({ height, heightUnit, feet, inches, weight, weight
     if (height == null) throw new Error("Height in cm is required.");
     heightInMeters = height / 100.0;
   } else if (heightUnit.toLowerCase() === 'inches') {
-    if (feet == null) throw new Error("Feet value is required.");
-    heightInMeters = (feet * 12 + (inches || 0)) * 0.0254;
+    heightInMeters = height / 3.28084;
   } else {
     throw new Error('Invalid height unit. Use "cms" or "inches".');
   }

@@ -49,3 +49,9 @@ export function zoomConnectionLink(coachId) {
 export function generateMeetingBaseLink(id) {
   return `${process.env.NEXT_PUBLIC_CLIENT_ENDPOINT}/meet/${id}`;
 }
+
+export function normalizeHexColor(hex) {
+  hex = hex.replace(/^#/, '');
+  if (hex.length === 6) return `#${hex}`;
+  if (hex.length === 8) return `#${hex.slice(2)}`;
+}

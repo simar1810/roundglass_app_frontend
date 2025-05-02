@@ -1,3 +1,8 @@
+import ContentError from "@/components/common/ContentError";
+import Loader from "@/components/common/Loader";
+import FormControl from "@/components/FormControl";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -5,20 +10,180 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { personalBrandingInitialState } from "@/config/state-data/personal-branding";
+import { changeFieldvalue, generateRequestPayload, personalBrandingReducer, personalBrandUpdated, selectPersonalBrandToEdit } from "@/config/state-reducers/personal-branding";
+import { sendDataWithFormData } from "@/lib/api";
+import { getPersonalBranding } from "@/lib/fetchers/app";
+import { getObjectUrl, normalizeHexColor } from "@/lib/utils";
+import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
+import { Pen, X } from "lucide-react";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
 
-
-export default function PersonalBranding() {
-  return <Dialog>
-    <DialogTrigger>
-      App personalisation
-    </DialogTrigger>
-    <DialogContent className="!max-w-[400px] w-full max-h-[70vh] border-0 p-0 overflow-auto">
+export default function PersonalBranding({ setModal }) {
+  return <Dialog open={true} onOpenChange={() => setModal(false)}>
+    <DialogTrigger />
+    <DialogContent className="!max-w-[400px] w-full max-h-[70vh] border-0 p-0 overflow-y-auto">
       <DialogHeader className="bg-[var(--comp-1)] p-4 border-b-1">
         <DialogTitle className="">
           App Personalization
         </DialogTitle>
       </DialogHeader>
-      <div className="p-4"></div>
+      <CurrentStateProvider
+        state={personalBrandingInitialState}
+        reducer={personalBrandingReducer}
+      >
+        <div className="pt-0 p-4">
+          <PersonalBrandingContainer />
+        </div>
+      </CurrentStateProvider>
     </DialogContent>
   </Dialog>
+}
+
+function PersonalBrandingContainer() {
+  const { stage } = useCurrentStateContext();
+  if (stage === 1) return <Stage1 />
+  return <Stage2 />
+}
+
+function Stage1() {
+  const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
+  const { dispatch } = useCurrentStateContext();
+
+  if (isLoading) return <div className="h-[200px] flex items-center justify-center">
+    <Loader />
+  </div>
+
+  if (error || data.status_code !== 200) return <ContentError className="border-0 min-h-auto h-[200px] mt-0" title={error || data.message} />
+  const brands = data.data;
+
+  return <>
+    {brands.map(brand => <div
+      key={brand._id}
+      className="mb-4 px-4 py-2 flex items-center gap-2 border-2 border-[var(--accent-1)] rounded-[8px]"
+    >
+      <Avatar>
+        <AvatarImage src={brand.brandLogo || "/not-found.png"} />
+      </Avatar>
+      <h3>{brand.brandName}</h3>
+      <Pen
+        onClick={() => dispatch(selectPersonalBrandToEdit(brand))}
+        className="w-[16px] h-[16px] text-[var(--dark-1)]/25 hover:text-[var(--dark-1)] ml-auto cursor-pointer"
+      />
+    </div>)}
+  </>
+}
+
+async function getRequestLink(data, type) {
+  if (Boolean(type)) {
+    const response = await sendDataWithFormData("app/update", data, "PUT");
+    return response;
+  } else {
+    const response = await sendDataWithFormData("app/addBranding", data);
+    return response
+  }
+}
+
+function Stage2() {
+  const { selectedBrand, formData, dispatch } = useCurrentStateContext();
+  const [loading, setLoading] = useState(false);
+  const brandLogoRef = useRef();
+
+  async function savePersonalBrandDetails() {
+    try {
+      setLoading(true);
+      const data = generateRequestPayload(formData, selectedBrand._id);
+      const response = await getRequestLink(data, selectedBrand._id);
+      if (response.status_code !== 200) throw new Error(response.message);
+      dispatch(personalBrandUpdated());
+      mutate("app/personalBranding");
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <div>
+    <FormControl
+      label="Brand Name"
+      placeholder="Company Name"
+      value={formData.brandName}
+      onChange={e => dispatch(changeFieldvalue("brandName", e.target.value))}
+      className="block mb-4"
+    />
+    <div>
+      <h3 className="mb-2">Brand Logo</h3>
+      <SelectBrandLogo brandLogoRef={brandLogoRef} />
+      <input
+        type="file"
+        ref={brandLogoRef}
+        onChange={e => dispatch(changeFieldvalue("file", e.target.files[0]))}
+        hidden
+      />
+    </div>
+
+    <h3 className="mt-4">Brand Colors</h3>
+    <div className="p-2 mt-4 grid grid-cols-2 gap-2 border-1 rounded-[8px]">
+      <div className="px-2 py-[2px] flex items-center justify-between border-2 rounded-[6px]">
+        Color 1
+        <input
+          type="color"
+          className="w-[32px] h-[32px] rounded-[4px]"
+          value={normalizeHexColor(formData.primaryColor)}
+          onChange={e => dispatch(changeFieldvalue("primaryColor", e.target.value.slice(1)))}
+        />
+      </div>
+      <div className="px-2 py-[2px] flex items-center justify-between border-2 rounded-[6px]">
+        Color 2
+        <input
+          type="color"
+          className="w-[32px] h-[32px] rounded-[4px]"
+          value={normalizeHexColor(formData.textColor)}
+          onChange={e => dispatch(changeFieldvalue("textColor", e.target.value.slice(1)))}
+        />
+      </div>
+    </div>
+
+    <Button
+      onClick={savePersonalBrandDetails}
+      variant="wz"
+      className="block mx-auto mt-8"
+      disabled={loading}
+    >
+      Share Details
+    </Button>
+  </div>
+}
+
+function SelectBrandLogo({ brandLogoRef }) {
+  const { formData, selectedBrand, dispatch } = useCurrentStateContext();
+
+  if (formData.file) return <div className="relative">
+    <Image
+      src={getObjectUrl(formData.file)}
+      alt=""
+      height={200}
+      width={200}
+      className="w-full max-h-[250px] object-contain"
+      onClick={() => brandLogoRef.current.click()}
+    />
+    <X
+      className="absolute top-2 right-2 cursor-pointer"
+      onClick={e => dispatch(changeFieldvalue("file", undefined))}
+    />
+  </div>
+
+  return <Image
+    src={selectedBrand?.brandLogo || "/not-found.png"}
+    alt=""
+    height={200}
+    width={200}
+    className="w-full max-h-[250px] object-contain"
+    onClick={() => brandLogoRef.current.click()}
+  />
 }
