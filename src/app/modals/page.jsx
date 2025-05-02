@@ -1,6 +1,5 @@
 import AddClientDetailsModal from "@/components/modals/AddClientDetailsModal";
 import AddClientModal from "@/components/modals/AddClientModal";
-import AddPlanModal from "@/components/modals/AddPlanModal";
 import AddRecipeModal from "@/components/modals/AddRecipeModal";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import AssignWorkoutAddModal from "@/components/modals/AssignModeladd";
@@ -18,22 +17,14 @@ import SelectClientModal from "@/components/modals/SelectClientModal";
 import ShoppingCartModal from "@/components/modals/shoppingcartmodel";
 
 export default function Page() {
-  return <div className="p-20 flex items-center gap-2">
-    <AddClientModal />
-    <ClientCreatedNotiModal />
-    <ProfileModal />
-    <AddClientDetailsModal />
-    {/* <AddPostModal /> */}
-    <AddPostModalVideo />
-    <SelectClientModal />
+  return <div className="p-20 grid grid-cols-8 items-center gap-2">
     <ShoppingCartModal />
     <OrderSuccessModal />
     <AddSelectClientModal />
     <AssignWorkoutModal />
     <AssignWorkoutAddModal />
-    =    <RecipieSuccessModal />
+    <RecipieSuccessModal />
     <NewRecipeModal />
-    <AddPlanModal />
     <CreateMealModal />
     <AddRecipeModal />
   </div>
