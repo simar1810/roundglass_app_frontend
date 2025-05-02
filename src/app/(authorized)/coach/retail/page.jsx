@@ -1,12 +1,15 @@
 "use client";
-
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
+import AddRetailModal from "@/components/modals/tools/AddRetailModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
-import { Pencil, PenLine, Plus, SquarePen } from "lucide-react";
+import { useAppSelector } from "@/providers/global/hooks";
+import { PenLine, Plus } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import useSWR from "swr";
 
 export default function Page() {
@@ -66,10 +69,10 @@ function Brands({ brands }) {
   return <div>
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
-      <Button variant="wz" size="sm">
+      {/* <Button variant="wz" size="sm">
         <Plus />
         Add New Kit
-      </Button>
+      </Button> */}
     </div>
     <div className="mt-4 grid grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
@@ -78,6 +81,8 @@ function Brands({ brands }) {
 }
 
 function Brand({ brand }) {
+  const [margin, setMargin] = useState();
+  const coachId = useAppSelector(state => state.coach.data._id);
   return <Card className="p-0 shadow-none border-0 gap-2 relative">
     <Image
       src={brand.image || "/not-found.png"}
@@ -87,6 +92,15 @@ function Brand({ brand }) {
       className="object-cover shadow-md shadow-[#808080]/80"
     />
     <p className="px-1">{brand.name}</p>
-    <PenLine className="w-[20px] h-[20px] bg-[var(--accent-1)] text-white p-[3px] rounded-[4px] absolute top-4 right-4 cursor-pointer" />
+    <RetailMarginDropDown margins={brand.margins} setMargin={setMargin} />
+    {(margin || margin === 0) && <AddRetailModal
+      payload={{
+        coachId,
+        margin,
+        selectedBrandId: brand._id,
+        margins: brand.margins
+      }}
+      setMargin={setMargin}
+    />}
   </Card>
 }
