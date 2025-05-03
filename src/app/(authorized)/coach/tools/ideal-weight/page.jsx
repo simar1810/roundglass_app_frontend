@@ -159,7 +159,7 @@ function AnatomyImage() {
     height={372}
     width={176}
     draggable={false}
-    className="w-[176px]"
+    className="w-[176px] h-[400px] object-contain"
   />
   return <Image
     src="/woman-anatomy.png"

@@ -23,7 +23,7 @@ export default function Page() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const clients = data.data;
+  const clients = data.data
 
   return <div className="mt-8">
     <div className="grid grid-cols-2 gap-4 divide-y-1">
@@ -31,8 +31,9 @@ export default function Page() {
         key={index}
         src={client.profilePhoto}
         name={client.name}
-        status={client.isActive}
+        status={client.isVerified}
         id={client._id}
+        client={client}
       />)}
     </div>
   </div>

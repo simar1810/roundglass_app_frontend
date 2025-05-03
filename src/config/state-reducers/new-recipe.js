@@ -1,3 +1,5 @@
+import { newRecipeInitialState } from "../state-data/new-recipe";
+
 export function newRecipeeReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FIELD_VALUE":
@@ -27,4 +29,18 @@ export function generateRequestPayload(state) {
     payload.append(field, state[field]);
   }
   return payload;
+}
+
+export function init(type, recipe) {
+  if (type === "new") return newRecipeInitialState;
+  const payload = {}
+  for (const field of ["title", "ingredients", "method"]) {
+    payload[field] = recipe[field]
+  }
+  for (const field of ["proteins", "carbs", "fats", "fibers", "total"]) {
+    payload[field] = recipe.calories[field];
+  }
+  payload.image = recipe.image;
+  payload._id = recipe._id;
+  return payload
 }

@@ -1,3 +1,5 @@
+import RecipeModal from "@/components/modals/RecipeModal";
+import DeleteRecipeModal from "@/components/modals/tools/DeleteRecipeModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,12 +34,10 @@ export default function RecipeDisplayCard({ plan }) {
           {!plan.admin && <EllipsisVertical className="cursor-pointer" />}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="font-semibold">
-          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
-            Edit
-          </DropdownMenuLabel>
+          <RecipeModal type="edit" recipe={plan} />
           <DropdownMenuSeparator className="mx-1" />
-          <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
-            Delete
+          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
+            <DeleteRecipeModal _id={plan._id} />
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>

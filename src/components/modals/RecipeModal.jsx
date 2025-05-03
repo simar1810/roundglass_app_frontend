@@ -11,8 +11,7 @@ import {
 import FormControl from "@/components/FormControl";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Textarea } from "../ui/textarea";
-import { newRecipeInitialState } from "@/config/state-data/new-recipe";
-import { changeFieldvalue, generateRequestPayload, newRecipeeReducer } from "@/config/state-reducers/new-recipe";
+import { changeFieldvalue, generateRequestPayload, init, newRecipeeReducer } from "@/config/state-reducers/new-recipe";
 import { Button } from "../ui/button";
 import { sendDataWithFormData } from "@/lib/api";
 import Image from "next/image";
@@ -29,28 +28,42 @@ const calorieFields = [
   { id: 5, label: "Fibres", name: "fibers", unit: "gm" },
 ]
 
-export default function NewRecipeModal() {
+export default function RecipeModal({ type, recipe }) {
   return (
     <Dialog>
-      <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-[600] px-4 py-2 rounded-[8px]">
-        Add New Recipe
-      </DialogTrigger>
+      {type === "new"
+        ? <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-[600] px-4 py-2 rounded-[8px]">
+          Add New Recipe
+        </DialogTrigger>
+        : <DialogTrigger className="text-[12px] font-[ 400] px-2">
+          Edit
+        </DialogTrigger>}
       <DialogContent className="!max-w-[500px] max-h-[70vh] border-0 p-0 overflow-y-auto">
         <DialogHeader className="py-4 px-6 border-b">
           <DialogTitle className="text-lg font-semibold">New Recipe</DialogTitle>
         </DialogHeader>
         <CurrentStateProvider
-          state={newRecipeInitialState}
+          state={init(type, recipe)}
           reducer={newRecipeeReducer}
         >
-          <NewRecipeContainer />
+          <NewRecipeContainer type={type} />
         </CurrentStateProvider>
       </DialogContent>
     </Dialog>
   );
 }
 
-function NewRecipeContainer() {
+async function getLink(type, payload, _id) {
+  if (type === "new") {
+    const response = await sendDataWithFormData("app/addRecipes", payload)
+    return response;
+  } else {
+    const response = await sendDataWithFormData(`app/editRecipes?id=${_id}`, payload, "PUT")
+    return response;
+  }
+}
+
+function NewRecipeContainer({ type }) {
   const { dispatch, ...state } = useCurrentStateContext();
   const [loading, setLoading] = useState(false);
 
@@ -61,9 +74,8 @@ function NewRecipeContainer() {
     try {
       setLoading(true);
       const payload = generateRequestPayload(state);
-      const response = await sendDataWithFormData("app/addRecipes", payload)
+      const response = await getLink(type, payload, state._id)
       if (response.status_code !== 200) throw new Error(response.error || response.message);
-      console.log(response)
       toast.success(response.message);
       mutate("getRecipes");
       closeBtnRef.current.click();
@@ -98,9 +110,9 @@ function NewRecipeContainer() {
       <div>
         <p className="font-medium">Thumbnail</p>
         <div className="border-2 border-dashed border-gray-200 rounded-lg">
-          {state.file
+          {state.file || state.image
             ? <Image
-              src={getObjectUrl(state.file)}
+              src={getObjectUrl(state.file) || state.image}
               alt=""
               height={200}
               width={200}
@@ -146,7 +158,7 @@ function NewRecipeContainer() {
       </div>
       <div className="pt-4">
         <Button disabled={loading} onClick={createNewRecipee} variant="wz">
-          Add Recipe
+          Save Recipe
         </Button>
       </div>
     </div>

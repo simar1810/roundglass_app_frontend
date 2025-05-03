@@ -2,7 +2,7 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
-import NewRecipeModal from "@/components/modals/NewRecipeModal";
+import RecipeModal from "@/components/modals/RecipeModal";
 import RecipeDisplayCard from "@/components/pages/coach/meals/RecipeDisplayCard";
 import { Button } from "@/components/ui/button";
 import { getRecipes } from "@/lib/fetchers/app";
@@ -10,7 +10,7 @@ import useSWR from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("getRecipes", getRecipes);
-
+  console.log(data)
   if (isLoading) return <ContentLoader />
 
   if (error || !data.success) return <ContentError title={error || data.message} />
@@ -34,6 +34,6 @@ function Header() {
       className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
       placeholder="Search Recipe.."
     />
-    <NewRecipeModal />
+    <RecipeModal type="new" />
   </div>
 }
