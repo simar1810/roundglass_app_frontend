@@ -18,7 +18,7 @@ export default async function Layout({ children }) {
   >
     <SidebarProvider className="!bg-white">
       <AppSidebar />
-      <div className="grow">
+      <div className="max-w-[calc(100vw-205px)] grow">
         <AppNavbar />
         <div className="bg-[var(--comp-2)] p-4">
           {/* <UpgradeSubscriptionAlert /> */}

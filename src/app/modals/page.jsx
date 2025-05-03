@@ -13,7 +13,7 @@ import NewNotesModal from "@/components/modals/NewNotesAdd";
 import NewRecipeModal from "@/components/modals/NewRecipeModal";
 import OrderSuccessModal from "@/components/modals/ordersuccessmodal";
 import ProgramModal from "@/components/modals/PorgramModal";
-import AddPostModal from "@/components/modals/postmodal";
+// import AddPostModal from "@/components/modals/postmodal";
 import AddPostModalVideo from "@/components/modals/postmodalvideo";
 
 import ProfileModal from "@/components/modals/ProfileModal";
@@ -31,7 +31,7 @@ export default function Page() {
     <AssignWorkoutAddModal />
     <RecipieSuccessModal />
     <NewRecipeModal />
-    <CreateMealModal />
+    {/* <CreateMealModal /> */}
     <AddRecipeModal />
   </div>
 }

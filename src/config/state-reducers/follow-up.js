@@ -78,14 +78,18 @@ export function init(data) {
 
 const fields = ["weight", "weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
 export function generateRequestPayload(state) {
-  const payload = {};
+  const payload = {
+    healthMatrix: {
+
+    }
+  };
   for (const field of fields) {
-    if (Boolean(field)) payload[field] = state.healthMatrix[field];
+    if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = state.healthMatrix[field];
   }
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
     : format(addDays(new Date(), 8), 'dd-MM-yyyy');
-  payload.createdDate = format(parse(state.healthMatrix.date, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy');
+  payload.healthMatrix.createdDate = format(parse(state.healthMatrix.date, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy');
   return payload;
 }
 
