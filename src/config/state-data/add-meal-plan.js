@@ -1,9 +1,10 @@
 export const addMealPlanInitialState = {
   stage: 1,
-  title: "",
-  file: "",
+  name: "",
   description: "",
-  meals: {
-
-  }
+  notes: "",
+  joiningDate: "",
+  meals: [],
+  image: null,
+  selectedMealType: ""
 }

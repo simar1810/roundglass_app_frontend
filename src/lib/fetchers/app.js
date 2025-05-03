@@ -46,7 +46,6 @@ export function getAppClients(query) {
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
   return fetchData(`app/allClient?${queries}`);
-
 }
 
 export function getAppClientPortfolioDetails(_id) {

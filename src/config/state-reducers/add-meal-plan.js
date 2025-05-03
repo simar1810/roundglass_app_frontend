@@ -10,6 +10,26 @@ export function addMealPlanReducer(state, action) {
         ...state,
         stage: action.payload
       }
+    case "ADD_MEAL_TYPE":
+      return {
+        ...state,
+        meals: [
+          ...state.meals,
+          {
+            mealType: action.payload,
+            meals: []
+          },
+        ],
+        selectedMealType: state.meals.length === 0 ? action.payload : state.selectedMealType
+      }
+    case "ADD_NEW_RECIPE":
+      return {
+        ...state,
+        meals: state.meals.map(item => item.mealType === state.selectedMealType
+          ? { ...item, meals: [...item.meals, action.payload] }
+          : item
+        )
+      }
     default:
       return state;
   }
@@ -28,6 +48,20 @@ export function changeFieldvalue(name, value) {
 export function setCurrentStage(payload) {
   return {
     type: "SET_CURRENT_STAGE",
+    payload
+  }
+}
+
+export function addMealType(payload) {
+  return {
+    type: "ADD_MEAL_TYPE",
+    payload
+  }
+}
+
+export function addNewRecipe(payload) {
+  return {
+    type: "ADD_NEW_RECIPE",
     payload
   }
 }
