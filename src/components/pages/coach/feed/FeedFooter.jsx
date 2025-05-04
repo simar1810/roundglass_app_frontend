@@ -20,7 +20,7 @@ export default function FeedFooter({
   setCommentsOpened
 }) {
   const { page, type, displayedPostsType } = useCurrentStateContext();
-
+  console.log(feed)
   async function likeDislike(status) {
     try {
       const data = {
@@ -48,17 +48,19 @@ export default function FeedFooter({
   }
 
   return <div className=" px-4 pb-2">
-    <div className="bg-white text[var(--dark-3)] pt-3 pb-1 flex items-center gap-2">
+    <div className="bg-white text[var(--dark-3)] pt-3 pb-1 flex items-center gap-1">
       <Heart
         fill={feed.isLikedByMe ? "#FF1D1D" : "transparent"}
         stroke={feed.isLikedByMe ? "#FF1D1D" : "#000000"}
         className="w-[20px] h-[20px] cursor-pointer"
         onClick={() => likeDislike(!feed.isLikedByMe)}
       />
+      <p>{feed.likesCount}</p>
       <MessageCircle
         onClick={() => setCommentsOpened(prev => !prev)}
-        className="w-[20px] h-[20px] cursor-pointer"
+        className="w-[20px] h-[20px] ml-2 cursor-pointer"
       />
+      <p>{feed.commentsCount}</p>
       <Bookmark
         fill={feed.isSavedByMe ? "#000000" : "transparent"}
         stroke={feed.isSavedByMe ? "#000000" : "#000000"}

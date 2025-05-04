@@ -37,13 +37,13 @@ function FeedImage({ images }) {
       src={images?.at(0) || "/not-found.png"}
       fill
       alt=""
-      className="object-cover !aspect-square"
+      className="object-contain !aspect-square"
     />
   </div>
 }
 
 function FeedVideo({ video }) {
   return <div className="relative aspect-[4/3] bg-black border-y-1">
-    <YouTubeEmbed videoId={video} />
+    <YouTubeEmbed link={video} />
   </div>
 }

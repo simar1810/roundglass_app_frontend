@@ -7,5 +7,8 @@ export const newRecipeInitialState = {
   total: "",
   ingredients: "",
   method: "",
-  file: null
+  file: null,
+
+  image: "",
+  _id: ""
 }

@@ -8,7 +8,7 @@ export default function Stories({ stories }) {
   const [modalOpened, setModalOpened] = useState(false);
 
   return <div className="mt-8">
-    <h4 className="mb-4">Stories</h4>
+    <h4 className="mb-4">Results</h4>
     <div className="max-w-[calc(100vw-204px-64px)] flex items-center gap-2 no-scrollbar">
       <div className="min-w-[64px] h-[64px] border-2 border-[var(--accent-1)] relative rounded-full">
         <Avatar className="w-full h-full p-3">

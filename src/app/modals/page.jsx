@@ -10,7 +10,7 @@ import AddSelectClientModal from "@/components/modals/clientmodal";
 import CreateMealModal from "@/components/modals/CreateMealModal";
 import NewAppointmentModal from "@/components/modals/NewAppointmentModal";
 import NewNotesModal from "@/components/modals/NewNotesAdd";
-import NewRecipeModal from "@/components/modals/NewRecipeModal";
+import NewRecipeModal from "@/components/modals/RecipeModal";
 import OrderSuccessModal from "@/components/modals/ordersuccessmodal";
 import ProgramModal from "@/components/modals/PorgramModal";
 // import AddPostModal from "@/components/modals/postmodal";

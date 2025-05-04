@@ -3,12 +3,14 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { useAppSelector } from "@/providers/global/hooks";
-import { PenLine, Plus } from "lucide-react";
+import { TabsTrigger } from "@radix-ui/react-tabs";
+import { Clock } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
 
@@ -39,7 +41,10 @@ export default function Page() {
       totalOrders={orders.myOrder.length}
     />
     <div className="content-container">
-      <Brands brands={retails.brands} />
+      <RetailContainer
+        orders={ordersData.data}
+        retails={retails}
+      />
     </div>
   </div>
 }
@@ -65,8 +70,29 @@ function RetailStatisticsCards({ totalSales, totalOrders }) {
   </div>
 }
 
+function RetailContainer({ orders, retails }) {
+  return <Tabs defaultValue="brands">
+    <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
+      <TabsTrigger
+        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="brands"
+      >
+        New Order
+      </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="order-history"
+      >
+        Order History
+      </TabsTrigger>
+    </TabsList>
+    <Brands brands={retails.brands} />
+    <Orders orders={orders} />
+  </Tabs>
+}
+
 function Brands({ brands }) {
-  return <div>
+  return <TabsContent value="brands">
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
       {/* <Button variant="wz" size="sm">
@@ -77,7 +103,7 @@ function Brands({ brands }) {
     <div className="mt-4 grid grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
     </div>
-  </div>
+  </TabsContent>
 }
 
 function Brand({ brand }) {
@@ -103,4 +129,65 @@ function Brand({ brand }) {
       setMargin={setMargin}
     />}
   </Card>
+}
+
+function Orders({ orders }) {
+  console.log(orders)
+  const myOrders = orders.myOrder;
+  return <TabsContent value="order-history">
+    <div className="grid grid-cols-3 gap-4">
+      {myOrders.map(order => <Order key={order._id} order={order} />)}
+    </div>
+  </TabsContent>
+}
+
+function Order({ order }) {
+  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
+    <CardHeader className="px-0">
+      {order.status === "Completed"
+        ?
+        <RetailCompletedLabel />
+        : <RetailPendingLabel />}
+    </CardHeader>
+    <CardContent className="px-0">
+      <div className="flex gap-4">
+        <Image
+          height={100}
+          width={100}
+          unoptimized
+          src={order.productModule?.at(0)?.productImage}
+          alt=""
+          className="bg-black w-[64px] h-[64px] object-cover rounded-md"
+        />
+        <div>
+          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
+          <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>
+        </div>
+      </div>
+    </CardContent>
+    <CardFooter className="px-0 items-end justify-between">
+      <div className="text-[12px]">
+        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
+        <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
+      </div>
+      <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
+        Order Now&nbsp;{">"}
+      </Link>
+    </CardFooter>
+  </Card>
+}
+
+function RetailCompletedLabel() {
+  return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
+    <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
+    <p>Completed</p>
+  </div>
+}
+
+function RetailPendingLabel() {
+  return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
+    <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
+    <p>Pending</p>
+  </div>
 }

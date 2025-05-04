@@ -55,3 +55,32 @@ export function normalizeHexColor(hex) {
   if (hex.length === 6) return `#${hex}`;
   if (hex.length === 8) return `#${hex.slice(2)}`;
 }
+
+export function youtubeVideoId(url) {
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname;
+
+    if (hostname === 'youtu.be') {
+      return parsedUrl.pathname.slice(1); // short URL
+    }
+
+    if (hostname.includes('youtube.com')) {
+      if (parsedUrl.pathname === '/watch') {
+        return parsedUrl.searchParams.get('v');
+      }
+
+      if (parsedUrl.pathname.startsWith('/embed/')) {
+        return parsedUrl.pathname.split('/embed/')[1];
+      }
+
+      if (parsedUrl.pathname.startsWith('/v/')) {
+        return parsedUrl.pathname.split('/v/')[1];
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return false;
+}

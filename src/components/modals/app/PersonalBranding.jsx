@@ -18,7 +18,7 @@ import { getObjectUrl, normalizeHexColor } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Pen, X } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -60,8 +60,12 @@ function Stage1() {
   if (error || data.status_code !== 200) return <ContentError className="border-0 min-h-auto h-[200px] mt-0" title={error || data.message} />
   const brands = data.data;
 
+  useEffect(function () {
+    dispatch(selectPersonalBrandToEdit(brands?.at(0)))
+  }, [])
+
   return <>
-    {brands.map(brand => <div
+    {brands.slice(0, 1).map(brand => <div
       key={brand._id}
       className="mb-4 px-4 py-2 flex items-center gap-2 border-2 border-[var(--accent-1)] rounded-[8px]"
     >
