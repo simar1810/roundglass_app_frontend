@@ -1,6 +1,6 @@
 import AddClientDetailsModal from "@/components/modals/AddClientDetailsModal";
 import AddClientModal from "@/components/modals/AddClientModal";
-import AddRecipeModal from "@/components/modals/AddRecipeModal";
+// import AddRecipeModal from "@/components/modals/AddRecipeModal";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import AssignWorkoutAddModal from "@/components/modals/AssignModeladd";
 import AssignNewAppointmentModal from "@/components/modals/AssignNewAppointmentModal";
@@ -10,7 +10,7 @@ import AddSelectClientModal from "@/components/modals/clientmodal";
 import CreateMealModal from "@/components/modals/CreateMealModal";
 import NewAppointmentModal from "@/components/modals/NewAppointmentModal";
 import NewNotesModal from "@/components/modals/NewNotesAdd";
-import NewRecipeModal from "@/components/modals/RecipeModal";
+// import NewRecipeModal from "@/components/modals/RecipeModal";
 import OrderSuccessModal from "@/components/modals/ordersuccessmodal";
 import ProgramModal from "@/components/modals/PorgramModal";
 // import AddPostModal from "@/components/modals/postmodal";
@@ -30,8 +30,8 @@ export default function Page() {
     <AssignWorkoutModal />
     <AssignWorkoutAddModal />
     <RecipieSuccessModal />
-    <NewRecipeModal />
+    {/* <NewRecipeModal /> */}
     {/* <CreateMealModal /> */}
-    <AddRecipeModal />
+    {/* <AddRecipeModal /> */}
   </div>
 }
