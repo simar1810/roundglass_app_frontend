@@ -20,7 +20,7 @@ export default function FeedFooter({
   setCommentsOpened
 }) {
   const { page, type, displayedPostsType } = useCurrentStateContext();
-  console.log(feed)
+
   async function likeDislike(status) {
     try {
       const data = {

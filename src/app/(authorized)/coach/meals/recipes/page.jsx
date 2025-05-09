@@ -10,7 +10,7 @@ import useSWR from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("getRecipes", getRecipes);
-  console.log(data)
+
   if (isLoading) return <ContentLoader />
 
   if (error || !data.success) return <ContentError title={error || data.message} />

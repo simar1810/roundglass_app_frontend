@@ -46,7 +46,7 @@ function selectDisplayComponent(stage) {
 
 function Stage2() {
   const { meals, selectedMealType, dispatch } = useCurrentStateContext();
-  console.log(meals)
+
   const selectedMeals = meals.find(item => item.mealType === selectedMealType)?.meals || [];
 
   return <div>

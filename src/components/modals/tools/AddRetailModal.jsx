@@ -214,7 +214,7 @@ function Stage3() {
         customerMargin
       })
       const response = await sendData("app/addClientOrder", payload);
-      console.log(response)
+
       if (response.status_code !== 200) throw new Error(response.message || response.error);
       toast.success(response.message);
       dispatch(orderCreated(response.data))

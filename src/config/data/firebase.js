@@ -1,0 +1,7 @@
+export const NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyDLLKiqpejDb9Yj6k7vRrsnOKkJb-ykms"
+export const NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "wellness-club.firebaseapp.com"
+export const NEXT_PUBLIC_FIREBASE_PROJECT_ID = "wellness-club"
+export const NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "welnessz-club.appspot.com"
+export const NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = "90022357755"
+export const NEXT_PUBLIC_FIREBASE_APP_ID = "1:901022357:web:17f9ef5fd0e4a7e34fb85e"
+export const NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = "G-5PJV4RL7H"

@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { differenceInCalendarDays, format, isValid, parse } from "date-fns";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs) {
@@ -50,7 +51,7 @@ export function generateMeetingBaseLink(id) {
   return `${process.env.NEXT_PUBLIC_CLIENT_ENDPOINT}/meet/${id}`;
 }
 
-export function normalizeHexColor(hex) {
+export function normalizeHexColor(hex = "") {
   hex = hex.replace(/^#/, '');
   if (hex.length === 6) return `#${hex}`;
   if (hex.length === 8) return `#${hex.slice(2)}`;
@@ -83,4 +84,59 @@ export function youtubeVideoId(url) {
   }
 
   return false;
+}
+
+export function subscriptionDaysRemaining(planCode, endDate) {
+  if (isNaN(planCode) || !endDate) {
+    return {
+      success: false,
+      message: "No subscription plan found."
+    };
+  }
+  const today = format(new Date(), 'dd-MM-yyyy');
+  const pendingDays = daysDifference__notification(today, endDate);
+  if (daysDifference__notification(today, endDate) < 0) {
+    return {
+      success: false,
+      message: "Your subscription has expired. Please renew your subscription to continue using the features."
+    };
+  }
+  switch (planCode) {
+    case 0:
+      return ({
+        success: true,
+        planType: "Free Trial Plan",
+        pendingDays
+      });
+    case 1:
+      return ({
+        success: true,
+        planType: "Basic Plan",
+        pendingDays
+      });
+    case 2:
+      return ({
+        success: true,
+        planType: "Pro Plan",
+        pendingDays
+      });
+    default:
+      return ({ success: false });
+  }
+}
+
+export function daysDifference__notification(...dates) {
+  const parseFlexibleDates = dates.map(dateStr => {
+    let parsed = parse(dateStr, 'dd-MM-yyyy', new Date());
+    if (!isValid(parsed)) {
+      parsed = parse(dateStr, 'yyyy-MM-dd', new Date());
+    }
+    return parsed;
+  });
+
+  if (!isValid(parseFlexibleDates[0]) || !isValid(parseFlexibleDates[1])) {
+    throw new Error('Invalid date format. Use dd-MM-yyyy or yyyy-MM-dd');
+  }
+
+  return differenceInCalendarDays(parseFlexibleDates[1], parseFlexibleDates[0]);
 }

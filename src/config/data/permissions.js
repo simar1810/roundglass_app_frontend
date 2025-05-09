@@ -1,5 +1,5 @@
 export const permissions = {
-  free: ["app"],
-  basic: ["app"],
-  pro: ["app", "club", "app-personalization"]
+  0: ["app"],
+  1: ["app"],
+  2: ["app", "club", "app-personalization"]
 }
