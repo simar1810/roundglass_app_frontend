@@ -7,7 +7,7 @@ import AssignNewAppointmentModal from "@/components/modals/AssignNewAppointmentM
 import BrandingModal from "@/components/modals/BrandingModal";
 import ClientCreatedNotiModal from "@/components/modals/ClientCreatedNotiModals";
 import AddSelectClientModal from "@/components/modals/clientmodal";
-import CreateMealModal from "@/components/modals/CreateMealModal";
+import CreateMealModal from "@/components/modals/AddRecipe";
 import NewAppointmentModal from "@/components/modals/NewAppointmentModal";
 import NewNotesModal from "@/components/modals/NewNotesAdd";
 // import NewRecipeModal from "@/components/modals/RecipeModal";

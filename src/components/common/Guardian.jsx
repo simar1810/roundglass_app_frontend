@@ -48,7 +48,7 @@ export default function Guardian({
   const subscription = data.data.subscription;
   const subscriptionStatus = subscriptionDaysRemaining(subscription?.planCode, subscription?.endDate)
 
-  if (!subscriptionStatus?.success) {
+  if (subscriptionStatus?.success) {
     return <div className="h-screen flex flex-col gap-0 items-center justify-center text-center">
       <ContentError
         className="max-w-[40ch] min-h-auto border-0 mt-0 p-0"

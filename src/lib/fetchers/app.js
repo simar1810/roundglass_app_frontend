@@ -24,8 +24,8 @@ export function getCoachSocialLinks() {
   return fetchData('app/sm');
 }
 
-export function getMeals() {
-  return fetchData("app/getMeal");
+export function getMeals(searchQuery) {
+  return fetchData(`app/getMeal?query=${searchQuery}`);
 }
 
 export function getRecipes() {

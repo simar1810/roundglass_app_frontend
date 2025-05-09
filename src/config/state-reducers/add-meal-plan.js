@@ -11,6 +11,7 @@ export function addMealPlanReducer(state, action) {
         stage: action.payload
       }
     case "ADD_MEAL_TYPE":
+      if (state.meals.find(mealType => mealType === action.payload)) return state;
       return {
         ...state,
         meals: [
@@ -26,7 +27,59 @@ export function addMealPlanReducer(state, action) {
       return {
         ...state,
         meals: state.meals.map(item => item.mealType === state.selectedMealType
-          ? { ...item, meals: [...item.meals, action.payload] }
+          ? {
+            ...item,
+            meals: item.meals.map(meal => meal.id === action.payload.id
+              ? ({
+                id: action.payload.id,
+                ...action.payload,
+                file: "",
+                meal_time: ""
+              })
+              : meal
+            )
+          }
+          : item
+        )
+      }
+    case "ADD_NEW_RECIPE_BLANK":
+      return {
+        ...state,
+        meals: state.meals.map(item => item.mealType === state.selectedMealType
+          ? {
+            ...item, meals: [...item.meals, {
+              id: action.payload,
+              name: "",
+              meal_time: "",
+              file: "",
+              description: ""
+            }]
+          }
+          : item
+        )
+      }
+    case "CHANGE_RECIPE_FIELD_VALUE":
+      return {
+        ...state,
+        meals: state.meals.map(item => item.mealType === state.selectedMealType
+          ? {
+            ...item,
+            meals: item.meals.map(meal => meal.id === action.payload.id
+              ? ({ ...meal, [action.payload.name]: action.payload.value })
+              : meal
+            )
+          }
+          : item
+        )
+      }
+    case "REMOVE_SELECTED_RECIPE":
+      return {
+        ...state,
+        meals: state.meals.map(item => item.mealType === state.selectedMealType
+          ? {
+            ...item,
+            meals: item.meals.filter(meal => meal.id !== action.payload)
+          }
           : item
         )
       }
@@ -41,6 +94,15 @@ export function changeFieldvalue(name, value) {
     payload: {
       name,
       value
+    }
+  }
+}
+
+export function changeRecipeFieldValue(id, name, value) {
+  return {
+    type: "CHANGE_RECIPE_FIELD_VALUE",
+    payload: {
+      id, name, value
     }
   }
 }
@@ -66,8 +128,19 @@ export function addNewRecipe(payload) {
   }
 }
 
+export function addNewRecipeBlank(payload) {
+  return { type: "ADD_NEW_RECIPE_BLANK", payload }
+}
+
+export function removeSelectedRecipe(payload) {
+  return {
+    type: "REMOVE_SELECTED_RECIPE",
+    payload
+  }
+}
+
 const fields = {
-  stage1: ["title", "description", "file"]
+  stage1: ["name", "description", "image"]
 }
 
 export function stage1Completed(state) {
@@ -75,4 +148,24 @@ export function stage1Completed(state) {
     if (!state[field]) return { success: false, field };
   }
   return { success: true }
+}
+
+const requestPayloadFields = ["name", "description", "image"];
+export function generateRequestPayload(state) {
+  const payload = {};
+  payload["joiningDate"] = null;
+  payload["notes"] = null;
+  for (const field of requestPayloadFields) {
+    if (!state[field]) return { success: false, field };
+    payload[field] = state[field];
+  }
+  for (const mealTypes of state.meals) {
+    for (const meal of mealTypes.meals) {
+      for (const mealField of ["name", "description", "meal_time"]) {
+        if (!meal[mealField]) return { success: false, field: mealField }
+      }
+    }
+  }
+  payload["meals"] = state.meals;
+  return { success: true, data: payload };
 }
