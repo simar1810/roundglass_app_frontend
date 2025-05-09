@@ -21,7 +21,7 @@ export default async function Layout({ children }) {
       <div className="max-w-[calc(100vw-205px)] grow">
         <AppNavbar />
         <div className="bg-[var(--comp-2)] p-4">
-          {/* <UpgradeSubscriptionAlert /> */}
+          <UpgradeSubscriptionAlert />
           {children}
         </div>
       </div>

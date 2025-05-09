@@ -137,7 +137,7 @@ function SearchItem({
 
 function UserOptions({ profilePhoto, name }) {
   const [modal, setModal] = useState();
-  const { coachId, roles } = useAppSelector(state => state.coach.data);
+  const { coachId, roles, subscription } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
 
   const personalizationpermitted = permit("app-personalization", roles);

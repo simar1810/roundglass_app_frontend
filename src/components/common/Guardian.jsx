@@ -7,8 +7,9 @@ import { getCoachProfile } from "@/lib/fetchers/app";
 import { store } from "@/providers/global/slices/coach";
 import Loader from "./Loader";
 import ContentError from "./ContentError";
-import Image from "next/image";
 import { TriangleAlert } from "lucide-react";
+import { subscriptionDaysRemaining } from "@/lib/utils";
+import Link from "next/link";
 
 async function logout() {
   await fetch("/api/logout", { method: "DELETE" });
@@ -19,6 +20,7 @@ export default function Guardian({
   _id
 }) {
   const { isLoading, error, data } = useSWR("coachProfile", () => getCoachProfile(_id))
+
   const dispatchRedux = useAppDispatch();
   const coach = useAppSelector(state => state.coach.data);
 
@@ -43,5 +45,23 @@ export default function Guardian({
     />
   </div>
 
+  const subscription = data.data.subscription;
+  const subscriptionStatus = subscriptionDaysRemaining(subscription?.planCode, subscription?.endDate)
+
+  if (subscriptionStatus?.success) {
+    return <div className="h-screen flex flex-col gap-0 items-center justify-center text-center">
+      <ContentError
+        className="max-w-[40ch] min-h-auto border-0 mt-0 p-0"
+        title={subscriptionStatus?.message}
+      />
+      <Link
+        href={`https://www.wellnessz.in/plans/${data.data._id}`}
+        className="bg-[var(--accent-1)] mt-2 px-4 py-2 rounded-[8px] text-white font-bold text-[14px]"
+        target="_blank"
+      >
+        Upgrade
+      </Link>
+    </div>
+  }
   return children;
 }

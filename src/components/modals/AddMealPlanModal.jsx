@@ -1,4 +1,4 @@
-import { ImagePlus } from "lucide-react";
+import { ClockFading, ImagePlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +10,30 @@ import FormControl from "@/components/FormControl";
 import { Textarea } from "../ui/textarea";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { changeFieldvalue, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-meal-plan";
-import { getObjectUrl } from "@/lib/utils";
 import { useRef } from "react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
+import { sendDataWithFormData } from "@/lib/api";
 
 export default function AddMealPlanModal() {
   const { dispatch, ...state } = useCurrentStateContext();
 
+  async function uploadMealPlanThumbnail(e) {
+    try {
+      const data = new FormData();
+      data.append("file", e.target.files[0])
+      const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+      if (response.status_code !== 200) throw new Error(response.message)
+      dispatch(changeFieldvalue("image", response.img))
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+    }
+  }
+
   const fileRef = useRef();
   return (
-    <Dialog open={true}>
+    <Dialog defaultOpen={true}>
       <DialogTrigger />
       <DialogContent className="!max-w-[450px] h-[70vh] border-0 p-0 overflow-y-auto">
         <DialogHeader className="py-4 px-6 border-b">
@@ -31,10 +43,10 @@ export default function AddMealPlanModal() {
         </DialogHeader>
         <div className="px-6 pt-4 pb-6 space-y-6">
           <div>
-            <p className="font-medium mb-2">Title</p>
+            <p className="font-medium mb-2">Name</p>
             <FormControl
-              value={state.title}
-              onChange={e => dispatch(changeFieldvalue("title", e.target.value))}
+              value={state.name}
+              onChange={e => dispatch(changeFieldvalue("name", e.target.value))}
               placeholder="Enter Title"
               className="w-full"
             />
@@ -42,10 +54,14 @@ export default function AddMealPlanModal() {
           <div>
             <p className="font-medium mb-2">Thumbnail</p>
             <div className="border-2 border-dashed border-gray-200 rounded-lg p-4">
-              <input type="file" hidden ref={fileRef} onChange={e => dispatch(changeFieldvalue("file", e.target.files[0]))} />
-              {state.file
+              <input
+                type="file"
+                hidden ref={fileRef}
+                onChange={uploadMealPlanThumbnail}
+              />
+              {state.image
                 ? <Image
-                  src={getObjectUrl(state.file)}
+                  src={state.image}
                   alt=""
                   height={200}
                   width={200}
@@ -73,7 +89,7 @@ export default function AddMealPlanModal() {
               className="block mx-auto"
               onClick={() => {
                 const completed = stage1Completed(state);
-                if (completed.success) toast.error(`Field ${completed.field} is required!`)
+                if (!completed.success) toast.error(`Field ${completed.field} is required!`)
                 else dispatch(setCurrentStage(2))
               }}
             >

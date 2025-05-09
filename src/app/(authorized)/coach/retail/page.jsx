@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
+import { parse } from "date-fns";
 import { Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -132,8 +133,13 @@ function Brand({ brand }) {
 }
 
 function Orders({ orders }) {
-  console.log(orders)
-  const myOrders = orders.myOrder;
+  const myOrders = [...orders.myOrder, ...orders.retailRequest]
+    .sort((a, b) => {
+      const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
+      const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
+      return dateA - dateB;
+    });
+
   return <TabsContent value="order-history">
     <div className="grid grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
@@ -146,8 +152,8 @@ function Order({ order }) {
     <CardHeader className="px-0">
       {order.status === "Completed"
         ?
-        <RetailCompletedLabel />
-        : <RetailPendingLabel />}
+        <RetailCompletedLabel status={order.status} />
+        : <RetailPendingLabel status={order.status} />}
     </CardHeader>
     <CardContent className="px-0">
       <div className="flex gap-4">
@@ -162,14 +168,14 @@ function Order({ order }) {
         <div>
           <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
           <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
-          <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>
+          {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
         </div>
       </div>
     </CardContent>
     <CardFooter className="px-0 items-end justify-between">
       <div className="text-[12px]">
-        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
-        <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
+        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name || "-"}</span></p>
+        <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
       </div>
       <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
@@ -178,16 +184,16 @@ function Order({ order }) {
   </Card>
 }
 
-function RetailCompletedLabel() {
+function RetailCompletedLabel({ status }) {
   return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
-    <p>Completed</p>
+    <p>{status}</p>
   </div>
 }
 
-function RetailPendingLabel() {
+function RetailPendingLabel({ status }) {
   return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
-    <p>Pending</p>
+    <p>{status}</p>
   </div>
 }

@@ -1,4 +1,5 @@
 import { permissions } from '@/config/data/permissions';
+import { subscriptionDaysRemaining } from '@/lib/utils';
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
@@ -11,12 +12,23 @@ const counterSlice = createSlice({
   initialState,
   reducers: {
     store: function (state, action) {
+      const subscriptionInfo = subscriptionDaysRemaining(action.payload?.subscription?.planCode, action.payload?.subscription?.endDate)
       state.isLoggedIn = true;
       state.data = {
         ...action.payload,
         clubSystem: 2,
         zoom_doc_ref: "123123123123",
-        roles: permissions["pro"]
+        roles: action.payload?.subscription?.planCode
+          ? permissions[action.payload?.subscription?.planCode]
+          : [],
+        subscription: {
+          ...action.payload?.subscription,
+          planType: subscriptionInfo?.planType,
+          pendingDays: subscriptionInfo?.pendingDays,
+          alertShown: subscriptionInfo?.pendingDays < 15 && action.payload?.subscription.planCode === 0
+            ? true
+            : subscriptionInfo?.pendingDays < 5 ? true : false
+        },
       }
     },
     destroy: function (state) {

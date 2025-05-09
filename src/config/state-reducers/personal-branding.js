@@ -11,10 +11,10 @@ export function personalBrandingReducer(state, action) {
     case "SELECT_PERSONAL_BRAND_EDIT":
       return {
         ...state,
-        selectedBrand: action.payload,
-        formData: action.payload,
-        type: "edit",
-        stage: 2
+        selectedBrand: action.payload.length >= 1 ? action.payload.at(0) : null,
+        formData: action.payload.length >= 1 ? action.payload.at(0) : state.formData,
+        type: action.payload.length >= 1 ? "edit" : "new",
+        stage: action.payload.length >= 1 ? 2 : 3
       }
     case "PERSONAL_BRAND_UPDATED":
       return {
@@ -23,6 +23,14 @@ export function personalBrandingReducer(state, action) {
         formData: {},
         type: "edit",
         stage: 1
+      }
+
+    case "PERSONAL_BRAND_CREATED":
+      return {
+        ...state,
+        stage: 2,
+        formData: action.payload,
+        selectedBrand: action.payload
       }
 
     default:
@@ -40,10 +48,10 @@ export function changeFieldvalue(name, value) {
   }
 }
 
-export function selectPersonalBrandToEdit(brand) {
+export function selectPersonalBrandToEdit(payload) {
   return {
     type: "SELECT_PERSONAL_BRAND_EDIT",
-    payload: brand
+    payload
   }
 }
 
@@ -51,7 +59,14 @@ export function personalBrandUpdated() {
   return { type: "PERSONAL_BRAND_UPDATED" }
 }
 
-const fields = ["file", "brandName", "primaryColor", "textColor"];
+export function personalBrandCreated(payload) {
+  return {
+    type: "PERSONAL_BRAND_CREATED",
+    payload
+  }
+}
+
+const fields = ["file", "brandName", "primaryColor", "textColor", "brandLogo"];
 export function generateRequestPayload(state, id) {
   const payload = new FormData();
   for (const field of fields) {
