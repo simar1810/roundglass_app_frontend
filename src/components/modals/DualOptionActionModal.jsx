@@ -1,11 +1,9 @@
-import { Trash } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
-  AlertDialogTrigger
 } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
 import { useRef, useState } from "react";

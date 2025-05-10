@@ -17,7 +17,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { CircleCheckBig, Copy } from "lucide-react";
 import { toast } from "sonner";
 
-export default function QuickAddClient({ setModal }) {
+export default function QuickAddClient({ client, setModal }) {
   return <Dialog open={true} onOpenChange={() => setModal()}>
     <DialogTrigger />
     <DialogContent className="!max-w-[400px] max-h-[70vh] border-0 p-0 overflow-y-auto">

@@ -39,7 +39,7 @@ export default function Page() {
   </CurrentStateProvider>
 }
 
-function AddMealPlanContainer() {
+export function AddMealPlanContainer() {
   const { stage } = useCurrentStateContext();
   const Component = selectDisplayComponent(stage);
 

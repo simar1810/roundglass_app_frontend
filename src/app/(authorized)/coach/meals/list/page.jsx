@@ -3,7 +3,6 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
 import MealDisplayCard from "@/components/pages/coach/meals/MealDisplayCard";
-import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/fetchers/app";
 import useSWR from "swr";
 
