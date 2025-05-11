@@ -22,7 +22,6 @@ export default function AddStoryModal() {
       const data = new FormData();
       data.append("file", image);
       const response = await sendDataWithFormData(`app/addStory`, data, "POST");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("coachHomeTrial")

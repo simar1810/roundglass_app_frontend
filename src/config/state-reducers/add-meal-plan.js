@@ -83,6 +83,24 @@ export function addMealPlanReducer(state, action) {
           : item
         )
       }
+    case "CHANGE_MEAL_TYPE_VALUE":
+      if (state.meals.find(meal => meal.mealType === action.payload.value)) return state;
+      return {
+        ...state,
+        selectedMealType: action.payload.value,
+        meals: state.meals.map((item, index) => index === action.payload.index
+          ? {
+            ...item,
+            mealType: action.payload.value
+          }
+          : item
+        )
+      }
+    case "DELETE_MEAL_TYPE":
+      return {
+        ...state,
+        meals: state.meals.filter((meal, index) => index !== action.payload)
+      }
     default:
       return state;
   }
@@ -137,6 +155,42 @@ export function removeSelectedRecipe(payload) {
     type: "REMOVE_SELECTED_RECIPE",
     payload
   }
+}
+
+export function changeMealTypeValue(index, value) {
+  return {
+    type: "CHANGE_MEAL_TYPE_VALUE",
+    payload: {
+      index,
+      value
+    }
+  }
+}
+
+export function deleteMealTypeValue(payload) {
+  return {
+    type: "DELETE_MEAL_TYPE",
+    payload
+  }
+}
+
+export function init(data) {
+  const payload = {
+    stage: 1,
+    name: `Copy of ${data.name}`,
+    description: data.description,
+    notes: data.notes,
+    image: data.image,
+    joiningDate: data.joiningDate,
+    selectedMealType: data.meals?.at(0).mealType
+  };
+  for (const mealType of data.meals) {
+    for (const meal of mealType.meals) {
+      meal.id = (Math.random() * 1000000).toFixed(0)
+    }
+  }
+  payload.meals = data.meals;
+  return payload;
 }
 
 const fields = {

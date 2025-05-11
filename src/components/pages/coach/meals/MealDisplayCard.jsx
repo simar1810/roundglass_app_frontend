@@ -1,3 +1,4 @@
+import AddMealPlanModal from "@/components/modals/AddMealPlanModal";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -15,12 +16,17 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { sendData } from "@/lib/api";
+import { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 export default function MealDisplayCard({ plan }) {
+  const [addPlanModal, setAddPlanModalOpened] = useState(false);
+
   async function deleteMealPlan(setLoading, closeBtnRef) {
     try {
       setLoading(true);
@@ -54,6 +60,10 @@ export default function MealDisplayCard({ plan }) {
         <DropdownMenuContent className="font-semibold">
           <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
             Edit
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="mx-1" />
+          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
+            <Link href={`/coach/meals/add-plan?id=${plan._id}`}>Copy & Edit</Link>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="mx-1" />
           <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
