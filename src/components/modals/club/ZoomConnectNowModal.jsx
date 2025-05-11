@@ -10,7 +10,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 import Link from "next/link";
 
 export default function ZoomConnectNowModal() {
-  const coachId = useAppSelector(state => state.coach.data.coachId);
+  const coachId = useAppSelector(state => state.coach.data._id);
   return <Dialog>
     <DialogTrigger className="text-[var(--accent-1)] px-4 py-2 rounded-[10px]">
       <div className="flex items-center gap-2">

@@ -127,6 +127,12 @@ export const sidebar__coachContent = [
   },
   {
     id: 9,
+    title: "Marathon",
+    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/marathons"
+  },
+  {
+    id: 10,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/club",
@@ -164,7 +170,7 @@ export const sidebar__coachContent = [
     ]
   },
   {
-    id: 10,
+    id: 11,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools",

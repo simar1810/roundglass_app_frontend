@@ -21,6 +21,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
 import { copyText } from "@/lib/utils";
+import { mutate } from "swr";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_ref = useAppSelector(state => state.coach.data.zoom_doc_ref);
@@ -123,6 +124,7 @@ function MeetingForm({ withZoom }) {
       const response = await generateMeeting(withZoom, data, state.baseLink);
       if (response.status_code !== 200) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");
+      mutate("getMeetings")
       dispatch(setWellnessZLink(response?.data?.wellnessZLink));
       if (state.copyToClipboard) {
         copyText(response?.data?.wellnessZLink);

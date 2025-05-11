@@ -16,7 +16,6 @@ export default function InputOTPContainer() {
     mobileNumber,
     otp,
     dispatch,
-    refreshToken,
     user
   } = useCurrentStateContext();
 
@@ -42,11 +41,12 @@ export default function InputOTPContainer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken, _id: user._id })
+        body: JSON.stringify({ refreshToken: response.refreshToken, _id: user._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
-      dispatchRedux(store(user));
+      delete user.refreshToken;
+      dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
       router.push("/coach/dashboard");
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
