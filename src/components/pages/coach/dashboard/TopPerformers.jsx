@@ -1,16 +1,25 @@
-import Link from "next/link";
 import TopPerformerClientList from "./ClientListTopPerformer";
+import { useState } from "react";
+import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function TopPerformers({ clients }) {
+  const [modalOpened, setModalOpened] = useState(false);
+
   return <div className="bg-white py-4 rounded-[10px]">
     <div className="mb-4 px-4 flex items-center justify-between">
       <p className="text-[14px] font-bold">Top Performers</p>
-      <Link
-        href="/coach/add-client"
-        className="bg-[var(--accent-1)] text-white text-[10px] font-semibold px-3 py-2 rounded-[4px]"
+      {modalOpened && <QuickAddClient setModal={setModalOpened} />}
+      <Button
+        variant="wz"
+        size="sm"
+        className="h-auto text-[12px] py-2 gap-1"
+        onClick={() => setModalOpened(true)}
       >
-        + Add Client
-      </Link>
+        <Plus />
+        Add Client
+      </Button>
     </div>
     <div className="divide-y-1 divide-[#ECECEC]">
       {clients.map(client => <TopPerformerClientList

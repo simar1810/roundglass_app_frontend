@@ -2,9 +2,9 @@
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
 import { redirect } from "next/navigation"
 import { useEffect } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { getCoachProfile } from "@/lib/fetchers/app";
-import { store } from "@/providers/global/slices/coach";
+import { destroy, store } from "@/providers/global/slices/coach";
 import Loader from "./Loader";
 import ContentError from "./ContentError";
 import { TriangleAlert } from "lucide-react";
@@ -30,6 +30,8 @@ export default function Guardian({
 
   if (error || data?.status_code === 400 || data?.success === false) {
     logout();
+    dispatchRedux(destroy());
+    mutate(() => true, undefined);
     redirect("/login");
   };
 
@@ -37,18 +39,18 @@ export default function Guardian({
     <Loader />
   </div>
 
-  if (data.status_code !== 200 || !coach) return <div className="h-screen text-[var(--accent-2)] flex flex-col gap-0 items-center justify-center font-bold text-[32px]">
+  if (data?.status_code !== 200 || !coach) return <div className="h-screen text-[var(--accent-2)] flex flex-col gap-0 items-center justify-center font-bold text-[32px]">
     <TriangleAlert className="w-[64px] h-[64px]" />
     <ContentError
       className="min-h-auto border-0 mt-0 p-0"
-      title={`${data.message}`}
+      title={`${data?.message}`}
     />
   </div>
 
   const subscription = data.data.subscription;
   const subscriptionStatus = subscriptionDaysRemaining(subscription?.planCode, subscription?.endDate)
 
-  if (subscriptionStatus?.success) {
+  if (!subscriptionStatus?.success) {
     return <div className="h-screen flex flex-col gap-0 items-center justify-center text-center">
       <ContentError
         className="max-w-[40ch] min-h-auto border-0 mt-0 p-0"

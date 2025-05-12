@@ -24,7 +24,7 @@ export default function AssignMealModal({ planId }) {
       <DialogTrigger className="p-0">
         <Badge variant="wz_fill">Assign</Badge>
       </DialogTrigger>
-      <DialogContent className="!max-w-[650px] max-h-[70vh] border-0 p-0 overflow-auto gap-0">
+      <DialogContent className="!max-w-[650px] h-[70vh] border-0 p-0 overflow-auto block">
         <DialogHeader className="p-4 border-b-1">
           <DialogTitle className="text-lg font-semibold">
             Assign Meal
@@ -39,6 +39,7 @@ export default function AssignMealModal({ planId }) {
 function AssignMealPlanContainer({ planId }) {
   const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientForMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (isLoading) return <ContentLoader />
 
@@ -55,16 +56,18 @@ function AssignMealPlanContainer({ planId }) {
     }
   }
 
-  const assignedClients = data.data.assignedClients;
-  const unassignedClients = data.data.unassignedClients;
+  const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
+  const unassignedClients = data.data.unassignedClients.filter(client => client.name.includes(searchQuery));
 
-  return <div className="p-4 text-sm space-y-6">
+  return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
         placeholder="Search Client here"
         className="w-full bg-gray-50 rounded-lg"
+        value={searchQuery}
+        onChange={e => setSearchQuery(e.target.value)}
       />
-      <p className="mt-4 font-medium">23 Clients Available</p>
+      <p className="mt-4 font-medium">{unassignedClients.length} Clients Available</p>
     </div>
     <div className="grid grid-cols-2 gap-6">
       <div>

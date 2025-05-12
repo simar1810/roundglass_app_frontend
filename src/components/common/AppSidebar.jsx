@@ -43,7 +43,7 @@ export default function AppSidebar() {
 
   const clubFeaturesPermitted = permit("club", roles);
   let sidebarItems = sidebar__coachContent;
-  if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 9);
+  if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 10);
 
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">

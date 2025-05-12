@@ -9,6 +9,17 @@ import { useRouter } from "next/navigation";
 import { navigateUserToFeature__notification } from "@/lib/utils";
 
 export default function NotificationModal() {
+  return <DropdownMenu>
+    <DropdownMenuTrigger>
+      <Bell fill="#67BC2A" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
+    </DropdownMenuTrigger>
+    <DropdownMenuContent className="!max-w-[450px] max-h-[500px] border-0 p-0 overflow-auto border">
+      <DropDownContainer />
+    </DropdownMenuContent>
+  </DropdownMenu>
+}
+
+function DropDownContainer() {
   const { isLoading, error, data } = useSWR("getCoachNotifications", getCoachNotifications);
 
   if (isLoading) return <Bell
@@ -17,37 +28,31 @@ export default function NotificationModal() {
   />
 
   const notifications = data.data.slice(0, 8)
-
-  return <DropdownMenu>
-    <DropdownMenuTrigger>
-      <Bell fill="#67BC2A" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
-    </DropdownMenuTrigger>
-    <DropdownMenuContent className="!max-w-[450px] max-h-[500px] border-0 p-0 overflow-auto border">
-      {(error || data.status_code !== 200)
-        ? <>
-          <div className="py-6 h-[56px]">
-            <h3 className="text-black text-[14px] ml-4">
-              Error
-            </h3>
-          </div>
-          <ContentError title={error || data.message} className="!min-h-[200px] !mt-0 border-0" />
-        </>
-        : <>
-          <div className="pr-4 py-6 h-[56px] flex items-center justify-between">
-            <h3 className="text-black text-[14px] ml-4">
-              Notifications
-            </h3>
-            <Link href="/coach/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
-          </div>
-          <div className="px-4 py-3 divide-y-1">
-            {notifications.map(notification => <Notification
-              notification={notification}
-              key={notification._id}
-            />)}
-          </div>
-        </>}
-    </DropdownMenuContent>
-  </DropdownMenu>
+  return <>
+    {(error || data.status_code !== 200)
+      ? <>
+        <div className="py-6 h-[56px]">
+          <h3 className="text-black text-[14px] ml-4">
+            Error
+          </h3>
+        </div>
+        <ContentError title={error || data.message} className="!min-h-[200px] !mt-0 border-0" />
+      </>
+      : <>
+        <div className="pr-4 py-6 h-[56px] flex items-center justify-between">
+          <h3 className="text-black text-[14px] ml-4">
+            Notifications
+          </h3>
+          <Link href="/coach/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
+        </div>
+        <div className="px-4 py-3 divide-y-1">
+          {notifications.map(notification => <Notification
+            notification={notification}
+            key={notification._id}
+          />)}
+        </div>
+      </>}
+  </>
 }
 
 function Notification({ notification }) {

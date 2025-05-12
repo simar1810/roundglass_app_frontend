@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { nameInitials } from "@/lib/formatter";
 import { vpDaysPending } from "@/lib/utils";
 import { CircleAlert, CircleArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -14,7 +15,7 @@ export default function ClientListVolumePoint({
     <Avatar className="w-[48px] h-[48px] !rounded-[8px]">
       <AvatarImage className="rounded-[8px]" src={client.profilePhoto || "/"} />
       <AvatarFallback className="rounded-[8px] uppercase">
-        {client.name.split(" ").slice(0, 2).map(word => word?.at(0)).join("")}
+        {nameInitials(client.name || "")}
       </AvatarFallback>
     </Avatar>
     <div className="grow">

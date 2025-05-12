@@ -113,3 +113,11 @@ export function getClientForMeals(planId) {
 export function getProductByBrand(brandId) {
   return fetchData(`app/getProductByBrand/${brandId}`);
 }
+
+export function getWorkouts() {
+  return fetchData("app/workout/coach/workoutCollections");
+}
+
+export function getMarathons() {
+  return fetchData("app/marathon/coach/listMarathons");
+}

@@ -16,7 +16,6 @@ export default function InputOTPContainer() {
     mobileNumber,
     otp,
     dispatch,
-    refreshToken,
     user
   } = useCurrentStateContext();
 
@@ -42,14 +41,38 @@ export default function InputOTPContainer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken, _id: user._id })
+        body: JSON.stringify({ refreshToken: response.refreshToken, _id: user._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
-      dispatchRedux(store(user));
+      delete user.refreshToken;
+      dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
       router.push("/coach/dashboard");
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
+    }
+  }
+
+
+  async function resendOtp() {
+    try {
+      if (mobileNumber.length !== 10) throw new Error("Mobile number should be 10 digits longer!");
+      const data = {
+        credential: "+91" + mobileNumber,
+        fcmToken: ""
+      }
+      const response = await sendData("app/signin?authMode=mob", data);
+      if (response.status_code === 400) throw new Error(response.message);
+      dispatch({
+        type: "UPDATE_CURRENT_STATE",
+        payload: {
+          stage: 2,
+          user: response.data.user
+        }
+      });
+      toast.success("OTP sent successfully!");
+    } catch (error) {
+      toast.error(error.message || " Please try again Later!")
     }
   }
 
@@ -57,7 +80,7 @@ export default function InputOTPContainer() {
     <h3 className="text-[32px] mb-4">Security Code</h3>
     <p className="text-[var(--dark-1)]/25 text-[14px] mb-8">
       <span>Enter 4-Digit OTP sent on</span>
-      <span className="text-black">+91 9876543210</span>
+      <span className="text-black">+91 {mobileNumber}</span>
     </p>
     <InputOTP
       maxLength={4}
@@ -76,7 +99,7 @@ export default function InputOTPContainer() {
       <p className="text-[var(--dark-1)]/50">Didn&apos;t received OTP?</p>
       <button
         className="font-bold"
-        onClick={() => dispatch({ type: "UPDATE_CURRENT_STATE", payload: { stage: 1 } })}
+        onClick={resendOtp}
       >
         Resend OTP
       </button>

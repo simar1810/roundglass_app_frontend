@@ -1,6 +1,8 @@
+import AddMealPlanModal from "@/components/modals/AddMealPlanModal";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,10 +15,33 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { sendData } from "@/lib/api";
+import { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 export default function MealDisplayCard({ plan }) {
+  const [addPlanModal, setAddPlanModalOpened] = useState(false);
+
+  async function deleteMealPlan(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/delete-plan?planId=" + plan._id, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message || "Successfully deleted the meal plan!");
+      mutate("getPlans");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return <Card className="p-0 rounded-[4px] shadow-none gap-2">
     <CardHeader className="relative aspect-video">
       <Image
@@ -37,8 +62,19 @@ export default function MealDisplayCard({ plan }) {
             Edit
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="mx-1" />
+          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
+            <Link href={`/coach/meals/add-plan?id=${plan._id}`}>Copy & Edit</Link>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="mx-1" />
           <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
-            Delete
+            <DualOptionActionModal
+              description="Do you want to delete the meal plan."
+              action={deleteMealPlan}
+            >
+              <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] p-0">
+                Delete
+              </AlertDialogTrigger>
+            </DualOptionActionModal>
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>

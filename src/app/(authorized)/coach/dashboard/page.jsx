@@ -14,7 +14,7 @@ export default function Page() {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const coachHomeData = data.data;
 
   return <div className="mt-8">

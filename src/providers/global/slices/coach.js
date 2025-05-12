@@ -16,8 +16,6 @@ const counterSlice = createSlice({
       state.isLoggedIn = true;
       state.data = {
         ...action.payload,
-        clubSystem: 2,
-        zoom_doc_ref: "123123123123",
         roles: action.payload?.subscription?.planCode
           ? permissions[action.payload?.subscription?.planCode]
           : [],

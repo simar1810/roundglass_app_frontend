@@ -7,6 +7,7 @@ import useCurrentStateContext from "@/providers/CurrentStateContext";
 import Image from "next/image";
 import { useRef } from "react";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 export default function ClubSystemConfirmation({ clubSystem }) {
   const {
@@ -25,6 +26,7 @@ export default function ClubSystemConfirmation({ clubSystem }) {
       const response = await sendData("verifyOtpToUpdateClubSystem", data);
       if (!response.sucess) throw new Error(response.message || response.error);
       toast.success(response.message);
+      mutate("coachProfile")
       alertClose.current.click();
     } catch (error) {
       toast.error(error.message);
