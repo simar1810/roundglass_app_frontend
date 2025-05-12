@@ -1,0 +1,199 @@
+"use client";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
+import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
+import AddRetailModal from "@/components/modals/tools/AddRetailModal";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
+import { useAppSelector } from "@/providers/global/hooks";
+import { TabsTrigger } from "@radix-ui/react-tabs";
+import { parse } from "date-fns";
+import { Clock } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import useSWR from "swr";
+
+export default function Page() {
+  const {
+    isLoading: retailLoading,
+    error: retailError,
+    data: retailData
+  } = useSWR("app/coach-retail", getRetail);
+  const {
+    isLoading: ordersLoading,
+    error: ordersError,
+    data: ordersData
+  } = useSWR("app/order-history", getOrderHistory);
+  if (retailLoading || ordersLoading) return <ContentLoader />
+
+  if (
+    ordersError || retailError ||
+    retailData.status_code !== 200 || ordersData.status_code !== 200
+  ) return <ContentError title={ordersError || retailError || ordersData.message || retailData.message} />
+
+  const retails = retailData.data;
+  const orders = ordersData.data;
+
+  return <div className="mt-4">
+    <RetailStatisticsCards
+      totalSales={retails.totalSale}
+      totalOrders={orders.myOrder.length}
+    />
+    <div className="content-container">
+      <RetailContainer
+        orders={ordersData.data}
+        retails={retails}
+      />
+    </div>
+  </div>
+}
+
+function RetailStatisticsCards({ totalSales, totalOrders }) {
+  return <div className="grid grid-cols-3 gap-4">
+    <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
+      <CardHeader className="text-white p-0 mb-0">
+        <CardTitle>Total Sales</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <h4 className="text-white !text-[28px]">₹ {totalSales}</h4>
+      </CardContent>
+    </Card>
+    <Card className="p-4 rounded-[10px] shadow-none">
+      <CardHeader className="p-0 mb-0">
+        <CardTitle>Total Orders</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <h4 className="!text-[28px]">₹ {totalOrders}</h4>
+      </CardContent>
+    </Card>
+  </div>
+}
+
+function RetailContainer({ orders, retails }) {
+  return <Tabs defaultValue="brands">
+    <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
+      <TabsTrigger
+        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="brands"
+      >
+        New Order
+      </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="order-history"
+      >
+        Order History
+      </TabsTrigger>
+    </TabsList>
+    <Brands brands={retails.brands} />
+    <Orders orders={orders} />
+  </Tabs>
+}
+
+function Brands({ brands }) {
+  return <TabsContent value="brands">
+    <div className="flex items-center gap-2 justify-between">
+      <h4>Brands</h4>
+      {/* <Button variant="wz" size="sm">
+        <Plus />
+        Add New Kit
+      </Button> */}
+    </div>
+    <div className="mt-4 grid grid-cols-6">
+      {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
+    </div>
+  </TabsContent>
+}
+
+function Brand({ brand }) {
+  const [margin, setMargin] = useState();
+  const coachId = useAppSelector(state => state.coach.data._id);
+  return <Card className="p-0 shadow-none border-0 gap-2 relative">
+    <Image
+      src={brand.image || "/not-found.png"}
+      alt=""
+      height={540}
+      width={540}
+      className="object-cover shadow-md shadow-[#808080]/80"
+    />
+    <p className="px-1">{brand.name}</p>
+    <RetailMarginDropDown margins={brand.margins} setMargin={setMargin} />
+    {(margin || margin === 0) && <AddRetailModal
+      payload={{
+        coachId,
+        margin,
+        selectedBrandId: brand._id,
+        margins: brand.margins
+      }}
+      setMargin={setMargin}
+    />}
+  </Card>
+}
+
+function Orders({ orders }) {
+  const myOrders = [...orders.myOrder, ...orders.retailRequest]
+    .sort((a, b) => {
+      const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
+      const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
+      return dateA - dateB;
+    });
+
+  return <TabsContent value="order-history">
+    <div className="grid grid-cols-3 gap-4">
+      {myOrders.map(order => <Order key={order._id} order={order} />)}
+    </div>
+  </TabsContent>
+}
+
+function Order({ order }) {
+  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
+    <CardHeader className="px-0">
+      {order.status === "Completed"
+        ?
+        <RetailCompletedLabel status={order.status} />
+        : <RetailPendingLabel status={order.status} />}
+    </CardHeader>
+    <CardContent className="px-0">
+      <div className="flex gap-4">
+        <Image
+          height={100}
+          width={100}
+          unoptimized
+          src={order.productModule?.at(0)?.productImage}
+          alt=""
+          className="bg-black w-[64px] h-[64px] object-cover rounded-md"
+        />
+        <div>
+          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
+          {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
+        </div>
+      </div>
+    </CardContent>
+    <CardFooter className="px-0 items-end justify-between">
+      <div className="text-[12px]">
+        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name || "-"}</span></p>
+        <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
+      </div>
+      <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
+        Order Now&nbsp;{">"}
+      </Link>
+    </CardFooter>
+  </Card>
+}
+
+function RetailCompletedLabel({ status }) {
+  return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
+    <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
+    <p>{status}</p>
+  </div>
+}
+
+function RetailPendingLabel({ status }) {
+  return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
+    <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
+    <p>{status}</p>
+  </div>
+}

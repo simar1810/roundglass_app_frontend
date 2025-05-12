@@ -1,0 +1,103 @@
+import { ClockFading, ImagePlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import FormControl from "@/components/FormControl";
+import { Textarea } from "../ui/textarea";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { changeFieldvalue, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-meal-plan";
+import { useRef } from "react";
+import Image from "next/image";
+import { Button } from "../ui/button";
+import { toast } from "sonner";
+import { sendDataWithFormData } from "@/lib/api";
+
+export default function AddMealPlanModal() {
+  const { dispatch, ...state } = useCurrentStateContext();
+
+  async function uploadMealPlanThumbnail(e) {
+    try {
+      const data = new FormData();
+      data.append("file", e.target.files[0])
+      const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+      if (response.status_code !== 200) throw new Error(response.message)
+      dispatch(changeFieldvalue("image", response.img))
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+    }
+  }
+
+  const fileRef = useRef();
+  return (
+    <Dialog defaultOpen={true}>
+      <DialogTrigger />
+      <DialogContent className="!max-w-[450px] h-[70vh] border-0 p-0 overflow-y-auto">
+        <DialogHeader className="py-4 px-6 border-b">
+          <DialogTitle className="text-lg font-semibold">
+            Add Plan
+          </DialogTitle>
+        </DialogHeader>
+        <div className="px-6 pt-4 pb-6 space-y-6">
+          <div>
+            <p className="font-medium mb-2">Name</p>
+            <FormControl
+              value={state.name}
+              onChange={e => dispatch(changeFieldvalue("name", e.target.value))}
+              placeholder="Enter Title"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <p className="font-medium mb-2">Thumbnail</p>
+            <div className="border-2 border-dashed border-gray-200 rounded-lg p-4">
+              <input
+                type="file"
+                hidden ref={fileRef}
+                onChange={uploadMealPlanThumbnail}
+              />
+              {state.image
+                ? <Image
+                  src={state.image}
+                  alt=""
+                  height={200}
+                  width={200}
+                  className="w-full max-h-[180px] object-contain"
+                  onClick={() => fileRef.current.click()}
+                />
+                : <div onClick={() => fileRef.current.click()} className="flex flex-col items-center justify-center text-gray-400">
+                  <ImagePlus size={24} className="mb-2" />
+                  <span>Add Image</span>
+                </div>}
+            </div>
+          </div>
+          <div>
+            <p className="font-medium mb-2">Description</p>
+            <Textarea
+              value={state.description}
+              onChange={e => dispatch(changeFieldvalue("description", e.target.value))}
+              placeholder="Enter description here"
+              className="w-full min-h-[120px]"
+            />
+          </div>
+          <div className="pt-4">
+            <Button
+              variant="wz"
+              className="block mx-auto"
+              onClick={() => {
+                const completed = stage1Completed(state);
+                if (!completed.success) toast.error(`Field ${completed.field} is required!`)
+                else dispatch(setCurrentStage(2))
+              }}
+            >
+              Start Adding Meal Plan
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

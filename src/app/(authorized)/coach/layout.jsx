@@ -1,17 +1,35 @@
+"use server";
 import AppNavbar from "@/components/common/AppNavbar";
 import AppSidebar from "@/components/common/AppSidebar";
+import Guardian from "@/components/common/Guardian";
+import Loader from "@/components/common/Loader";
 import UpgradeSubscriptionAlert from "@/components/common/UpgradeSubscriptionAlert";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { cookies } from "next/headers";
 
-export default function Layout({ children }) {
-  return <SidebarProvider className="!bg-white">
-    <AppSidebar className="!min-w-[250px]" />
-    <div className="grow">
-      <AppNavbar />
-      <div className="bg-[var(--comp-2)] p-4">
-        <UpgradeSubscriptionAlert />
-        {children}
+export default async function Layout({ children }) {
+  const cookiesList = await cookies()
+
+  const token = cookiesList.get("token")?.value;
+  const _id = cookiesList.get("_id")?.value
+
+  if (!token || !_id) return <div className="h-screen flex items-center justify-center">
+    <Loader />
+  </div>
+
+  return <Guardian
+    _id={_id}
+    token={token}
+  >
+    <SidebarProvider className="!bg-white">
+      <AppSidebar />
+      <div className="max-w-[calc(100vw-205px)] grow">
+        <AppNavbar />
+        <div className="bg-[var(--comp-2)] p-4">
+          <UpgradeSubscriptionAlert />
+          {children}
+        </div>
       </div>
-    </div>
-  </SidebarProvider>
+    </SidebarProvider>
+  </Guardian>
 }
