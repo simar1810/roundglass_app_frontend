@@ -1,5 +1,6 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -8,6 +9,7 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
+import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { calculateBMI } from "@/lib/client/statistics";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
@@ -35,6 +37,100 @@ const chartConfig = {
 const chartData = [
   { browser: "safari", title: "Healthy", visitors: 23.4, fill: "var(--color-safari)" },
 ]
+
+const comparisonPDFData = {
+  clientName: "John Doe",
+  age: "32",
+  gender: "Male",
+  joined: "2025-05-12",
+  weight: "78",
+  height: "180",
+  brandLogo: "/brandLogo.png",
+  sideImage: "/side.png",
+  bottomStripImage: "/bottom.png",
+  allStatsList: [
+    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" }
+  ]
+}
+
+const clientStatistics = {
+  clientName: "Simarpreet Singh",
+  age: "21",
+  gender: "Male",
+  joined: "2025-05-12",
+  weight: "93",
+  height: "6.3 ft",
+  bmi: "27.2",
+  fatPercentage: "27.5",
+  musclePercentage: "31.4",
+  restingMetabolism: "1550",
+  bodyComposition: "Moderate Muscle, High Fat",
+  coachName: "Gurpreet Sir",
+  coachDescription: "A certified wellness coach helping you transform your lifestyle through science-backed fitness and meal plans.",
+  coachProfileImage: "",
+};
+
+const invoiceData = {
+  clientName: 'Simarpreet Singh',
+  age: '21',
+  address: 'New Amritsar, Punjab',
+  city: 'Amritsar',
+  phone: '9876543210',
+  invoiceNo: 'INV123456',
+  date: '2025-05-12',
+  coachName: 'Wellness Coach',
+  coachPhone: '9876543210',
+  coachCity: 'Ludhiana',
+  subtotal: '3500',
+  discount: '500',
+  total: '3000',
+  logoUrl: 'https://wellnessz.in/static/logo.png',
+  products: [
+    { productName: 'Formula 1 Shake', quantity: 2, price: 1000 },
+    { productName: 'Afresh Energy Drink', quantity: 1, price: 500 },
+  ],
+};
+
+const mealPlan = {
+  planName: 'Fat Burn Plan',
+  coachName: 'John Doe',
+  coachDescription: 'Certified Health Coach',
+  coachImage: '/coach.jpg',
+  brandLogo: '/logo.png',
+  mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
+  meals: [
+    {
+      meals: [
+        {
+          name: 'Oats & Fruits',
+          description: 'Healthy mix of oats and seasonal fruits',
+          mealTime: '8:00 AM',
+          image: '/meals/oats.png'
+        }
+      ]
+    },
+    {
+      meals: [
+        {
+          name: 'Grilled Chicken',
+          description: 'Lean protein with mixed vegetables',
+          mealTime: '1:00 PM',
+          image: '/meals/chicken.png'
+        }
+      ]
+    },
+    {
+      meals: [
+        {
+          name: 'Soup & Salad',
+          description: 'Light dinner with soup and green salad',
+          mealTime: '7:00 PM',
+          image: '/meals/soup.png'
+        }
+      ]
+    }
+  ]
+};
 
 export default function ClientStatisticsData({ clientId }) {
   const [selectedDate, setSelectedDate] = useState();
@@ -79,18 +175,30 @@ export default function ClientStatisticsData({ clientId }) {
 
 function StatisticsExportingOptions({ clientStats }) {
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
-    <Button variant="outline" className="text-[12px]">
-      <FilePen className="w-[14px]" />
-      Share & View Comparison PPT
-    </Button>
-    <Button variant="outline" className="text-[12px]">
-      <FilePen className="w-[14px]" />
-      Create & Share PDF
-    </Button>
-    <Button variant="outline" className="text-[12px]">
-      <FilePen className="w-[14px]" />
-      Share Statistics
-    </Button>
+    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatistics}>
+      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
+        <FilePen className="w-[14px]" />
+        Share Statistics
+      </DialogTrigger>
+    </PDFRenderer>
+    <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData}>
+      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
+        <FilePen className="w-[14px]" />
+        Share & View Comparison PPT
+      </DialogTrigger>
+    </PDFRenderer>
+    <PDFRenderer pdfTemplate="PDFInvoice" data={invoiceData}>
+      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
+        <FilePen className="w-[14px]" />
+        Invoice
+      </DialogTrigger>
+    </PDFRenderer>
+    <PDFRenderer pdfTemplate="PDFMealPlan" data={mealPlan}>
+      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
+        <FilePen className="w-[14px]" />
+        Meal Plan
+      </DialogTrigger>
+    </PDFRenderer>
   </div>
 }
 

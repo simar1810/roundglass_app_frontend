@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { sendData } from "@/lib/api";
-import { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +41,8 @@ export default function MealDisplayCard({ plan }) {
     }
   }
 
+  console.log(plan)
+
   return <Card className="p-0 rounded-[4px] shadow-none gap-2">
     <CardHeader className="relative aspect-video">
       <Image
@@ -50,32 +51,36 @@ export default function MealDisplayCard({ plan }) {
         alt=""
         className="object-cover bg-black"
       />
-      {plan.tag === "ADMIN"
-        ? <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Admin</Badge>
-        : <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Custom</Badge>}
+      <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">{plan.tag}</Badge>
       <DropdownMenu>
         <DropdownMenuTrigger asChild className="text-white w-[16px] !absolute top-2 right-2">
-          {!plan.admin && <EllipsisVertical className="cursor-pointer" />}
+          <EllipsisVertical className="cursor-pointer" />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="font-semibold">
-          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
-            Edit
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-1" />
+          {!plan.admin && <>
+            <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
+              Edit
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="mx-1" />
+          </>}
           <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
             <Link href={`/coach/meals/add-plan?id=${plan._id}`}>Copy & Edit</Link>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-1" />
-          <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
-            <DualOptionActionModal
-              description="Do you want to delete the meal plan."
-              action={deleteMealPlan}
-            >
-              <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] p-0">
-                Delete
-              </AlertDialogTrigger>
-            </DualOptionActionModal>
-          </DropdownMenuLabel>
+          {!plan.admin &&
+            <>
+              <DropdownMenuSeparator className="mx-1" />
+              <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
+                <DualOptionActionModal
+                  description="Do you want to delete the meal plan."
+                  action={deleteMealPlan}
+                >
+                  <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] p-0">
+                    Delete
+                  </AlertDialogTrigger>
+                </DualOptionActionModal>
+              </DropdownMenuLabel>
+            </>
+          }
         </DropdownMenuContent>
       </DropdownMenu>
     </CardHeader>
