@@ -1,22 +1,21 @@
-export function calculateBMI({
-  height,
-  heightUnit,
-  weight,
-  weightUnit
-}) {
+export function calculateBMI({ height, heightUnit, weight, weightUnit }) {
   let heightInMeters;
   if (height == null) throw new Error("Height in cms is required.");
 
-  if (heightUnit.toLowerCase() === 'cms' || heightUnit.toLowerCase() === 'cm') {
-    heightInMeters = cms / 100;
-  } else if (heightUnit.toLowerCase() === 'inches') {
-    const [feet, inches] = height.split(".");
-    heightInMeters = ((Number(feet) || 0) * 30.48) + ((Number(inches) || 0) * 2.54)
+  if (heightUnit.toLowerCase() === "cms" || heightUnit.toLowerCase() === "cm") {
+    heightInMeters = Number(height) / 100; // FIXED: changed `cms` to `height` and added Number()
+  } else if (heightUnit.toLowerCase() === "inches") {
+    const [feet, inches] = String(height).split(".");
+    heightInMeters =
+      ((Number(feet) || 0) * 12 + (Number(inches) || 0)) * 0.0254; // FIXED: proper inches to meters conversion
   } else {
     throw new Error('Invalid height unit. Use "cms" or "inches".');
   }
 
-  const weightInKgs = weightUnit.toLowerCase() === 'pounds' ? weight / 2.20462 : weight;
+  const weightInKgs =
+    weightUnit.toLowerCase() === "pounds"
+      ? Number(weight) / 2.20462
+      : Number(weight); // FIXED: added Number()
   const bmi = weightInKgs / (heightInMeters * heightInMeters);
 
   return parseFloat(bmi.toFixed(1));
@@ -29,45 +28,70 @@ export function calculateIdealWeight({
   inches,
   gender,
   unit,
-  referenceBMI = 23.0
+  referenceBMI = 23.0,
 }) {
   let heightInCM;
 
-  if (heightUnit.toLowerCase() === 'cms') {
-    if (cms == null) throw new Error("Height in cms is required.");
-    heightInCM = cms;
-  } else if (heightUnit.toLowerCase() === 'inches') {
-    if (feet == null || feet <= 0) {
-      throw new Error('Feet value is required for height in feet.');
+  // Normalize input units
+  const heightUnitLower = heightUnit?.toLowerCase();
+  const unitLower = unit?.toLowerCase();
+
+  // Validate and calculate height in cm
+  if (heightUnitLower === "cms" || heightUnitLower === "cm") {
+    if (!cms || cms < 100 || cms > 250) {
+      throw new Error("Height in cm must be between 100 and 250.");
     }
-    heightInCM = ((feet * 12) + (inches || 0)) * 2.54;
+    heightInCM = cms;
+  } else if (heightUnitLower === "inches" || heightUnitLower === "feet") {
+    if (feet == null || feet <= 0) {
+      throw new Error("Feet value is required for height in feet.");
+    }
+    const totalInches = feet * 12 + (inches || 0);
+    heightInCM = totalInches * 2.54;
   } else {
-    throw new Error('Invalid height unit. Use "cms" or "inches".');
+    throw new Error(
+      'Invalid height unit. Use "cms", "cm", "inches", or "feet".'
+    );
   }
 
-  const heightInMeters = heightInCM / 100;
-  let idealWeight = referenceBMI * (heightInMeters ** 2);
+  const heightInMeters = heightInCM / 100.0;
 
-  if (unit.toLowerCase() === 'pounds') {
-    idealWeight *= 2.20462;
+  // Apply reference BMI formula
+  let idealWeightKg = referenceBMI * heightInMeters ** 2; // in kilograms
+
+  // Convert to pounds if needed
+  const finalWeight =
+    unitLower === "pounds" ? idealWeightKg * 2.20462 : idealWeightKg;
+
+  // Sanity check: normal adult ideal weight should be in a sensible range
+  if (finalWeight < 40 || finalWeight > 150) {
+    console.warn("Unusual ideal weight result:", finalWeight);
   }
 
-  return Math.round(idealWeight);
+  return Math.round(finalWeight);
 }
 
-export function calculateBMI2({ height, heightUnit, feet, inches, weight, weightUnit }) {
+export function calculateBMI2({
+  height,
+  heightUnit,
+  feet,
+  inches,
+  weight,
+  weightUnit,
+}) {
   let heightInMeters;
 
-  if (heightUnit.toLowerCase() === 'cm' || heightUnit.toLowerCase() === 'cms') {
+  if (heightUnit.toLowerCase() === "cm" || heightUnit.toLowerCase() === "cms") {
     if (height == null) throw new Error("Height in cm is required.");
     heightInMeters = height / 100.0;
-  } else if (heightUnit.toLowerCase() === 'inches') {
+  } else if (heightUnit.toLowerCase() === "inches") {
     heightInMeters = height / 3.28084;
   } else {
     throw new Error('Invalid height unit. Use "cms" or "inches".');
   }
 
-  const weightInKgs = weightUnit.toLowerCase() === 'pounds' ? weight / 2.20462 : weight;
+  const weightInKgs =
+    weightUnit.toLowerCase() === "pounds" ? weight / 2.20462 : weight;
   const bmi = weightInKgs / (heightInMeters * heightInMeters);
 
   return parseFloat(bmi.toFixed(1));
@@ -79,89 +103,147 @@ export function calculateSkeletalMassPercentage({
   heightFeet,
   heightInches,
   heightCms,
+  height,
   age,
   bodyComposition,
   weightUnit,
-  heightUnit
+  heightUnit,
 }) {
-  const weightInKgs = weightUnit.toLowerCase() === 'pounds' ? weight * 0.453592 : weight;
-  const heightInCms = heightUnit.toLowerCase() === 'cms'
-    ? heightCms
-    : (heightFeet * 12 + heightInches) * 2.54;
+  // Convert to numbers if passed as strings
+  weight = parseFloat(weight);
+  height = parseFloat(height);
+  age = parseInt(age);
+
+  console.log({
+    gender,
+    weight,
+    height,
+    heightFeet,
+    heightInches,
+    heightCms,
+    age,
+    bodyComposition,
+    weightUnit,
+    heightUnit,
+  });
+
+  const weightInKgs = weightUnit === "Pounds" ? weight * 0.453592 : weight;
+
+  const heightInCms =
+    heightUnit === "Cm"
+      ? height
+      : heightUnit === "Feet-Inches"
+      ? (parseInt(heightFeet || 0) * 12 + parseInt(heightInches || 0)) * 2.54
+      : height * 12 * 2.54; // fallback if height is in feet
+
   const heightInMeters = heightInCms / 100.0;
 
-  const genderInt = gender.toLowerCase() === 'male' ? 1 : 0;
+  const genderInt = gender?.toLowerCase() === "male" ? 1 : 0;
 
   let skeletalMuscleMass =
-    0.22 * weightInKgs +
-    6.5 * heightInMeters -
-    0.1 * age +
-    5.8 * genderInt -
-    3.5;
+    0.26 * weightInKgs +
+    6.3 * heightInMeters -
+    0.15 * age +
+    5.1 * genderInt -
+    2.5;
 
   let skeletalMassPercentage = (skeletalMuscleMass / weightInKgs) * 100;
 
-  switch (bodyComposition.toLowerCase()) {
-    case 'slim':
+  switch (bodyComposition?.toLowerCase()) {
+    case "slim":
       skeletalMassPercentage += 0.5;
       break;
-    case 'medium':
+    case "medium":
       skeletalMassPercentage += 1.0;
       break;
-    case 'fat':
+    case "fat":
       skeletalMassPercentage -= 2.0;
       break;
     default:
-      throw new Error('Invalid body composition. Use "slim", "medium", or "fat".');
+      console.warn(
+        'Invalid or missing body composition. Expected "slim", "medium", or "fat".'
+      );
   }
 
-  skeletalMassPercentage = Math.max(25.0, Math.min(42.0, skeletalMassPercentage));
-  return parseFloat(skeletalMassPercentage.toFixed(1));
+  skeletalMassPercentage = Math.max(
+    25.0,
+    Math.min(42.0, skeletalMassPercentage)
+  );
+
+  return Math.round(skeletalMassPercentage * 10) / 10;
 }
 
-export function calculateBodyFatPercentage({ bmi, age, gender, bodyComposition }) {
-  const g = gender.toLowerCase() === 'male' ? 1 : 0;
+export function calculateBodyFatPercentage({
+  bmi,
+  age,
+  gender,
+  bodyComposition,
+}) {
+  // Type coercion to ensure valid numbers
+  const bmiNum = parseFloat(bmi);
+  const ageNum = parseInt(age);
+  const g = gender?.toLowerCase() === "male" ? 1 : 0;
+
   let fat;
 
-  switch (bodyComposition.toLowerCase()) {
-    case 'slim':
-      fat = 1.30 * bmi + 0.23 * age - 10.8 * g - 5.4 - 2.5;
+  switch (bodyComposition?.toLowerCase()) {
+    case "slim":
+      fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4 - 2.5;
       break;
-    case 'medium':
-      fat = 1.30 * bmi + 0.23 * age - 10.8 * g - 5.4;
+    case "medium":
+      fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4;
       break;
-    case 'fat':
-      fat = 1.30 * bmi + 0.23 * age - 10.8 * g - 5.4 + 2.5;
+    case "fat":
+      fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4 + 2.5;
       break;
     default:
-      throw new Error('Invalid body composition. Use "slim", "medium", or "fat".');
+      throw new Error(
+        'Invalid or missing body composition. Use "slim", "medium", or "fat".'
+      );
   }
 
+  // Clamp the value between 5% and 35%
   fat = Math.max(5.0, Math.min(35.0, fat));
+
   return parseFloat(fat.toFixed(1));
 }
 
 export function calculateBMR({
   gender,
   weight,
-  height,
-  age,
   weightUnit,
-  heightUnit
+  height,
+  heightUnit,
+  feet,
+  inches,
+  age,
 }) {
-  const weightInKgs = weightUnit.toLowerCase() === 'pounds' ? weight * 0.453592 : weight;
-  const heightInCms = heightUnit.toLowerCase() === 'cms' || heightUnit.toLowerCase() === 'cm'
-    ? height
-    : (height * 12 + height) * 2.54;
+  // Convert weight to kilograms
+  const weightInKg =
+    weightUnit?.toLowerCase() === "pounds"
+      ? parseFloat(weight) * 0.453592
+      : parseFloat(weight);
 
+  // Convert height to centimeters
+  let heightInCm;
+  const unit = heightUnit?.toLowerCase();
+
+  if (unit === "cm" || unit === "cms") {
+    heightInCm = parseFloat(height);
+  } else if (unit === "inches") {
+    heightInCm = parseFloat(height) * 2.54;
+  } else if (unit === "feet") {
+    heightInCm = (parseInt(feet) * 12 + parseInt(inches || 0)) * 2.54;
+  }
+
+  const ageNum = parseInt(age);
+
+  // Apply Mifflin-St Jeor Equation
   let bmr;
-
-  if (gender.toLowerCase() === 'male') {
-    bmr = 88.362 + (13.397 * weightInKgs) + (4.799 * heightInCms) - (5.677 * age);
-  } else if (gender.toLowerCase() === 'female') {
-    bmr = 447.593 + (9.247 * weightInKgs) + (3.098 * heightInCms) - (4.33 * age);
-  } else {
-    throw new Error('Invalid gender.');
+  if (gender?.toLowerCase() === "male") {
+    bmr = 10 * weightInKg + 6.25 * heightInCm - 5 * ageNum + 5;
+  } else if (gender?.toLowerCase() === "female") {
+    bmr = 10 * weightInKg + 6.25 * heightInCm - 5 * ageNum - 161;
   }
 
   return Math.round(bmr);
@@ -173,37 +255,50 @@ export function calculateBodyAge({
   bmr,
   age,
   gender,
-  bodyComposition
+  bodyComposition,
 }) {
-  let bodyAge = age;
+  const bmiVal = parseFloat(bmi);
+  const fatVal = parseFloat(bodyFatPercentage);
+  const bmrVal = parseFloat(bmr); // optional but parsed
+  const ageVal = parseInt(age);
+  const genderVal = gender?.toLowerCase();
+  const comp = bodyComposition?.toLowerCase();
 
-  if (bmi < 18.5) {
+  let bodyAge = ageVal;
+
+  // Adjustments based on BMI
+  if (bmiVal < 18.5) {
     bodyAge += 2.0;
-  } else if (bmi > 25.0) {
+  } else if (bmiVal > 25.0) {
     bodyAge += 3.0;
   } else {
     bodyAge -= 1.0;
   }
 
-  if (gender.toLowerCase() === 'male') {
-    if (bodyFatPercentage < 8.0) {
+  // Adjustments based on body fat %
+  if (genderVal === "male") {
+    if (fatVal < 8.0) {
       bodyAge -= 2.0;
-    } else if (bodyFatPercentage > 25.0) {
+    } else if (fatVal > 25.0) {
       bodyAge += 4.0;
     }
-  } else if (gender.toLowerCase() === 'female') {
-    if (bodyFatPercentage < 21.0) {
+  } else if (genderVal === "female") {
+    if (fatVal < 21.0) {
       bodyAge -= 2.0;
-    } else if (bodyFatPercentage > 32.0) {
+    } else if (fatVal > 32.0) {
       bodyAge += 4.0;
     }
   }
 
-  const comp = bodyComposition.toLowerCase();
-  if (comp === 'slim') {
-    bodyAge -= 1.0;
-  } else if (comp === 'fat') {
-    bodyAge += 2.0;
+  // Adjustments based on body composition
+  switch (comp) {
+    case "slim":
+      bodyAge -= 1.0;
+      break;
+    case "fat":
+      bodyAge += 2.0;
+      break;
+    // "medium" makes no change
   }
 
   return Math.round(bodyAge);

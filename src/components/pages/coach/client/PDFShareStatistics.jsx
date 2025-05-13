@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Document,
   Page,
@@ -6,60 +6,427 @@ import {
   View,
   Image,
   StyleSheet,
-  Font
-} from '@react-pdf/renderer';
-
+  Font,
+} from "@react-pdf/renderer";
 
 // Register custom font
-Font.register({ family: 'NotoSans', src: "/fonts/Roboto-Regular.ttf" });
+Font.register({ family: "NotoSans", src: "/fonts/Roboto-Regular.ttf" });
 
 // Styles
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontFamily: 'NotoSans',
+    padding: 30,
+    fontSize: 10,
+    fontFamily: "Helvetica",
   },
-  brandName: {
-    fontSize: 24,
-    textAlign: 'center',
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
-  reportTitle: {
+  brandTitle: {
     fontSize: 20,
-    textAlign: 'center',
-    marginVertical: 10,
-    fontWeight: 'bold',
+    textAlign: "center",
+    color: "#F7941E",
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  subHeader: {
+    textAlign: "center",
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  infoBox: {
+    backgroundColor: "#f7941e",
+    padding: 10,
+    borderRadius: 4,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  leftInfo: {
+    color: "white",
+  },
+  rightInfo: {
+    color: "white",
+    textAlign: "right",
+  },
+  name: {
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  meta: {
+    fontSize: 10,
+  },
+  sectionHeader: {
+    borderBottom: "1 solid #ccc",
+    fontSize: 13,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  description: {
+    marginBottom: 10,
+  },
+  metricRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderBottom: "1 solid #eee",
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    marginRight: 6,
+  },
+  metricText: {
+    flex: 1,
+  },
+  metricTitle: {
+    fontWeight: "bold",
+  },
+  metricNote: {
+    fontSize: 8,
+    color: "#666",
+  },
+  metricValue: {
+    width: 60,
+    fontWeight: "bold",
+    color: "#0c8848",
+  },
+  metricStatus: {
+    width: 60,
+    fontSize: 9,
+    color: "#cc0000",
+  },
+  progressContainer: {
+    width: "100%",
+    height: 6,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 3,
+    marginTop: 4,
+  },
+  disclaimer: {
+    fontSize: 8,
+    color: "#999",
+    marginTop: 20,
+    borderTop: "1 solid #ccc",
+    paddingTop: 10,
+  },
+  leftSection: {
+    width: "85%",
+    paddingTop: 50,
+    paddingRight: 30,
+  },
+  rightStrip: {
+    width: "15%",
+    height: "100%",
+  },
+  logo: {
+    height: 50,
+    alignSelf: "center",
+    marginBottom: 10,
+  },
+  heading: {
+    fontSize: 20,
+    textAlign: "center",
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  greenBox: {
+    backgroundColor: "#FFA500",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  whiteText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  table: {
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#aaa",
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#aaa",
+  },
+  cell: {
+    flex: 1,
+    padding: 5,
+    fontSize: 10,
+  },
+  footerStrip: {
+    marginTop: 20,
+    textAlign: "center",
+    fontSize: 8,
+    color: "#98D89E",
   },
   divider: {
-    height: 2,
-    backgroundColor: '#FFC107',
+    borderBottomWidth: 1,
+    borderBottomColor: "#98D89E",
     marginVertical: 10,
   },
-  infoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    padding: 12,
-    borderRadius: 6,
+  flowerStack: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20,
   },
-  statsTitle: {
-    fontSize: 18,
-    marginTop: 20,
-    fontWeight: 'bold',
+  suggestionStrip: {
+    backgroundColor: "#98D89E",
+    color: "white",
+    padding: 8,
+    fontSize: 12,
+    textAlign: "center",
+    marginVertical: 15,
+    borderRadius: 5,
   },
-  healthBlock: {
-    backgroundColor: '#f2f2f2',
-    padding: 12,
-    marginTop: 10,
-    borderRadius: 6,
+  boldText: {
+    fontWeight: "bold",
+    fontSize: 14,
+    marginVertical: 10,
+  },
+  paragraph: {
+    fontSize: 12,
+    lineHeight: 1.5,
+    marginVertical: 10,
+  },
+  containerBox: {
+    position: "relative",
+    marginVertical: 10,
+  },
+  containerOverlay: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
+    bottom: 10,
+  },
+  boxTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  boxTitleGreen: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#5CB85C",
+  },
+  boxTitleRed: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#D9534F",
+  },
+  boxContent: {
+    fontSize: 11,
+    lineHeight: 1.5,
   },
   bottomBanner: {
-    marginTop: 40,
-    width: '100%',
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#fff", // Optional: set background to avoid overlap issues
+    borderTopWidth: 1,
+    borderColor: "#ccc",
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  bodyWeightCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#4CAF50",
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginVertical: 10,
+  },
+  bodyWeightText: {
+    color: "#ffffff",
+    fontSize: 12,
+    textAlign: "center",
+  },
+  optimalWeightBox: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#ffc107",
+    borderWidth: 1,
+    padding: 4,
+    fontSize: 9,
+    marginVertical: 5,
+    textAlign: "center",
+  },
+  boldHighlight: {
+    fontWeight: "bold",
+    fontSize: 11,
+  },
+  whyHeader: {
+    color: "#ff9800",
+    fontWeight: "bold",
+    fontSize: 12,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  riskHeader: {
+    color: "#d32f2f",
+    fontWeight: "bold",
+    fontSize: 17,
+    marginTop: 25,
+    marginBottom: 5,
+  },
+  tipEmoji: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+    marginTop: 2,
+    resizeMode: "contain",
+  },
+  riskBox: {
+    backgroundColor: "#ffe6e6",
+    padding: 8,
+    fontSize: 10,
+    borderRadius: 5,
+    color: "#d32f2f",
+    flex: 1,
+  },
+  disclaimer: {
+    marginTop: 20,
+    fontSize: 8,
+    padding: 6,
+    backgroundColor: "#d4edda",
+    borderColor: "#c3e6cb",
+    color: "#444",
+    borderRadius: 5,
+  },
+  page: {
+    padding: 24,
+    backgroundColor: "#fff",
+    fontFamily: "Helvetica",
+    fontSize: 11,
+    lineHeight: 1.5,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  topRightBox: {
+    alignItems: "flex-end",
+  },
+  topRightImage: {
+    width: 90,
+    height: 90,
+    marginBottom: 4,
+  },
+  bmiBadge: {
+    backgroundColor: "#7ed957",
+    borderRadius: 30,
+    width: 110,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    right: 24,
+    top: 90,
+    zIndex: 2,
+  },
+  bmiBadgeText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  bmiBadgeSub: {
+    color: "#fff",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 2,
+  },
+  intro: {
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  yellowBar: {
+    height: 3,
+    backgroundColor: "#f3c623",
+    marginBottom: 10,
+    marginTop: 2,
+    width: "100%",
+  },
+  sectionBox: {
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 10,
+  },
+  greenBox: {
+    backgroundColor: "#eaf6e9",
+    borderLeft: "5px solid #7ed957",
+  },
+  greenTitle: {
+    color: "#7ed957",
+    fontWeight: "bold",
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  redBox: {
+    backgroundColor: "#ffeaea",
+    borderLeft: "5px solid #f76b6b",
+  },
+  redTitle: {
+    color: "#f76b6b",
+    fontWeight: "bold",
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  suggestions: {
+    fontWeight: "bold",
+    fontSize: 13,
+    marginTop: 6,
+    marginBottom: 2,
+    color: "#444",
+  },
+  suggestionsText: {
+    fontSize: 11,
+    color: "#222",
   },
 });
+
+const ProgressBar = ({ percent, color }) => (
+  <View style={styles.progressContainer}>
+    <View
+      style={{
+        height: "100%",
+        width: `${percent}%`,
+        backgroundColor: color,
+        borderRadius: 3,
+      }}
+    />
+  </View>
+);
+
+const Metric = ({ icon, title, note, value, status, percent, color }) => (
+  <View style={styles.metricRow}>
+    <Image style={styles.icon} src={{ uri: icon }} />
+    <View style={styles.metricText}>
+      <Text style={styles.metricTitle}>{title}</Text>
+      <Text style={styles.metricNote}>{note}</Text>
+      <ProgressBar percent={percent} color={color} />
+    </View>
+    <Text style={styles.metricValue}>{value}</Text>
+    <Text style={styles.metricStatus}>{status}</Text>
+  </View>
+);
 
 export default function PDFShareStatistics({ data }) {
   return (
@@ -72,7 +439,7 @@ export default function PDFShareStatistics({ data }) {
       <StatisticsPage6 data={data} />
     </Document>
   );
-};
+}
 
 function StatisticsPage1({ data }) {
   const {
@@ -83,290 +450,572 @@ function StatisticsPage1({ data }) {
     weight,
     height,
     fatPercentage,
+    restingMetabolism,
+    bmi,
+    bodyAge,
+    musclePercentage,
   } = data;
-  return <Page size="A4" style={styles.page}>
-    {/* Brand & Report */}
-    <Text style={styles.brandName}>WellnessZ</Text>
-    <Text style={styles.reportTitle}>Client Wellness Report</Text>
-    <View style={styles.divider} />
 
-    {/* Client Info */}
-    <View style={styles.infoContainer}>
-      <View>
-        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{clientName}</Text>
-        <Text>{`${age} Yrs | ${gender}`}</Text>
+  return (
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.brandTitle}>Simar Nutrition</Text>
+      <Text style={styles.subHeader}>Checkup Report</Text>
+
+      <View style={styles.infoBox}>
+        <View style={styles.leftInfo}>
+          <Text style={styles.name}>{clientName}</Text>
+          <Text style={styles.meta}>
+            {age} Yrs | {gender}
+          </Text>
+        </View>
+        <View style={styles.rightInfo}>
+          <Text>Report Generated on: {joined}</Text>
+          <Text>
+            Weight: {weight} KG | Height: {height}
+          </Text>
+        </View>
       </View>
-      <View>
-        <Text>Generated On: {joined}</Text>
-        <Text>{`Weight: ${weight} | Height: ${height}`}</Text>
-      </View>
-    </View>
 
-    {/* Statistics Title */}
-    <Text style={styles.statsTitle}>Statistics</Text>
-    <View style={styles.divider} />
-    <Text>Here is a quick summary of your body metrics.</Text>
+      <Text style={styles.sectionHeader}>Statistics</Text>
+      <Text style={styles.description}>
+        Your Statistic Report is here, Analyse and track your progress
+      </Text>
 
-    {/* Health Metric Block – Weight */}
-    <View style={styles.healthBlock}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Weight</Text>
-      <Text>Current: {weight} kg</Text>
-      <Text>Ideal: 75 kg</Text>
-      <Text>Status: Healthy</Text>
-    </View>
+      <Metric
+        icon="/assets/SVG/weightLog.svg"
+        title="Weight"
+        note="Optimal Range: Varies by Height & Gender"
+        value={`${weight} KG`}
+        status="Not-Healthy"
+        percent={30}
+        color="#f7b731"
+      />
 
-    {/* Health Metric Block – Fat % */}
-    {fatPercentage && (
-      <View style={styles.healthBlock}>
-        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Fat Percentage</Text>
-        <Text>Current: {fatPercentage}%</Text>
-        <Text>Status: Moderate</Text>
-      </View>
-    )}
+      <Metric
+        icon="/assets/SVG/fat_icon.svg"
+        title="Fat Percentage"
+        note="Optimal: 10–20% men, 20–30% women"
+        value={fatPercentage}
+        status="Not-Healthy"
+        percent={40}
+        color="#f7b731"
+      />
 
-    {/* Bottom Banner */}
-    <Image
-      style={styles.bottomBanner}
-      src="/assets/bottom.png"
-    />
-  </Page>
+      <Metric
+        icon="/assets/SVG/body.svg"
+        title="Resting Metabolism"
+        note="Optimal Range: Varies on activity and age"
+        value={restingMetabolism}
+        status="Not-Healthy"
+        percent={50}
+        color="#f7b731"
+      />
+
+      <Metric
+        icon="/assets/SVG/BMI.svg"
+        title="BMI"
+        note="Optimal Range: 18 - 24.9"
+        value={bmi}
+        status="Not-Healthy"
+        percent={30}
+        color="#f7b731"
+      />
+
+      <Metric
+        icon="/assets/SVG/body.svg"
+        title="Body Age"
+        note="Optimal Range: Matches actual age"
+        value={`${bodyAge} Years`}
+        status="Healthy"
+        percent={80}
+        color="#2ecc71"
+      />
+
+      <Metric
+        icon="/assets/SVG/muscle.svg"
+        title="Muscle Percentage"
+        note="Optimal Range: 32%-36% for men, 24-30% for women, Athletes: 38-42%"
+        value={musclePercentage}
+        status="Healthy"
+        percent={85}
+        color="#2ecc71"
+      />
+
+      <Text style={styles.disclaimer}>
+        Disclaimer: This report does not provide any medical advice & is not a
+        clinical report. It is intended for informational purposes only. Please
+        talk to your doctor / health professional for any further treatment.
+      </Text>
+    </Page>
+  );
 }
 
 function StatisticsPage2({ data }) {
-  return <Page size="A4" style={styles.page}>
-    {/* Header Row */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+  // Example data structure (replace with actual data as needed)
+  const { weight = 30.0, clientName = "" } = data || {};
+
+  return (
+    <Page
+      size="A4"
+      style={{
+        padding: 30,
+        fontSize: 11,
+        fontFamily: "Helvetica",
+        lineHeight: 1.5,
+        backgroundColor: "#ffffff",
+      }}
+    >
+      {/* Header Section */}
       <Text style={styles.sectionTitle}>Body Composition</Text>
-      <Image
-        src="/logo.png"
-        style={{ width: 100, height: 40 }}
-      />
-    </View>
-    <View style={styles.divider} />
-
-    {/* Body Composition Description */}
-    <Text style={styles.paragraph}>
-      This section provides an overview of your body structure and type.
-    </Text>
-
-    {/* Body Type Strip (L1 to L9) */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 }}>
-      {Array.from({ length: 9 }, (_, i) => (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          marginBottom: 5,
+        }}
+      >
         <Image
-          key={i}
-          src={`/assets/L${i + 1}.png`}
-          style={{ width: 28, height: 60 }}
+          src="/assets/SVG/steps_circle.png"
+          style={{ width: 70, height: 70 }}
         />
-      ))}
-    </View>
-
-    {/* Summary Section */}
-    <Text style={styles.sectionTitle}>Summary</Text>
-    <View style={styles.divider} />
-    <Text style={styles.paragraph}>
-      Dear {data.clientName}, based on your metrics, here is a quick summary.
-    </Text>
-
-    <View style={{ flexDirection: 'row', marginTop: 10 }}>
-      {/* Body Composition Flower */}
-      <View style={{ width: '30%', alignItems: 'center' }}>
-        <Image
-          src="/assets/flower.png"
-          style={{ width: 90, height: 90 }}
-        />
-        <Text style={{ fontSize: 14 }}>{data.bodyComposition}</Text>
-        <Text style={styles.subtext}>Body Composition</Text>
       </View>
 
-      {/* Weight Block + Risk Info */}
-      <View style={{ marginLeft: 20 }}>
-        <Image
-          src="/assets/redflower.png"
-          style={{ width: 90, height: 90 }}
-        />
-        <Text style={{ marginTop: 6 }}>{data.weight} Kg</Text>
-        <Text style={styles.subtext}>Body Weight</Text>
+      {/* Body Composition Description */}
+      <Text style={styles.paragraph}>
+        Body composition refers to the proportion of fat and non-fat mass in
+        your body. Understanding body composition is crucial for assessing
+        overall health and fitness, as it provides insights beyond simple weight
+        measurements. Higher muscle mass and lower fat percentage typically
+        indicate better health and physical fitness. Regular exercise, balanced
+        nutrition, and strength training can positively impact body composition.
+        Monitoring changes in body composition helps tailor fitness and dietary
+        plans to achieve specific health and fitness goals.
+      </Text>
 
+      {/* Colorful Body Icons Row */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginVertical: 12,
+        }}
+      >
         <Image
-          src="/assets/containerred.png"
-          style={{ width: 300, height: 100, marginTop: 10 }}
+          src="/assets/SVG/body_icon_red.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
         />
-        <Text style={{ fontSize: 10, marginTop: 5, width: 280 }}>
-          Overweight may lead to increased health risks including joint pain, heart problems,
-          and decreased energy. Regular activity and guided nutrition is recommended.
+        <Image
+          src="/assets/SVG/body_icon_red.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+        <Image
+          src="/assets/SVG/body_icon_orange.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+        <Image
+          src="/assets/SVG/body_icon_orange.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+        <Image
+          src="/assets/SVG/body_icon_yellow.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+        <Image
+          src="/assets/SVG/body_icon_green.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+        <Image
+          src="/assets/SVG/body_icon_green.svg"
+          style={{ width: 24, height: 24, marginHorizontal: 2 }}
+        />
+      </View>
+
+      {/* Personalized Summary & Risk Analysis */}
+      <Text style={styles.sectionTitle}>
+        Personalised Summary & Possible Risk Analysis
+      </Text>
+      <Text style={styles.paragraph}>
+        Dear {clientName}, 'Dear ,Body Composition Analysis (BCA) provides
+        insights into your total body water, protein, minerals, body fat mass,
+        and weight. A BCA report helps your physician or health coach establish
+        an accurate baseline and plan your health goals accordingly. This method
+        offers a more comprehensive view of your overall health compared to
+        traditional methods. Regular BCA assessments can assist in monitoring
+        and achieving your health objectives.
+      </Text>
+
+      {/* Medium Body Comp. Green Bubble */}
+      <View style={{ position: "absolute", right: 60, top: 250 }}>
+        <View
+          style={{
+            backgroundColor: "#98D89E",
+            borderRadius: 30,
+            width: 120,
+            height: 50,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 13, fontWeight: "bold" }}>
+            Medium{"\n"}Body Comp.
+          </Text>
+        </View>
+      </View>
+
+      {/* Body Weight Red Circle and Risks Box */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-start",
+          marginTop: 24,
+        }}
+      >
+        {/* Body Weight Circle */}
+        <View
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: 45,
+            backgroundColor: "#F76B6B",
+            justifyContent: "center",
+            alignItems: "center",
+            marginRight: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+            30.0 KG
+          </Text>
+          <Text style={{ color: "#fff", fontSize: 10 }}>Body Weight</Text>
+        </View>
+        {/* Risks Box */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#ffe6e6",
+            borderRadius: 8,
+            padding: 10,
+            minHeight: 70,
+          }}
+        >
+          <Text
+            style={{
+              color: "#d32f2f",
+              fontWeight: "bold",
+              fontSize: 13,
+              marginBottom: 4,
+            }}
+          >
+            risks
+          </Text>
+          <Text style={{ color: "#444", fontSize: 10 }}>
+            Being overweight can lead to serious health risks, including
+            cardiovascular diseases like heart disease and hypertension, type 2
+            diabetes, and joint problems such as osteoarthritis. Respiratory
+            issues, like sleep apnea, and mental health challenges, including
+            depression and anxiety, are also common. Additionally, the risk of
+            certain cancers, such as breast, colon, and kidney cancer, is
+            higher. Maintaining a healthy weight through balanced nutrition and
+            regular exercise is crucial for reducing these risks and enhancing
+            overall well-being.
+          </Text>
+        </View>
+      </View>
+
+      {/* Disclaimer */}
+      <Text style={styles.disclaimer}>
+        Disclaimer: This report does not provide any medical advice & is not a
+        clinical report. It is intended for informational purposes only. It is
+        not a substitute for professional medical advice, diagnosis or
+        treatment. This report is generated based on the information provided by
+        you. Please talk to your doctor / health professional for any further
+        treatment.
+      </Text>
+    </Page>
+  );
+}
+function StatisticsPage3({
+  bmiValue = 12.9,
+  bmiStatus = "Not-Healthy",
+  steps = 555,
+}) {
+  return (
+    <Page size="A4" style={styles.page}>
+      {/* Header row with title and top-right image */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Body Mass Index (BMI)</Text>
+        <View style={styles.topRightBox}>
+          {/* Replace with your own image asset */}
+          <Image
+            src="/assets/SVG/steps_circle.png"
+            style={styles.topRightImage}
+          />
+          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
+            0 Heart Pts, {steps} Steps
+          </Text>
+        </View>
+      </View>
+
+      {/* Yellow bar */}
+      <View style={styles.yellowBar} />
+
+      {/* BMI Badge */}
+      <View style={styles.bmiBadge}>
+        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
+        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      </View>
+
+      {/* Introductory Paragraph */}
+      <Text style={styles.intro}>
+        Body Mass Index (BMI) is a simple, widely used method for assessing
+        whether a person has a healthy body weight for their height. It is
+        calculated by dividing a person's weight in kilograms by the square of
+        their height in meters (kg/m²). BMI categories include underweight
+        (below 18.5), normal weight (18.5 to 24.9), overweight (25 to 29.9), and
+        obese (30 and above). While BMI is a useful screening tool, it does not
+        directly measure body fat and may not accurately represent the health of
+        individuals with high muscle mass or those with a different body
+        composition.
+      </Text>
+
+      {/* If within Normal Range */}
+      <View style={[styles.sectionBox, styles.greenBox]}>
+        <Text style={styles.greenTitle}>If within Normal Range:</Text>
+        <Text>
+          If BMI is within the normal range, it generally indicates that a
+          person has a healthy body weight relative to their height. This
+          balance contributes to lower risks of various health issues.
+          Individuals with a normal BMI typically experience a reduced risk of
+          cardiovascular diseases, such as heart disease and stroke. Their
+          likelihood of developing type 2 diabetes is also lower. Maintaining a
+          normal BMI helps prevent joint problems and reduces the stress on
+          bones and joints, lowering the risk of osteoarthritis. Additionally,
+          it contributes to better sleep quality by minimizing the risk of sleep
+          apnea. A normal BMI is associated with a lower risk of certain
+          cancers, including breast, colon, and kidney cancers. Overall,
+          maintaining a normal BMI through a balanced diet and regular physical
+          activity supports optimal physical health, enhances mental well-being,
+          and promotes a better quality of life.
         </Text>
       </View>
-    </View>
 
-    {/* Footer Elements */}
-    <Image
-      src="/assets/bottom.png"
-      style={{ marginTop: 30, width: '100%' }}
-    />
-  </Page>
-}
-
-
-function StatisticsPage3({ data }) {
-  return <Page size="A4" style={styles.page}>
-    {/* Header */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={styles.sectionTitle}>BMI</Text>
-      <Image src="/logo.png" style={{ width: 100, height: 40 }} />
-    </View>
-    <View style={styles.divider} />
-
-    {/* Description */}
-    <Text style={styles.paragraph}>
-      Body Mass Index (BMI) helps evaluate whether your weight is in a healthy range based on height.
-    </Text>
-
-    {/* BMI Flower with Value */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 }}>
-      <View style={{ alignItems: 'center' }}>
-        <Image src="/assets/flower.png" style={{ width: 90, height: 90 }} />
-        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>{data.bmi ?? '0.0'}</Text>
-        <Text style={styles.subtext}>
-          {(parseFloat(data.bmi ?? 0) >= 18 && parseFloat(data.bmi ?? 0) <= 25)
-            ? 'Healthy'
-            : 'Not Healthy'}
+      {/* If Outside Normal Range */}
+      <View style={[styles.sectionBox, styles.redBox]}>
+        <Text style={styles.redTitle}>If Outside Normal Range:</Text>
+        <Text>
+          If BMI is higher than the normal range, it indicates that a person is
+          either overweight or obese, leading to various health risks and
+          complications. Cardiovascular diseases become more likely, with an
+          increased risk of heart disease, high blood pressure, and stroke.
+          Higher BMI also raises the likelihood of developing type 2 diabetes
+          due to insulin resistance. Joint problems such as osteoarthritis can
+          arise from the additional stress on joints. Obesity is linked to sleep
+          apnea, where breathing repeatedly stops and starts during sleep, and
+          it increases the risk of certain cancers, including breast, colon, and
+          kidney cancers. Additionally, the risk of liver diseases, such as
+          fatty liver disease and cirrhosis, escalates. Mental health can also
+          be affected, with higher BMI contributing to conditions like
+          depression and anxiety. Therefore, maintaining a healthy BMI through a
+          balanced diet and regular exercise is crucial for reducing these risks
+          and promoting overall well-being.
         </Text>
-        <Text style={styles.subtext}>BMI</Text>
       </View>
-    </View>
 
-    {/* Green Container */}
-    <Image src="/assets/container2.png" style={{ width: '100%', height: 90 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      In range: A BMI of 18.5–24.9 is considered healthy. Maintain through regular activity and balanced diet.
-    </Text>
-
-    {/* Red Container */}
-    <Image src="/assets/containerred.png" style={{ width: '100%', height: 90, marginTop: 20 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      Out of range: BMI under 18 or above 25 can increase health risks. Consult your coach for improvements.
-    </Text>
-
-    {/* Suggestion */}
-    <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Suggestions</Text>
-    <Text style={styles.paragraph}>
-      Include strength training, track calorie intake, and eat whole foods to improve BMI.
-    </Text>
-
-    {/* Footer */}
-    <Image src="/assets/container.png" style={{ marginTop: 30, width: '100%', height: 90 }} />
-    <Image src="/assets/bottom.png" style={{ width: '100%', marginTop: 8 }} />
-  </Page>
+      {/* Suggestions */}
+      <Text style={styles.suggestions}>Suggestions:</Text>
+      <Text style={styles.suggestionsText}>
+        Maintaining a perfect BMI requires a balanced approach that includes a
+        healthy diet, regular physical activity, and lifestyle adjustments.
+        Consuming a variety of nutrient-dense foods, such as fruits, vegetables,
+        whole grains, lean proteins, and healthy fats, helps provide essential
+        nutrients while managing calorie intake. Regular exercise, including
+        both aerobic and strength-training activities, supports muscle health
+        and aids in weight management. Staying hydrated, getting adequate sleep,
+        and managing stress are also crucial for overall well-being. Consistency
+        in these habits promotes a balanced BMI and supports long-term health.
+      </Text>
+    </Page>
+  );
 }
+function StatisticsPage4({
+  bmiValue = 12.9,
+  bmiStatus = "Not-Healthy",
+  steps = 555,
+}) {
+  return (
+    <Page size="A4" style={styles.page}>
+      {/* Header row with title and top-right image */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Muscle Percentage</Text>
+        <View style={styles.topRightBox}>
+          {/* Replace with your own image asset */}
+          <Image
+            src="/assets/SVG/steps_circle.png"
+            style={styles.topRightImage}
+          />
+          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
+            0 Heart Pts, {steps} Steps
+          </Text>
+        </View>
+      </View>
 
-function StatisticsPage4({ data }) {
-  return <Page size="A4" style={styles.page}>
-    {/* Header */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={styles.sectionTitle}>Muscle Percentage</Text>
-      <Image src="/logo.png" style={{ width: 100, height: 40 }} />
-    </View>
-    <View style={styles.divider} />
+      {/* Yellow bar */}
+      <View style={styles.yellowBar} />
 
-    {/* Description */}
-    <Text style={styles.paragraph}>
-      Muscle mass percentage reflects how much of your body is made up of muscle tissues.
-      It's a critical metric for strength, posture, and metabolism.
-    </Text>
+      {/* BMI Badge */}
+      <View style={styles.bmiBadge}>
+        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
+        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      </View>
 
-    {/* Muscle % Flower Display */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 }}>
-      <View style={{ alignItems: 'center' }}>
-        <Image src="/assets/flower.png" style={{ width: 90, height: 90 }} />
-        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>{data.musclePercentage ?? '0.0'}%</Text>
-        <Text style={styles.subtext}>
-          {(parseFloat(data.musclePercentage ?? 0) >= 30 &&
-            parseFloat(data.musclePercentage ?? 0) <= 45)
-            ? 'Healthy'
-            : 'Needs Work'}
+      {/* Introductory Paragraph */}
+      <Text style={styles.intro}>
+        Muscle percentage refers to the proportion of total body weight that is
+        composed of muscle tissue. It is an important component of body
+        composition analysis, providing insights into overall muscle health and
+        fitness level. Muscle percentage can vary significantly based on factors
+        such as age, sex, fitness level, and physical activity. Muscle tissue
+        plays a vital role in metabolism, as it requires more energy (calories)
+        than fat tissue to maintain. Therefore, a higher muscle percentage can
+        contribute to a higher basal metabolic rate (BMR), which may aid in
+        weight management and overall metabolic health.
+      </Text>
+
+      {/* If within Normal Range */}
+      <View style={[styles.sectionBox, styles.greenBox]}>
+        <Text style={styles.greenTitle}>If within Normal Range:</Text>
+        <Text>
+          If muscle percentage is within the normal range for an individual, it
+          typically indicates a healthy balance between muscle mass and overall
+          body weight. Having a normal muscle percentage suggests that the
+          individual's muscle mass is adequate for their age, gender, and
+          activity level, contributing positively to overall health and physical
+          function. Maintaining a healthy muscle percentage is crucial for
+          various reasons. It supports metabolic health by enhancing calorie
+          expenditure and insulin sensitivity, which are important factors in
+          managing weight and preventing chronic diseases like diabetes and
+          cardiovascular conditions. Additionally, adequate muscle mass promotes
+          functional strength, agility, and endurance, which are essential for
+          daily activities and athletic performance.
         </Text>
-        <Text style={styles.subtext}>Muscle %</Text>
       </View>
-    </View>
 
-    {/* Green Container */}
-    <Image src="/assets/container2.png" style={{ width: '100%', height: 90 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      In range: For men, 32–36% is considered healthy; women: 24–30%. Athletes may exceed 38–42%.
-    </Text>
-
-    {/* Red Container */}
-    <Image src="/assets/containerred.png" style={{ width: '100%', height: 90, marginTop: 20 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      Low muscle % may lead to weakness, poor balance, and slower metabolism. Resistance training is key.
-    </Text>
-
-    {/* Suggestion */}
-    <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Suggestions</Text>
-    <Text style={styles.paragraph}>
-      Start regular strength-based workouts (pushups, dumbbells), and eat more lean protein to improve muscle percentage.
-    </Text>
-
-    {/* Footer */}
-    <Image src="/assets/container.png" style={{ marginTop: 30, width: '100%', height: 90 }} />
-    <Image src="/assets/bottom.png" style={{ width: '100%', marginTop: 8 }} />
-  </Page>
-}
-
-function StatisticsPage5({ data }) {
-  return <Page size="A4" style={styles.page}>
-    {/* Header */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={styles.sectionTitle}>Resting Metabolism</Text>
-      <Image src="/logo.png" style={{ width: 100, height: 40 }} />
-    </View>
-    <View style={styles.divider} />
-
-    {/* Description */}
-    <Text style={styles.paragraph}>
-      Resting Metabolism (RM) refers to the number of calories your body burns while at rest.
-      A higher RM indicates better metabolism and calorie-burning efficiency.
-    </Text>
-
-    {/* Flower + RM Value */}
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 }}>
-      <View style={{ alignItems: 'center' }}>
-        <Image src="/assets/flower.png" style={{ width: 90, height: 90 }} />
-        <Text style={{ fontSize: 14, fontWeight: 'bold' }}>{data.restingMetabolism ?? '0'} kcal</Text>
-        <Text style={styles.subtext}>
-          {(parseFloat(data.restingMetabolism ?? 0) >= 1500 &&
-            parseFloat(data.restingMetabolism ?? 0) <= 3000)
-            ? 'Healthy'
-            : 'Needs Work'}
+      {/* If Outside Normal Range */}
+      <View style={[styles.sectionBox, styles.redBox]}>
+        <Text style={styles.redTitle}>If Outside Normal Range:</Text>
+        <Text>
+          Muscle mass significantly impacts health and function. Low muscle mass
+          leads to reduced physical function, increased injury risk, and
+          metabolic impact. Conversely, high muscle mass requires more calories,
+          may limit flexibility, hinder explosive movements, and strain organs.
+          As we age, maintaining muscle through exercise and nutrition is
+          crucial.
         </Text>
-        <Text style={styles.subtext}>Resting Metabolism</Text>
       </View>
-    </View>
 
-    {/* Green Container */}
-    <Image src="/assets/container2.png" style={{ width: '100%', height: 90 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      In Range: RM between 1500–3000 kcal is considered ideal for most adults. Good RM helps burn fat faster.
-    </Text>
-
-    {/* Red Container */}
-    <Image src="/assets/containerred.png" style={{ width: '100%', height: 90, marginTop: 20 }} />
-    <Text style={{ fontSize: 10, marginTop: 5 }}>
-      Low RM may lead to slower fat burn, fatigue, and difficulty in weight loss. Can result from low muscle mass or inactivity.
-    </Text>
-
-    {/* Suggestion */}
-    <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Suggestions</Text>
-    <Text style={styles.paragraph}>
-      Increase activity levels, drink more water, add strength training, and avoid crash dieting to boost RM.
-    </Text>
-
-    {/* Footer */}
-    <Image src="/assets/container.png" style={{ marginTop: 30, width: '100%', height: 90 }} />
-    <Image src="/assets/bottom.png" style={{ width: '100%', marginTop: 8 }} />
-  </Page>
+      {/* Suggestions */}
+      <Text style={styles.suggestions}>Suggestions:</Text>
+      <Text style={styles.suggestionsText}>
+        Maintaining a perfect BMI requires a balanced approach that includes a
+        healthy diet, regular physical activity, and lifestyle adjustments.
+        Consuming a variety of nutrient-dense foods, such as fruits, vegetables,
+        whole grains, lean proteins, and healthy fats, helps provide essential
+        nutrients while managing calorie intake. Regular exercise, including
+        both aerobic and strength-training activities, supports muscle health
+        and aids in weight management. Staying hydrated, getting adequate sleep,
+        and managing stress are also crucial for overall well-being. Consistency
+        in these habits promotes a balanced BMI and supports long-term health.
+      </Text>
+    </Page>
+  );
 }
+function StatisticsPage5({
+  bmiValue = 12.9,
+  bmiStatus = "Not-Healthy",
+  steps = 555,
+}) {
+  return (
+    <Page size="A4" style={styles.page}>
+      {/* Header row with title and top-right image */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Resting Metabolism</Text>
+        <View style={styles.topRightBox}>
+          {/* Replace with your own image asset */}
+          <Image
+            src="/assets/SVG/steps_circle.png"
+            style={styles.topRightImage}
+          />
+          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
+            0 Heart Pts, {steps} Steps
+          </Text>
+        </View>
+      </View>
 
+      {/* Yellow bar */}
+      <View style={styles.yellowBar} />
+
+      {/* BMI Badge */}
+      <View style={styles.bmiBadge}>
+        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
+        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      </View>
+
+      {/* Introductory Paragraph */}
+      <Text style={styles.intro}>
+       Resting metabolism, or basal metabolic rate (BMR), is the energy
+ expended by the body at rest to maintain vital functions like
+ breathing and circulation. It varies based on age, sex, body
+ composition, and genetics, with muscle tissue requiring more
+ energy than fat tissue. BMR is essential for managing weight and
+ planning nutrition and exercise, as it determines daily calorie
+ needs. Monitoring changes in BMR helps gauge metabolic health
+ and guides adjustments in lifestyle for optimal energy balance and
+ overall well-being.
+      </Text>
+
+      {/* If within Normal Range */}
+      <View style={[styles.sectionBox, styles.greenBox]}>
+        <Text style={styles.greenTitle}>If within Normal Range:</Text>
+        <Text>
+         Having a resting metabolism within the normal range for your age, sex, and body composition
+ indicates that your body efficiently expends energy to maintain essential functions at rest. This
+ suggests a balanced metabolic rate that supports overall health and energy balance. It typically
+ reflects a healthy metabolic function, where the body can effectively regulate energy needs based on
+ daily activities and dietary intake. Monitoring and maintaining a normal resting metabolism through
+ lifestyle habits like regular exercise and balanced nutrition helps support optimal weight management
+ and overall well-being.
+        </Text>
+      </View>
+
+      {/* If Outside Normal Range */}
+      <View style={[styles.sectionBox, styles.redBox]}>
+        <Text style={styles.redTitle}>If Outside Normal Range:</Text>
+        <Text>
+           If your resting metabolism is outside the normal range for your age, sex, and body composition, it
+ indicates potential metabolic variations that could impact overall health and energy balance. A
+ higher-than-normal resting metabolism may suggest increased energy expenditure, potentially
+ requiring adjustments in diet and exercise. Conversely, a lower-than-normal metabolism could
+ indicate reduced energy expenditure, affecting weight management and energy levels. Consulting
+ healthcare professionals can help identify underlying causes and develop tailored strategies to
+ support metabolic health and well-being.
+        </Text>
+      </View>
+
+      {/* Suggestions */}
+      <Text style={styles.suggestions}>Suggestions:</Text>
+      <Text style={styles.suggestionsText}>
+        Maintaining a perfect BMI requires a balanced approach that includes a
+        healthy diet, regular physical activity, and lifestyle adjustments.
+        Consuming a variety of nutrient-dense foods, such as fruits, vegetables,
+        whole grains, lean proteins, and healthy fats, helps provide essential
+        nutrients while managing calorie intake. Regular exercise, including
+        both aerobic and strength-training activities, supports muscle health
+        and aids in weight management. Staying hydrated, getting adequate sleep,
+        and managing stress are also crucial for overall well-being. Consistency
+        in these habits promotes a balanced BMI and supports long-term health.
+      </Text>
+    </Page>
+  );
+}
 function StatisticsPage6({ data }) {
   return <Page size="A4" style={styles.page}>
     {/* Suggestions Header */}
@@ -383,7 +1032,7 @@ function StatisticsPage6({ data }) {
         </Text>
       </View>
       <Image
-        src="/assets/eating.png"
+        src="/assets/PNG/eating.png"
         style={{ width: 180, height: 120 }}
       />
     </View>
@@ -391,7 +1040,7 @@ function StatisticsPage6({ data }) {
     {/* 2. Exercise Block */}
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
       <Image
-        src="/assets/dumbell.png"
+        src="/assets/PNG/dumbell.png"
         style={{ width: 180, height: 120 }}
       />
       <View style={{ width: '50%' }}>
@@ -413,7 +1062,7 @@ function StatisticsPage6({ data }) {
         </Text>
       </View>
       <Image
-        src="/assets/stress.png"
+        src="/assets/PNG/stress.png"
         style={{ width: 180, height: 120 }}
       />
     </View>
@@ -430,14 +1079,13 @@ function StatisticsPage6({ data }) {
           <Text style={styles.paragraph}>{data.coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
         </View>
         <Image
-          src={data.coachProfileImage || "/assets/tryimage.png"}
+          src={data.coachProfileImage || "/assets/PNG/tryimage.png"}
           style={{ width: 120, height: 120, borderRadius: 60 }}
         />
       </View>
     </View>
 
     {/* Footer */}
-    <Image src="/assets/container.png" style={{ marginTop: 40, width: '100%', height: 90 }} />
-    <Image src="/assets/bottom.png" style={{ width: '100%', marginTop: 8 }} />
+    <Image src="/assets/PNG/bottom.png" style={{ width: '100%', marginTop: 8 }} />
   </Page>
 }
