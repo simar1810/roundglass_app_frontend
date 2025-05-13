@@ -121,3 +121,7 @@ export function getWorkouts() {
 export function getMarathons() {
   return fetchData("app/marathon/coach/listMarathons");
 }
+
+export function getMealPlanById(id) {
+  return fetchData(`app/get-plan-by-id?id=${id}`)
+}

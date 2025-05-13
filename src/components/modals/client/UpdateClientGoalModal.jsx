@@ -3,26 +3,24 @@ import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { sendData } from "@/lib/api";
-import { useAppSelector } from "@/providers/global/hooks";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function UpdateClientGoalModal({ defaultValue }) {
+export default function UpdateClientGoalModal({ id, defaultValue }) {
   const [loading, setLoading] = useState(false);
-  const [about, setAbout] = useState(() => defaultValue);
-
-  const _id = useAppSelector(state => state.coach.data._id);
+  const [goal, setGoal] = useState(() => defaultValue);
 
   const closeBtnRef = useRef(null);
 
   async function updateClientGoal() {
     try {
       setLoading(true);
-      const response = await sendData(`app/updateCoachProfile`, { about, coachId: _id }, "POST");
+      const data = new FormData();
+      const response = await sendData(`app/updateClient?id=${id}`, { goal }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate("coachProfile")
+      mutate(`clientDetails?id=${id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -41,10 +39,10 @@ export default function UpdateClientGoalModal({ defaultValue }) {
         <div className="mt-4 grid w-full gap-1.5">
           <Label htmlFor="message" className="font-bold text-[var(--dark-1)]/50 mb-2">Assign new goal to your Client</Label>
           <Textarea
-            placeholder="Write about yourself."
+            placeholder="Write goal yourself."
             id="message"
-            value={about}
-            onChange={e => setAbout(e.target.value)}
+            value={goal}
+            onChange={e => setGoal(e.target.value)}
             className="focus-visible:ring-[0px] min-h-[150px]"
           />
         </div>

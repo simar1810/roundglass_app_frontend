@@ -1,15 +1,14 @@
 class AppUrl {
-//   BASE URLS
-//   static const String baseUrl = "https://www.wellnessz.in";
-//   static const String baseUrl = "https://wellnessz-backend-one.vercel.app";
-//   static const String baseUrl = "http://51.21.57.22";
+  //   BASE URLS
+  //   static const String baseUrl = "https://www.wellnessz.in";
+  //   static const String baseUrl = "https://wellnessz-backend-one.vercel.app";
+  //   static const String baseUrl = "http://51.21.57.22";
   static const String baseUrl = "https://api.wellnessz.in";
-//   static const String baseUrl = "https://stage.wellnessz.in";
-// static const String baseUrl = "http://192.168.29.34:8080";
+  //   static const String baseUrl = "https://stage.wellnessz.in";
+  // static const String baseUrl = "http://192.168.29.34:8080";
   static const String baseUrlSocket = "https://chat-backend.wellnessz.in";
-// static const String baseUrlSocket = "http://10.0.2.2:8081";
+  // static const String baseUrlSocket = "http://10.0.2.2:8081";
 
-  
   //Client Routes
   static const String signInClientCode = "/api/app/clientLogin"; // done
   static const String clientProfile = "/api/app/clientProfile"; // done
@@ -40,10 +39,14 @@ class AppUrl {
   static const String updateCoach = "/api/app/updateCoach"; //done
   static const String updateClientOwn = "/api/app/updateClientOwn"; //done
   static const String getCoachProfile = "/api/app/coachProfile"; // done
-  static const String getCoachHome = "/api/app/coachHome"; // will update optimised
-  static const String getCoachHomeNew = "/api/app/coachHomeTrial"; // will update optimised
-  static const String signInMobile = "/api/app/signin?authMode=mob"; // will update otimpised
-  static const String signInGoogle = "/api/app/signin?authMode=g-auth"; // will update optimised
+  static const String getCoachHome =
+      "/api/app/coachHome"; // will update optimised
+  static const String getCoachHomeNew =
+      "/api/app/coachHomeTrial"; // will update optimised
+  static const String signInMobile =
+      "/api/app/signin?authMode=mob"; // will update otimpised
+  static const String signInGoogle =
+      "/api/app/signin?authMode=g-auth"; // will update optimised
   static const String verifyOtp = "/api/app/verifyOtp"; //done
   static const String coachRegistration = "/api/app/register"; //done
   static const String updateCoachProfile = "/api/app/updateCoachProfile"; //done
@@ -57,7 +60,7 @@ class AppUrl {
   static const String getActivity = "/api/app/activity/get";
   static const String uploadFile = "/api/app/uploadFile";
 
-//Coach Subscription Routes
+  //Coach Subscription Routes
   static const String addSubscription = "/api/app/addSubscription";
   static const String updateSubscription = "/api/app/updateSubscription";
   static const String viewSubscription = "/api/app/viewSubscription";
@@ -146,12 +149,12 @@ class AppUrl {
   static const String feedComments = "/api/app/get-comments?postId="; //DONE
   //User Routes
 
-// personal branding
+  // personal branding
   static const String addBranding = "/api/app/create";
   static const String getBranding = "/api/app/list";
-  static const String updateBrand= "/api/app/update";
+  static const String updateBrand = "/api/app/update";
 
-// social links
+  // social links
   static const String addLinks = "/api/app/sm";
   static const String getLinks = "/api/app/sm";
 
@@ -163,8 +166,6 @@ class AppUrl {
   static const String deleteRecipe = "/api/app/deleteRecipes";
   static const String recipees = "/api/app/recipees";
 
-
   // Health Matrix Routes
   static const String healthMatrix = "/api/app/health-matrix";
-
 }

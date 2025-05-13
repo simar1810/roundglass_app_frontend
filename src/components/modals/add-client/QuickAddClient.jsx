@@ -82,6 +82,7 @@ function FormContainer() {
 
 function SuccessClientCreated() {
   const { clientId } = useCurrentStateContext();
+  const clientLink = `https://www.wellnessz.in/app/loginClient?clientID=${clientId}`
   return <div className="px-4">
     <CircleCheckBig className="static w-[120px] h-[120px] text-[var(--accent-1)] aspect-square mx-auto" />
     <h4 className="text-[var(--accent-1)] text-center mb-4">Client Added successfully!</h4>
@@ -89,11 +90,11 @@ function SuccessClientCreated() {
     <p className="text-[var(--dark-1)]/35 text-[14px] text-center">with Client ID #{clientId}</p>
     <p className="font-bold mt-12">Client Link</p>
     <div className="mb-8 flex border-1 rounded-[8px] overflow-clip">
-      <p className="grow px-4 py-2">www.wellnessZ.com/{clientId}</p>
+      <p className="grow px-4 py-2">{clientLink}</p>
       <button
         className="bg-[var(--accent-1)] aspect-square px-2 cursor-pointer"
         onClick={() => {
-          copyText(clientId)
+          copyText(clientLink)
           toast.success("Link Copied!");
         }}
       >

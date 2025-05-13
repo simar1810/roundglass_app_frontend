@@ -68,9 +68,9 @@ export default function Stage2() {
 function MealTypesList() {
   const { meals, selectedMealType, dispatch } = useCurrentStateContext();
 
-  return <div className="flex gap-2 mb-6">
+  return <div className="flex gap-2 mb-6 overflow-x-auto">
     {meals.map((meal, index) => <div
-      className={`pl-4 py-2 rounded-[8px] cursor-pointer ${meal.mealType === selectedMealType ? "bg-[var(--accent-1)] text-white" : "text-[var(--accent-1)] border-1 border-[var(--accent-1)]"}`}
+      className={`whitespace-nowrap pl-4 py-2 rounded-[8px] cursor-pointer ${meal.mealType === selectedMealType ? "bg-[var(--accent-1)] text-white" : "text-[var(--accent-1)] border-1 border-[var(--accent-1)]"}`}
       key={index}
     >
       <span onClick={() => dispatch(changeFieldvalue("selectedMealType", meal.mealType))}>
@@ -85,7 +85,7 @@ function MealTypesList() {
   </div>
 }
 
-function RecipeDetails({ recipe, index }) {
+export function RecipeDetails({ recipe, index }) {
   const { dispatch } = useCurrentStateContext();
 
   const selectRecipeImageRef = useRef();
@@ -163,7 +163,7 @@ function AddMealType() {
   }
 
   return <Dialog defaultOpen={true}>
-    <DialogTrigger className="bg-[var(--comp-1)] text-[14px] px-4 py-2 rounded-[8px] border-1">
+    <DialogTrigger className="bg-[var(--comp-1)] whitespace-nowrap text-[14px] px-4 py-2 rounded-[8px] border-1">
       Add New Type
     </DialogTrigger>
     <DialogContent className="!max-w-[400px] w-full p-0 gap-0">

@@ -42,10 +42,15 @@ function ClientMealData({ _id }) {
     }
   }, [isLoading])
 
-  if (isLoading) return <ContentLoader />
-  if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <ContentError
-    title={error || data.message}
-  />
+  if (isLoading) return <TabsContent value="meal">
+    <ContentLoader />
+  </TabsContent>
+
+  if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <TabsContent value="meal">
+    <ContentError
+      title={error || data.message}
+    />
+  </TabsContent>
 
   return <TabsContent value="meal">
     <div className="mb-4 flex items-center gap-4 overflow-x-auto custom-scrollbar">
