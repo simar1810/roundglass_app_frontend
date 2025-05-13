@@ -23,8 +23,8 @@ export default function AddStoryModal() {
       data.append("file", image);
       const response = await sendDataWithFormData(`app/addStory`, data, "POST");
       if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
       mutate("coachHomeTrial")
+      toast.success(response.message);
       setImage();
       closeBtnRef.current.click();
     } catch (error) {

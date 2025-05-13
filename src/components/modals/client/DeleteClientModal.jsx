@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { sendData } from "@/lib/api";
 import { Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -18,16 +19,19 @@ export default function DeleteClientModal({
   defaultOpen,
 }) {
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+
   const closeBtnRef = useRef(null);
 
   async function deleteClient() {
     try {
       setLoading(true);
-      const response = await sendData(`deleteClient?id=${_id}`, {}, "DELETE");
-      throw new Error("this is error")
-      if (!response.success) throw new Error(response.message);
+      const response = await sendData(`app/deleteClient?id=${_id}`, {}, "DELETE");
+      if (!response.status) throw new Error(response.error);
       toast.success(response.message);
-      mutate("getMeetings")
+      mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
+      router.push("/coach/clients");
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);

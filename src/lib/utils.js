@@ -95,7 +95,7 @@ export function subscriptionDaysRemaining(planCode, endDate) {
   }
   const today = format(new Date(), 'dd-MM-yyyy');
   const pendingDays = daysDifference__notification(today, endDate);
-  if (daysDifference__notification(today, endDate) < 0) {
+  if (daysDifference__notification(today, endDate) <= 0) {
     return {
       success: false,
       message: "Your subscription has expired. Please renew your subscription to continue using the features."
@@ -139,4 +139,20 @@ export function daysDifference__notification(...dates) {
   }
 
   return differenceInCalendarDays(parseFlexibleDates[1], parseFlexibleDates[0]);
+}
+
+export function calculatePieChartAngle(idealValue, calculatedValue, normalMin, normalMax) {
+  idealValue = Math.min(Math.max(idealValue, normalMin), normalMax);
+  calculatedValue = Math.min(Math.max(calculatedValue, normalMin), normalMax);
+
+  // Normalize values
+  const normalizedIdeal = (idealValue - normalMin) / (normalMax - normalMin);
+  const normalizedCalculated = (calculatedValue - normalMin) / (normalMax - normalMin);
+
+  // Calculate difference and pie slice
+  const percentageDifference = normalizedCalculated - normalizedIdeal;
+  const pieChartSlice = 0.5 + 0.5 * percentageDifference;
+
+  // Clamp final result between 0 and 1
+  return (90 - 360) * Math.min(Math.max(pieChartSlice, 0.0), 1.0);
 }

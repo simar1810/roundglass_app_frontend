@@ -11,7 +11,7 @@ import RequestedVPModal from "@/components/modals/club/RequestedVPModal";
 
 export default function VolumePointModeClientsList() {
   const { isLoading, error, data } = useSWR(`membership`, getClubClientVolumePoints);
-  console.log(data)
+
   if (isLoading) return <ContentLoader />
 
   if (data.status_code !== 200 || error) return <ContentError title={error || data.message} />

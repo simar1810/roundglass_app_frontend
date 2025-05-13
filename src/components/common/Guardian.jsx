@@ -28,7 +28,10 @@ export default function Guardian({
     if (data && data.status_code === 200) dispatchRedux(store(data.data));
   }, [isLoading]);
 
-  if (error || data?.status_code === 400 || data?.success === false) {
+  if (
+    error || data?.success === false ||
+    (!!data?.status_code && data?.status_code !== 200)
+  ) {
     logout();
     dispatchRedux(destroy());
     mutate(() => true, undefined);

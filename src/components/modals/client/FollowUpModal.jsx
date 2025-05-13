@@ -2,7 +2,7 @@ import FormControl from "@/components/FormControl";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Label as ChartLabel } from "recharts";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -12,13 +12,14 @@ import useCurrentStateContext, { CurrentStateProvider } from "@/providers/Curren
 import { changeFieldvalue, followUpReducer, generateRequestPayload, init, setCurrentStage, setHealthMatrices, setNextFollowUpDate, stage1Completed } from "@/config/state-reducers/follow-up";
 import { calculateBMI2, calculateBMR, calculateBodyAge, calculateBodyFatPercentage, calculateSkeletalMassPercentage } from "@/lib/client/statistics";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
+import { mutate } from "swr";
 
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
-    <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 flex items-center justify-center gap-2 rounded-[8px]">
+    <DialogTrigger className="w-full h-10 bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange />
       Follow-up
     </DialogTrigger>
@@ -57,7 +58,7 @@ function Stage1() {
     <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-4">
       <div>
         <div className="pr-2 flex items-center gap-2 justify-between">
-          <p>Last Weight</p>
+          <p>Current Weight</p>
           <RadioGroup value={healthMatrix.weightUnit} className="flex items-center gap-1">
             <input
               id="weight-kg"
@@ -186,8 +187,12 @@ const matrices = [
 ]
 
 function Stage2({ clientId }) {
+  const closeBtnRef = useRef();
+
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
-  const heightinMetres = healthMatrix.heightUnit === "Cm" ? Number(healthMatrix.height) / 100 : Number(healthMatrix.height) / 3.28084;
+  const heightinMetres = healthMatrix.heightUnit === "Cm"
+    ? Number(healthMatrix.height) / 100
+    : Number(healthMatrix.height) / 3.28084;
 
   const healthMatrices = {
     bmi: calculateBMI2({ ...healthMatrix, bodyComposition: healthMatrix.body_composition }),
@@ -200,10 +205,12 @@ function Stage2({ clientId }) {
 
   async function createFollowUp() {
     try {
-      const data = generateRequestPayload({ healthMatrix, ...state })
-      const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
+      const data = generateRequestPayload({ healthMatrix, ...state });
+      const response = await sendData(`app/add-followup?clientId=${clientId}`, data);
       if (response.status_code !== 200) throw new Error(response.message || response.error);
+      mutate(`app/clientStatsCoach?clientId=${clientId}`);
       toast.success(response.message);
+      closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
     }
@@ -229,6 +236,7 @@ function Stage2({ clientId }) {
         {matrix.info.split("\n").map(text => <p key={text} className="text-[12px] leading-[1.4]">{text}</p>)}
       </div>)}
     </div>
+    <DialogClose ref={closeBtnRef} />
     <Button onClick={createFollowUp} variant="wz" className="block mx-auto mt-10 px-24">Done</Button>
   </div>
 }

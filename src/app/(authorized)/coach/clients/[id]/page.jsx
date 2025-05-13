@@ -10,9 +10,7 @@ import useSWR from "swr";
 export default function Page() {
   const { id } = useParams();
   const { isLoading, error, data } = useSWR(`clientDetails?id=${id}`, () => getAppClientPortfolioDetails(id));
-
   if (isLoading) return <ContentLoader />
-
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
   const clientData = data.data;
   clientData.weightLoss = data.weightLost;
