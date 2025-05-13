@@ -1,5 +1,5 @@
 import FormControl from "@/components/FormControl";
-import { changeFieldvalue, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
+import { changeFieldvalue, changeHeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -88,7 +88,7 @@ export default function CheckupStage1() {
         <div className="flex items-center gap-4 text-sm mb-2">
           <label className="flex items-center gap-1">
             <input
-              onChange={e => dispatch(changeFieldvalue("heightUnit", "Inches"))}
+              onChange={e => dispatch(changeHeightUnit("Inches"))}
               checked={state.heightUnit === "Inches"}
               type="radio"
             />
@@ -96,7 +96,7 @@ export default function CheckupStage1() {
           </label>
           <label className="flex items-center gap-1">
             <input
-              onChange={e => dispatch(changeFieldvalue("heightUnit", "Cm"))}
+              onChange={e => dispatch(changeHeightUnit("Cm"))}
               checked={state.heightUnit === "Cm"}
               type="radio"
             />
@@ -208,38 +208,47 @@ export default function CheckupStage1() {
 }
 
 function Selectheight() {
-  const { dispatch, height, heightUnit } = useCurrentStateContext();
+  const { heightCms, heightFeet, heightInches, dispatch, heightUnit } = useCurrentStateContext();
+
   if (heightUnit !== "Inches") return <div className="flex">
     <FormControl
-      value={height}
+      value={heightCms}
       placeholder="Cm"
-      onChange={(e) => dispatch(changeFieldvalue("height", e.target.value))}
+      onChange={(e) => dispatch(changeFieldvalue("heightCms", e.target.value))}
       type="number"
       className="grow"
     />
   </div>
-
-  const [feet, inches] = convertFeetToFeetAndInches(height);
   return <div className="flex gap-2">
     <FormControl
-      value={feet}
-      onChange={(e) => dispatch(changeFieldvalue("height", e.target.value))}
+      value={heightFeet}
+      label="Ft"
+      onChange={(e) => {
+        const value = Number(e.target.value);
+        if (value >= 0 && value <= 12) {
+          dispatch(changeFieldvalue("heightFeet", value));
+        } else {
+          toast.error("Inches should be between 0 and 12");
+        }
+      }}
       placeholder="Ft"
       className="w-full"
       type="number"
     />
     <FormControl
-      value={inches}
-      onChange={(e) => dispatch(changeFieldvalue("height", e.target.value))}
+      value={heightInches}
+      label="Inch"
+      onChange={(e) => {
+        const value = Number(e.target.value);
+        if (value >= 0 && value <= 12) {
+          dispatch(changeFieldvalue("heightInches", value));
+        } else {
+          toast.error("Inches should be between 0 and 12");
+        }
+      }}
       placeholder="In"
       className="w-full"
       type="number"
     />
   </div>
-}
-
-function convertFeetToFeetAndInches(feetDecimal) {
-  const feet = Math.floor(feetDecimal);
-  const inches = Math.round((feetDecimal - feet) * 12 * 100) / 100; // rounded to 2 decimal places
-  return [feet, inches];
 }

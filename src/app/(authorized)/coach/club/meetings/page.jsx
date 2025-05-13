@@ -28,7 +28,7 @@ export default function Page() {
       <h4>Meeting Details</h4>
       <ClubSystemOptions />
     </div>
-    <div className="w-[calc(100vw-68px)] md:w-[calc(100vw-344px)] overflow-x-auto">
+    <div className="overflow-x-auto">
       <Table className=" border-1 border-r-0 [&_th]:border-r-1 [&_td]:border-r-1 overflow-x-auto">
         <TableHeader className=" bg-[var(--comp-1)] border-b-1">
           <TableRow>
