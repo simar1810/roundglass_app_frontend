@@ -186,7 +186,7 @@ export function MeetingRepeat({ field }) {
     <div className="w-[418px] flex items-center gap-2 overflow-x-auto">
       {days.map((day, index) => <Badge
         variant="wz_fill"
-        className={`rounded-full border-0 font-bold cursor-pointer ${!reOcurred.includes(index) && "text-[var(--dark-1)]/25 bg-[var(--comp-1)] opacit y-50 hover:text-[var(--primary-1)] hover:bg-[var(--accent-1)]"}`}
+        className={`rounded-full border-0 font-bold cursor-pointer ${!reOcurred.includes(index) && "text-[var(--dark-1)]/25 bg-[var(--comp-1)] opacity-50"}`}
         key={index}
         onClick={reOcurred.includes(index)
           ? () => dispatch(changeFieldvalue(field.name, reOcurred.filter(item => item !== index)))

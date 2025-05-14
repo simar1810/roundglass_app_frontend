@@ -7,7 +7,7 @@ export const followUpInitialState = {
     height: "",
     heightUnit: "Cm",
     bmi: "",
-    body_composition: "",
+    body_composition: "Slim",
     visceral_fat: "",
     createdDate: "",
     rm: "",
