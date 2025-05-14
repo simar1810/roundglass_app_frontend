@@ -39,7 +39,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
-  const roles = useAppSelector(state => state.coach.data.roles);
+  const { roles, subscription } = useAppSelector(state => state.coach.data);
 
   const clubFeaturesPermitted = permit("club", roles);
   let sidebarItems = sidebar__coachContent;

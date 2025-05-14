@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -7,9 +8,9 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function UpdateClientGoalModal({ id, defaultValue }) {
+export default function UpdateClientNotesModal({ id, defaultValue }) {
   const [loading, setLoading] = useState(false);
-  const [goal, setGoal] = useState(() => defaultValue);
+  const [notes, setNotes] = useState(() => defaultValue || "");
 
   const closeBtnRef = useRef(null);
 
@@ -17,10 +18,11 @@ export default function UpdateClientGoalModal({ id, defaultValue }) {
     try {
       setLoading(true);
       const data = new FormData();
-      const response = await sendData(`app/updateClient?id=${id}`, { goal }, "PUT");
+      data.append("notes", notes);
+      const response = await sendData(`app/updateClient?id=${id}`, { notes }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${id}`);
+      mutate(`clientDetails?id=${id}`)
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -39,10 +41,10 @@ export default function UpdateClientGoalModal({ id, defaultValue }) {
         <div className="mt-4 grid w-full gap-1.5">
           <Label htmlFor="message" className="font-bold text-[var(--dark-1)]/50 mb-2">Assign new goal to your Client</Label>
           <Textarea
-            placeholder="Write goal yourself."
+            placeholder="Write notes yourself."
             id="message"
-            value={goal}
-            onChange={e => setGoal(e.target.value)}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
             className="focus-visible:ring-[0px] min-h-[150px]"
           />
         </div>

@@ -11,7 +11,6 @@ import { copyText } from "@/lib/utils";
 
 export default function SubscriptionModeClientList() {
   const { isLoading, error, data } = useSWR(`getAllClubSubscriptions`, () => getClubClientSubscriptions());
-  console.log(data)
 
   if (isLoading) return <ContentLoader />
 

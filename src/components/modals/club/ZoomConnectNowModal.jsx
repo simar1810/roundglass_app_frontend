@@ -14,7 +14,7 @@ export default function ZoomConnectNowModal() {
   return <Dialog>
     <DialogTrigger className="text-[var(--accent-1)] px-4 py-2 rounded-[10px]">
       <div className="flex items-center gap-2">
-        <span className="w-[28px] min-h-[28px] text-[#0B5CFF] text-[8px] text-center leading-[28px] aspect-square rounded-full border-1">zoom</span>
+        <span className="w-[28px] min-h-[28px] bg-[#0B5CFF] text-[var(--primary-1)] text-[8px] text-center font-[500] leading-[28px] aspect-square rounded-full">zoom</span>
         <span className="text-black">With Zoom Meetings</span>
       </div>
     </DialogTrigger>

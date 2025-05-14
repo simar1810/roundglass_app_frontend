@@ -1,30 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { sendData, sendDataWithFormData } from "@/lib/api";
-import { X } from "lucide-react";
+import { Pen, Pencil, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-async function sendRequest(formData, _id) {
-  if (formData.file) {
-    const data = new FormData();
-    data.append("file", formData.file);
-    data.append("name", formData.name);
-    data.append("description", formData.description);
-    return await sendDataWithFormData(`app/editPlan?id=${_id}`, data, "PUT");;
-  } else {
-    return await sendData(`app/editPlan?id=${_id}`, formData, "PUT");;
-  }
-}
-
-export default function UpdateMealPlanModal({ mealPlan }) {
+export default function UpdateMealPlanMealType({ mealPlan, recipe }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: mealPlan.name,
-    description: mealPlan.description,
+    name: recipe.name,
+    description: recipe.description,
     file: undefined
   });
   const closeBtnRef = useRef();
@@ -44,10 +31,9 @@ export default function UpdateMealPlanModal({ mealPlan }) {
       setLoading(false);
     }
   }
-
   return <Dialog>
-    <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] font-bold px-4 py-1 rounded-[8px]">
-      Edit
+    <DialogTrigger>
+      <Pencil className="w-[16px] h-[16px] text-[var(--accent-1)] absolute bottom-4 right-4" />
     </DialogTrigger>
     <DialogContent className="max-h-[70vh] p-0 gap-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
@@ -62,7 +48,7 @@ export default function UpdateMealPlanModal({ mealPlan }) {
             hidden
           />
           <Image
-            src={formData.file ? URL.createObjectURL(formData.file) : mealPlan.image || "/not-found.png"}
+            src={formData.file ? URL.createObjectURL(formData.file) : recipe.image || "/not-found.png"}
             height={540}
             width={540}
             alt="meal-plan"

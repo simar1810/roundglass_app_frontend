@@ -3,18 +3,18 @@ import SelectControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { clientDetailsFields } from "@/config/data/ui";
 import { sendDataWithFormData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
-import { useAppSelector } from "@/providers/global/hooks";
 import { format, parse } from "date-fns";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { Image as ImageIcon } from "lucide-react"
 
-const formFields = ["name", "email", "mobileNumber", "dob", "age", "height", "weight", "heightUnit", "weightUnit", "gender"];
+const formFields = ["name", "email", "mobileNumber", "dob", "age", "height", "weight", "heightUnit", "weightUnit", "gender", "file"];
 
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,6 @@ export default function UpdateClientDetailsModal({ clientData }) {
       for (const field of formFields) {
         data.append(field, formData[field])
       }
-      throw new Error("this is error!")
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);
@@ -87,7 +86,7 @@ function ProfilePhoto({ profilePhoto, value, fileRef, setFormData }) {
     />
     {value || profilePhoto
       ? <Image
-        src={getObjectUrl(value) || profilePhoto || "/"}
+        src={getObjectUrl(value) || profilePhoto || "/not-found.png"}
         alt=""
         height={200}
         width={200}
@@ -96,8 +95,10 @@ function ProfilePhoto({ profilePhoto, value, fileRef, setFormData }) {
       />
       : <div
         onClick={() => fileRef.current.click()}
-        className="max-w-[100px] w-full bg-[var(--comp-3)] rounded-full border-[var(--accent-1)] aspect-square"
-      />}
+        className="max-w-[100px] w-full bg-[var(--comp-3)] flex items-center justify-center rounded-full border-[var(--accent-1)] aspect-square"
+      >
+        <ImageIcon className="w-[20px] h-[20px]" />
+      </div>}
   </>
 }
 

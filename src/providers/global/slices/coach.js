@@ -32,6 +32,16 @@ const counterSlice = createSlice({
     destroy: function (state) {
       state.isLoggedIn = false;
       state.data = null;
+    },
+    updateCoachField: function (state, action) {
+      console.log(action)
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          [action.payload.name]: action.payload.value
+        }
+      }
     }
   },
 })
@@ -39,5 +49,6 @@ const counterSlice = createSlice({
 export default counterSlice.reducer;
 export const {
   store,
-  destroy
+  destroy,
+  updateCoachField
 } = counterSlice.actions;
