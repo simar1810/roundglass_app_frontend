@@ -52,7 +52,10 @@ const comparisonPDFData = {
   sideImage: "/side.png",
   bottomStripImage: "/bottom.png",
   allStatsList: [
-    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" }
+    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
+    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
+    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
+    { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
   ]
 }
 
@@ -91,6 +94,9 @@ const invoiceData = {
   products: [
     { productName: 'Formula 1 Shake', quantity: 2, price: 1000 },
     { productName: 'Afresh Energy Drink', quantity: 1, price: 500 },
+    { productName: 'Subtotal', quantity: "", price: 3500 },
+    { productName: 'Discount', quantity: "", price: 500 },
+    { productName: 'Total', quantity: "", price: 3000 },
   ],
 };
 
@@ -100,7 +106,7 @@ const mealPlan = {
   coachDescription: 'Certified Health Coach',
   coachImage: '/coach.jpg',
   brandLogo: '/logo.png',
-  mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
+  mealTypes: ['Breakfast', 'Lunch', 'Snack','Dinner' , 'After Dinner'],
   meals: [
     {
       meals: [
