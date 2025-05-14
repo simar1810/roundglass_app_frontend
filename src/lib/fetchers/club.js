@@ -31,3 +31,15 @@ export function getMeetingZoomEvents(_id) {
 export function getRequestVolumePoints() {
   return fetchData("getReqVpByClients");
 }
+
+export function getClientSubscriptions(id) {
+  return fetchData(`getSubscription/${id}`);
+}
+
+export function getClientVolumePoints(id) {
+  return fetchData(`getClientVP?clientId=${id}`);
+}
+
+export function getClientAttendance(id) {
+  return fetchData(`getClientAttendance/${id}`);
+}

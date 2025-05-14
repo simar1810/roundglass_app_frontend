@@ -119,7 +119,6 @@ export function stage1Completed(state, stage) {
 }
 
 export function generateRequestPayload(state, coachId, existingClientID) {
-  console.log(state, coachId, existingClientID)
   const formData = new FormData();
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);

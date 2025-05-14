@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCaption,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow
@@ -37,40 +38,66 @@ export default function Page() {
       </div>}
     </div>
     <div className="py-4 flex items-center justify-between gap-2 border-t-1">
-      <span>{7} Records Available</span>
+      <span>{meeting?.attendenceList?.length} Records Available</span>
       <Button size="sm" variant="wz_outline">
         <Upload />
         Export Records
       </Button>
     </div>
     <div className="w-[calc(100vw-68px)] md:w-[calc(100vw-344px)] overflow-x-auto">
-      <MeetingAttendanceTable attendanceList={meeting.attendenceList} />
+      <MeetingAttendanceTable meetingType={meeting.meetingType} attendenceList={meeting.attendenceList} />
       <MeetingEventsTable _id={meeting._id} />
     </div>
   </div>
 }
 
-function MeetingAttendanceTable({ attendanceList }) {
+function MeetingAttendanceTable({ meetingType, attendenceList }) {
+  if (attendenceList.length === 0) return <ContentError
+    className="!min-h-[200px] font-[600] mt-4 mb-8"
+    title="No record for this meeting found!"
+  />
+
+  console.log(attendenceList)
+
   return <Table className="bordered-table [&_th]:font-bold [&_th]:text-center mb-10">
     <TableCaption>Meeting Attendance</TableCaption>
     <TableHeader>
       <TableRow>
         <TableHead className="w-[100px]">Sr. No</TableHead>
         <TableHead>Client Name</TableHead>
-        <TableHead>Client ID</TableHead>
-        <TableHead>Email</TableHead>
-        <TableHead>Joining Time</TableHead>
+        <TableHead>Roll No</TableHead>
         <TableHead>Joining Date</TableHead>
+        <TableHead>Joining Time</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
-      {attendanceList.map((attendance, index) => <MeetingAttendanceRow
-        key={index}
-        index={index}
-        attendance={attendance}
-      />)}
+      {meetingType === "reocurr"
+        ? <ReocurringMeetingAttendanceTable attendenceList={attendenceList} />
+        : attendenceList.map((attendance, index) => <MeetingAttendanceRow
+          key={index}
+          index={index}
+          attendance={attendance}
+        />)}
     </TableBody>
   </Table>
+}
+
+function ReocurringMeetingAttendanceTable({ attendenceList }) {
+  return <>
+    {attendenceList.map((attendance, index) => <TableRow key={index}>
+      <TableCell>{index + 1}</TableCell>
+      <TableCell>{attendance?.commonDate}</TableCell>
+      <TableCell className="px-0 py-0 divide-y-1">
+        {attendance.details.map((detail, index) => <p className="py-[2px]" key={index}>{detail.name}</p>)}
+      </TableCell>
+      <TableCell className="px-0 py-0 divide-y-1">
+        {attendance.details.map((detail, index) => <p className="py-[2px]" key={index}>{detail.rollno}</p>)}
+      </TableCell>
+      <TableCell className="px-0 py-0 divide-y-1">
+        {attendance.details.map((detail, index) => <p className="py-[2px]" key={index}>{detail.time}</p>)}
+      </TableCell>
+    </TableRow>)}
+  </>
 }
 
 function MeetingEventsTable({ _id }) {

@@ -9,7 +9,7 @@ import { generateMeetingBaseLink, getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function Page() {
@@ -38,7 +38,9 @@ export default function Page() {
         state={onboardingFormInitialState}
         reducer={onboardingFormReducer}
       >
-        <OnboardingFormContainer />
+        <Suspense>
+          <OnboardingFormContainer />
+        </Suspense>
       </CurrentStateProvider>
     </div>
   </div>

@@ -13,9 +13,6 @@ export default function CheckupStage3() {
   async function createClient() {
     try {
       const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID);
-      for (const [field, value] of data.entries()) {
-        console.log(field, value)
-      }
       const response = await sendDataWithFormData("app/createClient", data);
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);

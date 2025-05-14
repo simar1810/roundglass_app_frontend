@@ -3,27 +3,23 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory } from "@/lib/fetchers/app";
 import { Clock, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
-import ClientStatisticsData from "./ClientStatisticsData";
 import { useEffect, useState } from "react";
+import ClientClubDataComponent from "./ClientClubDataComponent";
 
-export default function ClientData({
-  _id,
-  clientId
-}) {
+export default function ClientData({ clientData }) {
   return <div className="bg-white p-4 rounded-[18px] border-1">
-    <Tabs defaultValue="statistics">
+    <Tabs defaultValue="club">
       <Header />
-      <ClientStatisticsData clientId={clientId} />
-      <ClientMealData _id={_id} />
-      <ClientRetailData clientId={clientId} />
-      <ClientClubDataComponent />
+      {/* <ClientStatisticsData clientId={clientId} /> */}
+      <ClientMealData _id={clientData._id} />
+      <ClientRetailData clientId={clientData.clientId} />
+      <ClientClubDataComponent clientData={clientData} />
     </Tabs>
   </div>
 }
@@ -91,7 +87,6 @@ function ClientMealData({ _id }) {
   </TabsContent>
 }
 
-
 function ClientRetailData({ clientId }) {
   const { isLoading, error, data } = useSWR(`app/getClientOrderHistory?clientId=${clientId}`, () => getClientOrderHistory(clientId));
 
@@ -154,89 +149,6 @@ function RetailPendingLabel() {
   return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>Pending</p>
-  </div>
-}
-
-function ClientClubDataComponent() {
-  if (false) return <TabsContent value="club">
-    <Image
-      src="/illustrations/club.svg"
-      alt=""
-      height={305}
-      width={305}
-      className="max-w-[300px] h-full w-full mx-auto object-contain"
-    />
-    <h5 className="text-center">This feature is only available with premium memberships</h5>
-    <Button variant="wz" className="mt-4 mb-20 mx-auto block">Add membership</Button>
-  </TabsContent>
-
-  return <TabsContent value="club">
-    <SubscriptionHistory />
-    <AttendanceRecord />
-  </TabsContent>
-}
-
-function SubscriptionHistory() {
-  return <div className="mb-8">
-    <div className="flex items-center justify-between">
-      <h5>Subscription History</h5>
-      <Button variant="wz" size="sm">Add</Button>
-    </div>
-    <Table className="bordered-table mt-4 [&_th]:font-bold">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Sr No.</TableHead>
-          <TableHead>Invoice No.</TableHead>
-          <TableHead>Valid From</TableHead>
-          <TableHead>Valid Till</TableHead>
-          <TableHead>Payment</TableHead>
-          <TableHead>Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: 2 }, (_, i) => i).map(item => <TableRow key={item}>
-          <TableCell>1</TableCell>
-          <TableCell>#1234-1234-1234</TableCell>
-          <TableCell>01/01/2000 </TableCell>
-          <TableCell>01/01/2001</TableCell>
-          <TableCell>Online</TableCell>
-          <TableCell>199</TableCell>
-        </TableRow>)}
-      </TableBody>
-    </Table>
-  </div>
-}
-function AttendanceRecord() {
-  return <div className="mb-8">
-    <div className="flex items-center justify-between">
-      <h5>Attendance Record</h5>
-      <Button variant="wz_outline" size="sm" className="font-[500]">
-        <Upload />
-        Export Records
-      </Button>
-    </div>
-    <Table className="bordered-table mt-4 [&_th]:font-bold">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Sr No.</TableHead>
-          <TableHead>Meet Link</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Time</TableHead>
-          <TableHead>Attendance</TableHead>
-          <TableHead>Club Type</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: 2 }, (_, i) => i).map(item => <TableRow key={item}>
-          <TableCell>1</TableCell>
-          <TableCell>https://Wellness Zmeet.google.com/rwx-nter-hhy</TableCell>
-          <TableCell>01/01/2000 </TableCell>
-          <TableCell>10:00 AM</TableCell>
-          <TableCell>1</TableCell>
-          <TableCell>Morning</TableCell>
-        </TableRow>)}
-      </TableBody>
-    </Table>
   </div>
 }
 

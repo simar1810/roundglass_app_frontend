@@ -6,10 +6,9 @@ export default function MeetingAttendanceRow({
 }) {
   return <TableRow>
     <TableCell>{index + 1}</TableCell>
-    <TableCell>{attendance.name}</TableCell>
-    <TableCell>{attendance.rollno}</TableCell>
-    <TableCell>null in api</TableCell>
-    <TableCell>{attendance.attendance.time}</TableCell>
-    <TableCell>{attendance.attendance.date}</TableCell>
+    <TableCell>{attendance?.name}</TableCell>
+    <TableCell>{attendance?.rollno}</TableCell>
+    <TableCell>{attendance?.attendance?.date}</TableCell>
+    <TableCell>{attendance?.attendance?.time}</TableCell>
   </TableRow>
 }
