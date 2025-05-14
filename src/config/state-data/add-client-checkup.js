@@ -30,4 +30,6 @@ export const addClientCheckupInitialState = {
   nextFollowup: "",
   clientType: "existing",// e.g. new, existing
   file: null,
+  pendingCustomer: false,
+  existingClientID: ""
 }

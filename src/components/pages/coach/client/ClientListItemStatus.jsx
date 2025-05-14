@@ -16,21 +16,37 @@ import DeleteClientModal from "@/components/modals/client/DeleteClientModal";
 import { useState } from "react";
 import { nameInitials } from "@/lib/formatter";
 import FollowUpModal from "@/components/modals/client/FollowUpModal";
+import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
+import { DialogTrigger } from "@/components/ui/dialog";
 
 export default function ClientListItemStatus({
   client
 }) {
   const [modal, setModal] = useState();
+  const [modalOpened, setModalOpened] = useState(false);
 
   return <div className="mb-1 px-4 py-2 flex items-center gap-4">
     {modal}
-    <Link className="grow flex items-center gap-4" href={`/coach/clients/${client._id}`}>
-      <Avatar className="w-[36px] h-[36px] !rounded-[8px]">
-        <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
-        <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
-      </Avatar>
-      <p className="text-[12px] font-semibold mr-auto">{client.name}</p>
-    </Link>
+    {client.isVerified
+      ? <Link className="grow flex items-center gap-4" href={`/coach/clients/${client._id}`}>
+        <Avatar className="w-[36px] h-[36px] !rounded-[8px]">
+          <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
+          <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
+        </Avatar>
+        <p className="text-[12px] font-semibold mr-auto">{client.name}</p>
+      </Link>
+      : <div onClick={() => setModalOpened(true)} className="grow flex items-center gap-4">
+        <Avatar className="w-[36px] h-[36px] !rounded-[8px]">
+          <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
+          <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
+        </Avatar>
+        <p className="text-[12px] font-semibold mr-auto">{client.name}</p>
+      </div>}
+    {!client.isVerified && modalOpened && <AddClientWithCheckup
+      type="add-details"
+      data={client}
+      setModal={setModalOpened}
+    />}
     {client.isVerified
       ? <Badge className="text-white font-semibold bg-[var(--accent-1)] border-[var(--accent-1)]">Active</Badge>
       : <Badge

@@ -5,17 +5,22 @@ import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
 
   async function createClient() {
     try {
-      const data = generateRequestPayload({ ...state, file });
+      const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID);
+      for (const [field, value] of data.entries()) {
+        console.log(field, value)
+      }
       const response = await sendDataWithFormData("app/createClient", data);
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       dispatch(createdClient(response.data.clientId));
+      mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {
       toast.error(error.message);
     }

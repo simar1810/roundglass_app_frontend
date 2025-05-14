@@ -69,7 +69,6 @@ export function calculateIdealWeight({
 
   // Sanity check: normal adult ideal weight should be in a sensible range
   if (finalWeight < 40 || finalWeight > 150) {
-    console.warn("Unusual ideal weight result:", finalWeight);
   }
 
   return Math.round(finalWeight);
@@ -121,19 +120,6 @@ export function calculateSkeletalMassPercentage({
   height = parseFloat(height);
   age = parseInt(age);
 
-  console.log({
-    gender,
-    weight,
-    height,
-    heightFeet,
-    heightInches,
-    heightCms,
-    age,
-    bodyComposition,
-    weightUnit,
-    heightUnit,
-  });
-
   const weightInKgs = weightUnit === "Pounds" ? weight * 0.453592 : weight;
 
   const heightInCms =
@@ -174,10 +160,7 @@ export function calculateSkeletalMassPercentage({
           skeletalMassPercentage -= 2.0;
           break;
         default:
-          // throw new Error('Invalid body composition. Use "slim", "medium", or "fat".');
-          console.warn(
-            'Invalid or missing body composition. Expected "slim", "medium", or "fat".'
-          );
+          skeletalMassPercentage += 0;
       }
 
       skeletalMassPercentage = Math.max(

@@ -5,19 +5,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { addClientCheckupInitialState } from "@/config/state-data/add-client-checkup";
-import { addClientCheckupReducer } from "@/config/state-reducers/add-client-checkup";
+import { addClientCheckupReducer, init } from "@/config/state-reducers/add-client-checkup";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import CheckupStage1 from "../add-client/CheckupStage1";
 import CheckupStage2 from "../add-client/CheckupStage2";
 import CheckupStage3 from "../add-client/CheckupStage3";
 import ClientCreatedNotify from "../add-client/ClientCreatedNotify";
 
-export default function AddClientWithCheckup({ setModal }) {
+export default function AddClientWithCheckup({ children, type, data, setModal }) {
   return <Dialog open={true} onOpenChange={() => setModal()}>
-    <DialogTrigger />
+    {children}
+    {!children && <DialogTrigger />}
     <CurrentStateProvider
-      state={addClientCheckupInitialState}
+      state={init(type, data)}
       reducer={addClientCheckupReducer}
     >
       <AddClientCheckupContainer />
@@ -32,7 +32,7 @@ function AddClientCheckupContainer() {
   return <DialogContent className="!max-w-[656px] h-[692px] border-0 p-0 overflow-y-auto">
     <DialogHeader className="p-4 border-b-2 border-[var(--dark-1)]/25">
       <DialogTitle className="text-left text-black text-lg font-semibold">
-        Add Client
+        Client Details
       </DialogTitle>
       <Component />
     </DialogHeader>

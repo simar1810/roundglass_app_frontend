@@ -32,11 +32,10 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
-import { mutate } from "swr";
 
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
-    <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 flex items-center justify-center gap-2 rounded-[8px]">
+    <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange />
       Follow-up
     </DialogTrigger>
@@ -63,7 +62,6 @@ function FollowUpModalContainer({ clientId, dob }) {
 function Stage1() {
   const { followUpType, healthMatrix, dispatch, ...state } =
     useCurrentStateContext();
-  // console.log(healthMatrix)
 
   return <div className="p-4">
     <FormControl
@@ -233,8 +231,6 @@ function Stage2({ clientId }) {
     }),
     age: age,
   };
-  // console.log(age);
-  // console.log("heath matrix", healthMatrix);
 
   async function createFollowUp() {
     try {

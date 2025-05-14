@@ -106,7 +106,8 @@ export function stage1Completed(state, stage) {
   return { success: true };
 }
 
-export function generateRequestPayload(state, coachId) {
+export function generateRequestPayload(state, coachId, existingClientID) {
+  console.log(state, coachId, existingClientID)
   const formData = new FormData();
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
@@ -114,5 +115,17 @@ export function generateRequestPayload(state, coachId) {
   const joiningDate = format(parse(state.joiningDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy');
   formData.append("coachId", coachId);
   formData.append("joiningDate", joiningDate);
+  formData.append("existingClientID", existingClientID);
   return formData;
+}
+
+export function init(type, data) {
+  if (type !== "add-details") return addClientCheckupInitialState;
+  const payload = addClientCheckupInitialState;
+  for (const field of ["mobileNumber", "name"]) {
+    payload[field] = data[field];
+  }
+  payload.pendingCustomer = "true";
+  payload.existingClientID = data._id;
+  return payload;
 }
