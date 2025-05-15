@@ -81,8 +81,8 @@ export function generateRequestPayload(state) {
     payload[field.name] = state[field.name];
   }
   if (state.data && state.time) {
-    const schedulueDate = format(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()), 'dd-MM-yyyy HH:mm:ss');
-    payload.schedulueDate = schedulueDate;
+    const scheduleDate = format(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()), 'dd-MM-yyyy HH:mm:ss');
+    payload.scheduleDate = scheduleDate;
   }
   return payload;
 }
