@@ -57,8 +57,6 @@ function MeetingAttendanceTable({ meetingType, attendenceList }) {
     title="No record for this meeting found!"
   />
 
-  console.log(attendenceList)
-
   return <Table className="bordered-table [&_th]:font-bold [&_th]:text-center mb-10">
     <TableCaption>Meeting Attendance</TableCaption>
     <TableHeader>

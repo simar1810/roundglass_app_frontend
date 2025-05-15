@@ -28,7 +28,6 @@ export default function AddSubscriptionModal({ _id }) {
     try {
       setLoading(true);
       const response = await sendData(`addSubscription/${_id}`, formData, "POST");
-      console.log(response)
       if (!response.status) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientSubscriptions/${_id}`)

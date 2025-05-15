@@ -20,7 +20,11 @@ export function clubSystemReducer(state, action) {
       }
     case "RESET":
       return clubSystemInitialState
-
+    case "CLUB_SYSTEM_CHANGE":
+      return {
+        ...state,
+        selectedClubSystem: action.payload
+      }
     default:
       return state;
   }
@@ -43,4 +47,8 @@ export function resetClubSystemChange() {
 
 export function onChangeOTP(otp) {
   return { type: "UPDATE_OTP", payload: otp }
+}
+
+export function changeClubSystem(clubSystem) {
+  return { type: "CLUB_SYSTEM_CHANGE", payload: clubSystem }
 }

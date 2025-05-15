@@ -26,7 +26,6 @@ export default function AddVolumePointsModal({ _id }) {
     try {
       setLoading(true);
       const response = await sendData(`addVolumePoints`, formData);
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientVolumePoints/${_id}`);

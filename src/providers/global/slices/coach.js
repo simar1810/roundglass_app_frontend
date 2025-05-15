@@ -34,12 +34,9 @@ const counterSlice = createSlice({
       state.data = null;
     },
     updateCoachField: function (state, action) {
-      return {
-        ...state,
-        data: {
-          ...state.data,
-          [action.payload.name]: action.payload.value
-        }
+      state.data = {
+        ...state.data,
+        [action.payload.name]: action.payload.value
       }
     }
   },

@@ -22,9 +22,17 @@ export default function Page() {
 
   const customers = data.payload;
 
+  if (customers.length === 0) return <div className="content-container">
+    <FreeTrialCustomerHeader />
+    <ContentError
+      className="text-center font-semibold text-[var(--dark-1)]/50 border-0"
+      title="0 Free Trial Customers Found"
+    />
+  </div>
+
   return <div className="content-container">
     <FreeTrialCustomerHeader />
-    <div className="w-[calc(100vw-68px)] md:w-[calc(100vw-344px)] overflow-x-auto">
+    <div className="overflow-x-auto">
       <Table className="bordered-table [&_th]:font-bold [&_th]:text-center">
         <TableHeader>
           <TableRow>

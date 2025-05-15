@@ -20,8 +20,8 @@ export function getClubClientVolumePoints() {
   return fetchData("clubClientsWithVP");
 }
 
-export function getClubClientSubscriptions() {
-  return fetchData("getAllClubSubscriptions")
+export function getClubClientSubscriptions(page, limit) {
+  return fetchData(`getAllSubscription?page=${page}&limit=${limit}`);
 }
 
 export function getMeetingZoomEvents(_id) {
