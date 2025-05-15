@@ -13,7 +13,7 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { getMeeting, getMeetingZoomEvents } from "@/lib/fetchers/club";
-import { format, parse } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import { Upload } from "lucide-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -32,9 +32,9 @@ export default function Page() {
   return <div className="content-container">
     <div className="text-[20px] mb-4 flex items-center justify-between gap-4">
       <h4>Meet Link</h4>
-      {meeting.schedulueDate && <div>
+      {meeting.scheduleDate && <div>
         Date:&nbsp;
-        {format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), "dd-MM-yyyy")}
+        {format(parseISO(meeting.scheduleDate), 'dd-MM-yyyy')}
       </div>}
     </div>
     <div className="py-4 flex items-center justify-between gap-2 border-t-1">

@@ -4,6 +4,7 @@ export default function MeetingAttendanceRow({
   attendance,
   index
 }) {
+  console.log(attendance)
   return <TableRow>
     <TableCell>{index + 1}</TableCell>
     <TableCell>{attendance?.name}</TableCell>

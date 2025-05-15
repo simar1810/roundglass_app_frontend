@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 export default function ReviewSubscriptionModal({ subscription }) {
-  console.log(subscription)
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef(null);
 
@@ -27,7 +26,6 @@ export default function ReviewSubscriptionModal({ subscription }) {
         status
       }
       const response = await sendData(`approveSubscriptionClients?`, data, "POST");
-      console.log(response)
       if (response.success === false || response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       closeBtnRef.current.click();

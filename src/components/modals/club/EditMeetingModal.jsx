@@ -29,7 +29,7 @@ export default function EditMeetingModal({ meeting }) {
         baseLink: e.currentTarget.baseLink.value,
         meetingType: e.currentTarget.meetingType.value,
         clubType: e.currentTarget.clubType.value,
-        schedulueDate: `${format(parse(e.currentTarget.date.value, "yyyy-mm-dd", new Date()), 'dd-MM-yyyy')} ${e.currentTarget.time.value}:00`,
+        scheduleDate: `${format(parse(e.currentTarget.date.value, "yyyy-mm-dd", new Date()), 'dd-MM-yyyy')} ${e.currentTarget.time.value}:00`,
         time: e.currentTarget.time.value,
         date: e.currentTarget.date.value
       }
