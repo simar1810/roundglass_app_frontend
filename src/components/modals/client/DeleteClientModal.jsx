@@ -42,7 +42,7 @@ export default function DeleteClientModal({
 
   return <AlertDialog defaultOpen={defaultOpen}>
     {!defaultOpen && <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] px-2 flex items-center gap-2">
-      <Trash className="w-[16px]" />
+      <Trash className="w-[16px] text-[var(--accent-2)]" />
       Delete Client
     </AlertDialogTrigger>}
     <AlertDialogContent className="!max-w-[450px] text-center border-0 px-0 overflow-auto gap-0">

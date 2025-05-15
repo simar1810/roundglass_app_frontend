@@ -1,9 +1,11 @@
 import { AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { onChangeOTP } from "@/config/state-reducers/clubsystem";
+import { changeClubSystem, onChangeOTP } from "@/config/state-reducers/clubsystem";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { useAppDispatch } from "@/providers/global/hooks";
+import { updateCoachField } from "@/providers/global/slices/coach";
 import Image from "next/image";
 import { useRef } from "react";
 import { toast } from "sonner";
@@ -12,9 +14,10 @@ import { mutate } from "swr";
 export default function ClubSystemConfirmation({ clubSystem }) {
   const {
     otp,
+    selectedClubSystem,
     dispatch
   } = useCurrentStateContext();
-
+  const dispatchRedux = useAppDispatch();
   const alertClose = useRef();
 
   async function confirmationClusSystemChange() {
@@ -26,7 +29,9 @@ export default function ClubSystemConfirmation({ clubSystem }) {
       const response = await sendData("verifyOtpToUpdateClubSystem", data);
       if (!response.sucess) throw new Error(response.message || response.error);
       toast.success(response.message);
-      mutate("coachProfile")
+      dispatchRedux(updateCoachField({ name: "clubSystem", value: selectedClubSystem }));
+      dispatch(onChangeOTP(""));
+      mutate("coachProfile");
       alertClose.current.click();
     } catch (error) {
       toast.error(error.message);

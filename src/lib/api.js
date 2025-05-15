@@ -10,7 +10,7 @@ export async function fetchData(endpoint) {
 
     const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
       headers: {
-        Authorization: `Bearer ${TOKEN}`
+        Authorization: `Bearer ${TOKEN}`,
       },
       cache: "no-store"
     });

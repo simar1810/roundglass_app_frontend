@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendData } from "@/lib/api";
+import { getMeeting } from "@/lib/fetchers/club";
 import { generateMeetingBaseLink } from "@/lib/utils";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -27,6 +28,17 @@ export default function Page() {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onboardClient() {
+    try {
+      const response = await getMeeting(id)
+      if (!response.success) throw new Error(response.message);
+      toast.success(response.message);
+      router.push(`/onboarding-form?id=${response?.data?.coach}`)
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
     }
   }
 
@@ -58,6 +70,13 @@ export default function Page() {
           Enter
         </Button>
       </div>
+      <Button
+        size="sm"
+        onClick={onboardClient}
+        className="block mt-4 mx-auto"
+      >
+        Don't Have Roll Number
+      </Button>
     </div>
   </div>
 }

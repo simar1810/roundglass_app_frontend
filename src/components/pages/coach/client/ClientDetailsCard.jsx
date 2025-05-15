@@ -17,11 +17,13 @@ import {
 import {
   ChevronDown,
   EllipsisVertical,
+  Plus,
   Target,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,9 @@ import { mutate } from "swr";
 import { sendData } from "@/lib/api";
 import FollowUpModal from "@/components/modals/client/FollowUpModal";
 import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotesModal";
+import { useRef, useState } from "react";
+import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
+import useClickOutside from "@/hooks/useClickOutside";
 
 export default function ClientDetailsCard({ clientData }) {
   return <Card className="bg-white rounded-[18px] shadow-none">
@@ -97,6 +102,26 @@ export default function ClientDetailsCard({ clientData }) {
 }
 
 function Header({ clientData }) {
+  const [modalOpened, setModalOpened] = useState(false);
+
+  const dropdownRef = useRef(null);
+  useClickOutside(dropdownRef, () => setModalOpened(false));
+
+  async function generateClientRollno(setLoading) {
+    try {
+      setLoading(true)
+      const response = await sendData(`edit-rollno?id=${clientData._id}`, { clientId: clientData._id });
+      if (!response.success) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`clientDetails?id=${clientData._id}`);
+      setModalOpened(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return <CardHeader className="relative flex items-center gap-4 md:gap-8">
     <Avatar className="w-[100px] h-[100px]">
       <AvatarImage src={clientData.profilePhoto} />
@@ -104,18 +129,42 @@ function Header({ clientData }) {
     </Avatar>
     <div>
       <h3 className="mb-2">{clientData.name}</h3>
-      <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1] mb-2">ID #{clientData.clientId}</p>
+      <div className="mb-2 flex items-center gap-2">
+        <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
+        <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
+        {clientData.rollno && <EditClientRollnoModal
+          defaultValue={clientData.rollno}
+          _id={clientData._id}
+        />}
+      </div>
       <ClientStatus
         status={clientData.isActive}
         _id={clientData._id}
       />
     </div>
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild className="!absolute top-0 right-4">
+    <DropdownMenu open={modalOpened}>
+      <DropdownMenuTrigger onClick={() => setModalOpened(true)} asChild className="!absolute top-0 right-4">
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="text-[14px] font-semibold">
-        <DeleteClientModal _id={clientData._id} />
+      <DropdownMenuContent ref={dropdownRef} className="text-[14px] font-semibold">
+        <DropdownMenuItem>
+          <DeleteClientModal
+            onClose={() => setModalOpened(false)}
+            _id={clientData._id}
+          />
+        </DropdownMenuItem>
+        {!Boolean(clientData.rollno) && <DropdownMenuItem>
+          <DualOptionActionModal
+            action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}
+            description="Are you sure to generate a new roll number for the client?"
+            onClose={() => setModalOpened(false)}
+          >
+            <AlertDialogTrigger className="font-semibold text-[var(--accent-1)] px-2 flex items-center gap-2">
+              <Plus strokeWidth="3" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
+              Generate Roll Number
+            </AlertDialogTrigger>
+          </DualOptionActionModal>
+        </DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   </CardHeader>

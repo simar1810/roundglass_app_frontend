@@ -17,9 +17,15 @@ export function addClientCheckupReducer(state, action) {
       return {
         ...state,
         heightUnit: action.payload,
-        height: action.payload.toLowerCase() === "cm"
-          ? (state.height / 30.48).toFixed(2)
-          : (state.height * 30.48).toFixed(2)
+        heightCms: action.payload.toLowerCase() === "cm"
+          ? (Number(state.heightFeet) * 30.48) + (Number(state.heightInches) * 2.54)
+          : state.heightCms,
+        heightFeet: action.payload.toLowerCase() === "inches"
+          ? Math.floor(Number(state.heightCms) / 30.48)
+          : state.heightFeet,
+        heightInches: action.payload.toLowerCase() === "inches"
+          ? Math.round(((Number(state.heightCms) / 30.48) % 1) * 12)
+          : state.heightInches,
       }
     case "CHANGE_WEIGHT_UNIT":
       return {
@@ -37,6 +43,7 @@ export function addClientCheckupReducer(state, action) {
     case "CLIENT_CREATION_DONE":
       return {
         ...addClientCheckupInitialState,
+        stage: 4,
         clientId: action.payload
       }
 
@@ -95,24 +102,46 @@ export function updateMatrices(matrices, values) {
 }
 
 const fields = {
-  stage1: ["name", "dob", "gender", "joiningDate", "height", "heightUnit", "weight", "weightUnit", "bodyComposition"],
-  requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "height", "heightUnit", "weight", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "bodyComposition", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
+  stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weight", "weightUnit", "bodyComposition"],
+  requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "heightUnit", "weight", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "bodyComposition", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
 }
 
 export function stage1Completed(state, stage) {
   for (const field of fields[stage]) {
     if (!state[field]) return { success: false, field };
   }
+  if (state.heightUnit.toLowerCase() === "cm") {
+    if (!state["heightCms"]) return { success: false, field: "Height Cms" };
+  } else {
+    if (!state["heightFeet"] || !state["heightInches"]) return { success: false, field: "Height Feet ,Height Inches" };
+  }
   return { success: true };
 }
 
-export function generateRequestPayload(state, coachId) {
+export function generateRequestPayload(state, coachId, existingClientID) {
   const formData = new FormData();
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
+  if (state.heightUnit.toLowerCase() === "cm") {
+    formData.append("height", state["heightCms"]);
+  } else {
+    formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
+  }
   const joiningDate = format(parse(state.joiningDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy');
   formData.append("coachId", coachId);
   formData.append("joiningDate", joiningDate);
+  formData.append("existingClientID", existingClientID);
   return formData;
+}
+
+export function init(type, data) {
+  if (type !== "add-details") return addClientCheckupInitialState;
+  const payload = addClientCheckupInitialState;
+  for (const field of ["mobileNumber", "name"]) {
+    payload[field] = data[field];
+  }
+  payload.pendingCustomer = "true";
+  payload.existingClientID = data._id;
+  return payload;
 }

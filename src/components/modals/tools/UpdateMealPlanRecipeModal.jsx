@@ -1,26 +1,37 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Pen, Pencil, X } from "lucide-react";
+import { sendData, sendDataWithFormData } from "@/lib/api";
+import { Pencil, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function UpdateMealPlanMealType({ mealPlan, recipe }) {
+export default function UpdateMealPlanRecipeModal({ mealType, mealPlan, recipe }) {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     name: recipe.name,
     description: recipe.description,
     file: undefined
-  });
+  }));
   const closeBtnRef = useRef();
   const fileRef = useRef();
 
   async function updateMealPlan() {
     try {
-      setLoading(true)
-      const response = await sendRequest(formData, mealPlan._id);
+      setLoading(true);
+      if (formData.file) {
+        const data = new FormData();
+        data.append("file", formData.file);
+        const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+        formData.image = response.img;
+      }
+      const payload = mealPlan.meals.map(meals => meals.mealType === mealType
+        ? { ...meals, meals: meals.meals.map(meal => meal.meal_id === recipe.meal_id ? { ...meal, ...formData } : meal) }
+        : meals
+      )
+      const response = await sendData(`app/update-plan?id=${mealPlan._id}`, { meals: payload }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Successfully updated the meal plan!");
       closeBtnRef.current.click();

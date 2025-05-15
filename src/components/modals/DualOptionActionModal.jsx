@@ -12,6 +12,7 @@ export default function DualOptionActionModal({
   children,
   description,
   action,
+  onClose,
   ...props
 }) {
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ export default function DualOptionActionModal({
         <AlertDialogCancel
           ref={closeBtnRef}
           className="bg-[var(--accent-2)] text-white mr-2 py-[9px] px-4 rounded-[8px]"
+          onClick={onClose ? onClose : new Function()}
         >
           Cancel
         </AlertDialogCancel>

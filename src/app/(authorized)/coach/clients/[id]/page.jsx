@@ -17,9 +17,6 @@ export default function Page() {
 
   return <div className="mt-4 grid md:grid-cols-2 items-start gap-4">
     <ClientDetailsCard clientData={clientData} />
-    <ClientData
-      clientId={clientData.clientId}
-      _id={clientData._id}
-    />
+    <ClientData clientData={clientData} />
   </div>
 }

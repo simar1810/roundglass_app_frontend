@@ -5,7 +5,7 @@ export const addClientCheckupInitialState = {
   mobileNumber: "",
   age: "",
   dob: "", //done
-  gender: "",//done
+  gender: "male",//done
   coachId: "",
   notes: "",
   weight: "",
@@ -13,6 +13,9 @@ export const addClientCheckupInitialState = {
   weightInKgs: "",
   heightInCms: "",
   height: "",
+  heightCms: "",
+  heightFeet: "",
+  heightInches: "",
   heightUnit: "Cm", // e.g. Inches, Cm
   bmi: "",
   visceral_fat: "",
@@ -22,7 +25,7 @@ export const addClientCheckupInitialState = {
   joiningDate: "",
   muscle: "",
   fat: "",
-  bodyComposition: "",
+  bodyComposition: "Slim",
   ideal_weight: "",
   bodyAge: "",
   pendingCustomer: "",
@@ -30,4 +33,6 @@ export const addClientCheckupInitialState = {
   nextFollowup: "",
   clientType: "existing",// e.g. new, existing
   file: null,
+  pendingCustomer: false,
+  existingClientID: ""
 }

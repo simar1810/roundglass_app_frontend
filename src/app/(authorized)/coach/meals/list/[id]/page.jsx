@@ -1,7 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import UpdateMealPlanMealType from "@/components/modals/tools/UpdateMealPlanMealType";
+import UpdateMealPlanRecipeModal from "@/components/modals/tools/UpdateMealPlanRecipeModal";
 import UpdateMealPlanModal from "@/components/modals/tools/UpdateMealPlanModal";
 import { getMealPlanById } from "@/lib/fetchers/app";
 import { Clock, Pencil } from "lucide-react";
@@ -44,7 +44,7 @@ export default function Page() {
         key={index}
         recipe={recipe}
         mealPlan={planData}
-        index={index}
+        selectedIndex={selectedIndex}
       />)}
     </div>
   </div>
@@ -66,10 +66,11 @@ function MealTypesList({
   </div>
 }
 
-function RecipeDetails({ mealPlan, recipe }) {
+function RecipeDetails({ selectedIndex, mealPlan, recipe }) {
   return <div className="min-w-96 max-w-96 border border-grey-500 rounded-md px-4 py-4 pr-4 relative">
     <Image
       src={recipe.image}
+      onError={e => e.target.src = "/not-found.png"}
       height={540}
       width={540}
       alt="Recipe Image"
@@ -81,9 +82,11 @@ function RecipeDetails({ mealPlan, recipe }) {
       <Clock size={20} fill="#67BC2A" className="text-[var(--primary-1)]" />
       <span className="text-[14px]">{recipe.meal_time}</span>
     </div>
-    <UpdateMealPlanMealType
+    <UpdateMealPlanRecipeModal
       mealPlan={mealPlan}
       recipe={recipe}
+      mealType={mealPlan.meals[selectedIndex]?.mealType}
+      key={recipe._id}
     />
   </div>
 }
