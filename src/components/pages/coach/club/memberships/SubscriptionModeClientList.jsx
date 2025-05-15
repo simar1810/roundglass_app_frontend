@@ -13,21 +13,17 @@ import { useState } from "react";
 export default function SubscriptionModeClientList() {
   const [page, setPage] = useState(1)
   const { isLoading, error, data } = useSWR(`getAllSubscription?limit=20&page${page}`, () => getClubClientSubscriptions(page, 20));
-
   if (isLoading) return <ContentLoader />
-
   if (data.status_code !== 200 || error) return <ContentError title={error || data.message} />
-
   const subscriptions = data.data;
-  console.log(subscriptions)
 
   return <div className="content-container">
     <Header />
     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-4 divide-y-1">
-      {/* {subscriptions.map(subscription => <ClientListSubscription
+      {subscriptions.map(subscription => <ClientListSubscription
         subscription={subscription}
         key={subscription._id}
-      />)} */}
+      />)}
     </div>
   </div>
 }

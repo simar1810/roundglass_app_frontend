@@ -3,5 +3,6 @@ export const membershipState = {
   date: "",
   points: "",
   file: "",
-  amount: ""
+  amount: "",
+  name: ""
 }

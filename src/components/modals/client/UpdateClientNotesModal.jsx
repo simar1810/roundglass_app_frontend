@@ -36,7 +36,7 @@ export default function UpdateClientNotesModal({ id, defaultValue }) {
       Edit
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] text-center border-0 px-4 overflow-auto gap-0">
-      <DialogTitle className="text-[24px] mb-4">Edit Goal</DialogTitle>
+      <DialogTitle className="text-[24px] mb-4">Edit Notes</DialogTitle>
       <div>
         <div className="mt-4 grid w-full gap-1.5">
           <Label htmlFor="message" className="font-bold text-[var(--dark-1)]/50 mb-2">Assign new goal to your Client</Label>

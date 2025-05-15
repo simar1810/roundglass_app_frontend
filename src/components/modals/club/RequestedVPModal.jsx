@@ -11,7 +11,7 @@ import { getRequestVolumePoints } from "@/lib/fetchers/club";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
 
-export default function RequestedVPModal({ _id }) {
+export default function RequestedVPModal() {
   const { isLoading, error, data } = useSWR("getRequestVolumePoints", () => getRequestVolumePoints())
 
   if (isLoading) return <></>
@@ -23,20 +23,22 @@ export default function RequestedVPModal({ _id }) {
       Requested Volume Points
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] max-h-[65vh] text-center border-0 px-0 overflow-auto gap-0">
-      {data.status_code !== 200 || error
-        ? <>
-          <DialogTitle className="text-[24px] mb-0">Error</DialogTitle>
-          <ContentError title={error || data.message} className="!min-h-[200px] border-0" />
-        </>
-        : <>
-          <DialogTitle className="text-[24px]">Requested Volume Points</DialogTitle>
-          {vps.map(vp => <RequestVolumePointCard
-            vp={vp}
-            key={vp._id}
-          />)}
-        </>}
+      {data.status_code !== 200 || error && <>
+        <DialogTitle className="text-[24px] mb-0">Error</DialogTitle>
+        <ContentError title={error || data.message} className="!min-h-[200px] border-0" />
+      </>}
+      {data.status_code === 200 && !error && <>
+        <DialogTitle className="text-[24px]">Requested Volume Points</DialogTitle>
+        {vps.map(vp => <RequestVolumePointCard
+          vp={vp}
+          key={vp._id}
+        />)}
+      </>}
+      {vps.length === 0 && <div className="text-[var(--dark-1)]/50 mb-4">
+        <ContentError title="No Volume Points Requested!" className="!min-h-[200px] border-0" />
+      </div>}
     </DialogContent>
-  </Dialog>
+  </Dialog >
 }
 
 function RequestVolumePointCard({ vp }) {

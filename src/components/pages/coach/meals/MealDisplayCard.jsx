@@ -37,8 +37,8 @@ export default function MealDisplayCard({ plan }) {
     }
   }
 
-  return <Link href={`/coach/meals/list/${plan._id}`}>
-    <Card className="p-0 rounded-[4px] shadow-none gap-2">
+  return <Card className="p-0 rounded-[4px] shadow-none gap-2">
+    <Link href={`/coach/meals/list/${plan._id}`}>
       <CardHeader className="relative aspect-video">
         <Image
           fill
@@ -79,15 +79,17 @@ export default function MealDisplayCard({ plan }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-2">
-        <div className="flex items-start justify-between gap-1">
+    </Link>
+    <CardContent className="p-2">
+      <div className="flex items-start justify-between gap-1">
+        <Link href={`/coach/meals/list/${plan._id}`}>
           <h5 className="text-[12px]">{plan.name}</h5>
-          <AssignMealModal planId={plan._id} />
-        </div>
-        <p className="text-[14px] text-[var(--dark-1)]/25 leading-tight mt-2">
-          {plan.description}
-        </p>
-      </CardContent>
-    </Card>
-  </Link>
+        </Link>
+        <AssignMealModal planId={plan._id} />
+      </div>
+      <p className="text-[14px] text-[var(--dark-1)]/25 leading-tight mt-2">
+        {plan.description}
+      </p>
+    </CardContent>
+  </Card>
 }
