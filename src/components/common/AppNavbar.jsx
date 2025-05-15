@@ -37,6 +37,22 @@ export default function AppNavbar() {
   </nav>
 }
 
+export function useExpireUserSession() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  return async function expireUserSession() {
+    try {
+      const response = await fetch("/api/logout", { method: "DELETE" });
+      const data = await response.json();
+      if (data.status_code !== 200) throw new Error(data.message);
+      dispatch(destroy());
+      router.push("/login");
+    } catch (error) {
+      toast.error(error.message || "Please try again later");
+    }
+  };
+}
 const features = [
   { id: 1, title: "Meal", link: "/coach/meals/list" },
   { id: 2, title: "Recipees", link: "/coach/meals/recipes" },
