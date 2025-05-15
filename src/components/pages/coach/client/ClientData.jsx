@@ -5,20 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory } from "@/lib/fetchers/app";
-import { Clock, Upload } from "lucide-react";
+import { Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
 import { useEffect, useState } from "react";
 import ClientClubDataComponent from "./ClientClubDataComponent";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function ClientData({ clientData }) {
+  const { organisation } = useAppSelector(state => state.coach.data);
   return <div className="bg-white p-4 rounded-[18px] border-1">
     <Tabs defaultValue="club">
       <Header />
       {/* <ClientStatisticsData clientId={clientId} /> */}
       <ClientMealData _id={clientData._id} />
-      <ClientRetailData clientId={clientData.clientId} />
+      {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       <ClientClubDataComponent clientData={clientData} />
     </Tabs>
   </div>
@@ -43,9 +45,7 @@ function ClientMealData({ _id }) {
   </TabsContent>
 
   if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <TabsContent value="meal">
-    <ContentError
-      title={error || data.message}
-    />
+    <ContentError className="mt-0" title={error || data.message} />
   </TabsContent>
 
   return <TabsContent value="meal">
@@ -59,12 +59,6 @@ function ClientMealData({ _id }) {
         {plan.mealType}
       </Button>)}
     </div>
-    {/* <Button
-      variant="outline"
-      className="w-full text-[var(--dark-1)]/25 my-4"
-    >
-      View Meal Section
-    </Button> */}
     {mealsFromSelectedMealPlan?.meals?.map((meal, index) => <Card
       key={index}
       className="p-0 mb-8 shadow-none border-0 rounded-none overflow-clip"
@@ -90,10 +84,19 @@ function ClientMealData({ _id }) {
 function ClientRetailData({ clientId }) {
   const { isLoading, error, data } = useSWR(`app/getClientOrderHistory?clientId=${clientId}`, () => getClientOrderHistory(clientId));
 
-  if (isLoading) return <ContentLoader />
+  if (isLoading) return <TabsContent value="meal">
+    <ContentLoader />
+  </TabsContent>
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200) return <TabsContent value="meal">
+    <ContentError title={error || data.message} />
+  </TabsContent>
+
   const orderHistoryClient = data.data;
+
+  if (orderHistoryClient.orderHistory.length === 0) return <TabsContent value="retail">
+    <ContentError className="mt-0" title="0 retails for this client!" />
+  </TabsContent>
 
   return <TabsContent value="retail">
     {orderHistoryClient.orderHistory.map(order => <RetailOrderDetailCard
@@ -153,6 +156,8 @@ function RetailPendingLabel() {
 }
 
 function Header() {
+  const { organisation } = useAppSelector(state => state.coach.data);
+
   return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-4 border-b-2 rounded-none">
     <TabsTrigger
       className="font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
@@ -166,12 +171,12 @@ function Header() {
     >
       Meal
     </TabsTrigger>
-    <TabsTrigger
+    {organisation.toLowerCase() === "herbalife" && <TabsTrigger
       className="font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="retail"
     >
       Retail
-    </TabsTrigger>
+    </TabsTrigger>}
     <TabsTrigger
       className="font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="club"

@@ -32,6 +32,10 @@ export function getRequestVolumePoints() {
   return fetchData("getReqVpByClients");
 }
 
+export function getRequestSubscriptions() {
+  return fetchData("getReqSubscriptionByClients");
+}
+
 export function getClientSubscriptions(id) {
   return fetchData(`getSubscription/${id}`);
 }

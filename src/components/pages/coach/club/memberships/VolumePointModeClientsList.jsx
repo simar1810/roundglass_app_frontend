@@ -22,8 +22,8 @@ export default function VolumePointModeClientsList() {
   return <div className="content-container">
     <Header />
     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-4 divide-y-1">
-      {clients.map(client => <ClientListVolumePoint
-        key={client._id}
+      {clients.map((client, index) => <ClientListVolumePoint
+        key={index}
         client={client.clientId || {}}
         activePoints={client.activePoints}
       />)}

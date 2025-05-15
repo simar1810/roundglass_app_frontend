@@ -43,6 +43,8 @@ import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotes
 import { useRef, useState } from "react";
 import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
 import useClickOutside from "@/hooks/useClickOutside";
+import { useAppSelector } from "@/providers/global/hooks";
+import { permit } from "@/lib/permit";
 
 export default function ClientDetailsCard({ clientData }) {
   return <Card className="bg-white rounded-[18px] shadow-none">
@@ -103,6 +105,7 @@ export default function ClientDetailsCard({ clientData }) {
 
 function Header({ clientData }) {
   const [modalOpened, setModalOpened] = useState(false);
+  const { roles } = useAppSelector(state => state.coach.data)
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setModalOpened(false));
@@ -137,10 +140,16 @@ function Header({ clientData }) {
           _id={clientData._id}
         />}
       </div>
-      <ClientStatus
-        status={clientData.isActive}
-        _id={clientData._id}
-      />
+      <div className="flex gap-4">
+        <ClientStatus
+          status={clientData.isActive}
+          _id={clientData._id}
+        />
+        {permit("club", roles) && <ClientClubStatus
+          status={clientData.isSubscription}
+          _id={clientData._id}
+        />}
+      </div>
     </div>
     <DropdownMenu open={modalOpened}>
       <DropdownMenuTrigger onClick={() => setModalOpened(true)} asChild className="!absolute top-0 right-4">
@@ -211,6 +220,56 @@ function ClientStatus({
             action={(setLoading, btnRef) => changeStatus(setLoading, btnRef, true)}
           >
             <AlertDialogTrigger className="font-semibold text-[14px] text-[var(--accent-1)] pl-4 py-1 flex items-center gap-2">Active</AlertDialogTrigger>
+          </DualOptionActionModal>}
+      </MenubarContent>
+    </MenubarMenu>
+  </Menubar>
+}
+
+
+function ClientClubStatus({
+  status,
+  _id
+}) {
+
+  async function changeStatus(
+    setLoading,
+    closeBtnRef,
+    status
+  ) {
+    try {
+      setLoading(true);
+      const response = await sendData(`updateClubClientStatus?id=${_id}&status=${status}`, {}, "PUT");
+      if (!Boolean(response.data)) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`clientDetails?id=${_id}`);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Menubar className="p-0 border-0 shadow-none">
+    <MenubarMenu className="p-0">
+      <MenubarTrigger className={`${status ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
+        {status ? <>Membership On</> : <>Membership Off</>}
+        <ChevronDown className="w-[18px]" />
+      </MenubarTrigger>
+      <MenubarContent sideOffset={10} align="center">
+        {status
+          ? <DualOptionActionModal
+            description="Are you sure to change the status of the client"
+            action={(setLoading, btnRef) => changeStatus(setLoading, btnRef, false)}
+          >
+            <AlertDialogTrigger className="font-semibold text-[14px] text-[var(--accent-2)] pl-4 py-1 flex items-center gap-2">Membership Off</AlertDialogTrigger>
+          </DualOptionActionModal>
+          : <DualOptionActionModal
+            description="Are you sure to change the membership status of the client"
+            action={(setLoading, btnRef) => changeStatus(setLoading, btnRef, true)}
+          >
+            <AlertDialogTrigger className="font-semibold text-[14px] text-[var(--accent-1)] pl-4 py-1 flex items-center gap-2">Membership On</AlertDialogTrigger>
           </DualOptionActionModal>}
       </MenubarContent>
     </MenubarMenu>

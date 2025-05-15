@@ -1,43 +1,46 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { sendData } from "@/lib/api";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { mutate } from "swr";
+import useSWR from "swr";
 import ReviewSubscriptionModal from "./ReviewSubscriptionModal";
+import { getRequestSubscriptions } from "@/lib/fetchers/club";
+import Loader from "@/components/common/Loader";
+import ContentError from "@/components/common/ContentError";
 
 export default function RequestedSubscriptionModal({ _id }) {
-  const [loading, setLoading] = useState(false);
-  const closeBtnRef = useRef(null);
+  const { isLoading, error, data } = useSWR("getRequestVolumePoints", () => getRequestSubscriptions())
 
-  async function deleteMeeting() {
-    try {
-      setLoading(true);
-      const response = await sendData(`deleteMeetLink?meetingId=${_id}`, {}, "DELETE");
-      if (!response.success) throw new Error(response.message);
-      toast.success(response.message);
-      mutate("getMeetings")
-      closeBtnRef.current.click();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  if (isLoading) return <div>
+    <Loader />
+  </div>
+
+  const requestedSubscriptions = data.data;
+  console.log(requestedSubscriptions)
 
   return <Dialog>
     <DialogTrigger className="h-8 px-4 py-2 text-[14px] has-[>svg]:px-3 bg-[var(--accent-1)] text-white hover:bg-[var(--accent-1)] font-semibold rounded-[8px]">
       Requested Subscriptions
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] max-h-[65vh] text-center border-0 px-0 overflow-auto gap-0">
-      <DialogTitle className="text-[24px]">Requested Subscriptions</DialogTitle>
-      {Array.from({ length: 2 }, (_, i) => i).map(item => <RequestVolumePointCard key={item} />)}
+      {requestedSubscriptions.map(item => <RequestVolumePointCard key={item} />)}
+      {data.status_code !== 200 || error && <>
+        <DialogTitle className="text-[24px] mb-0">Error</DialogTitle>
+        <ContentError title={error || data.message} className="!min-h-[200px] border-0" />
+      </>}
+      {data.status_code === 200 && !error && <>
+        <DialogTitle className="text-[24px]">Requested Subscriptions</DialogTitle>
+        {requestedSubscriptions.map(vp => <RequestVolumePointCard
+          vp={vp}
+          key={vp._id}
+        />)}
+      </>}
+      {requestedSubscriptions.length === 0 && <div className="text-[var(--dark-1)]/50 mb-4">
+        <ContentError title="No Subscriptions Requested!" className="!min-h-[200px] border-0" />
+      </div>}
     </DialogContent>
   </Dialog>
 }

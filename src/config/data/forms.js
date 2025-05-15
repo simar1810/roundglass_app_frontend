@@ -78,20 +78,27 @@ export const reviewVPFormControls = [
 export const requestSubscriptionFormControls = [
   {
     id: 1,
+    label: "Name",
+    placeholder: "Enter Name",
+    type: "text",
+    name: "name"
+  },
+  {
+    id: 2,
     label: "Roll No",
     placeholder: "Enter Roll No",
     type: "text",
     name: "rollno"
   },
   {
-    id: 2,
-    label: "Date",
+    id: 3,
+    label: "Date Of Shopping",
     placeholder: "Enter Date",
     type: "date",
     name: "date"
   },
   {
-    id: 3,
+    id: 4,
     label: "Subscription Amount",
     placeholder: "Enter Amount",
     type: "number",

@@ -16,7 +16,7 @@ export default function ClientActivityModal({ id, defaultValue }) {
       Edit
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] text-center border-0 px-4 overflow-auto gap-0">
-      <DialogTitle className="text-[24px] mb-4">Edit Goal</DialogTitle>
+      <DialogTitle className="text-[24px] mb-4">Edit Activity</DialogTitle>
       <div>
         ClientActivityModal
         <Button

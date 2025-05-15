@@ -9,6 +9,7 @@ import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function Page() {
@@ -20,23 +21,29 @@ export default function Page() {
   </CurrentStateProvider>
 }
 
-const formFields = ["rollno", "date", "amount", "file"]
+const formFields = ["rollno", "name", "date", "amount", "file"]
 function MembershipSubscriptionContainer() {
+  const [loading, setLoading] = useState(false);
   const { dispatch, ...state } = useCurrentStateContext();
 
   async function requestSubscription(e) {
+    const toastId = toast.loading("Please Wait...");
     try {
+      setLoading(true)
       e.preventDefault();
       const data = new FormData()
       for (const name of formFields) {
         data.append(name, state[name]);
       }
-      const response = await sendDataWithFormData("reqSubscription", data)
+      const response = await sendDataWithFormData("request-subscription", data)
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       dispatch({ type: "RESET_STATE" })
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
+      toast.dismiss(toastId);
     }
   }
 
@@ -80,7 +87,7 @@ function MembershipSubscriptionContainer() {
             onClick={() => dispatch(onChangeField("file", undefined))}
           />
         </div>}
-        <Button className="mt-4" variant="wz">Submit</Button>
+        <Button disabled={loading} className="mt-4" variant="wz">Submit</Button>
       </form>
     </div>
   </div>

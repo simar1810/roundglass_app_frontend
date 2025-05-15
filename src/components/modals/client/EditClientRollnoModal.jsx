@@ -35,7 +35,7 @@ export default function EditClientRollnoModal({ _id, defaultValue }) {
       <Pencil strokeWidth={2.5} className="w-[12px] h-[12px] text-[var(--dark-2)] font-semibold" />
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] text-center border-0 px-4 overflow-auto gap-0">
-      <DialogTitle className="text-[24px] mb-4">Edit Goal</DialogTitle>
+      <DialogTitle className="text-[24px] mb-4">Edit Roll Number</DialogTitle>
       <div>
         <FormControl
           placeholder="Enter the new roll number for the client."

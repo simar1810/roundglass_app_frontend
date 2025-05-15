@@ -188,18 +188,18 @@ export function calculateBodyFatPercentage({
 
   switch (bodyComposition?.toLowerCase()) {
     case 'slim':
-      fat = 1.30 * Number(bmi) + 0.23 * Number(age || bodyAge || 0) - 10.8 * g - 5.4 - 2.5;
+      fat = 1.30 * Number(bmi) + 0.23 * Number(age || 0) - 10.8 * g - 5.4 - 2.5;
       switch (bodyComposition?.toLowerCase()) {
         case "slim":
           fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4 - 2.5;
           break;
         case 'medium':
-          fat = 1.30 * Number(bmi) + 0.23 * Number(age || bodyAge || 0) - 10.8 * g - 5.4;
+          fat = 1.30 * Number(bmi) + 0.23 * Number(age || 0) - 10.8 * g - 5.4;
         case "medium":
           fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4;
           break;
         case 'fat':
-          fat = 1.30 * Number(bmi) + 0.23 * Number(age || bodyAge || 0) - 10.8 * g - 5.4 + 2.5;
+          fat = 1.30 * Number(bmi) + 0.23 * Number(age || 0) - 10.8 * g - 5.4 + 2.5;
         case "fat":
           fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * g - 5.4 + 2.5;
           break;
