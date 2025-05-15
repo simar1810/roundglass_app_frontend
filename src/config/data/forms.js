@@ -72,7 +72,7 @@ export const reviewVPFormControls = [
     placeholder: "Enter Requested Points",
     type: "number",
     name: "points"
-  },
+  }
 ]
 
 export const requestSubscriptionFormControls = [
