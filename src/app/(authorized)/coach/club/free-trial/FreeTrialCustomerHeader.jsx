@@ -15,6 +15,7 @@ export default function FreeTrialCustomerHeader() {
     try {
       setLoading(true);
       const response = await fetchBlobData(`export-clients-excel`);
+      console.log(response)
       const data = await response.blob();
       const blob = new Blob([data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -54,8 +55,8 @@ export default function FreeTrialCustomerHeader() {
         Onboarding Form
       </Button>
     </div>
-    {/* <div className="py-4 flex items-center justify-end gap-2 border-t-1">
-      <Button size="sm" variant="wz_outline">
+    <div className="py-4 flex items-center justify-end gap-2 border-t-1">
+      {/* <Button size="sm" variant="wz_outline">
         <FolderInput />
         Import Data
       </Button>
@@ -70,7 +71,7 @@ export default function FreeTrialCustomerHeader() {
       </DualOptionActionModal>
       <Button size="sm" variant="wz_outline">
         Demo
-      </Button>
-    </div> */}
+      </Button> */}
+    </div>
   </>
 }
