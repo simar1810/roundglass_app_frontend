@@ -146,7 +146,6 @@ export default function ClientStatisticsData({ clientId }) {
 
   const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
   const clientStats = data?.data;
-  console.log(data)
 
   if (isLoading) return <ContentLoader />
 

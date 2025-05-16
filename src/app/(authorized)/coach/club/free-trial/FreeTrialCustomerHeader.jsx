@@ -15,7 +15,6 @@ export default function FreeTrialCustomerHeader() {
     try {
       setLoading(true);
       const response = await fetchBlobData(`export-clients-excel`);
-      console.log(response)
       const data = await response.blob();
       const blob = new Blob([data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);

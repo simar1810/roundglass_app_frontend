@@ -1,3 +1,5 @@
+import registerState from "../state-data/register";
+
 export default function registerReducer(state, action) {
   switch (action.type) {
     case "UPDATE_FIELD_VALUE":
@@ -15,5 +17,12 @@ export function setFieldValue(name, value) {
       name,
       value
     }
+  }
+}
+
+export function init(payload) {
+  return {
+    ...registerState,
+    coachId: payload.coachId
   }
 }

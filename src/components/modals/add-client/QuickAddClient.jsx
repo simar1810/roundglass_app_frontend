@@ -16,6 +16,7 @@ import useCurrentStateContext, { CurrentStateProvider } from "@/providers/Curren
 import { useAppSelector } from "@/providers/global/hooks";
 import { CircleCheckBig, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 export default function QuickAddClient({ client, setModal }) {
   return <Dialog open={true} onOpenChange={() => setModal()}>
@@ -57,6 +58,7 @@ function FormContainer() {
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       dispatch(quickAddClientCreated(response?.data?.clientId))
+      mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {
       toast.error(error.message);
     }

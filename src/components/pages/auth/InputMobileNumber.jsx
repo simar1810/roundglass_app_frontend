@@ -20,7 +20,8 @@ export default function InputMobileNumber() {
         type: "UPDATE_CURRENT_STATE",
         payload: {
           stage: 2,
-          user: response.data.user
+          user: response.data.user,
+          isFirstTime: response.data.isFirstTime
         }
       });
     } catch (error) {
