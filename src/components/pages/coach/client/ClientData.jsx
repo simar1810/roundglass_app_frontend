@@ -12,13 +12,14 @@ import useSWR from "swr";
 import { useEffect, useState } from "react";
 import ClientClubDataComponent from "./ClientClubDataComponent";
 import { useAppSelector } from "@/providers/global/hooks";
+import ClientStatisticsData from "./ClientStatisticsData";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
   return <div className="bg-white p-4 rounded-[18px] border-1">
-    <Tabs defaultValue="club">
+    <Tabs defaultValue="statistics">
       <Header />
-      {/* <ClientStatisticsData clientId={clientId} /> */}
+      <ClientStatisticsData clientId={clientData._id} />
       <ClientMealData _id={clientData._id} />
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       <ClientClubDataComponent clientData={clientData} />

@@ -8,15 +8,13 @@ export const addClientCheckupInitialState = {
   gender: "male",//done
   coachId: "",
   notes: "",
-  weight: "",
-  weightUnit: "Pounds",
+  weightUnit: "Kg", // e.g. Kg Pounds
   weightInKgs: "",
-  heightInCms: "",
-  height: "",
+  weightInPounds: "",
+  heightUnit: "Cm", // e.g. Inches, Cm
   heightCms: "",
   heightFeet: "",
   heightInches: "",
-  heightUnit: "Cm", // e.g. Inches, Cm
   bmi: "",
   visceral_fat: "",
   followUpDate: "",

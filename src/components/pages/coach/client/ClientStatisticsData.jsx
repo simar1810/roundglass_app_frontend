@@ -106,7 +106,7 @@ const mealPlan = {
   coachDescription: 'Certified Health Coach',
   coachImage: '/coach.jpg',
   brandLogo: '/logo.png',
-  mealTypes: ['Breakfast', 'Lunch', 'Snack','Dinner' , 'After Dinner'],
+  mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
   meals: [
     {
       meals: [
@@ -146,10 +146,13 @@ export default function ClientStatisticsData({ clientId }) {
 
   const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
   const clientStats = data?.data;
+  console.log(data)
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200 || isNaN(selectedDate)) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200 || isNaN(selectedDate)) return <TabsContent value="statistics">
+    <ContentError title={error || data.message} className="mt-0" />
+  </TabsContent>
 
   const statistics = {
     ...clientStats?.at(selectedDate),

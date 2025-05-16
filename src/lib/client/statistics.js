@@ -74,12 +74,48 @@ export function calculateIdealWeight({
   return Math.round(finalWeight);
 }
 
+function generateHeightStandard({
+  heightUnit,
+  heightCms,
+  heightInches,
+  heightFeet,
+}) {
+  if (heightUnit.toLowerCase() === "inches") {
+    return ((heightFeet * 0.3048) + (heightInches * 0.0254)).toFixed(2);
+  } else if (heightUnit.toLowerCase() === "cms") {
+    return (heightCms / 100).toFixed(2);
+  } else {
+    throw new Error("Please provide correct height unit");
+  }
+}
+
+function generateWeightStandard({
+  weightUnit,
+  weightInPounds,
+  weightInKgs
+}) {
+  if (weightUnit.toLowerCase() === "kg") {
+    return weightInKgs
+  } else if (weightUnit.toLowerCase() === "pounds") {
+    return (weightInPounds * 0.453592).toFixed(2)
+  } else {
+    throw new Error("Please provide correct height unit");
+  }
+}
+
+export function calculateBMIFinal(data) {
+  const height = generateHeightStandard(data);
+  const weight = generateWeightStandard(data);
+  return (weight / (height * height)).toFixed(1);
+}
+
 export function calculateBMI2({
   height,
   heightUnit,
   feet,
   inches,
-  weight,
+  weightPounds,
+  weightKgs,
   weightUnit,
 }) {
   let heightInMeters;
