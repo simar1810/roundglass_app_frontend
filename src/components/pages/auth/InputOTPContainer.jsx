@@ -4,6 +4,7 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from "@/components/ui/input-otp";
+import { coachfirstTimeRegistration } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppDispatch } from "@/providers/global/hooks";
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 
 export default function InputOTPContainer() {
   const {
+    isFirstTime,
     mobileNumber,
     otp,
     dispatch,
@@ -47,12 +49,17 @@ export default function InputOTPContainer() {
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
       delete user.refreshToken;
       dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
-      router.push("/coach/dashboard");
+
+      if (isFirstTime) {
+        dispatch(coachfirstTimeRegistration(user.coachId));
+        return;
+      } else {
+        router.push("/coach/dashboard");
+      }
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
     }
   }
-
 
   async function resendOtp() {
     try {

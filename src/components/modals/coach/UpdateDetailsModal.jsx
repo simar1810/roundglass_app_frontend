@@ -63,9 +63,9 @@ export default function UpdatePersonalDetails({ coachData }) {
             label={field.label}
             placeholder={"Please enter the value."}
           />)}
-          <Organisation
+          <SelectOrganisation
             value={formData.organisation}
-            setFormData={setFormData}
+            onChange={e => setFormData(prev => ({ ...prev, organisation: e.target.value }))}
           />
         </div>
         <Button
@@ -106,17 +106,17 @@ function ProfilePhoto({ profilePhoto, value, fileRef, setFormData }) {
   </>
 }
 
-function Organisation({ value, setFormData }) {
+export function SelectOrganisation({ value, onChange }) {
   const { isLoading, error, data } = useSWR("getOrganisation", () => getOrganisation());
 
   if (isLoading) return <Loader />
 
-  if (data.status_code !== 200 || error) return <ContentError title={error || data.message} />
+  if (data.status_code !== 200 || error) return <ContentError className="mt-0 p-0 text-[12px] !min-h-auto border-0 text-[var(--accent-2)]" title={error || data.message} />
 
   const organisations = data.data;
 
   return <SelectControl
-    onChange={e => setFormData(prev => ({ ...prev, organisation: e.target.value }))}
+    onChange={onChange}
     options={generateOrgsPayload(organisations)}
     value={value}
     label={"Organisation"}
@@ -132,7 +132,7 @@ function generateDefaultPayload(obj) {
 }
 
 function generateOrgsPayload(orgs) {
-  const options = [];
+  const options = [{ id: -1, value: "", name: "Select An Organisation" }];
   for (const [index, org] of orgs.entries()) {
     options.push({ id: index, value: org.organisation, name: org.organisation });
   }

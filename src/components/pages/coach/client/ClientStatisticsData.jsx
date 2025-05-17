@@ -106,7 +106,7 @@ const mealPlan = {
   coachDescription: 'Certified Health Coach',
   coachImage: '/coach.jpg',
   brandLogo: '/logo.png',
-  mealTypes: ['Breakfast', 'Lunch', 'Snack','Dinner' , 'After Dinner'],
+  mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
   meals: [
     {
       meals: [
@@ -149,7 +149,9 @@ export default function ClientStatisticsData({ clientId }) {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200 || isNaN(selectedDate)) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200 || isNaN(selectedDate)) return <TabsContent value="statistics">
+    <ContentError title={error || data.message} className="mt-0" />
+  </TabsContent>
 
   const statistics = {
     ...clientStats?.at(selectedDate),
@@ -230,36 +232,36 @@ function StatisticsExportingOptions({ clientStats }) {
 const formFields = [
   {
     label: "BMI",
-    maxValue: 25,
-    minValue: 18,
+    maxValue: () => 25,
+    minValue: () => 18,
     idealValue: 23.0,
     desc: "Healthy",
-    info: "Optimal: 18–23\nOverweight: 23–27\nObese: 27–32",
+    info: "Optimal: 18-23\nOverweight: 23-27\nObese: 27-32",
     icon: "/svgs/bmi.svg",
     name: "bmi"
   },
   {
     label: "Muscle",
-    maxValue: 45,
-    minValue: 30,
+    maxValue: () => 45,
+    minValue: () => 30,
     idealValue: 35,
-    info: "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
+    info: "Optimal Range: 32-36% for men, 24-30% for women\nAthletes: 38-42%",
     icon: "/svgs/muscle.svg",
     name: "muscle"
   },
   {
     label: "Fat",
-    maxValue: 20,
-    minValue: 10,
+    maxValue: () => 20,
+    minValue: () => 10,
     idealValue: 15,
-    info: "Optimal Range:\n10–20% for Men\n20–30% for Women",
+    info: "Optimal Range:\n10-20% for Men\n20-30% for Women",
     icon: "/svgs/fats.svg",
     name: "fat",
   },
   {
     label: "Resting Metabolism",
-    maxValue: 3000,
-    minValue: 1500,
+    maxValue: () => 3000,
+    minValue: () => 1500,
     idealValue: 2000,
     info: "Optimal Range: Varies by age,\ngender, and activity level",
     icon: "/svgs/meta.svg",
@@ -268,13 +270,16 @@ const formFields = [
   {
     label: "Weight",
     desc: "Ideal 75",
+    maxValue: (value) => value + 5,
+    minValue: (value) => value - 5,
     info: "Ideal weight Range:\n118. This varies by height and weight",
     icon: "/svgs/weight.svg",
     name: "ideal_weight"
   },
   {
     label: "Body Age",
-    maxValue: 100,
+    maxValue: () => 67,
+    minValue: () => 33,
     info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
     icon: "/svgs/body.svg",
     name: "bodyAge"
@@ -282,7 +287,6 @@ const formFields = [
 ]
 
 function ClientStatisticCharts({ payload }) {
-
   return <>
     {formFields.filter(field => !!payload[field.name]).map(field => <Card className="bg-[var(--comp-1)] px-2 py-0 gap-2 shadow-none border-0" key={field.name}>
       <CardHeader className="px-0">

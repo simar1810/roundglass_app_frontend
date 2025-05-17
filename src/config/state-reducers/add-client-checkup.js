@@ -31,9 +31,12 @@ export function addClientCheckupReducer(state, action) {
       return {
         ...state,
         weightUnit: action.payload,
-        weight: action.payload.toLowerCase() === "kg"
-          ? state.weight
-          : state.weight
+        weightInKgs: action.payload.toLowerCase() === "kg"
+          ? (Number(state.weightInPounds) * 0.453592).toFixed(2)
+          : state.weightInKg,
+        weightInPounds: action.payload.toLowerCase() === "pounds"
+          ? (Number(state.weightInKgs) / 0.453592).toFixed(2)
+          : state.weightInPounds,
       }
     case "UPDATE_MATRICES":
       return {
@@ -83,10 +86,10 @@ export function changeHeightUnit(unit) {
   }
 }
 
-export function changeWeightUnit(unit) {
+export function changeWeightUnit(payload) {
   return {
     type: "CHANGE_WEIGHT_UNIT",
-    payload: unit
+    payload
   }
 }
 
@@ -102,13 +105,18 @@ export function updateMatrices(matrices, values) {
 }
 
 const fields = {
-  stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weight", "weightUnit", "bodyComposition"],
+  stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
   requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "heightUnit", "weight", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "bodyComposition", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
 }
 
 export function stage1Completed(state, stage) {
   for (const field of fields[stage]) {
     if (!state[field]) return { success: false, field };
+  }
+  if (state.weightUnit.toLowerCase() === "kg" && !state.weightInKgs) {
+    return { success: false, field: "Please mention weight in KGs" };
+  } else if (state.weightUnit.toLowerCase() === "pounds" && !state.weightInPounds) {
+    return { success: false, field: "Please mention weight in Pounds" };
   }
   if (state.heightUnit.toLowerCase() === "cm") {
     if (!state["heightCms"]) return { success: false, field: "Height Cms" };

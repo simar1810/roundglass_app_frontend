@@ -125,3 +125,7 @@ export function getMarathons() {
 export function getMealPlanById(id) {
   return fetchData(`app/get-plan-by-id?id=${id}`)
 }
+
+export function getSyncCoachesList() {
+  return fetchData("app/sync-coach/super")
+}

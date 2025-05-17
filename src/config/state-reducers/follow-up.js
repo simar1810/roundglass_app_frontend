@@ -21,6 +21,20 @@ export function followUpReducer(state, action) {
         ...state,
         nextFollowUpDate: action.payload
       }
+    case "CHANGE_WEIGHT_UNIT":
+      return {
+        ...state,
+        healthMatrix: {
+          ...state.healthMatrix,
+          weightUnit: action.payload,
+          weightInKgs: action.payload.toLowerCase() === "kg"
+            ? (Number(state.healthMatrix.weightInPounds) * 0.453592).toFixed(2)
+            : state.healthMatrix.weightInKgs,
+          weightInPounds: action.payload.toLowerCase() === "pounds"
+            ? (Number(state.healthMatrix.weightInKgs) / 0.453592).toFixed(2)
+            : state.healthMatrix.weightInPounds,
+        }
+      }
     case "SET_HEALTH_MATRICES":
       return {
         ...state,
@@ -61,6 +75,13 @@ export function setNextFollowUpDate(payload) {
 export function setHealthMatrices(payload) {
   return {
     type: "SET_HEALTH_MATRICES",
+    payload
+  }
+}
+
+export function changeWeightUnit(payload) {
+  return {
+    type: "CHANGE_WEIGHT_UNIT",
     payload
   }
 }

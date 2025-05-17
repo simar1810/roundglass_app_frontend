@@ -13,6 +13,7 @@ import useCurrentStateContext, {
 } from "@/providers/CurrentStateContext";
 import {
   changeFieldvalue,
+  changeWeightUnit,
   followUpReducer,
   generateRequestPayload,
   init,
@@ -60,8 +61,7 @@ function FollowUpModalContainer({ clientId, dob }) {
 }
 
 function Stage1() {
-  const { followUpType, healthMatrix, dispatch, ...state } =
-    useCurrentStateContext();
+  const { followUpType, healthMatrix, dispatch, ...state } = useCurrentStateContext();
 
   return <div className="p-4">
     <FormControl
@@ -83,7 +83,7 @@ function Stage1() {
               type="radio"
               className="w-[14px] h-[14px]"
               checked={healthMatrix.weightUnit === "Kg"}
-              onChange={() => dispatch(changeFieldvalue("weightUnit", "Kg"))}
+              onChange={() => dispatch(changeWeightUnit("Kg"))}
             />
             <Label htmlFor="weight-kg" className="mr-3">Kg</Label>
             <input
@@ -92,18 +92,12 @@ function Stage1() {
               type="radio"
               checked={healthMatrix.weightUnit === "Pounds"}
               className="w-[14px] h-[14px]"
-              onChange={() => dispatch(changeFieldvalue("weightUnit", "Pounds"))}
+              onChange={() => dispatch(changeWeightUnit("Pounds"))}
             />
             <Label htmlFor="weight-pounds">Pounds</Label>
           </RadioGroup>
         </div>
-        <FormControl
-          type="number"
-          className="[&_.label]:font-[400] [&_.input]:text-[14px]"
-          placeholder="Enter Weight"
-          value={healthMatrix.weight}
-          onChange={e => dispatch(changeFieldvalue("weight", e.target.value))}
-        />
+        <WeightOfClient />
       </div>
       <FormControl
         label="Visceral Fat"
@@ -206,30 +200,29 @@ const matrices = [
 function Stage2({ clientId }) {
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
   const heightinMetres = healthMatrix.heightUnit === "Cm" ? Number(healthMatrix.height) / 100 : Number(healthMatrix.height) / 3.28084;
-
+  const bodyComposition = healthMatrix.body_composition
   const healthMatrices = {
     bmi: calculateBMI2({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     muscle: calculateSkeletalMassPercentage({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     fat: calculateBodyFatPercentage({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     rm: calculateBMR({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     ideal_weight: (21 * (heightinMetres * heightinMetres)).toFixed(2),
     bodyAge: calculateBodyAge({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
-    age: age,
   };
 
   async function createFollowUp() {
@@ -323,7 +316,7 @@ function PieChart({ amount }) {
                     </tspan>
                   </text>
                 );
-              }
+              } else return <></>
             }}
           />
         </PolarRadiusAxis>
@@ -384,4 +377,24 @@ function SelectBodyComposition() {
       </div>
     </div>
   );
+}
+
+
+function WeightOfClient() {
+  const { dispatch, healthMatrix, ...state } = useCurrentStateContext();
+  if (healthMatrix.weightUnit.toLowerCase() === "kg") return <FormControl
+    type="number"
+    className="[&_.label]:font-[400] [&_.input]:text-[14px]"
+    placeholder="Enter Weight"
+    value={healthMatrix.weightInKgs}
+    onChange={e => dispatch(changeFieldvalue("weightInKgs", e.target.value))}
+  />
+
+  return <FormControl
+    type="number"
+    className="[&_.label]:font-[400] [&_.input]:text-[14px]"
+    placeholder="Enter Weight"
+    value={healthMatrix.weightInPounds}
+    onChange={e => dispatch(changeFieldvalue("weightInPounds", e.target.value))}
+  />
 }

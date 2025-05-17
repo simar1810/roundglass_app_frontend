@@ -21,6 +21,7 @@ import {
   Settings,
   Soup,
   Store,
+  Unlink,
   User,
   UserPlus,
   Users,
@@ -166,6 +167,12 @@ export const sidebar__coachContent = [
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
         title: "Free Trial",
         url: "/coach/club/free-trial"
+      },
+      {
+        id: 6,
+        icon: <Unlink className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Coach Sync",
+        url: "/coach/club/coach-sync"
       }
     ]
   },

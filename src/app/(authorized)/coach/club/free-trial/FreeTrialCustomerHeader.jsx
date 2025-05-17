@@ -54,8 +54,8 @@ export default function FreeTrialCustomerHeader() {
         Onboarding Form
       </Button>
     </div>
-    {/* <div className="py-4 flex items-center justify-end gap-2 border-t-1">
-      <Button size="sm" variant="wz_outline">
+    <div className="py-4 flex items-center justify-end gap-2 border-t-1">
+      {/* <Button size="sm" variant="wz_outline">
         <FolderInput />
         Import Data
       </Button>
@@ -70,7 +70,7 @@ export default function FreeTrialCustomerHeader() {
       </DualOptionActionModal>
       <Button size="sm" variant="wz_outline">
         Demo
-      </Button>
-    </div> */}
+      </Button> */}
+    </div>
   </>
 }

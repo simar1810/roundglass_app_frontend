@@ -14,7 +14,20 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { Image as ImageIcon } from "lucide-react"
 
-const formFields = ["name", "email", "mobileNumber", "dob", "age", "height", "weight", "heightUnit", "weightUnit", "gender", "file"];
+const formFields = ["name", "email", "mobileNumber", "dob", "age", "heightCms", "heightFeet", "heightInches", "weight", "heightUnit", "weightUnit", "gender", "file"];
+
+function generateDefaultPayload(obj) {
+  const payload = {};
+  for (const field of formFields) {
+    payload[field] = obj[field] || "";
+  }
+  if (!payload.weightUnit) payload.weightUnit = "kgs"
+  if (!payload.heightUnit) payload.heightUnit = "inches"
+  if (payload.dob && payload.dob.split("-")[0].length === 2) {
+    payload.dob = format(parse(payload.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
+  }
+  return payload;
+}
 
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
@@ -102,28 +115,12 @@ function ProfilePhoto({ profilePhoto, value, fileRef, setFormData }) {
   </>
 }
 
-function generateDefaultPayload(obj) {
-  const payload = {};
-  for (const field of formFields) {
-    payload[field] = obj[field];
-  }
-  if (!payload.weightUnit) payload.weightUnit = "kgs"
-  if (!payload.heightUnit) payload.heightUnit = "feet"
-  if (!payload.weight) payload.weight = 0;
-  if (!payload.height) payload.height = 0;
-  if (payload.dob && payload.dob.split("-")[0].length === 2) {
-    payload.dob = format(parse(payload.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
-  }
-  return payload;
-}
-
 function Component({ field, formData, setFormData }) {
   switch (field.type) {
     case 2:
       return <HeightFormControl
         key={field.id}
-        height={formData.height}
-        heightUnit={formData.heightUnit}
+        formData={formData}
         setFormData={setFormData}
       />;
     case 3:
@@ -151,39 +148,30 @@ function Component({ field, formData, setFormData }) {
 }
 
 function HeightFormControl({
-  height,
-  heightUnit,
+  formData,
   setFormData
 }) {
+  if (formData.heightUnit.toLowerCase() === "cms") return
 
-  function onFeetChange(e) {
-    const newFeet = e.target.value;
-    setFeet(newFeet);
-    const cm = (parseFloat(newFeet) || 0) * 30.48 + (parseFloat(inches) || 0) * 2.54;
-    setFormData(prev => ({ ...prev, height: cm.toFixed(2) }));
-  };
+  function changeHeightUnit(unit) {
+    if (unit.toLowerCase() === "inches") {
+      (feet * 30.48) + (inches * 2.54)
+    } else {
 
-  function onInchesChange(e) {
-    const newInches = Number(e.target.value);
-    if (newInches < 0) return;
-    const feet = Number((newInches / 12).toFixed(0));
-    setFormData(prev => ({
-      ...prev,
-      height: prev.height + (feet * 30.48) + ((newInches % 12) * 2.54)
-    }));
-  };
+    }
+  }
 
   return <div className="mt-2">
     <div className="flex items-center gap-4 justify-between">
       <p className="mr-auto">Last Height</p>
-      <RadioGroup value={heightUnit} className="flex items-center gap-2">
+      <RadioGroup value={formData.heightUnit} className="flex items-center gap-2">
         <input
           id="feet"
           value="feet"
           type="radio"
           className="w-[14px] h-[14px]"
-          checked={heightUnit === "feet"}
-          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "feet" }))}
+          checked={formData.heightUnit.toLowerCase() === "inches"}
+          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "inches" }))}
         />
         <Label htmlFor="feet">
           Ft In
@@ -192,34 +180,34 @@ function HeightFormControl({
           id="cms"
           value="cms"
           type="radio"
-          checked={heightUnit === "cms"}
+          checked={formData.heightUnit.toLowerCase() === "cm"}
           className="w-[14px] h-[14px]"
-          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "cms" }))}
+          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "cm" }))}
         />
         <Label htmlFor="cms">
           Cm
         </Label>
       </RadioGroup>
     </div>
-    {heightUnit === "feet"
+    {formData.heightUnit === "inches"
       ? <div className="flex items-center gap-3">
         <FormControl
           type="number"
-          value={((parseFloat(height) || 0) / 30.48).toFixed(0)}
-          onChange={onFeetChange}
+          value={formData.heightFeet}
+          onChange={e => setFormData(prev => ({ ...prev, heightFeet: e.target.value }))}
           placeholder="Feet"
         />
         <FormControl
           type="number"
-          value={((height % 30.48) / 2.54).toFixed(0)}
-          onChange={onInchesChange}
+          value={formData.heightInches}
+          onChange={e => setFormData(prev => ({ ...prev, heightInches: e.target.value }))}
           placeholder="Inches"
         />
       </div>
       : <FormControl
         type="number"
-        value={height}
-        onChange={e => setFormData(prev => ({ ...prev, height: e.target.value }))}
+        value={formData.heightCms}
+        onChange={e => setFormData(prev => ({ ...prev, heightCms: e.target.value }))}
         placeholder="CMs"
       />}
   </div>
