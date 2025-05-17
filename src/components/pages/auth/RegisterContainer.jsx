@@ -35,14 +35,14 @@ export default function RegisterContainer() {
     <div className="mt-4 grid grid-cols-2 gap-4">
       <FormControl
         label="Name"
-        placeholder="Enter Phone No."
+        placeholder="Enter Name"
         className="text-[14px] [&_.label]:font-[500]"
         value={state.name}
         onChange={e => dispatch(setFieldValue("name", e.target.value))}
       />
       <FormControl
         label="No. Of Clients"
-        placeholder="Enter Phone No."
+        placeholder="Expected Clients"
         className="text-[14px] [&_.label]:font-[500]"
         value={state.expectedNoOfClients}
         onChange={e => dispatch(setFieldValue("expectedNoOfClients", e.target.value))}
