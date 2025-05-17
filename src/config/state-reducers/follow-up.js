@@ -29,7 +29,7 @@ export function followUpReducer(state, action) {
           weightUnit: action.payload,
           weightInKgs: action.payload.toLowerCase() === "kg"
             ? (Number(state.healthMatrix.weightInPounds) * 0.453592).toFixed(2)
-            : state.healthMatrix.weightKg,
+            : state.healthMatrix.weightInKgs,
           weightInPounds: action.payload.toLowerCase() === "pounds"
             ? (Number(state.healthMatrix.weightInKgs) / 0.453592).toFixed(2)
             : state.healthMatrix.weightInPounds,

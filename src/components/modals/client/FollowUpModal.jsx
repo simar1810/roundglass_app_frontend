@@ -200,28 +200,28 @@ const matrices = [
 function Stage2({ clientId }) {
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
   const heightinMetres = healthMatrix.heightUnit === "Cm" ? Number(healthMatrix.height) / 100 : Number(healthMatrix.height) / 3.28084;
-
+  const bodyComposition = healthMatrix.body_composition
   const healthMatrices = {
     bmi: calculateBMI2({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     muscle: calculateSkeletalMassPercentage({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     fat: calculateBodyFatPercentage({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     rm: calculateBMR({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
     ideal_weight: (21 * (heightinMetres * heightinMetres)).toFixed(2),
     bodyAge: calculateBodyAge({
       ...healthMatrix,
-      bodyComposition: healthMatrix.body_composition,
+      bodyComposition,
     }),
   };
 
@@ -316,7 +316,7 @@ function PieChart({ amount }) {
                     </tspan>
                   </text>
                 );
-              }
+              } else return <></>
             }}
           />
         </PolarRadiusAxis>
