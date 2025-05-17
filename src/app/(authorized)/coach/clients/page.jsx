@@ -25,7 +25,7 @@ export default function Page() {
 
   const clients = data.data
 
-  return <div className="mt-8">
+  return <div className="mt-8 content-container">
     <div className="grid grid-cols-2 gap-4 divide-y-1">
       {clients.map((client, index) => <ClientListItemStatus
         key={index}

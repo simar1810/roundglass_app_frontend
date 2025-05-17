@@ -2,7 +2,7 @@ import FormControl from "@/components/FormControl";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChartContainer } from "@/components/ui/chart";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Label as ChartLabel } from "recharts";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -24,15 +24,24 @@ import {
 } from "@/config/state-reducers/follow-up";
 import {
   calculateBMI2,
+  calculateBMIFinal,
   calculateBMR,
+  calculateBMRFinal,
   calculateBodyAge,
+  calculateBodyAgeFinal,
+  calculateBodyFatFinal,
   calculateBodyFatPercentage,
+  calculateIdealWeightFinal,
   calculateSkeletalMassPercentage,
+  calculateSMPFinal,
 } from "@/lib/client/statistics";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
+import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
+import { differenceInYears, parse } from "date-fns";
+import { mutate } from "swr";
 
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
@@ -48,21 +57,28 @@ export default function FollowUpModal({ clientData }) {
         state={init(clientData)}
         reducer={followUpReducer}
       >
-        <FollowUpModalContainer clientId={clientData.clientId} />
+        <FollowUpModalContainer clientData={clientData} clientId={clientData.clientId} />
       </CurrentStateProvider>
     </DialogContent>
   </Dialog>
 }
 
-function FollowUpModalContainer({ clientId, dob }) {
+function FollowUpModalContainer({ clientData }) {
+  const { clientId, dob } = clientData;
+  const age = clientData.dob
+    ? differenceInYears(new Date(), parse(clientData.dob, 'yyyy-MM-dd', new Date()))
+    : 0
   const { stage } = useCurrentStateContext();
   if (stage === 1) return <Stage1 />;
-  return <Stage2 clientId={clientId} dob={dob} />;
+  return <Stage2
+    age={age}
+    clientId={clientId}
+    dob={dob}
+  />;
 }
 
 function Stage1() {
   const { followUpType, healthMatrix, dispatch, ...state } = useCurrentStateContext();
-
   return <div className="p-4">
     <FormControl
       label="Date"
@@ -150,80 +166,25 @@ function Stage1() {
   </div>
 }
 
-const matrices = [
-  {
-    label: "BMI",
-    desc: "Healthy",
-    info: "Optimal: 18-23\nOverweight: 23-27\nObese: 27-32",
-    icon: "/svgs/bmi.svg",
-    name: "bmi",
-    id: 1,
-  },
-  {
-    label: "Muscle",
-    info: "Optimal Range: 32-36% for men, 24-30% for women\nAthletes: 38-42%",
-    icon: "/svgs/muscle.svg",
-    name: "muscle",
-    id: 2,
-  },
-  {
-    label: "Fat",
-    info: "Optimal Range:\n10-20% for Men\n20-30% for Women",
-    icon: "/svgs/fats.svg",
-    name: "fat",
-    id: 3,
-  },
-  {
-    label: "Resting Metabolism",
-    info: "Optimal Range: Varies by age,\ngender, and activity level",
-    icon: "/svgs/meta.svg",
-    name: "rm",
-    id: 4,
-  },
-  {
-    label: "Weight",
-    desc: "Ideal 75",
-    info: "Ideal weight Range:\n118. This varies by height and weight",
-    icon: "/svgs/weight.svg",
-    name: "ideal_weight",
-    id: 5,
-  },
-  {
-    label: "Body Age",
-    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-    icon: "/svgs/body.svg",
-    name: "bodyAge",
-    id: 6,
-  },
-];
-
-function Stage2({ clientId }) {
+function Stage2({ age, clientId }) {
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
-  const heightinMetres = healthMatrix.heightUnit === "Cm" ? Number(healthMatrix.height) / 100 : Number(healthMatrix.height) / 3.28084;
-  const bodyComposition = healthMatrix.body_composition
-  const healthMatrices = {
-    bmi: calculateBMI2({
-      ...healthMatrix,
-      bodyComposition,
-    }),
-    muscle: calculateSkeletalMassPercentage({
-      ...healthMatrix,
-      bodyComposition,
-    }),
-    fat: calculateBodyFatPercentage({
-      ...healthMatrix,
-      bodyComposition,
-    }),
-    rm: calculateBMR({
-      ...healthMatrix,
-      bodyComposition,
-    }),
-    ideal_weight: (21 * (heightinMetres * heightinMetres)).toFixed(2),
-    bodyAge: calculateBodyAge({
-      ...healthMatrix,
-      bodyComposition,
-    }),
-  };
+
+  const closeBtnRef = useRef();
+
+  const payload = {
+    ...healthMatrix,
+    age,
+    bodyComposition: healthMatrix.body_composition
+  }
+
+  const clienthealthStats = {
+    bmi: calculateBMIFinal(payload),
+    muscle: calculateSMPFinal(payload),
+    fat: calculateBodyFatFinal(payload),
+    rm: calculateBMRFinal(payload),
+    idealWeight: calculateIdealWeightFinal(payload),
+    bodyAge: calculateBodyAgeFinal(payload),
+  }
 
   async function createFollowUp() {
     try {
@@ -231,6 +192,7 @@ function Stage2({ clientId }) {
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
       if (response.status_code !== 200) throw new Error(response.message || response.error);
       toast.success(response.message);
+      mutate(`app/clientStatsCoach?clientId=${clientId}`)
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -238,29 +200,14 @@ function Stage2({ clientId }) {
   }
 
   useEffect(function () {
-    dispatch(setHealthMatrices(healthMatrices));
+    dispatch(setHealthMatrices(clienthealthStats));
   }, []);
 
   return (
     <div>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-6">
-          {matrices.map((matrix) => (
-            <div key={matrix.id} className="bg-[var(--comp-1)] p-4 rounded-[8px]">
-              <div className="flex gap-4">
-                <Avatar className="w-[20px] h-[20px] rounded-none">
-                  <AvatarImage src={matrix.icon} />
-                </Avatar>
-                <p className="text-[12px] font-semibold">{matrix.label}</p>
-              </div>
-              <PieChart amount={healthMatrices[matrix.name]} />
-              {matrix.info.split("\n").map((text) => (
-                <p key={text} className="text-[12px] leading-[1.4]">
-                  {text}
-                </p>
-              ))}
-            </div>
-          ))}
+          <HealthMetrics data={payload} />
         </div>
         <Button
           onClick={createFollowUp}
@@ -269,60 +216,10 @@ function Stage2({ clientId }) {
         >
           Done
         </Button>
+        <DialogClose ref={closeBtnRef} />
       </div>
-      <Button onClick={createFollowUp} variant="wz" className="block mx-auto mt-10 px-24">Done</Button>
     </div>
   )
-}
-
-const chartData = [{ visitors: 20, fill: "var(--accent-1)" }];
-
-function PieChart({ amount }) {
-  return (
-    <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px]">
-      <RadialBarChart
-        data={chartData}
-        startAngle={90}
-        endAngle={-125}
-        innerRadius={60}
-        outerRadius={110}
-        maxBarSize={10}
-      >
-        <RadialBar dataKey="visitors" background cornerRadius={10} />
-        <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-          <ChartLabel
-            content={({ viewBox }) => {
-              if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                return (
-                  <text
-                    x={viewBox.cx}
-                    y={viewBox.cy}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    <tspan
-                      x={viewBox.cx}
-                      y={viewBox.cy}
-                      className="fill-foreground text-4xl font-bold"
-                    >
-                      {amount}
-                    </tspan>
-                    <tspan
-                      x={viewBox.cx}
-                      y={(viewBox.cy || 0) + 24}
-                      className="fill-muted-foreground"
-                    >
-                      {chartData[0].title}
-                    </tspan>
-                  </text>
-                );
-              } else return <></>
-            }}
-          />
-        </PolarRadiusAxis>
-      </RadialBarChart>
-    </ChartContainer>
-  );
 }
 
 function SelectBodyComposition() {
@@ -378,7 +275,6 @@ function SelectBodyComposition() {
     </div>
   );
 }
-
 
 function WeightOfClient() {
   const { dispatch, healthMatrix, ...state } = useCurrentStateContext();

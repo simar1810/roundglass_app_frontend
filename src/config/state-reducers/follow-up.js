@@ -91,19 +91,38 @@ export function init(data) {
     ...followUpInitialState,
     healthMatrix: {
       ...followUpInitialState.healthMatrix,
-      height: data.healthMatrix.height,
-      heightUnit: data.healthMatrix.heightUnit
+      heightUnit: data.healthMatrix.heightUnit,
+      heightCms: data.healthMatrix.heightUnit.toLowerCase() === "cm"
+        ? data.healthMatrix.height
+        : "",
+      heightFeet: data.healthMatrix.heightUnit.toLowerCase() === "inches"
+        ? (data.healthMatrix.height.split("."))[0]
+        : "",
+      heightInches: data.healthMatrix.heightUnit.toLowerCase() === "inches"
+        ? (data.healthMatrix.height.split("."))[1]
+        : ""
+
     }
   }
 }
 
-const fields = ["weight", "weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
+const fields = ["weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
 export function generateRequestPayload(state) {
   const payload = {
     healthMatrix: {
 
     }
   };
+  if (state.healthMatrix["weightUnit"].toLowerCase() === "kg") {
+    payload.healthMatrix.weight = state.healthMatrix.weightInKgs;
+  } else {
+    payload.healthMatrix.weight = state.healthMatrix.weightInPounds;
+  };
+  if (state.healthMatrix["heightUnit"].toLowerCase() === "cm") {
+    payload.healthMatrix.height = state.healthMatrix["heightCms"];
+  } else {
+    payload.healthMatrix.height = `${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`;
+  }
   for (const field of fields) {
     if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = state.healthMatrix[field];
   }
@@ -114,11 +133,16 @@ export function generateRequestPayload(state) {
   return payload;
 }
 
-const stage1fields = ["date", "weight", "weightUnit", "visceral_fat", "body_composition"];
+const stage1fields = ["date", "weightUnit", "visceral_fat", "body_composition"];
 export function stage1Completed(data) {
   for (const field of stage1fields) {
     if (!data.healthMatrix[field]) return { success: false, field }
   }
+  if (data.healthMatrix.weightUnit.toLowerCase() === "kg" && !data.healthMatrix.weightInKgs) {
+    return { success: false, field: "weight (kg)" }
+  } else if (data.healthMatrix.weightUnit.toLowerCase() === "pounds" && !data.healthMatrix.weightInPounds) {
+    return { success: false, field: "weight (pounds)" }
+  };
   if (!data.nextFollowUpDate && data.healthMatrix.followUpType === "custom") return { success: false, field: "nextFollowUpDate" }
   return { success: true };
 }
