@@ -10,7 +10,7 @@ export const dashboardCards = {
     { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg" },
   ],
   club: [
-    { id: 1, title: "Meetings", name: "", icon: "/svgs/checklist.svg" }
+    { id: 1, title: "Meetings", name: "meetings", icon: "/svgs/checklist.svg" }
   ]
 };
 
@@ -80,6 +80,7 @@ export const linkGeneratorFields = [
   { id: 6, label: "Meeting Description", inputtype: 3, placeholder: "Enter Description", name: "description" },
   { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
+  { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" }
 ];
 
 export const quickAddClientFormFields = [

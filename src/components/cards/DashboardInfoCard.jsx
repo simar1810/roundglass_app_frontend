@@ -1,8 +1,4 @@
-import {
-  Lock,
-  TrendingDown,
-  TrendingUp
-} from "lucide-react";
+import { Lock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,9 +9,8 @@ import { Badge } from "../ui/badge";
 
 export default function DashboardInfoCard({
   icon = "/svgs/users-icon.svg",
-  trendUp = false,
   title,
-  quantity = 100,
+  quantity,
   isSubscribed
 }) {
   return <div className="relative overflow-clip border-1 rounded-[10px]">
@@ -27,9 +22,6 @@ export default function DashboardInfoCard({
             className="w-[40px] h-[40px] !rounded-none"
           />
         </Avatar>
-        {/* {trendUp
-          ? <TrendingUp className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-          : <TrendingDown className="w-[16px] h-[16px] text-[var(--accent-2)]" />} */}
       </CardHeader>
       <CardContent>
         <div className="text-[20px] font-bold">{quantity}</div>

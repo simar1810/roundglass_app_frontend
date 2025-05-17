@@ -13,15 +13,16 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { changeFieldvalue, generateRequestPayload, init, linkGeneratorReducer, selectFields, selectMeetingFormField, setCurrentView, setWellnessZLink } from "@/config/state-reducers/link-generator";
-import { sendData } from "@/lib/api";
+import { sendData, sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { CircleMinus, CirclePlus, Copy } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
-import { copyText } from "@/lib/utils";
+import { copyText, getObjectUrl } from "@/lib/utils";
 import { mutate } from "swr";
+import Image from "next/image";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_ref = useAppSelector(state => state.coach.data.zoom_doc_ref);
@@ -102,10 +103,11 @@ function MeetingLink() {
 
 async function generateMeeting(withZoom, data, baseLink) {
   if (withZoom) {
-    const response = await sendData(`zoom/meeting/schedule?club=${process.env.NEXT_PUBLIC_ZOOM_CLUB_ID}`, data);
+    const response = await sendDataWithFormData(`zoom/meeting/schedule?club=${process.env.NEXT_PUBLIC_ZOOM_CLUB_ID}`, data);
     return response;
   } else {
-    const response = await sendData(`generateCustomLink?club=${process.env.NEXT_PUBLIC_ZOOM_CLUB_ID}`, { ...data, baseLink });
+    data.append("baseLink", baseLink);
+    const response = await sendDataWithFormData(`generateCustomLink?club=${process.env.NEXT_PUBLIC_ZOOM_CLUB_ID}`, data);
     return response;
   }
 }
@@ -210,6 +212,32 @@ export function MeetingDescription({ field }) {
       value={state[field.name]}
       onChange={e => dispatch(changeFieldvalue(field.name, e.target.value))}
       className="h-[120px]"
+    />
+  </div>
+}
+
+export function MeetingBanner({ field }) {
+  const { dispatch, ...state } = useCurrentStateContext();
+  const fileRef = useRef();
+
+  return <div className="mb-4">
+    <label className="text-[14px]" htmlFor="meeting-banner">{field.label}</label>
+    <Image
+      src={state.banner ? getObjectUrl(state.banner) : "/not-found.png"}
+      height={540}
+      width={540}
+      alt=""
+      className="w-full bg-[var(--comp-1)] mt-2 aspect-video object-contain rounded-md border-1"
+      onClick={() => fileRef.current.click()}
+      unoptimized
+    />
+    <input
+      ref={fileRef}
+      id="meeting-banner"
+      type="file"
+      hidden
+      onChange={e => dispatch(changeFieldvalue(field.name, e.target.files[0]))}
+      accept="image/*"
     />
   </div>
 }

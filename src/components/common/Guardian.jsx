@@ -2,7 +2,7 @@
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
 import { redirect } from "next/navigation"
 import { useEffect } from "react";
-import useSWR, { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 import { getCoachProfile } from "@/lib/fetchers/app";
 import { destroy, store } from "@/providers/global/slices/coach";
 import Loader from "./Loader";
@@ -20,6 +20,7 @@ export default function Guardian({
   _id
 }) {
   const { isLoading, error, data } = useSWR("coachProfile", () => getCoachProfile(_id))
+  const { cache } = useSWRConfig();
 
   const dispatchRedux = useAppDispatch();
   const coach = useAppSelector(state => state.coach.data);
@@ -34,8 +35,10 @@ export default function Guardian({
   ) {
     logout();
     dispatchRedux(destroy());
-    mutate(() => true, undefined);
-    redirect("/login");
+    for (const [field] of cache.entries()) {
+      cache.delete(field)
+    }
+    // redirect("/login");
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">
@@ -46,7 +49,7 @@ export default function Guardian({
     <TriangleAlert className="w-[64px] h-[64px]" />
     <ContentError
       className="min-h-auto border-0 mt-0 p-0"
-      title={`${data?.message}`}
+      title={data?.message || "Please Wait"}
     />
   </div>
 

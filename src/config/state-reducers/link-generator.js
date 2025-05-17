@@ -1,7 +1,7 @@
 import FormControl from "@/components/FormControl";
-import { MeetingDescription, MeetingRepeat, MeetingType } from "@/components/modals/club/LinkGenerator";
+import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType } from "@/components/modals/club/LinkGenerator";
 import { linkGeneratorFields } from "../data/ui";
-import { format, parse } from "date-fns";
+import { format, formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
 
 export function linkGeneratorReducer(state, action) {
@@ -26,7 +26,7 @@ export function linkGeneratorReducer(state, action) {
       }
 
     default:
-      break;
+      return state;
   }
 }
 
@@ -55,10 +55,10 @@ export function setWellnessZLink(link) {
 }
 
 const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7],
-  scheduled: [1, 2, 3, 4, 6, 7],
-  reocurr: [1, 2, 3, 4, 5, 6, 7],
-  event: [1, 2, 3, 4, 6, 7, 8]
+  quick: [1, 2, 6, 7, 9],
+  scheduled: [1, 2, 3, 4, 6, 7, 9],
+  reocurr: [1, 2, 3, 4, 6, 7, 9],
+  event: [1, 2, 3, 4, 6, 7, 8, 9]
 }
 
 export function selectFields(meetingType) {
@@ -76,13 +76,19 @@ export function init(withZoom) {
 
 export function generateRequestPayload(state) {
   const formControls = selectFields(state.meetingType)
-  const payload = {};
+
+  const payload = new FormData;
   for (const field of formControls) {
-    payload[field.name] = state[field.name];
+    payload.append(field.name, state[field.name]);
   }
-  if (state.data && state.time) {
-    const scheduleDate = format(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()), 'dd-MM-yyyy HH:mm:ss');
-    payload.scheduleDate = scheduleDate;
+  if (state.meetingType === "reocurr") {
+    payload.append("reOcurred", JSON.stringify(state["reOcurred"]));
+  }
+  if (state.date && state.time) {
+    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()));
+    payload.append("scheduleDate", scheduleDate);
+  } else {
+    payload.append("scheduleDate", new Date().toISOString());
   }
   return payload;
 }
@@ -109,6 +115,11 @@ export function selectMeetingFormField(field, formData, dispatch) {
       />
     case 4:
       return <MeetingRepeat
+        key={field.id}
+        field={field}
+      />
+    case 5:
+      return <MeetingBanner
         key={field.id}
         field={field}
       />

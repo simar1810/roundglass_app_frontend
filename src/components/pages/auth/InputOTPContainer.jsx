@@ -43,11 +43,10 @@ export default function InputOTPContainer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: response.refreshToken, _id: user._id })
+        body: JSON.stringify({ refreshToken: user.refreshToken, _id: user._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
-      delete user.refreshToken;
       dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
 
       if (isFirstTime) {
