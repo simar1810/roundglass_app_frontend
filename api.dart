@@ -7,7 +7,7 @@ class AppUrl {
   //   static const String baseUrl = "https://stage.wellnessz.in";
   // static const String baseUrl = "http://192.168.29.34:8080";
   static const String baseUrlSocket = "https://chat-backend.wellnessz.in";
-  // static const String baseUrlSocket = "http://10.0.2.2:8081";
+  // static const String baseUrlSocket = "http://10.0.2.2:8081"; 
 
   //Client Routes
   static const String signInClientCode = "/api/app/clientLogin"; // done
