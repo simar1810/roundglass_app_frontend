@@ -24,7 +24,7 @@ jobs:
         SSH_USER: ${{ secrets.SSH_USER }}
       run: |
         sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
-        cd /var/www/test.wellnessz.in/ && \
+        cd /var/www/app.wellnessz.in/ && \
         git pull origin main && \
         npm install && \
         npm run build && \
