@@ -129,3 +129,7 @@ export function getMealPlanById(id) {
 export function getSyncCoachesList() {
   return fetchData("app/sync-coach/super")
 }
+
+export function getSyncedCoachesClientList(coachId) {
+  return fetchData(`app/sync-coach/super/client?coachId=${coachId}`);
+}

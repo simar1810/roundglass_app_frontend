@@ -106,7 +106,7 @@ export function updateMatrices(matrices, values) {
 
 const fields = {
   stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
-  requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "heightUnit", "weight", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "bodyComposition", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
+  requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "heightUnit", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
 }
 
 export function stage1Completed(state, stage) {
@@ -131,6 +131,11 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
+  if (state.weightUnit.toLowerCase() === "kg") {
+    formData.append("weight", state["weightInKgs"]);
+  } else {
+    formData.append("weight", state["weightInPounds"]);
+  }
   if (state.heightUnit.toLowerCase() === "cm") {
     formData.append("height", state["heightCms"]);
   } else {
@@ -147,7 +152,7 @@ export function init(type, data) {
   if (type !== "add-details") return addClientCheckupInitialState;
   const payload = addClientCheckupInitialState;
   for (const field of ["mobileNumber", "name"]) {
-    payload[field] = data[field];
+    payload[field] = data[field] || "";
   }
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;

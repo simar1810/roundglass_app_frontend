@@ -10,10 +10,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function Page() {
   const { id } = useParams()
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const { _id } = useAppSelector(state => state.coach.data)
 
   const { isLoading, error, data } = useSWR(`app/meal-plan/${id}`, () => getMealPlanById(id));
   if (isLoading) return <ContentLoader />
@@ -37,7 +39,7 @@ export default function Page() {
       >
         Copy & Edit
       </Link>
-      <UpdateMealPlanModal mealPlan={planData} />
+      {_id === planData.coach && <UpdateMealPlanModal mealPlan={planData} />}
     </div>
     <div className="mt-8 flex gap-4 overflow-x-auto">
       {selectedMeals.map((recipe, index) => <RecipeDetails

@@ -39,7 +39,7 @@ export default function AppNavbar() {
 
 const features = [
   { id: 1, title: "Meal", link: "/coach/meals/list" },
-  { id: 2, title: "Recipees", link: "/coach/meals/recipes" },
+  { id: 2, title: "Recipes", link: "/coach/meals/recipes" },
   { id: 3, title: "Meetings", link: "/coach/club/meetings" },
   { id: 4, title: "Link Generator", link: "/coach/club/link-generator" },
   { id: 5, title: "Notes", link: "/coach/tools/notes" },

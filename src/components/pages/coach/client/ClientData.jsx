@@ -19,7 +19,7 @@ export default function ClientData({ clientData }) {
   return <div className="bg-white p-4 rounded-[18px] border-1">
     <Tabs defaultValue="statistics">
       <Header />
-      <ClientStatisticsData clientId={clientData._id} />
+      <ClientStatisticsData clientData={clientData} />
       <ClientMealData _id={clientData._id} />
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       <ClientClubDataComponent clientData={clientData} />

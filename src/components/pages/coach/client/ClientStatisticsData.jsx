@@ -1,5 +1,6 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import { Button } from "@/components/ui/button"
 import {
@@ -12,12 +13,13 @@ import { ChartContainer } from "@/components/ui/chart"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { sendData } from "@/lib/api";
-import { calculateBMI, calculateBMI2, calculateBMR, calculateBodyAge, calculateBodyFatPercentage, calculateSkeletalMassPercentage } from "@/lib/client/statistics";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
+import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { calculatePieChartAngle } from "@/lib/utils";
+import { differenceInYears, parse } from "date-fns";
 import { FilePen } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PolarRadiusAxis,
   RadialBar,
@@ -41,7 +43,7 @@ const chartData = [
   { browser: "safari", title: "Healthy", visitors: 23.4 },
 ]
 
-const comparisonPDFData = {
+const comparisonPDFD = {
   clientName: "John Doe",
   age: "32",
   gender: "Male",
@@ -58,23 +60,6 @@ const comparisonPDFData = {
     { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
   ]
 }
-
-const clientStatistics = {
-  clientName: "Simarpreet Singh",
-  age: "21",
-  gender: "Male",
-  joined: "2025-05-12",
-  weight: "93",
-  height: "6.3 ft",
-  bmi: "27.2",
-  fatPercentage: "27.5",
-  musclePercentage: "31.4",
-  restingMetabolism: "1550",
-  bodyComposition: "Moderate Muscle, High Fat",
-  coachName: "Gurpreet Sir",
-  coachDescription: "A certified wellness coach helping you transform your lifestyle through science-backed fitness and meal plans.",
-  coachProfileImage: "",
-};
 
 const invoiceData = {
   clientName: 'Simarpreet Singh',
@@ -141,7 +126,8 @@ const mealPlan = {
   ]
 };
 
-export default function ClientStatisticsData({ clientId }) {
+export default function ClientStatisticsData({ clientData }) {
+  const { dob, clientId, gender } = clientData
   const [selectedDate, setSelectedDate] = useState(0);
 
   const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
@@ -153,20 +139,29 @@ export default function ClientStatisticsData({ clientId }) {
     <ContentError title={error || data.message} className="mt-0" />
   </TabsContent>
 
-  const statistics = {
-    ...clientStats?.at(selectedDate),
-    bodyComposition: clientStats?.at(0)?.body_composition || "Slim"
-  }
-  const heightinMetres = statistics.heightUnit === "Cm"
-    ? Number(statistics.height) / 100
-    : Number(statistics.height) / 3.28084;
+
   const payload = {
-    bmi: calculateBMI2(statistics || {}),
-    muscle: calculateSkeletalMassPercentage({ ...statistics, bodyComposition: statistics?.body_composition } || {}),
-    fat: calculateBodyFatPercentage({ ...statistics, bodyComposition: statistics?.body_composition } || {}),
-    rm: calculateBMR({ ...statistics, gender: "male" } || {}),
-    ideal_weight: (21 * (heightinMetres * heightinMetres)).toFixed(2),
-    bodyAge: calculateBodyAge(statistics || {}),
+    ...clientStats?.at(selectedDate),
+    age: dob
+      ? differenceInYears(new Date(), parse(dob, 'yyyy-MM-dd', new Date()))
+      : 0,
+    bodyComposition: clientStats?.at(selectedDate).body_composition,
+    gender,
+    heightCms: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "cm"
+      ? clientStats?.at(selectedDate).height
+      : "",
+    heightFeet: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "inches"
+      ? (clientStats?.at(selectedDate).height.split("."))[0]
+      : "",
+    heightInches: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "inches"
+      ? (clientStats?.at(selectedDate).height.split("."))[1]
+      : "",
+    weightInKgs: clientStats?.at(selectedDate).weightUnit.toLowerCase() === "kg"
+      ? clientStats?.at(selectedDate).weight
+      : "",
+    weightInPounds: clientStats?.at(selectedDate).weightUnit.toLowerCase() === "pounds"
+      ? clientStats?.at(selectedDate).weight
+      : "",
   }
 
   async function sendAnalysis() {
@@ -190,25 +185,30 @@ export default function ClientStatisticsData({ clientId }) {
         {stat.createdDate}
       </Button>)}
     </div>
-    <StatisticsExportingOptions clientStats={clientStats} />
+    <StatisticsExportingOptions
+      clientData={clientData}
+      clientStats={clientStats}
+    />
     <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: 2 KG</h5>
-    <div className="aspect-video bg-[var(--dark-1)]/4 mt-4"></div>
     <div className="mt-8 grid grid-cols-3 gap-5">
-      <ClientStatisticCharts payload={payload} />
+      <HealthMetrics data={payload} />
     </div>
     <Button onClick={sendAnalysis} variant="wz" className="mx-auto mt-8 block">Send Analysis Reminder</Button>
   </TabsContent>
 }
 
-function StatisticsExportingOptions({ clientStats }) {
+function StatisticsExportingOptions({
+  clientData,
+  clientStats
+}) {
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
-    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatistics}>
+    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatisticsPDFData(clientData, clientStats)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
         Share Statistics
       </DialogTrigger>
     </PDFRenderer>
-    <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData}>
+    <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
         Share & View Comparison PPT

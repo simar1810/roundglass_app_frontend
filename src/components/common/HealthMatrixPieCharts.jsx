@@ -132,17 +132,13 @@ export function MetricProgress({
             alt=""
             className="object-contain"
           />
-          <h2 className="text-2xl font-bold">{title}</h2>
+          <h2 className="text-[16px] font-bold">{title}</h2>
         </div>
       </CardHeader>
       <CardContent className="mt-auto">
         <div className="relative flex items-center justify-center  mb -8">
-          {/* SVG for circular progress - starting at top (12 o'clock) and moving clockwise */}
           <svg width="160" height="160" viewBox="0 0 160 160">
-            {/* Background circle */}
             <circle cx="80" cy="80" r={radius} fill="none" stroke="#f0f0f0" strokeWidth="16" />
-
-            {/* Progress circle - starts at top and moves clockwise */}
             <circle
               cx="80"
               cy="80"

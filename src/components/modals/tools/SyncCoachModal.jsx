@@ -1,4 +1,5 @@
 import SelectControl from "@/components/Select";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { sendData } from "@/lib/api";
@@ -31,8 +32,8 @@ export default function SyncCoachModal({ coachId, defaultValue }) {
   }
 
   return <Dialog>
-    <DialogTrigger className="w-full">
-      Change Status
+    <DialogTrigger>
+      <Badge variant="wz" className="hover:bg-[var(--accent-1)] hover:text-[var(--primary-1)]">Change Status</Badge>
     </DialogTrigger>
     <DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
       <DialogHeader className="py-4 px-6 border-b">

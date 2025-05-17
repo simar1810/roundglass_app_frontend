@@ -458,7 +458,7 @@ function StatisticsPage1({ data }) {
 
   return (
     <Page size="A4" style={styles.page}>
-      <Text style={styles.brandTitle}>Simar Nutrition</Text>
+      <Text style={styles.brandTitle}>WellnessZ Nutrition</Text>
       <Text style={styles.subHeader}>Checkup Report</Text>
 
       <View style={styles.infoBox}>
@@ -961,28 +961,28 @@ function StatisticsPage5({
 
       {/* Introductory Paragraph */}
       <Text style={styles.intro}>
-       Resting metabolism, or basal metabolic rate (BMR), is the energy
- expended by the body at rest to maintain vital functions like
- breathing and circulation. It varies based on age, sex, body
- composition, and genetics, with muscle tissue requiring more
- energy than fat tissue. BMR is essential for managing weight and
- planning nutrition and exercise, as it determines daily calorie
- needs. Monitoring changes in BMR helps gauge metabolic health
- and guides adjustments in lifestyle for optimal energy balance and
- overall well-being.
+        Resting metabolism, or basal metabolic rate (BMR), is the energy
+        expended by the body at rest to maintain vital functions like
+        breathing and circulation. It varies based on age, sex, body
+        composition, and genetics, with muscle tissue requiring more
+        energy than fat tissue. BMR is essential for managing weight and
+        planning nutrition and exercise, as it determines daily calorie
+        needs. Monitoring changes in BMR helps gauge metabolic health
+        and guides adjustments in lifestyle for optimal energy balance and
+        overall well-being.
       </Text>
 
       {/* If within Normal Range */}
       <View style={[styles.sectionBox, styles.greenBox]}>
         <Text style={styles.greenTitle}>If within Normal Range:</Text>
         <Text>
-         Having a resting metabolism within the normal range for your age, sex, and body composition
- indicates that your body efficiently expends energy to maintain essential functions at rest. This
- suggests a balanced metabolic rate that supports overall health and energy balance. It typically
- reflects a healthy metabolic function, where the body can effectively regulate energy needs based on
- daily activities and dietary intake. Monitoring and maintaining a normal resting metabolism through
- lifestyle habits like regular exercise and balanced nutrition helps support optimal weight management
- and overall well-being.
+          Having a resting metabolism within the normal range for your age, sex, and body composition
+          indicates that your body efficiently expends energy to maintain essential functions at rest. This
+          suggests a balanced metabolic rate that supports overall health and energy balance. It typically
+          reflects a healthy metabolic function, where the body can effectively regulate energy needs based on
+          daily activities and dietary intake. Monitoring and maintaining a normal resting metabolism through
+          lifestyle habits like regular exercise and balanced nutrition helps support optimal weight management
+          and overall well-being.
         </Text>
       </View>
 
@@ -990,13 +990,13 @@ function StatisticsPage5({
       <View style={[styles.sectionBox, styles.redBox]}>
         <Text style={styles.redTitle}>If Outside Normal Range:</Text>
         <Text>
-           If your resting metabolism is outside the normal range for your age, sex, and body composition, it
- indicates potential metabolic variations that could impact overall health and energy balance. A
- higher-than-normal resting metabolism may suggest increased energy expenditure, potentially
- requiring adjustments in diet and exercise. Conversely, a lower-than-normal metabolism could
- indicate reduced energy expenditure, affecting weight management and energy levels. Consulting
- healthcare professionals can help identify underlying causes and develop tailored strategies to
- support metabolic health and well-being.
+          If your resting metabolism is outside the normal range for your age, sex, and body composition, it
+          indicates potential metabolic variations that could impact overall health and energy balance. A
+          higher-than-normal resting metabolism may suggest increased energy expenditure, potentially
+          requiring adjustments in diet and exercise. Conversely, a lower-than-normal metabolism could
+          indicate reduced energy expenditure, affecting weight management and energy levels. Consulting
+          healthcare professionals can help identify underlying causes and develop tailored strategies to
+          support metabolic health and well-being.
         </Text>
       </View>
 
