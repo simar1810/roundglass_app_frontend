@@ -17,7 +17,7 @@ import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
-import { mutate } from "swr";
+import { mutate, useSWRConfig } from "swr";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -140,6 +140,7 @@ function UserOptions({ profilePhoto, name }) {
   const [modal, setModal] = useState();
   const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
+  const { cache } = useSWRConfig();
 
   const personalizationpermitted = permit("app-personalization", roles);
 
@@ -147,10 +148,12 @@ function UserOptions({ profilePhoto, name }) {
 
   async function expireUserSession() {
     try {
-      // mutate(() => true, undefined, { revalidate: false })
       const response = await fetch("/api/logout", { method: "DELETE" });
       const data = await response.json();
       if (data.status_code !== 200) throw new Error(data.message);
+      for (const [field] of cache.entries()) {
+        cache.delete(field)
+      }
       dispatchRedux(destroy());
       router.push("/login");
     } catch (error) {

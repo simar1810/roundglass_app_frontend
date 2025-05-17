@@ -87,7 +87,7 @@ export default function HealthMetrics({ data }) {
     idealWeight: calculateIdealWeightFinal(data),
     bodyAge: calculateBodyAgeFinal(data),
   }
-  console.log(payload)
+
   return <>
     {healtMetrics.map(metric => <MetricProgress
       key={metric.id}
@@ -108,14 +108,9 @@ export function MetricProgress({
   className,
   optimalRangeText = "Optimal Range: 32-36% for men, 24-30% for women\nAthletes: 38-42%",
 }) {
-  // console.log(maxPossibleValue)
   const maxPossibleValue = (maxThreshold + minThreshold)
-  console.log(title, maxPossibleValue, minThreshold, maxThreshold)
 
-  // Calculate the progress percentage for the circle
   const progressPercentage = (value / maxPossibleValue) * 100
-
-  // Calculate the stroke dash for the progress
   const radius = 70
   const circumference = 2 * Math.PI * radius
   const progressOffset = ((100 - progressPercentage) / 100) * circumference;
