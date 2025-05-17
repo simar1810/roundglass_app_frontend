@@ -12,6 +12,7 @@ import ContentLoader from "@/components/common/ContentLoader";
 import { getSyncCoachesList } from "@/lib/fetchers/app";
 import useSWR from "swr";
 import SyncCoachModal from "@/components/modals/tools/SyncCoachModal";
+import SyncedCoachesModal from "@/components/modals/coach/SyncedCoachesModal";
 
 const CoachSyncStatus = { 1: "request", 2: "synced" }
 
@@ -58,8 +59,9 @@ function SyncedCoaches({ data }) {
             <TableCell>{record?.coach?.mobileNumber}</TableCell>
             <TableCell>{record?.coach?.coachId}</TableCell>
             <TableCell>{CoachSyncStatus[record.status]}</TableCell>
-            <TableCell>
+            <TableCell className="flex items-center justify-center gap-4">
               <SyncCoachModal coachId={record.coach._id} defaultValue={record.status} />
+              <SyncedCoachesModal coachId={record.coach._id} />
             </TableCell>
           </TableRow>)}
         </TableBody>

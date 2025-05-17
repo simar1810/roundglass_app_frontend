@@ -1,7 +1,7 @@
 import FormControl from "@/components/FormControl";
 import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType } from "@/components/modals/club/LinkGenerator";
 import { linkGeneratorFields } from "../data/ui";
-import { format, formatISO, parse } from "date-fns";
+import { formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
 
 export function linkGeneratorReducer(state, action) {
@@ -23,6 +23,11 @@ export function linkGeneratorReducer(state, action) {
         ...state,
         wellnessZLink: action.payload,
         view: 3
+      }
+    case "RESET_STATE":
+      return {
+        linkGeneratorInitialState,
+        view: 2
       }
 
     default:
@@ -52,6 +57,10 @@ export function setWellnessZLink(link) {
     type: "SET_WELLNESSZ_LINK",
     payload: link
   }
+}
+
+export function resetCurrentState() {
+  return { type: "RESET_STATE" }
 }
 
 const meetingTypeFieldsMap = {

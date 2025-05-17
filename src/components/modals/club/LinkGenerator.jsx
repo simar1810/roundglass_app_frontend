@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { changeFieldvalue, generateRequestPayload, init, linkGeneratorReducer, selectFields, selectMeetingFormField, setCurrentView, setWellnessZLink } from "@/config/state-reducers/link-generator";
+import { changeFieldvalue, generateRequestPayload, init, linkGeneratorReducer, resetCurrentState, selectFields, selectMeetingFormField, setCurrentView, setWellnessZLink } from "@/config/state-reducers/link-generator";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -96,6 +96,7 @@ function MeetingLink() {
             <Copy />
           </div>
         </div>
+        <Button variant="wz" className="block mt-4 mx-auto" onClick={() => dispatch(resetCurrentState())}>New Meeting</Button>
       </div>}
     </div>
   </>
@@ -145,16 +146,19 @@ function MeetingForm({ withZoom }) {
     </DialogHeader>
     <div className="text-left px-4">
       {fieldsToBeDisplayed.map(field => selectMeetingFormField(field, state, dispatch))}
-      <Button
-        onClick={createMeeting}
-        variant="wz"
-        className="block mx-auto"
-        disabled={loading}
-      >
-        Create Meeting
-      </Button>
+      <div className="flex gap-4">
+        <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
+        <Button
+          onClick={createMeeting}
+          variant="wz"
+          className="grow block mx-auto"
+          disabled={loading}
+        >
+          Create Meeting
+        </Button>
+      </div>
       <DialogClose ref={closeBtnRef} />
-    </div>
+    </div >
   </>
 }
 

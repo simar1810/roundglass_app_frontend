@@ -41,7 +41,7 @@ export default function AddSubscriptionModal({ _id }) {
 
   return <Dialog>
     <DialogTrigger className="font-semibold text-[12px] text-[var(--primary-1)] bg-[var(--accent-1)] px-4 py-2 rounded-[8px]">
-      Add
+      Add Membership
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] max-h-[70vh] border-0 px-0 overflow-auto gap-0 overflow-y-auto">
       <DialogTitle className="text-[24px] px-4">Add Membership</DialogTitle>

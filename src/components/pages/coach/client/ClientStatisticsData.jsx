@@ -13,13 +13,13 @@ import { ChartContainer } from "@/components/ui/chart"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { sendData } from "@/lib/api";
-import { calculateBMI, calculateBMI2, calculateBMIFinal, calculateBMR, calculateBMRFinal, calculateBodyAge, calculateBodyAgeFinal, calculateBodyFatFinal, calculateBodyFatPercentage, calculateIdealWeightFinal, calculateSkeletalMassPercentage, calculateSMPFinal } from "@/lib/client/statistics";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
+import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { calculatePieChartAngle } from "@/lib/utils";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PolarRadiusAxis,
   RadialBar,
@@ -43,7 +43,7 @@ const chartData = [
   { browser: "safari", title: "Healthy", visitors: 23.4 },
 ]
 
-const comparisonPDFData = {
+const comparisonPDFD = {
   clientName: "John Doe",
   age: "32",
   gender: "Male",
@@ -60,23 +60,6 @@ const comparisonPDFData = {
     { createdDate: "2025-01-01", weight: "78", bmi: "24.5", muscle: "38%", fat: "20%", rm: "1600" },
   ]
 }
-
-const clientStatistics = {
-  clientName: "Simarpreet Singh",
-  age: "21",
-  gender: "Male",
-  joined: "2025-05-12",
-  weight: "93",
-  height: "6.3 ft",
-  bmi: "27.2",
-  fatPercentage: "27.5",
-  musclePercentage: "31.4",
-  restingMetabolism: "1550",
-  bodyComposition: "Moderate Muscle, High Fat",
-  coachName: "Gurpreet Sir",
-  coachDescription: "A certified wellness coach helping you transform your lifestyle through science-backed fitness and meal plans.",
-  coachProfileImage: "",
-};
 
 const invoiceData = {
   clientName: 'Simarpreet Singh',
@@ -202,26 +185,30 @@ export default function ClientStatisticsData({ clientData }) {
         {stat.createdDate}
       </Button>)}
     </div>
-    <StatisticsExportingOptions clientStats={clientStats} />
+    <StatisticsExportingOptions
+      clientData={clientData}
+      clientStats={clientStats}
+    />
     <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: 2 KG</h5>
-    <div className="aspect-video bg-[var(--dark-1)]/4 mt-4"></div>
     <div className="mt-8 grid grid-cols-3 gap-5">
-      {/* <ClientStatisticCharts payload={payload} /> */}
       <HealthMetrics data={payload} />
     </div>
     <Button onClick={sendAnalysis} variant="wz" className="mx-auto mt-8 block">Send Analysis Reminder</Button>
   </TabsContent>
 }
 
-function StatisticsExportingOptions({ clientStats }) {
+function StatisticsExportingOptions({
+  clientData,
+  clientStats
+}) {
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
-    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatistics}>
+    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatisticsPDFData(clientData, clientStats)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
         Share Statistics
       </DialogTrigger>
     </PDFRenderer>
-    <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData}>
+    <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
         Share & View Comparison PPT

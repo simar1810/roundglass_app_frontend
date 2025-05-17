@@ -145,6 +145,8 @@ function CoachClubSettings() {
     }
   }
 
+  console.log(coach)
+
   return <TabsContent value="club">
     {fields.map(field => <FormControl
       key={field.id}

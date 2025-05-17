@@ -11,8 +11,8 @@ import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Plus, Upload, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function Stage2() {
@@ -67,6 +67,7 @@ export default function Stage2() {
 
 function MealTypesList() {
   const { meals, selectedMealType, dispatch } = useCurrentStateContext();
+  const params = useSearchParams()
 
   return <div className="flex gap-2 mb-6 overflow-x-auto">
     {meals.map((meal, index) => <div
@@ -81,7 +82,7 @@ function MealTypesList() {
         index={index}
       />
     </div >)}
-    <AddMealType />
+    <AddMealType defaultOpen={!Boolean(params.get("id"))} />
   </div>
 }
 
@@ -147,7 +148,7 @@ export function RecipeDetails({ recipe, index }) {
   </div>
 }
 
-function AddMealType() {
+function AddMealType({ defaultOpen }) {
   const [type, setType] = useState("");
   const { dispatch, meals } = useCurrentStateContext();
   const closeBtnRef = useRef();
@@ -162,7 +163,7 @@ function AddMealType() {
     }
   }
 
-  return <Dialog defaultOpen={true}>
+  return <Dialog defaultOpen={defaultOpen}>
     <DialogTrigger className="bg-[var(--comp-1)] whitespace-nowrap text-[14px] px-4 py-2 rounded-[8px] border-1">
       Add New Type
     </DialogTrigger>
