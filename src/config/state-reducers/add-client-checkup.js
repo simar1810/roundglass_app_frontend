@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { addDays, differenceInYears, format, parse } from "date-fns";
 import { addClientCheckupInitialState } from "../state-data/add-client-checkup";
 
 export function addClientCheckupReducer(state, action) {
@@ -49,7 +49,12 @@ export function addClientCheckupReducer(state, action) {
         stage: 4,
         clientId: action.payload
       }
-
+    case "CHANGE_NEXT_FOLLOW_UP_TYPE":
+      return {
+        ...state,
+        nextFollowupType: "8-day",
+        nextFollowup: format(addDays(new Date(), 8), 'yyyy-MM-dd')
+      }
     default:
       return state;
   }
@@ -93,6 +98,10 @@ export function changeWeightUnit(payload) {
   }
 }
 
+export function changeNextFollowUpType(payload) {
+  return { type: "CHANGE_NEXT_FOLLOW_UP_TYPE" }
+}
+
 export function updateMatrices(matrices, values) {
   const payload = {};
   for (const matrix of matrices) {
@@ -106,7 +115,12 @@ export function updateMatrices(matrices, values) {
 
 const fields = {
   stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
-  requestFields: ["name", "email", "mobileNumber", "age", "notes", "dob", "gender", "heightUnit", "weightUnit", "bodyComposition", "file", "bmi", "visceral_fat", "followUpDate", "activeType", "rm", "muscle", "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "nextFollowup"],
+  requestFields: [
+    "name", "email", "mobileNumber", "notes", "dob", "gender",
+    "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
+    "visceral_fat", "activeType", "rm", "muscle",
+    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID"
+  ],
 }
 
 export function stage1Completed(state, stage) {
@@ -121,7 +135,7 @@ export function stage1Completed(state, stage) {
   if (state.heightUnit.toLowerCase() === "cm") {
     if (!state["heightCms"]) return { success: false, field: "Height Cms" };
   } else {
-    if (!state["heightFeet"] || !state["heightInches"]) return { success: false, field: "Height Feet ,Height Inches" };
+    if (!state["heightFeet"] || !state["heightInches"]) return { success: false, field: "Height Feet, Height Inches" };
   }
   return { success: true };
 }
@@ -141,10 +155,12 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   } else {
     formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
   }
-  const joiningDate = format(parse(state.joiningDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy');
+  for (const field of ["followUpDate", "joiningDate"]) {
+    formData.append(field, format(parse(state[field], 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
+  }
   formData.append("coachId", coachId);
-  formData.append("joiningDate", joiningDate);
   formData.append("existingClientID", existingClientID);
+  formData.append("age", differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date())))
   return formData;
 }
 

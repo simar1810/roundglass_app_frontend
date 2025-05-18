@@ -16,7 +16,7 @@ export default function Feeds() {
   );
   useEffect(function () {
     if (data?.status_code === 201) {
-      dispatch(pageEnd(state.page - 1))
+      // dispatch(pageEnd(state.page - 1))
     }
   }, [isLoading]);
 

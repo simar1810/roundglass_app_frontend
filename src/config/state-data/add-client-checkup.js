@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 
 export const addClientCheckupInitialState = {
   stage: 1,
@@ -19,8 +19,8 @@ export const addClientCheckupInitialState = {
   heightInches: "",
   bmi: "",
   visceral_fat: "",
-  followUpDate: "",
-  activeType: "",
+  followUpDate: format(addDays(new Date(), 8), 'yyyy-MM-dd'),
+  activeType: "active",
   rm: "",
   joiningDate: format(new Date(), 'yyyy-MM-dd'),
   muscle: "",
@@ -30,7 +30,7 @@ export const addClientCheckupInitialState = {
   bodyAge: "",
   pendingCustomer: "",
   existingClientID: "",
-  nextFollowup: "",
+  nextFollowupType: "8-day",
   clientType: "new",// e.g. new, existing
   file: null,
   pendingCustomer: false,

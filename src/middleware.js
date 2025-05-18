@@ -2,13 +2,19 @@ import { NextResponse } from "next/server";
 
 export default function middleware(request) {
   const token = request.cookies.get('token')?.value;
-  if (!token) return NextResponse.redirect(new URL(
-    "/login",
-    request.url
-  ));
+  const pathname = request.nextUrl.pathname;
+
+  if (pathname === "/login" && token) {
+    return NextResponse.redirect(new URL("/coach/dashboard", request.url));
+  }
+
+  if (pathname.startsWith("/coach") && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/coach/:path*"]
-}
+  matcher: ["/coach/:path*", "/login"],
+};

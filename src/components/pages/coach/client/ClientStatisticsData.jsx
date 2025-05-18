@@ -185,10 +185,10 @@ export default function ClientStatisticsData({ clientData }) {
         {stat.createdDate}
       </Button>)}
     </div>
-    <StatisticsExportingOptions
+    {/* <StatisticsExportingOptions
       clientData={clientData}
       clientStats={clientStats}
-    />
+    /> */}
     <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: 2 KG</h5>
     <div className="mt-8 grid grid-cols-3 gap-5">
       <HealthMetrics data={payload} />
