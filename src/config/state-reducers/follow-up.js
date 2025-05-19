@@ -114,17 +114,17 @@ export function generateRequestPayload(state) {
     }
   };
   if (state.healthMatrix["weightUnit"].toLowerCase() === "kg") {
-    payload.healthMatrix.weight = state.healthMatrix.weightInKgs;
+    payload.healthMatrix.weight = String(state.healthMatrix.weightInKgs);
   } else {
-    payload.healthMatrix.weight = state.healthMatrix.weightInPounds;
+    payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
   };
   if (state.healthMatrix["heightUnit"].toLowerCase() === "cm") {
-    payload.healthMatrix.height = state.healthMatrix["heightCms"];
+    payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
   } else {
-    payload.healthMatrix.height = `${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`;
+    payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
   }
   for (const field of fields) {
-    if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = state.healthMatrix[field];
+    if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = String(state.healthMatrix[field]);
   }
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
