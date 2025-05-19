@@ -38,11 +38,11 @@ export default function ClientClubDataComponent({ clientData }) {
       width={305}
       className="max-w-[300px] h-full w-full mx-auto object-contain"
     />
-    <h5 className="text-center">This feature is only available with premium memberships</h5>
-    <Button variant="wz" className="mt-4 mb-20 mx-auto block">Add membership</Button>
+    <h5 className="text-center">This feature is only available with premium subscription</h5>
+    <Button variant="wz" className="mt-4 mb-20 mx-auto block">Add Subscription</Button>
   </TabsContent>
 
-  if (!clientData.rollno) return <TabsContent value="club">
+  if (!clientData.rollno && permit("club", roles)) return <TabsContent value="club">
     <div className="h-[400px] flex items-center justify-center">
       <DualOptionActionModal
         action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}

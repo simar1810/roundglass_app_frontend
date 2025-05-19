@@ -14,7 +14,7 @@ export default function InputMobileNumber() {
         credential: "+91" + mobileNumber,
         fcmToken: ""
       }
-      const response = await sendData("app/signin?authMode=mob", data);
+      const response = await sendData("app/signin?authMode=mob&clientType=web", data);
       if (response.status_code === 400) throw new Error(response.message);
       dispatch({
         type: "UPDATE_CURRENT_STATE",

@@ -1,3 +1,5 @@
+import { format, parse } from "date-fns";
+
 export function addMealPlanReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FIELD_VALUE":
@@ -187,6 +189,7 @@ export function init(data) {
   for (const mealType of data.meals) {
     for (const meal of mealType.meals) {
       meal.id = (Math.random() * 1000000).toFixed(0)
+      meal.meal_time = format(parse(meal.meal_time, "hh:mm a", new Date()), "HH:mm");
     }
   }
   payload.meals = data.meals;

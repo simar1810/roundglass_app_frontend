@@ -177,6 +177,10 @@ export function calculateBodyAgeFinal(data) {
 
   let bodyAge = data.age;
 
+  const gender = data.gender?.toLowerCase() || '';
+  const bodyComposition = data.bodyComposition?.toLowerCase() || '';
+
+  // BMI-based adjustments
   if (bmi < 18.5) {
     bodyAge += 2;
   } else if (bmi > 25.0) {
@@ -185,13 +189,14 @@ export function calculateBodyAgeFinal(data) {
     bodyAge -= 1;
   }
 
-  if (data.gender.toLowerCase() === 'male') {
+  // Body fat adjustments by gender
+  if (gender === 'male') {
     if (fat < 8.0) {
       bodyAge -= 2;
     } else if (fat > 25.0) {
       bodyAge += 4;
     }
-  } else if (data.gender.toLowerCase() === 'female') {
+  } else if (gender === 'female') {
     if (fat < 21.0) {
       bodyAge -= 2;
     } else if (fat > 32.0) {
@@ -199,7 +204,8 @@ export function calculateBodyAgeFinal(data) {
     }
   }
 
-  switch (data.bodyComposition?.toLowerCase()) {
+  // Body composition adjustments
+  switch (bodyComposition) {
     case 'slim':
       bodyAge -= 1;
       break;
@@ -208,7 +214,8 @@ export function calculateBodyAgeFinal(data) {
       break;
   }
 
-  return Math.round(bodyAge);
+  // Ensure bodyAge is not negative
+  return Math.max(0, Math.round(bodyAge));
 }
 
 export function calculateBMI2({

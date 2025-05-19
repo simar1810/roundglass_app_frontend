@@ -135,7 +135,7 @@ function Header({ clientData }) {
       <div className="mb-2 flex items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
         <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
-        {clientData.rollno && <EditClientRollnoModal
+        {clientData.rollno && permit("club", roles) && <EditClientRollnoModal
           defaultValue={clientData.rollno}
           _id={clientData._id}
         />}
@@ -162,7 +162,7 @@ function Header({ clientData }) {
             _id={clientData._id}
           />
         </DropdownMenuItem>
-        {!Boolean(clientData.rollno) && <DropdownMenuItem>
+        {!Boolean(clientData.rollno) && permit("club", roles) && <DropdownMenuItem>
           <DualOptionActionModal
             action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}
             description="Are you sure to generate a new roll number for the client?"

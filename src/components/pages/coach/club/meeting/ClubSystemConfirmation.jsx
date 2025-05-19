@@ -47,16 +47,16 @@ export default function ClubSystemConfirmation({ clubSystem }) {
         width={150}
         className="max-w-[250px] w-full mx-auto"
       />
-      <AlertDialogTitle className="text-center mb-4">Enter the OTP Received on your Email ID</AlertDialogTitle>
+      <AlertDialogTitle className="text-center mb-4">Are you sure?<br />Club system will be changed to {selectedClubSystem} mode.</AlertDialogTitle>
     </AlertDialogHeader>
     <AlertDialogFooter>
-      <Input
+      {/* <Input
         placeholder="Please enter your OTP"
         value={otp}
         onChange={e => dispatch(onChangeOTP(e.target.value))}
-      />
-      <AlertDialogCancel ref={alertClose}>Cancel</AlertDialogCancel>
-      <Button variant="wz" onClick={confirmationClusSystemChange}>Confirm</Button>
+      /> */}
+      <AlertDialogCancel className="grow" ref={alertClose}>Cancel</AlertDialogCancel>
+      <Button className="grow" variant="wz" onClick={confirmationClusSystemChange}>Confirm</Button>
     </AlertDialogFooter>
   </AlertDialogContent>
 }

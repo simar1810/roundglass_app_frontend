@@ -78,13 +78,18 @@ export default function CheckupStage2() {
         Name: <span className="font-semibold">{state.name}</span>
       </div>
       <div>
-        Height: <span className="font-semibold">5 Feet 8 Inches</span>
+        Height:&nbsp;
+        <span className="font-semibold">
+          {state.heightUnit.toLowerCase() === "cm"
+            ? `${state.heightCms} cm`
+            : `${state.heightFeet} ft. ${state.heightInches} in`}
+        </span>
       </div>
       <div>
         D.O.B: <span className="font-semibold">{state.dob}</span>
       </div>
       <div>
-        Age: <span className="font-semibold">25 yrs</span>
+        Age: <span className="font-semibold">{differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))} yrs</span>
       </div>
       <div>
         Gender: <span className="font-semibold">{state.gender.split("")[0]?.toUpperCase() + state.gender.slice(1)}</span>
@@ -94,11 +99,12 @@ export default function CheckupStage2() {
     <div className="grid grid-cols-3 gap-4">
       <HealthMetrics data={{ ...state, age }} />
     </div>
-    <div className="mt-6 flex items-center gap-4">
-      <Button variant="wz_outline" onClick={() => dispatch(setCurrentStage(1))}>Previous</Button>
+    <div className="mt-10 flex items-center gap-4">
+      <Button className="grow" variant="wz_outline" onClick={() => dispatch(setCurrentStage(1))}>Previous</Button>
       <Button
         onClick={() => dispatch(setCurrentStage(3))}
         variant="wz"
+        className="grow"
       >
         Next
       </Button>

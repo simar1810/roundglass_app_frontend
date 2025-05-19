@@ -11,13 +11,46 @@ import CheckupStage1 from "../add-client/CheckupStage1";
 import CheckupStage2 from "../add-client/CheckupStage2";
 import CheckupStage3 from "../add-client/CheckupStage3";
 import ClientCreatedNotify from "../add-client/ClientCreatedNotify";
+import { useEffect, useState } from "react";
+import ContentLoader from "@/components/common/ContentLoader";
+import { toast } from "sonner";
+import { fetchData } from "@/lib/api";
 
 export default function AddClientWithCheckup({ children, type, data, setModal }) {
+  const [dataGenerated, setDataGenerated] = useState(false);
+  const [initialState, setInitialState] = useState(() => data)
+
+  useEffect(function () {
+    if (!dataGenerated) {
+      if (Boolean(data._id)) {
+        ; (async function () {
+          try {
+            const response = await fetchData(`app/clientProfile?id=${data._id}`);
+            if (response.status_code !== 200) throw new Error(response.message);
+            setInitialState(prev => ({ ...prev, mobileNumber: response.data.mobileNumber }))
+            setDataGenerated(true);
+          } catch (error) {
+            toast.error(error.message || "Please try again later!");
+          }
+        })();
+      } else {
+        setDataGenerated(true);
+      }
+    }
+  }, []);
+
+  if (!dataGenerated) return <Dialog open={true} onOpenChange={() => setModal()}>
+    <DialogContent className="!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">
+      <DialogTitle />
+      <ContentLoader />
+    </DialogContent>
+  </Dialog>
+
   return <Dialog open={true} onOpenChange={() => setModal()}>
     {children}
     {!children && <DialogTrigger />}
     <CurrentStateProvider
-      state={init(type, data)}
+      state={init(type, initialState)}
       reducer={addClientCheckupReducer}
     >
       <AddClientCheckupContainer />
@@ -29,13 +62,13 @@ function AddClientCheckupContainer() {
   const { stage } = useCurrentStateContext();
   const Component = selectComponent(stage)
 
-  return <DialogContent className="!max-w-[800px] h-[692px] border-0 p-0 overflow-y-auto">
-    <DialogHeader className="p-0 sticky top-0 border-b-2 border-[var(--dark-1)]/25 z-[100]">
+  return <DialogContent className="!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">
+    <DialogHeader className="!p-0 !h-auto border-b-2 border-[var(--dark-1)]/25 z-[100]">
       <DialogTitle className="bg-white p-4 text-left text-black text-lg font-semibold ">
         Client Details
       </DialogTitle>
     </DialogHeader>
-    <div className="px-4">
+    <div className="grow px-4">
       <Component />
     </div>
   </DialogContent>

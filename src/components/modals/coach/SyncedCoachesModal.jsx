@@ -4,7 +4,7 @@ import FormControl from "@/components/FormControl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { sendData } from "@/lib/api";
@@ -15,6 +15,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import AddSubscriptionModal from "../club/AddSubscriptionModal";
+import SubscriptionHistory from "@/components/pages/coach/client/SubscriptionHistory";
+import VolumePointHistory from "@/components/pages/coach/client/VolumePointHistory";
 
 
 export default function SyncedCoachesModal({ coachId }) {
@@ -36,9 +38,9 @@ function ClientsContainer({ coachId }) {
   if (error || !data?.success) return <ContentError title={error || data?.message} />
   const clients = data.data;
   return <div className="mt-8 grid grid-cols-2 gap-4">
-    {clients.map((client) => <SyncedCoachClientDetails
+    {clients.map((client, index) => <SyncedCoachClientDetails
       client={client}
-      key={client._id}
+      key={index}
     />)}
   </div>
 }
@@ -46,6 +48,8 @@ function ClientsContainer({ coachId }) {
 function SyncedCoachClientDetails({ client }) {
   const [formData, setFormData] = useState({ ...client, client_doc_id: client._id });
   const [loading, setLoading] = useState(false);
+
+  const clubSystem = useAppSelector(state => state.coach.data.clubSystem);
 
   const closeBtnRef = useRef()
 
@@ -60,7 +64,7 @@ function SyncedCoachClientDetails({ client }) {
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
       mutate(`sync-coach/super/client${client.coachId}`);
-      closeBtnRef.current.click();
+      // closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -78,13 +82,38 @@ function SyncedCoachClientDetails({ client }) {
         <p className="text-[14px] font-semibold">{client.name}</p>
       </div>
     </DialogTrigger>
-    <DialogContent className="!max-w-[850px] w-full">
-      <DialogTitle className="!text-[32px]">{client.name}</DialogTitle>
+    <DialogContent className="!max-w-[850px] max-h-[70vh] overflow-y-auto w-full">
+      <DialogHeader className="flex-row items-center gap-4">
+        <Avatar className="w-[64px] h-[64px] !rounded-[8px] !rounded-full border-1">
+          <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
+          <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
+        </Avatar>
+        <div>
+          <DialogTitle className="!text-[24px] leading-[1]">{client.name}</DialogTitle>
+          <p className="text-[var(--dark-1)]/50 text-[14px] font-bold leading-[1]"># {client.clientId}</p>
+        </div>
+      </DialogHeader>
       <div className="grid grid-cols-2 items-end gap-y-2 gap-x-4">
         <FormControl
           label="Client Name"
           value={formData.name}
           onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          className="[&_.label]:text-[14px]"
+          placeholder="Please fill the detail!"
+        />
+        <FormControl
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          className="[&_.label]:text-[14px]"
+          placeholder="Please fill the detail!"
+        />
+        <FormControl
+          label="Mobile Number"
+          type="number"
+          value={formData.mobileNumber}
+          onChange={e => setFormData(prev => ({ ...prev, mobileNumber: e.target.value }))}
           className="[&_.label]:text-[14px]"
           placeholder="Please fill the detail!"
         />
@@ -95,16 +124,8 @@ function SyncedCoachClientDetails({ client }) {
           className="[&_.label]:text-[14px]"
           placeholder="Please fill the detail!"
         />
-        <FormControl
-          label="Client ID"
-          value={formData.clientId}
-          onChange={e => setFormData(prev => ({ ...prev, clientId: e.target.value }))}
-          className="[&_.label]:text-[14px]"
-          placeholder="Please fill the detail!"
-        />
-        <DialogClose ref={closeBtnRef} />
       </div>
-      <div className="flex gap-4">
+      <div className="mb-10 flex gap-4">
         <Button
           disabled={loading}
           onClick={udpateDetails}
@@ -112,8 +133,10 @@ function SyncedCoachClientDetails({ client }) {
         >
           Save
         </Button>
-        <AddSubscriptionModal _id={client._id} />
       </div>
+      {[0, 1].includes(clubSystem) && <SubscriptionHistory _id={client._id} />}
+      {/* {[2].includes(clubSystem) && <VolumePointHistory _id={client._id} />} */}
+      <DialogClose ref={closeBtnRef} />
     </DialogContent>
   </Dialog>
 }

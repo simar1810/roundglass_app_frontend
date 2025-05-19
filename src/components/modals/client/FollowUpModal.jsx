@@ -69,7 +69,7 @@ function FollowUpModalContainer({ clientData }) {
     ? differenceInYears(new Date(), parse(clientData.dob, 'yyyy-MM-dd', new Date()))
     : 0
   const { stage } = useCurrentStateContext();
-  if (stage === 1) return <Stage1 />;
+  if (stage === 1) return <Stage1 clientData={clientData} />;
   return <Stage2
     age={age}
     clientId={clientId}
@@ -77,8 +77,12 @@ function FollowUpModalContainer({ clientData }) {
   />;
 }
 
-function Stage1() {
+function Stage1({ clientData }) {
   const { followUpType, healthMatrix, dispatch, ...state } = useCurrentStateContext();
+
+  const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix;
+  const latestOldWeight = `${latesthealthMatrix?.at(0)?.weight} ${latesthealthMatrix?.at(0)?.weightUnit}`
+
   return <div className="p-4">
     <FormControl
       label="Date"
@@ -87,7 +91,7 @@ function Stage1() {
       value={healthMatrix.date}
       onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
     />
-    <h3 className="mt-4">Latest Old Weight {"-->"} 65.0 KG</h3>
+    {latestOldWeight && <h3 className="mt-4">Latest Old Weight {latestOldWeight}</h3>}
     <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-4">
       <div>
         <div className="pr-2 flex items-center gap-2 justify-between">
