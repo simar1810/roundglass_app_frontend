@@ -22,7 +22,7 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
 
   useEffect(function () {
     if (!dataGenerated) {
-      if (Boolean(data._id)) {
+      if (Boolean(data?._id)) {
         ; (async function () {
           try {
             const response = await fetchData(`app/clientProfile?id=${data._id}`);

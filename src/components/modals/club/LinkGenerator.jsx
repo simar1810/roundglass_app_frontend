@@ -25,8 +25,8 @@ import { mutate } from "swr";
 import Image from "next/image";
 
 export default function LinkGenerator({ withZoom, children }) {
-  const zoom_doc_ref = useAppSelector(state => state.coach.data.zoom_doc_ref);
-  if (withZoom && !zoom_doc_ref) return <ZoomConnectNowModal />
+  const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
+  if (withZoom && !zoom_doc_id) return <ZoomConnectNowModal />
 
   return <Dialog>
     {children}

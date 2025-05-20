@@ -80,8 +80,9 @@ function FollowUpModalContainer({ clientData }) {
 function Stage1({ clientData }) {
   const { followUpType, healthMatrix, dispatch, ...state } = useCurrentStateContext();
 
-  const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix;
-  const latestOldWeight = `${latesthealthMatrix?.at(0)?.weight} ${latesthealthMatrix?.at(0)?.weightUnit}`
+  const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix
+    .at(clientData?.healthMatrix?.healthMatrix.length - 1);
+  const latestOldWeight = `${latesthealthMatrix?.weight} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
     <FormControl
