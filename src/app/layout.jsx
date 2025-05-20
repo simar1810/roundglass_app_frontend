@@ -2,6 +2,8 @@ import GlobalStateProvider from "@/providers/GlobalStateProvider";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { SWRConfig } from "swr";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "WellnessZ",
@@ -9,6 +11,14 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const headersList = headers();
+  const userAgent = headersList.get('user-agent') || '';
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
+
+  if (isMobile) {
+    redirect('/app');
+  }
   return (
     <html lang="en">
       <body className="antialiased">
