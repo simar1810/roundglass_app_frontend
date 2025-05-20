@@ -34,11 +34,10 @@ const counterSlice = createSlice({
       state.data = null;
     },
     updateCoachField: function (state, action) {
-      state.data = {
-        ...state.data,
-        [action.payload.name]: action.payload.value
+      for (const field in action.payload) {
+        state.data[field] = action.payload[field]
       }
-    }
+    },
   },
 })
 

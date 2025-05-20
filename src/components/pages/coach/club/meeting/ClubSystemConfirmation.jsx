@@ -29,7 +29,7 @@ export default function ClubSystemConfirmation({ clubSystem }) {
       const response = await sendData("verifyOtpToUpdateClubSystem", data);
       if (!response.sucess) throw new Error(response.message || response.error);
       toast.success(response.message);
-      dispatchRedux(updateCoachField({ name: "clubSystem", value: selectedClubSystem }));
+      dispatchRedux(updateCoachField({ "clubSystem": selectedClubSystem }));
       dispatch(onChangeOTP(""));
       mutate("coachProfile");
       alertClose.current.click();
