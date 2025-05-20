@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { setFieldValue } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { useAppDispatch } from "@/providers/global/hooks";
+import { updateCoachField } from "@/providers/global/slices/coach";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,12 +17,14 @@ export default function RegisterContainer() {
   const { dispatch, ...state } = useCurrentStateContext();
 
   const router = useRouter();
+  const dispatchRedux = useAppDispatch();
 
   async function registerCoach() {
     try {
       setLoading(true);
       const response = await sendData("app/register", state.registration);
       if (response.status_code !== 200) throw new Error(response.message);
+      dispatchRedux(updateCoachField(response.data))
       toast.success(response.message);
       router.push("/coach/dashboard");
     } catch (error) {

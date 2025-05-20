@@ -8,7 +8,8 @@ import useSWR from "swr";
 
 const initialQuery = {
   page: 1,
-  limit: 50
+  limit: 500,
+  finalPage: Infinity
 }
 
 export default function Page() {
@@ -21,8 +22,7 @@ export default function Page() {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const clients = data.data
 
   return <div className="mt-8 content-container">

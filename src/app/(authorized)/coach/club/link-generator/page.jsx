@@ -92,7 +92,7 @@ function DisconnectZoomModal({ onClose }) {
       if (!response.success) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       mutate("coachProfile");
-      dispatch(updateCoachField({ name: "zoom_doc_id", value: undefined }))
+      dispatch(updateCoachField({ zoom_doc_id: undefined }))
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
