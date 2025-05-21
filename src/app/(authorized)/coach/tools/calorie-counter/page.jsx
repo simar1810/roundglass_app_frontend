@@ -43,7 +43,7 @@ function CalorieContainer() {
       className="font-semibold"
     />
     {query.length === 0 && !dishesData
-      ? <ContentError title="Please search for a recipee" />
+      ? <ContentError title="Please search for a recipe" />
       : <div className="mt-4 grid grid-cols-3 items-start gap-4">
         <RecipesSearchResults fetchDishedData={fetchDishedData} />
         <CalorieResult />
@@ -80,7 +80,7 @@ function RecipesSearchResults({ fetchDishedData }) {
 
   if (data?.status_code !== 200) return <ContentError className="mt-0" title={data?.message} />
   const dishes = data?.data;
-  if (dishes.length === 0) return <ContentError className="mt-0" title={"No recipees found for this query!"} />
+  if (dishes.length === 0) return <ContentError className="mt-0" title={"No recipes found for this query!"} />
   return <div className="sticky top-20">
     <div className="bg-white p-4 rounded-[8px] border-1 h-[60vh] overflow-y-auto">
       {dishes.map((item, index) => <div
@@ -129,8 +129,8 @@ function CalorieResult() {
   </>
 
   if (view === 1) return <>
-    <ContentError className="mt-0" title="Please search For A Recipee" />
-    <ContentError className="mt-0" title="Please search For A Recipee" />
+    <ContentError className="mt-0" title="Please search For A Recipe" />
+    <ContentError className="mt-0" title="Please search For A Recipe" />
   </>
 
   const dishes = dishesData?.dishes;

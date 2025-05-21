@@ -33,7 +33,6 @@ export default function AssignWorkoutModal() {
               />
             </div>
 
-            {/* Workouts */}
             <div>
               <label className="block mb-1 font-medium">Workouts</label>
               <div className="w-full border border-gray-300 rounded-md px-4 py-6 flex justify-center items-center">
@@ -44,7 +43,6 @@ export default function AssignWorkoutModal() {
               </div>
             </div>
 
-            {/* Instructions */}
             <div >
               <label className="block mb-1 font-medium">Instructions</label>
               <FormControl

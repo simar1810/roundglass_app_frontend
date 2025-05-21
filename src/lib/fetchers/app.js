@@ -45,7 +45,6 @@ export function getAppClients(query) {
   if (query?.page) queries += "page=" + query.page + "&";
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
-  console.log(queries)
   return fetchData(`app/allClient?${queries}`);
 }
 
@@ -133,4 +132,12 @@ export function getSyncCoachesList() {
 
 export function getSyncedCoachesClientList(coachId) {
   return fetchData(`app/sync-coach/super/client?coachId=${coachId}`);
+}
+
+export function getMarathonTaskOptions() {
+  return fetchData("app/marathon/coach/task-options");
+}
+
+export function getClientsForMarathon(marathonId) {
+  return fetchData(`app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`);
 }

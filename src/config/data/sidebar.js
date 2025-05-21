@@ -120,18 +120,18 @@ export const sidebar__coachContent = [
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats"
   },
-  // {
-  //   id: 8,
-  //   title: "Workout",
-  //   icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-  //   url: "/coach/workouts"
-  // },
-  // {
-  //   id: 9,
-  //   title: "Marathon",
-  //   icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-  //   url: "/coach/marathons"
-  // },
+  {
+    id: 8,
+    title: "Workout",
+    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/workouts"
+  },
+  {
+    id: 9,
+    title: "Marathon",
+    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/marathons"
+  },
   {
     id: 10,
     title: "Club",

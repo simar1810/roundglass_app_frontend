@@ -19,17 +19,17 @@ export default function Page() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Workout Library</h1>
         {/* <FilterOptions /> */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
           {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
             <div className="relative">
               <Image
-                src={workout.thumbnail || "/not-found.png"}
+                src={workout?.thumbnail?.trim() || "/not-found.png"}
                 alt="Total Core Workout"
                 width={1024}
                 height={1024}
                 unoptimized
                 onError={e => e.target.src = "/not-found.png"}
-                className="w-full max-h-[200px] object-cover rounded-xl"
+                className="w-full max-h-[200px] object-cover rounded-xl border-1"
               />
 
             </div>
