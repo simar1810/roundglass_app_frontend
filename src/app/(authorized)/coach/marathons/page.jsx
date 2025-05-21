@@ -10,11 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
-/**
- * 
+import AssignMarathonModal from "@/components/modals/app/AssignMarathonModal";
+import CreateMarathonModal from "@/components/modals/app/CreateMarathonModal";
 
- * @returns 
- */
 export default function schedule() {
   const { isLoading, error, data } = useSWR("app/getMarathons", getMarathons);
   const [selectedMarathonId, setSelectedMarathonId] = useState("");
@@ -29,7 +27,9 @@ export default function schedule() {
       setSelectedMarathonId={setSelectedMarathonId}
       marathons={marathons}
     />
-    <SelectedMarathonDetails marathon={marathons.find(marathon => marathon._id === selectedMarathonId)} />
+    <SelectedMarathonDetails
+      marathon={marathons.find(marathon => marathon._id === selectedMarathonId)}
+    />
   </div>
 }
 
@@ -46,7 +46,10 @@ function ListMarathons({ marathons, setSelectedMarathonId }) {
       className="[&_.input]:text-[14px] [&_.input]:bg-[var(--comp-1)]"
       placeholder="Search Here..."
     />
-    <h3 className="my-4">{marathons.length} Marathons available</h3>
+    <div className="flex items-center justify-between gap-4">
+      <h3 className="my-4">{marathons.length} Marathons available</h3>
+      <CreateMarathonModal />
+    </div>
     <div className="divide-y-4 divide-[var(--comp-2)]">
       {marathonsToDisplay.length === 0
         ? <ContentError
@@ -57,7 +60,7 @@ function ListMarathons({ marathons, setSelectedMarathonId }) {
           <div className="flex items-center gap-2">
             <h5 className="text-[14px]">{marathon.title}</h5>
             <Eye className="w-[16px] h-[16px] text-[var(--dark-1)]/50 cursor-pointer" onClick={() => setSelectedMarathonId(marathon._id)} />
-            <Button className="h-auto text-[12px] ml-auto " variant="wz_outline">Assign Customer</Button>
+            <AssignMarathonModal marathonId={marathon._id} />
           </div>
           {marathon.clients.slice(0, 4).map((client, index) => <div key={index} className="mb-2 flex items-center gap-2">
             <Avatar>
@@ -84,8 +87,9 @@ function SelectedMarathonDetails({ marathon }) {
     {marathon.tasks.map(task => <div className="mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px]" key={task._id}>
       <div>
         <h3>{task.title}</h3>
-        <p className="text-[var(--dark-1)]/50 text-[14px] font-[500] mt-1">{task.description}</p>
-        {task.photoSubmission && <p className="text-[14px] italic mt-4">* Photo required at Submission</p>}
+        <p className="text-[var(--dark-1)]/32 text-[14px] font-[500] mt-1">{task.description}</p>
+        {task.photoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic mt-4">* Photo required at Submission</p>}
+        {task.videoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic">* Video required at Submission</p>}
       </div>
       <Image
         src="/svgs/marathon.svg"
