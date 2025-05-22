@@ -124,6 +124,7 @@ function MeetingForm({ withZoom }) {
     try {
       setLoading(true);
       const data = generateRequestPayload(state);
+      // throw new Error("Please fill all the fields");
       const response = await generateMeeting(withZoom, data, state.baseLink);
       if (response.status_code !== 200) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");

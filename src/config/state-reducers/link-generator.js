@@ -3,6 +3,8 @@ import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType } from "@
 import { linkGeneratorFields } from "../data/ui";
 import { formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
+import SelectControl from "@/components/Select";
+import SelectMultiple from "@/components/SelectMultiple";
 
 export function linkGeneratorReducer(state, action) {
   switch (action.type) {
@@ -64,10 +66,10 @@ export function resetCurrentState() {
 }
 
 const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7, 9],
-  scheduled: [1, 2, 3, 4, 6, 7, 9],
-  reocurr: [1, 2, 3, 4, 6, 7, 9],
-  event: [1, 2, 3, 4, 6, 7, 8, 9]
+  quick: [1, 2, 6, 7, 9, 10],
+  scheduled: [1, 2, 3, 4, 6, 7, 9, 10],
+  reocurr: [1, 2, 3, 4, 6, 7, 9, 10],
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10]
 }
 
 export function selectFields(meetingType) {
@@ -98,6 +100,10 @@ export function generateRequestPayload(state) {
     payload.append("scheduleDate", scheduleDate);
   } else {
     payload.append("scheduleDate", new Date().toISOString());
+  }
+  payload.delete("allowed_client_type");
+  for (const type of state.allowed_client_type) {
+    payload.append("allowed_client_type", type);
   }
   return payload;
 }
@@ -131,6 +137,15 @@ export function selectMeetingFormField(field, formData, dispatch) {
       return <MeetingBanner
         key={field.id}
         field={field}
+      />
+    case 6:
+      return <SelectMultiple
+        key={field.id}
+        className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
+        label={field.label}
+        options={field.options}
+        value={formData.allowed_client_type}
+        onChange={(newValues) => dispatch(changeFieldvalue("allowed_client_type", newValues))}
       />
   }
 }

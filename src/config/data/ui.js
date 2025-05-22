@@ -80,7 +80,14 @@ export const linkGeneratorFields = [
   { id: 6, label: "Meeting Description", inputtype: 3, placeholder: "Enter Description", name: "description" },
   { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
-  { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" }
+  { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" },
+  {
+    id: 10, label: "Allowed Client Type", type: "allowed_client_type", inputtype: 6, name: "allowed_client_type",
+    options: [
+      { id: 1, value: "client", name: "Client" },
+      { id: 2, value: "coach", name: "Coach" },
+    ]
+  }
 ];
 
 export const quickAddClientFormFields = [
