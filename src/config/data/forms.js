@@ -14,7 +14,7 @@ export const meetingEditFormControls = [
     placeholder: "Scheduled Date",
     type: "date",
     name: "date",
-    getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), 'HH:mm') : ""
+    getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), 'yyyy-MM-dd') : ""
   },
   {
     id: 3,

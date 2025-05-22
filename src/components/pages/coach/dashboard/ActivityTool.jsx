@@ -3,14 +3,11 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ActivityTool({ activities }) {
   const [api, setApi] = useState(null);
   const [current, setCurrent] = useState(0);
-
-  const router = useRouter();
 
   const onSelect = () => {
     if (!api) return
@@ -21,13 +18,24 @@ export default function ActivityTool({ activities }) {
     if (!api) return
     api.scrollTo(index)
   }
-
   useEffect(() => {
     if (!api) return;
     api.on("select", onSelect);
     return () => {
       api.off("select", onSelect);
     }
+  }, [api])
+
+  useEffect(function () {
+    const interval = setInterval(() => {
+      setCurrent(prev => prev === activities.length - 1 ? 0 : prev + 1);
+      if (api && api.canScrollNext()) {
+        api.scrollNext()
+      } else if (api) {
+        api.scrollTo(0)
+      }
+    }, 2000);
+    return () => clearInterval(interval);
   }, [api])
 
   return <Card className="grow relative !bg-transparent py-0 border-0 shadow-none">
@@ -47,7 +55,7 @@ export default function ActivityTool({ activities }) {
                 fill
                 src={activity.image}
                 alt=""
-                className="bg-gray-900 object-cover"
+                className="w-full bg-[var(--accent-1)] object-contain object-center pl-4 border-1"
               />
             </Link>
           </CarouselItem>)}

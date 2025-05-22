@@ -124,12 +124,11 @@ function MeetingForm({ withZoom }) {
     try {
       setLoading(true);
       const data = generateRequestPayload(state);
-      // throw new Error("Please fill all the fields");
       const response = await generateMeeting(withZoom, data, state.baseLink);
-      if (response.status_code !== 200) throw new Error(response.message || response.error);
+      if (!response.success) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");
       mutate("getMeetings")
-      dispatch(setWellnessZLink(response?.data?.wellnessZLink));
+      dispatch(setWellnessZLink(response?.data?.wellnessZLink || response?.data?.newMeeting?.wellnessZLink));
       if (state.copyToClipboard) {
         copyText(response?.data?.wellnessZLink);
         toast.success("Link copied");
