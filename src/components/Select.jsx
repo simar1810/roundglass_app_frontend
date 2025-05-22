@@ -13,6 +13,7 @@ export default function SelectControl({
       {options.map(option => <option
         key={option.id}
         value={option.value}
+        className="option"
       >
         {option.name}
       </option>)}
