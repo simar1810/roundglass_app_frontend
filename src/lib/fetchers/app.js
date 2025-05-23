@@ -141,3 +141,15 @@ export function getMarathonTaskOptions() {
 export function getClientsForMarathon(marathonId) {
   return fetchData(`app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`);
 }
+
+export function getClientsForWorkout(workoutId) {
+  return fetchData(`app/workout/coach/getClientForWorkouts?workoutCollectionId=${workoutId}`);
+}
+
+export function getAllWorkoutItems() {
+  return fetchData("app/workout/coach/getAllWorkoutsItems");
+}
+
+export function getWorkoutDetails(workoutId) {
+  return fetchData(`app/workout/client/getWorkout?id=${workoutId}&person=coach`);
+}

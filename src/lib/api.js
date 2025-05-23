@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export async function fetchData(endpoint) {
@@ -15,6 +16,10 @@ export async function fetchData(endpoint) {
       cache: "no-store"
     });
     const data = await response.json();
+    if ([401].includes(data.status_code)) {
+      cookieStore.delete("token");
+      redirect("/login");
+    }
     return data;
   } catch (error) {
     return error;
@@ -69,5 +74,18 @@ export async function sendDataWithFormData(endpoint, formData, method = "POST") 
     return retrievedData;
   } catch (error) {
     return error;
+  }
+}
+
+
+export async function uploadImage(file) {
+  try {
+    const data = new FormData();
+    data.append("file", file)
+    const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+    if (response.status_code !== 200) throw new Error(response.message)
+    return response;
+  } catch (error) {
+    return error
   }
 }

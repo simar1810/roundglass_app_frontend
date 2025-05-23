@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { meetingEditFormControls, meetingEditSelectControls } from "@/config/data/forms";
 import { sendData } from "@/lib/api";
-import { format, parse } from "date-fns";
+import { format, formatISO, parse } from "date-fns";
 import { Pen } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -29,11 +29,10 @@ export default function EditMeetingModal({ meeting }) {
         baseLink: e.currentTarget.baseLink.value,
         meetingType: e.currentTarget.meetingType.value,
         clubType: e.currentTarget.clubType.value,
-        scheduleDate: `${format(parse(e.currentTarget.date.value, "yyyy-mm-dd", new Date()), 'dd-MM-yyyy')} ${e.currentTarget.time.value}:00`,
+        scheduleDate: formatISO(parse(`${e.currentTarget.date.value} ${e.currentTarget.time.value}`, 'yyyy-MM-dd HH:mm', new Date())),
         time: e.currentTarget.time.value,
         date: e.currentTarget.date.value
       }
-
       const response = await sendData(`edit-meetingLink?meetingId=${meeting._id}`, data, "PUT");
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
