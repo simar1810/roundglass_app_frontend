@@ -5,35 +5,54 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutInitialState } from "@/config/state-data/workout";
-import { changeFieldValue, generateRequestPayload, workoutReducer } from "@/config/state-reducers/workout";
-import { sendData, sendDataWithFormData } from "@/lib/api";
+import { changeFieldValue, generateRequestPayload, init, workoutReducer } from "@/config/state-reducers/workout";
+import { sendData, uploadImage } from "@/lib/api";
 import { getAllWorkoutItems } from "@/lib/fetchers/app";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { ImagePlus, Plus, PlusCircle, X } from "lucide-react";
 import Image from "next/image";
-import { use, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-export default function CreateWorkoutModal() {
+export default function CreateWorkoutModal({
+  children,
+  data
+}) {
   return <Dialog>
-    <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]">
+    {!children && <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]">
       <Plus className="w-[16px]" />
       Add
-    </DialogTrigger>
+    </DialogTrigger>}
+    {children}
     <DialogContent className="max-h-[70vh] p-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Workout Details</DialogTitle>
       </DialogHeader>
       <CurrentStateProvider
-        state={workoutInitialState}
+        state={init(data)}
         reducer={workoutReducer}
       >
         <AddWorkoutContainer />
       </CurrentStateProvider>
     </DialogContent>
   </Dialog>
+}
+
+async function getLink(state) {
+  if (state.type === "update") {
+    const thumbnail = state.thumbnail instanceof File
+      ? await uploadImage(state.thumbnail)
+      : state.thumbnail;
+    const data = generateRequestPayload(state, thumbnail.img);
+    return await sendData("app/workout/update", data, "PUT");
+  } else {
+    const thumbnail = await uploadImage(state.thumbnail);
+    if (thumbnail.status_code !== 200) throw new Error("Please try again later!")
+    const data = generateRequestPayload(state, thumbnail.img);
+    return await sendData("app/workout/create", data);
+  }
 }
 
 function AddWorkoutContainer() {
@@ -47,12 +66,15 @@ function AddWorkoutContainer() {
   async function saveWorkout() {
     try {
       setLoading(true);
-      const data = generateRequestPayload(state)
-      const response = await sendDataWithFormData("app/workout/create", data);
+      const response = await getLink(state)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Note added successfully!");
       closeBtnRef.current.click();
-      mutate("app/coach/workoutCollections");
+      if (state.type === "update") {
+        mutate(`app/getWorkoutDetails/${state.id}`)
+      } else {
+        mutate("app/coach/workoutCollections");
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {

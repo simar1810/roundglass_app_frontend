@@ -1,3 +1,5 @@
+import { workoutInitialState } from "../state-data/workout";
+
 export function workoutReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FIELD":
@@ -14,15 +16,31 @@ export function changeFieldValue(name, value) {
   }
 }
 
-export function generateRequestPayload(state) {
-  const formData = new FormData();
-  for (const field of ["title", "thumbnail", "instructions"]) {
+export function init(state) {
+  if (Boolean(state)) {
+    const data = {
+      title: state.title,
+      instructions: state.instructions,
+      thumbnail: state.thumbnail,
+      workouts: state.workouts.map(workout => workout._id),
+      id: state._id,
+      type: "update"
+    }
+    return data;
+  }
+  return workoutInitialState;
+}
+
+export function generateRequestPayload(state, thumbnail) {
+  const formData = {}
+  for (const field of ["title", "instructions", "workouts"]) {
     if (state[field]) {
-      formData.append(field, state[field]);
+      formData[field] = state[field];
     }
   }
-  for (const workout of state.workouts) {
-    formData.append("workouts", workout);
+  if (state.type === "update") {
+    formData.id = state.id
   }
+  formData.thumbnail = thumbnail;
   return formData;
 }

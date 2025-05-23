@@ -76,3 +76,16 @@ export async function sendDataWithFormData(endpoint, formData, method = "POST") 
     return error;
   }
 }
+
+
+export async function uploadImage(file) {
+  try {
+    const data = new FormData();
+    data.append("file", file)
+    const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+    if (response.status_code !== 200) throw new Error(response.message)
+    return response;
+  } catch (error) {
+    return error
+  }
+}

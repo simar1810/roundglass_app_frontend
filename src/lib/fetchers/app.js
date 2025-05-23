@@ -149,3 +149,7 @@ export function getClientsForWorkout(workoutId) {
 export function getAllWorkoutItems() {
   return fetchData("app/workout/coach/getAllWorkoutsItems");
 }
+
+export function getWorkoutDetails(workoutId) {
+  return fetchData(`app/workout/client/getWorkout?id=${workoutId}&person=coach`);
+}

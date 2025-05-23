@@ -7,6 +7,7 @@ import { getWorkouts } from "@/lib/fetchers/app";
 import useSWR from "swr";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
+import Link from "next/link";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("app/coach/workoutCollections", getWorkouts);
@@ -25,23 +26,23 @@ export default function Page() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
           {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
             <div className="relative">
-              <Image
-                src={workout?.thumbnail?.trim() || "/not-found.png"}
-                alt="Total Core Workout"
-                width={1024}
-                height={1024}
-                unoptimized
-                onError={e => e.target.src = "/not-found.png"}
-                className="w-full object-cover rounded-xl border-1"
-              />
+              <Link href={`/coach/workouts/${workout._id}`}>
+                <Image
+                  src={workout?.thumbnail?.trim() || "/not-found.png"}
+                  alt="Total Core Workout"
+                  width={1024}
+                  height={1024}
+                  unoptimized
+                  onError={e => e.target.src = "/not-found.png"}
+                  className="w-full h-[250px] object-cover rounded-xl border-1"
+                />
+              </Link>
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-lg font-bold">{workout.title}</div>
               <AssignWorkoutModal workoutId={workout._id} />
             </div>
-            {/* <div className="text-sm opacity-90">Category : 10 MIN</div> */}
-          </div>
-          )}
+          </div>)}
         </div>
       </div>
     </main>
