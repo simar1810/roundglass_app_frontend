@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export async function fetchData(endpoint) {
@@ -15,6 +16,10 @@ export async function fetchData(endpoint) {
       cache: "no-store"
     });
     const data = await response.json();
+    if ([401].includes(data.status_code)) {
+      cookieStore.delete("token");
+      redirect("/login");
+    }
     return data;
   } catch (error) {
     return error;

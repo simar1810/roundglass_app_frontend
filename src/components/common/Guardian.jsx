@@ -38,7 +38,7 @@ export default function Guardian({
     for (const [field] of cache.entries()) {
       cache.delete(field)
     }
-    // redirect("/login");
+    redirect("/login");
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">
