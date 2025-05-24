@@ -55,7 +55,7 @@ function WorkoutDetails({ workoutDetails }) {
     />
     <h4 className="!text-[28px] mt-6 mb-2">Instructions</h4>
     <p className="text-[12px] leading-[1.4]">{workoutDetails.instructions}</p>
-    <h4 className="!text-[28px] mt-6 mb-2">Related Videos</h4>
+    {/* <h4 className="!text-[28px] mt-6 mb-2">Related Videos</h4>
     <div className="w-full flex gap-4 overflow-x-auto">
       {workoutDetails.workouts.map(workout => <div className="min-w-[200px] border-1 rounded-[8px] overflow-clip" key={workout._id}>
         <Image
@@ -70,7 +70,7 @@ function WorkoutDetails({ workoutDetails }) {
           <p className="text-[12px] leading-[1.2] text-[var(--dark-1)]/35">{workout.description}</p>
         </div>
       </div>)}
-    </div>
+    </div> */}
   </div>
 }
 
@@ -128,7 +128,7 @@ function VideoPlayer({
     if (videoRef.current) {
       try {
         videoRef.current.load();
-        // videoRef.current.play().catch()
+        videoRef.current.play().catch()
       } catch (error) {
 
       }

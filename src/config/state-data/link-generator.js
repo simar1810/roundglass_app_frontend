@@ -11,5 +11,6 @@ export const linkGeneratorInitialState = {
   wellnessZLink: "",
   view: 1,
   copyToClipboard: false,
-  allowed_client_type: []
+  allowed_client_type: [],
+  one_to_one_client_id: ""
 }

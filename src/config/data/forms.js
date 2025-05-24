@@ -23,7 +23,7 @@ export const meetingEditFormControls = [
     type: "time",
     name: "time",
     getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), 'HH:mm') : ""
-  },
+  }
 ]
 
 export const meetingEditSelectControls = [
@@ -103,5 +103,5 @@ export const requestSubscriptionFormControls = [
     placeholder: "Enter Amount",
     type: "number",
     name: "amount"
-  },
+  }
 ]

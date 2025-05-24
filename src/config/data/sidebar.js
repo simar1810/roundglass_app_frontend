@@ -8,6 +8,7 @@ import {
   FileCheck,
   FileText,
   Flame,
+  Footprints,
   Headset,
   Home,
   LayoutDashboard,
@@ -129,7 +130,7 @@ export const sidebar__coachContent = [
   {
     id: 9,
     title: "Marathon",
-    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+    icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/marathons"
   },
   {

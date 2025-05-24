@@ -51,3 +51,7 @@ export function getClientAttendance(id) {
 export function getMeetingPersonList(person, query) {
   return fetchData(`app/meeting/person-list?person=${person}&query=${query}`);
 }
+
+export function getMeetingClientList() {
+  return fetchData("app/meeting/client-list");
+}

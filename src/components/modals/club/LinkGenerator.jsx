@@ -13,7 +13,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { changeFieldvalue, generateRequestPayload, init, linkGeneratorReducer, resetCurrentState, selectFields, selectMeetingFormField, setCurrentView, setWellnessZLink } from "@/config/state-reducers/link-generator";
-import { sendData, sendDataWithFormData } from "@/lib/api";
+import { sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { CircleMinus, CirclePlus, Copy } from "lucide-react";
@@ -21,8 +21,12 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
 import { copyText, getObjectUrl } from "@/lib/utils";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
 import Image from "next/image";
+import { getMeetingClientList } from "@/lib/fetchers/club";
+import ContentError from "@/components/common/ContentError";
+import Loader from "@/components/common/Loader";
+import SelectControl from "@/components/Select";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -44,7 +48,35 @@ export default function LinkGenerator({ withZoom, children }) {
 function MeetingGeneratorContainer({ withZoom }) {
   const { view } = useCurrentStateContext();
   if (view === 1) return <MeetingForm withZoom={withZoom} />
+  if (view === 5) return <MeetingSuccess />
   if ([2, 3].includes(view)) return <MeetingLink />
+}
+
+function MeetingSuccess() {
+  const { wellnessZLink, dispatch } = useCurrentStateContext();
+  return <div className="p-4">
+    <DialogHeader className="mb-4 pb-4 border-b-1">
+      <DialogTitle className="px-4">Meeting Success</DialogTitle>
+    </DialogHeader>
+    <div className="mt-10 mb-32">
+      <Label className="font-bold mb-2" htmlFor="wz-link">WellnessZ Link</Label>
+      <div className="bg-[var(--accent-1)] flex items-center border-1 rounded-[8px] overflo-clip">
+        <div id="wz-link" placeholder="WellnessZ Link" className="bg-[var(--primary-1)]  text-[14px] p-2 rounded-r-none border-0">
+          {wellnessZLink}
+        </div>
+        <div
+          onClick={() => {
+            copyText(wellnessZLink)
+            toast.success("Link Copied!");
+          }}
+          className="text-white aspect-square rounded-r-[8px] p-[10px] cursor-pointer"
+        >
+          <Copy />
+        </div>
+      </div>
+      <Button variant="wz" className="block mt-4 mx-auto" onClick={() => dispatch(resetCurrentState())}>New Meeting</Button>
+    </div>
+  </div>
 }
 
 function MeetingLink() {
@@ -125,7 +157,7 @@ function MeetingForm({ withZoom }) {
       setLoading(true);
       const data = generateRequestPayload(state);
       const response = await generateMeeting(withZoom, data, state.baseLink);
-      if (!response.success) throw new Error(response.message || response.error);
+      if (!response.status && !response.success) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");
       mutate("getMeetings")
       dispatch(setWellnessZLink(response?.data?.wellnessZLink || response?.data?.newMeeting?.wellnessZLink));
@@ -167,7 +199,7 @@ export function MeetingType({ field }) {
   return <div className="mb-6">
     <div className="mb-2">Meeting Type</div>
     <div>
-      <RadioGroup className="flex items-center gap-6">
+      <RadioGroup className="flex flex-wrap items-center gap-x-6">
         {field.options.map((radio, index) =>
           <div key={radio.id} className="flex items-center gap-1">
             <input
@@ -244,4 +276,32 @@ export function MeetingBanner({ field }) {
       accept="image/*"
     />
   </div>
+}
+
+export function SelectOneToOneClient({ field }) {
+  const { isLoading, error, data } = useSWR("app/meeting/client-list", getMeetingClientList);
+
+  const { one_to_one_client_doc, dispatch } = useCurrentStateContext();
+
+  if (isLoading) return <div className="mb-4 flex justify-center">
+    <Loader />
+  </div>
+
+  if (error || data?.status_code !== 200) return <ContentError
+    className="min-h-auto mb-4"
+    title={error || data?.message}
+  />
+  const clients = data.data;
+  const options = clients.map((client, index) => ({
+    name: client.name,
+    value: client._id,
+    id: index
+  }))
+  return <SelectControl
+    label="Select A Client For One to One"
+    value={one_to_one_client_doc}
+    onChange={e => dispatch(changeFieldvalue("one_to_one_client_id", e.target.value))}
+    options={options}
+    className="block mb-4"
+  />
 }
