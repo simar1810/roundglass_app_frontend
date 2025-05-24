@@ -20,7 +20,7 @@ export default function Page() {
   async function joinMeeting() {
     try {
       setLoading(true);
-      const response = await sendData("verifyClientMeeting?wellnessZLink=" + generateMeetingBaseLink(id), { rollno });
+      const response = await sendData("verifyClientMeeting?wellnessZLink=" + generateMeetingBaseLink(id), { rollno, person: "client" });
       if (!response.status) throw new Error(response.message);
       router.push(response.data)
       toast.success(response.message);

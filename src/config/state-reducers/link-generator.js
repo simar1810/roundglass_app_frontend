@@ -1,5 +1,5 @@
 import FormControl from "@/components/FormControl";
-import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType } from "@/components/modals/club/LinkGenerator";
+import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType, SelectOneToOneClient } from "@/components/modals/club/LinkGenerator";
 import { linkGeneratorFields } from "../data/ui";
 import { formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
@@ -24,7 +24,7 @@ export function linkGeneratorReducer(state, action) {
       return {
         ...state,
         wellnessZLink: action.payload,
-        view: 3
+        view: 5
       }
     case "RESET_STATE":
       return {
@@ -69,7 +69,8 @@ const meetingTypeFieldsMap = {
   quick: [1, 2, 6, 7, 9, 10],
   scheduled: [1, 2, 3, 4, 6, 7, 9, 10],
   reocurr: [1, 2, 3, 4, 6, 7, 9, 10],
-  event: [1, 2, 3, 4, 6, 7, 8, 9, 10]
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10],
+  one_to_one: [1, 2, 3, 4, 6, 7, 9, 11],
 }
 
 export function selectFields(meetingType) {
@@ -146,6 +147,11 @@ export function selectMeetingFormField(field, formData, dispatch) {
         options={field.options}
         value={formData.allowed_client_type}
         onChange={(newValues) => dispatch(changeFieldvalue("allowed_client_type", newValues))}
+      />
+    case 7:
+      return <SelectOneToOneClient
+        key={field.id}
+        field={field}
       />
   }
 }

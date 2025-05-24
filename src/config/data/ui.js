@@ -71,7 +71,8 @@ export const linkGeneratorFields = [
       { id: 1, title: "Quick", value: "quick" },
       { id: 2, title: "Scheduled", value: "scheduled" },
       { id: 3, title: "Reoccurring", value: "reocurr" },
-      { id: 4, title: "Event", value: "event" }
+      { id: 4, title: "Event", value: "event" },
+      { id: 5, title: "One to One", value: "one_to_one" },
     ]
   },
   { id: 3, label: "Date", type: "date", inputtype: 1, name: "date" },
@@ -82,11 +83,15 @@ export const linkGeneratorFields = [
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
   { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" },
   {
-    id: 10, label: "Allowed Client Type", type: "allowed_client_type", inputtype: 6, name: "allowed_client_type",
+    id: 10, label: "Allowed Client Type", inputtype: 6, name: "allowed_client_type",
     options: [
       { id: 1, value: "client", name: "Client" },
       { id: 2, value: "coach", name: "Coach" },
     ]
+  },
+  {
+    id: 11, label: "Select A Client", inputtype: 7, name: "one_to_one_client_id",
+    options: []
   }
 ];
 
