@@ -3,15 +3,20 @@ import Image from "next/image";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { getMarathons } from "@/lib/fetchers/app";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import FormControl from "@/components/FormControl";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
 import AssignMarathonModal from "@/components/modals/app/AssignMarathonModal";
 import CreateMarathonModal from "@/components/modals/app/CreateMarathonModal";
+import { DialogTrigger } from "@/components/ui/dialog";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { sendData } from "@/lib/api";
 
 export default function schedule() {
   const { isLoading, error, data } = useSWR("app/getMarathons", getMarathons);
@@ -83,7 +88,15 @@ function SelectedMarathonDetails({ marathon }) {
     />
   </div>
   return <div className="content-container">
-    <h4 className="mb-4">{marathon.title}</h4>
+    <div className="flex items-center gap-4">
+      <h4 className="leading-[1] mb-4 mr-auto">{marathon.title}</h4>
+      <CreateMarathonModal type="update" data={marathon}>
+        <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[12px] leading-[1] font-semibold px-3 py-2 rounded-[8px]">
+          Edit
+        </DialogTrigger>
+      </CreateMarathonModal>
+      <DeleteMarathonAction marathonId={marathon._id} />
+    </div>
     {marathon.tasks.map(task => <div className="mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px]" key={task._id}>
       <div>
         <h3>{task.title}</h3>
@@ -100,4 +113,33 @@ function SelectedMarathonDetails({ marathon }) {
       />
     </div>)}
   </div>
+}
+
+function DeleteMarathonAction({ marathonId }) {
+  async function deleteMarathon(
+    setLoading,
+    closeBtnRef
+  ) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/marathon/coach/deleteMarathon", { marathonId }, "DELETE");
+      console.log(response)
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/getMarathons");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure of deleting this marathon!"
+    action={(setLoading, btnRef) => deleteMarathon(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

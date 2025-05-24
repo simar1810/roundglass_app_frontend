@@ -1,3 +1,5 @@
+import { newMarathonInitialState } from "../state-data/new-marathon"
+
 export function newMarathonReducer(state, action) {
   switch (action.type) {
     case "SELECT_TASK":
@@ -75,8 +77,27 @@ export function changeSubmissionReuirements(taskId, name, value) {
 }
 
 export function generatePayload(data) {
-  return {
+  const payload = {
     title: data.title,
     tasks: data.tasks
+  }
+  if (data.type === "update") {
+    payload.marathonId = data.id;
+  }
+  return payload
+}
+
+export function init(type, data) {
+  if (type === "update") {
+    const payload = {
+      title: data.title,
+      selected: data.tasks.map(task => task._id),
+      tasks: data.tasks,
+      type: "update",
+      id: data._id
+    }
+    return payload
+  } else {
+    return newMarathonInitialState;
   }
 }
