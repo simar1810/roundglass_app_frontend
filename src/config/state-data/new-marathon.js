@@ -1,5 +1,6 @@
 export const newMarathonInitialState = {
   title: "",
   tasks: [],
-  selected: []
+  selected: [],
+  type: "new"
 }
