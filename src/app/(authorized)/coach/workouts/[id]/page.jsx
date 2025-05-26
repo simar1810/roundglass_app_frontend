@@ -87,7 +87,9 @@ function WorkoutVideos({ workouts }) {
       prev={() => selected === 0
         ? toast.error("This is the first video")
         : setSelected(prev => prev - 1)}
-      next={() => setSelected(prev => prev + 1)}
+      next={() => setSelected(prev => prev === filteredWorkouts.length - 1
+        ? prev
+        : prev + 1)}
     />
     <div className="max-h-[60 0px] mt-10 overflow-y-auto">
       {filteredWorkouts
@@ -156,7 +158,7 @@ function VideoPlayer({
           <Pause />
           Pause / Play
         </Button>
-        <Button onClick={next} variant="wz" className="grow">
+        <Button onClick={() => next(true)} variant="wz" className="grow">
           <SkipForward />
           Next
         </Button>
