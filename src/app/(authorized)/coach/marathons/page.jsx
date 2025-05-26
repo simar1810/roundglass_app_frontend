@@ -2,10 +2,10 @@
 import Image from "next/image";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import { getMarathons } from "@/lib/fetchers/app";
+import { getMarathonLeaderBoard, getMarathons } from "@/lib/fetchers/app";
 import useSWR, { mutate } from "swr";
 import FormControl from "@/components/FormControl";
-import { Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials } from "@/lib/formatter";
@@ -28,13 +28,18 @@ export default function schedule() {
   const marathons = data.data;
 
   return <div className="grid grid-cols-2 items-start gap-8">
-    <ListMarathons
+    {!Boolean(selectedMarathonId) && <ListMarathons
       setSelectedMarathonId={setSelectedMarathonId}
       marathons={marathons}
-    />
+    />}
     <SelectedMarathonDetails
+      setSelectedMarathonId={setSelectedMarathonId}
       marathon={marathons.find(marathon => marathon._id === selectedMarathonId)}
     />
+    {selectedMarathonId && < MarathonLeaderBoard
+      marathon={marathons.find(marathon => marathon._id === selectedMarathonId)}
+      marathonId={selectedMarathonId}
+    />}
   </div>
 }
 
@@ -80,7 +85,10 @@ function ListMarathons({ marathons, setSelectedMarathonId }) {
   </div>
 }
 
-function SelectedMarathonDetails({ marathon }) {
+function SelectedMarathonDetails({
+  marathon,
+  setSelectedMarathonId
+}) {
   if (!marathon) return <div className="content-container">
     <ContentError
       className="border-0"
@@ -89,6 +97,10 @@ function SelectedMarathonDetails({ marathon }) {
   </div>
   return <div className="content-container">
     <div className="flex items-center gap-4">
+      <ArrowLeft
+        className="w-[20px] h-[20px] mb-auto cursor-pointer"
+        onClick={() => setSelectedMarathonId("")}
+      />
       <h4 className="leading-[1] mb-4 mr-auto">{marathon.title}</h4>
       <CreateMarathonModal type="update" data={marathon}>
         <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[12px] leading-[1] font-semibold px-3 py-2 rounded-[8px]">
@@ -141,4 +153,45 @@ function DeleteMarathonAction({ marathonId }) {
       <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
     </AlertDialogTrigger>
   </DualOptionActionModal>
+}
+
+function getBgColor(index) {
+  switch (index) {
+    case 0:
+      return "bg-[#FFDA47]";
+    case 1:
+      return "bg-[#F1EAEA]";
+    case 2:
+      return "bg-[#D7A07C]";
+
+    default:
+      return "bg-[var(--comp-1)]";
+  }
+}
+
+function MarathonLeaderBoard({ marathon, marathonId }) {
+  const { isLoading, error, data } = useSWR(`app/marathon-points/${marathonId}`, () => getMarathonLeaderBoard(marathonId));
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  const clients = data.data;
+  return <div className="content-container">
+    <div className="flex items-center gap-4">
+      <h4 className="leading-[1] mb-4 mr-auto">{marathon.title}</h4>
+    </div>
+    <div>
+      {clients.map((client, index) => <div
+        className={`mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px] ${getBgColor(index)}`}
+        key={index}>
+        <span>{index + 1}</span>
+        <Avatar>
+          <AvatarImage src={client.client.profilePhoto} />
+          <AvatarFallback>{nameInitials(client.client.name)}</AvatarFallback>
+        </Avatar>
+        <h3>{client.client.name}</h3>
+        <p className="ml-auto">{client.totalPointsInRange}&nbsp;pts</p>
+      </div>)}
+    </div>
+  </div>;
 }

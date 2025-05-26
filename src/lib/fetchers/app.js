@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { fetchData } from "../api";
 
 export function getCoachProfile(_id) {
@@ -120,6 +121,14 @@ export function getWorkouts() {
 
 export function getMarathons() {
   return fetchData("app/marathon/coach/listMarathons");
+}
+
+export function getMarathonLeaderBoard(marathonId) {
+  return fetchData(`app/marathon/coach/points?person=coach&marathonId=${marathonId}`);
+}
+
+export function getMarathonClientTask(clientId, date = format(new Date(), "dd-MM-yyyy")) {
+  return fetchData(`app/marathon/coach/viewProgress?clientId=${clientId}&date=${date}`);
 }
 
 export function getMealPlanById(id) {
