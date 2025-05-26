@@ -6,18 +6,20 @@ import RecipeModal from "@/components/modals/RecipeModal";
 import RecipeDisplayCard from "@/components/pages/coach/meals/RecipeDisplayCard";
 import { Button } from "@/components/ui/button";
 import { getRecipes } from "@/lib/fetchers/app";
+import { useState } from "react";
 import useSWR from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("getRecipes", getRecipes);
+  const [query, setQuery] = useState("");
 
   if (isLoading) return <ContentLoader />
 
   if (error || !data.success) return <ContentError title={error || data.message} />
-  const recipes = data.data;
+  const recipes = data.data.filter(recipe => recipe?.title?.toLowerCase()?.includes(query?.toLowerCase()));
 
   return <div className="content-container mt-8">
-    <Header />
+    <Header value={query} onChange={value => setQuery(value)} />
     <div className="grid grid-cols-4 gap-4">
       {recipes.map(plan => <RecipeDisplayCard
         key={plan._id}
@@ -27,12 +29,14 @@ export default function Page() {
   </div>
 }
 
-function Header() {
+function Header({ value, onChange }) {
   return <div className="mb-4 pb-4 flex items-center gap-4 border-b-1">
     <h4>Recipes</h4>
     <FormControl
       className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
       placeholder="Search Recipe.."
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
     <RecipeModal type="new" />
   </div>

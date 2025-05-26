@@ -11,7 +11,7 @@ export default function Stories({ stories }) {
     <h4 className="mb-4">Results</h4>
     <div className="max-w-[calc(100vw-204px-64px)] flex items-center gap-2 no-scrollbar">
       <AddStoryModal />
-      <div className="flex items-center gap-2 overflow-x-auto">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         {stories.map((story, index) => <Avatar
           key={story._id}
           className="w-[64px] h-[64px] border-2 border-[var(--accent-1)] cursor-pointer"

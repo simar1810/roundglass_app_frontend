@@ -69,6 +69,7 @@ function MealTypesList({
 }
 
 function RecipeDetails({ selectedIndex, mealPlan, recipe }) {
+  const coachId = useAppSelector(state => state.coach.data._id);
   return <div className="min-w-96 max-w-96 border border-grey-500 rounded-md px-4 py-4 pr-4 relative">
     <Image
       src={recipe.image}
@@ -84,11 +85,11 @@ function RecipeDetails({ selectedIndex, mealPlan, recipe }) {
       <Clock size={20} fill="#67BC2A" className="text-[var(--primary-1)]" />
       <span className="text-[14px]">{recipe.meal_time}</span>
     </div>
-    <UpdateMealPlanRecipeModal
+    {mealPlan.coach === coachId && <UpdateMealPlanRecipeModal
       mealPlan={mealPlan}
       recipe={recipe}
       mealType={mealPlan.meals[selectedIndex]?.mealType}
       key={recipe._id}
-    />
+    />}
   </div>
 }

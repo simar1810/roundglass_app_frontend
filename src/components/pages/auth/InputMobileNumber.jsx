@@ -4,16 +4,21 @@ import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { toast } from "sonner";
 
+function cleanPhoneNumber(input) {
+  const digitsOnly = input.replace(/\D/g, '');
+  return digitsOnly.slice(-10);
+}
+
 export default function InputMobileNumber() {
   const { mobileNumber, dispatch } = useCurrentStateContext();
 
   async function sendOtp() {
     try {
-      if (mobileNumber.length !== 10) throw new Error("Mobile number should be 10 digits longer!");
       const data = {
-        credential: "+91" + mobileNumber,
+        credential: "+91" + cleanPhoneNumber(mobileNumber),
         fcmToken: ""
       }
+      if (data.credential.length !== 13) throw new Error("Mobile number should be 10 digits longer!");
       const response = await sendData("app/signin?authMode=mob&clientType=web", data);
       if (response.status_code === 400) throw new Error(response.message);
       dispatch({

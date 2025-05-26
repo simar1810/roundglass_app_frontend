@@ -59,7 +59,7 @@ export default function AppSidebar() {
         />
       </SidebarHeader>
       <ClientSearchBar />
-      <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 custom-scrollbar">
+      <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
             {sidebarItems.map((item) => item.items && item.items.length > 0

@@ -75,13 +75,13 @@ function FeedPagination() {
   return <Pagination className="my-8">
     <PaginationContent className="gap-4">
       {page > 1 && <PaginationPrevious onClick={previous} />}
-      {page > 1 && <PaginationItem>{page - 1}</PaginationItem>}
+      {page > 1 && <PaginationItem className="cursor-pointer" onClick={previous}>{page - 1}</PaginationItem>}
       <PaginationItem>
         <PaginationLink isActive>
           {page}
         </PaginationLink>
       </PaginationItem>
-      {page < finalPage && <PaginationItem>{page + 1}</PaginationItem>}
+      {page < finalPage && <PaginationItem className="cursor-pointer" onClick={next}>{page + 1}</PaginationItem>}
       {page < finalPage && <PaginationNext onClick={next} />}
     </PaginationContent>
   </Pagination>
