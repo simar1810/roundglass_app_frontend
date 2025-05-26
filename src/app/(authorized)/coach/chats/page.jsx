@@ -158,7 +158,7 @@ function CurrentChatMessageBox() {
   }
 
   return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
-    <Paperclip className="text-[#535353] w-[18px]" />
+    {/* <Paperclip className="text-[#535353] w-[18px]" /> */}
     <Input
       value={message}
       onChange={e => setMessage(e.target.value)}

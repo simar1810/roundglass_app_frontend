@@ -58,7 +58,7 @@ export default function ClientListItemStatus({
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => setModal(<FollowUpModal
             defaultOpen={true}
             clientData={client}
@@ -66,7 +66,7 @@ export default function ClientListItemStatus({
           />)}
         >
           Follow Up
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem
           onClick={() => setModal(<DeleteClientModal
             defaultOpen={true}
