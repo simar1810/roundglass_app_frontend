@@ -1,4 +1,4 @@
-import { EllipsisVertical } from "lucide-react";
+import { CalendarRange, EllipsisVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Avatar,
@@ -25,6 +25,7 @@ import { sendData } from "@/lib/api";
 import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
 import { toast } from "sonner";
 import { copyText } from "@/lib/utils";
+import PendingClientClubDataModal from "@/components/modals/client/PendingClientClubDataModal";
 
 export default function ClientListItemStatus({
   client
@@ -68,28 +69,40 @@ export default function ClientListItemStatus({
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        {Boolean(client.rollno)
-          ? <DropdownMenuItem
-            onClick={() => setModal(<EditClientRollnoModal
-              _id={client._id}
-              onClose={() => setModal()}
-              defaultValue={client.rollno}
-              open={true}
-            />)}
-            className="cursor-pointer"
+        {Boolean(client.rollno) && <DropdownMenuItem
+          onClick={() => setModal(<PendingClientClubDataModal
+            clientData={client}
+            onClose={() => setModal()}
+            defaultValue={client.rollno}
+            open={true}
           >
-            Update Roll Number
-          </DropdownMenuItem>
-          : <DropdownMenuItem
-            onClick={() => setModal(<GenerateRollNo
-              _id={client._id}
-              onClose={() => setModal()}
-              open={true}
-            />)}
-            className="cursor-pointer"
-          >
-            Generate Roll Number
-          </DropdownMenuItem>}
+            <DialogTrigger />
+          </PendingClientClubDataModal>)}
+          className="cursor-pointer"
+        >
+          Club Details
+        </DropdownMenuItem>}
+        {Boolean(client.rollno) && <DropdownMenuItem
+          onClick={() => setModal(<EditClientRollnoModal
+            _id={client._id}
+            onClose={() => setModal()}
+            defaultValue={client.rollno}
+            open={true}
+          />)}
+          className="cursor-pointer"
+        >
+          Update Roll Number
+        </DropdownMenuItem>}
+        {!Boolean(client.rollno) && <DropdownMenuItem
+          onClick={() => setModal(<GenerateRollNo
+            _id={client._id}
+            onClose={() => setModal()}
+            open={true}
+          />)}
+          className="cursor-pointer"
+        >
+          Generate Roll Number
+        </DropdownMenuItem>}
         <DropdownMenuItem
           onClick={() => setModal(<DeleteClientModal
             defaultOpen={true}

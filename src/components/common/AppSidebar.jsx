@@ -200,13 +200,25 @@ function SearchedResults({ loading, data }) {
     title="No clients Founds!" />
 
   return <div className="divide-y-1 divide-y-white">
-    {data.map(client => <Link
-      key={client._id}
-      href={`/coach/clients/${client._id}`}
-      className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
-    >
-      {client.name}
-      <ChevronRight className="w-[16px] h-[16px] ml-auto" />
-    </Link>)}
+    {data.map(client =>
+      client.isVerified
+        ? <ActiveClient client={client} key={client._id} />
+        : <InactiveClient />
+    )}
   </div>
+}
+
+function ActiveClient({ client }) {
+  return <Link
+    key={client._id}
+    href={`/coach/clients/${client._id}`}
+    className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
+  >
+    {client.name}
+    <ChevronRight className="w-[16px] h-[16px] ml-auto" />
+  </Link>
+}
+
+function InactiveClient() {
+  return <></>
 }
