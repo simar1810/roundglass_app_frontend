@@ -14,7 +14,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-const formFields = ["name", "email", "mobileNumber", "expectedNoOfClients"];
+const formFields = ["name", "email", "mobileNumber", "expectedNoOfClients", "file"];
 
 export default function UpdatePersonalDetails({ coachData }) {
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,9 @@ export default function UpdatePersonalDetails({ coachData }) {
       const data = new FormData();
       for (const field of formFields) {
         data.append(field, formData[field])
+        console.log(field, formData[field])
       }
+      // throw new Error()
       const response = await sendDataWithFormData(`app/updateCoach?id=${_id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);

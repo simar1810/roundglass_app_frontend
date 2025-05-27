@@ -172,5 +172,6 @@ export function init(type, data) {
   }
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;
+  console.log(payload)
   return payload;
 }

@@ -18,7 +18,7 @@ export default function CoachMatrices() {
   const distance = data.data.dailyActivities[data.data.dailyActivities.length - 1].distance / 1000;
   const steps = data.data.dailyActivities[data.data.dailyActivities.length - 1].steps / 100;
 
-  return <Card className="w-[400px] border-0 !shadow-none gap-2 rounded-[10px]">
+  return <Card className="w-[400px] border-1 !shadow-none gap-2 rounded-[10px]">
     <CardHeader className="text-[14px] font-semibold flex items-center justify-between gap-[4px]">
       Activity
     </CardHeader>

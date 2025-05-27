@@ -140,9 +140,9 @@ function RetailOrderDetailCard({ order }) {
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
       </div>
-      <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
+      {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
-      </Link>
+      </Link> */}
     </CardFooter>
   </Card>
 }
