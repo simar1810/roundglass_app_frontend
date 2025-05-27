@@ -13,12 +13,13 @@ export default function DualOptionActionModal({
   description,
   action,
   onClose,
+  defaultOpen,
   ...props
 }) {
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef();
 
-  return <AlertDialog {...props}>
+  return <AlertDialog defaultOpen={defaultOpen || false} {...props}>
     {children}
     <AlertDialogContent className="!max-w-[450px] text-center border-0 px-0 overflow-auto gap-0">
       <AlertDialogTitle className="text-[24px]">Are you sure?</AlertDialogTitle>
