@@ -155,7 +155,7 @@
 body {
   font-family: "Inter", sans-serif;
   width: 100vw;
-  /* overflow: clip; */
+  overflow-x: clip;
 }
 
 .container {
@@ -209,4 +209,14 @@ a {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }

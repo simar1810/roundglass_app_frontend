@@ -51,10 +51,10 @@ function FeedActions({ postId }) {
       <EllipsisVertical className="w-[20px] ml-auto cursor-pointer" />
     </DropdownMenuTrigger>
     <DropdownMenuContent>
-      <DropdownMenuLabel className="text-[14px] py-0 flex items-center gap-2 cursor-pointer">
+      {/* <DropdownMenuLabel className="text-[14px] py-0 flex items-center gap-2 cursor-pointer">
         <Share className="w-[14px]" />
         Share
-      </DropdownMenuLabel>
+      </DropdownMenuLabel> */}
       {postActions && <>
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-[14px] py-0 flex items-center gap-2 cursor-pointer">

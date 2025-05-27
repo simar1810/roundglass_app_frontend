@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export async function DELETE() {
+export async function DELETE(request) {
   try {
     const response = NextResponse.json(
       { status_code: 200, message: 'Logged out successfully' },

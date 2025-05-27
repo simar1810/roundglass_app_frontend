@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 export default function TopPerformers({ clients }) {
   const [modalOpened, setModalOpened] = useState(false);
 
-  return <div className="bg-white py-4 rounded-[10px]">
+  return <div className="bg-white py-4 rounded-[10px] border-1">
     <div className="mb-4 px-4 flex items-center justify-between">
       <p className="text-[14px] font-bold">Top Performers</p>
       {modalOpened && <QuickAddClient setModal={setModalOpened} />}

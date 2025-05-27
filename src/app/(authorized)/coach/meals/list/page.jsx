@@ -10,7 +10,7 @@ export default function Page() {
   const { isLoading, error, data } = useSWR("getPlans", getPlans);
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || error.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
   const plans = data.data;
 
