@@ -20,7 +20,7 @@ export default function ClientClubDataComponent({ onSubmit = () => { }, mutateQu
       const response = await sendData(`edit-rollno?id=${clientData._id}`, { clientId: clientData._id });
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${clientData._id}`);
+      mutate(`clientDetails/${clientData._id}`);
       onSubmit()
       closeBtnRef.current.click();
     } catch (error) {

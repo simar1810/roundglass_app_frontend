@@ -134,8 +134,9 @@ function SyncedCoachClientDetails({ client }) {
           Save
         </Button>
       </div>
+      {console.log(client)}
       {[0, 1].includes(clubSystem) && <SubscriptionHistory _id={client._id} />}
-      {/* {[2].includes(clubSystem) && <VolumePointHistory _id={client._id} />} */}
+      {[2].includes(clubSystem) && <VolumePointHistory _id={client._id} />}
       <DialogClose ref={closeBtnRef} />
     </DialogContent>
   </Dialog>

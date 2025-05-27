@@ -116,7 +116,7 @@ function Header({ clientData }) {
       const response = await sendData(`edit-rollno?id=${clientData._id}`, { clientId: clientData._id });
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${clientData._id}`);
+      mutate(`clientDetails/${clientData._id}`);
       setModalOpened(false);
     } catch (error) {
       toast.error(error.message);
@@ -193,7 +193,7 @@ function ClientStatus({
       const response = await sendData(`app/updateClientActiveStatus?id=${_id}&status=${status}`, {}, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate(`clientDetails/${_id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -242,7 +242,7 @@ function ClientClubStatus({
       const response = await sendData(`updateClubClientStatus?id=${_id}&status=${status}`, {}, "PUT");
       if (!Boolean(response.data)) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate(`clientDetails/=${_id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);

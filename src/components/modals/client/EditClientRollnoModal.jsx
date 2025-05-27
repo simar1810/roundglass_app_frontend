@@ -25,7 +25,7 @@ export default function EditClientRollnoModal({
       const response = await sendData(`edit-rollno?id=${_id}`, { clientId: _id, newRollNumber: rollno });
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate(`clientDetails/${_id}`);
       mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'))
       closeBtnRef.current.click();
     } catch (error) {
