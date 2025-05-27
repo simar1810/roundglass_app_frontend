@@ -16,7 +16,7 @@ export async function fetchData(endpoint) {
       cache: "no-store"
     });
     const data = await response.json();
-    if ([401].includes(data.status_code)) {
+    if ([408].includes(data.status_code)) {
       cookieStore.delete("token");
       redirect("/login");
     }
