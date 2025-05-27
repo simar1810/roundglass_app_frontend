@@ -138,7 +138,7 @@ export default function ClientStatisticsData({ clientData }) {
   if (error || data.status_code !== 200 || isNaN(selectedDate)) return <TabsContent value="statistics">
     <ContentError title={error || data.message} className="mt-0" />
   </TabsContent>
-  return <></>
+
 
   const payload = {
     ...clientStats?.at(selectedDate),

@@ -77,12 +77,16 @@ function generateHeightStandard({
   heightInches,
   heightFeet,
 }) {
-  if (["inches", "inch"].includes(heightUnit.toLowerCase())) {
-    return ((heightFeet * 0.3048) + (heightInches * 0.0254)).toFixed(2);
-  } else if (["cms", "cm"].includes(heightUnit.toLowerCase())) {
-    return (heightCms / 100).toFixed(2);
-  } else {
-    throw new Error("Please provide correct height unit");
+  try {
+    if (["inches", "inch"].includes(heightUnit.toLowerCase())) {
+      return ((heightFeet * 0.3048) + (heightInches * 0.0254)).toFixed(2);
+    } else if (["cms", "cm"].includes(heightUnit.toLowerCase())) {
+      return (heightCms / 100).toFixed(2);
+    } else {
+      throw new Error("Please provide correct height unit");
+    }
+  } catch (error) {
+    return 0;
   }
 }
 
@@ -91,131 +95,159 @@ function generateWeightStandard({
   weightInPounds,
   weightInKgs
 }) {
-  if (["kg", "kgs"].includes(weightUnit.toLowerCase())) {
-    return weightInKgs
-  } else if (["pounds", "pound"].includes(weightUnit.toLowerCase())) {
-    return (weightInPounds * 0.453592).toFixed(2)
-  } else {
-    throw new Error("Please provide correct height unit");
+  try {
+    if (["kg", "kgs"].includes(weightUnit.toLowerCase())) {
+      return weightInKgs
+    } else if (["pounds", "pound"].includes(weightUnit.toLowerCase())) {
+      return (weightInPounds * 0.453592).toFixed(2)
+    } else {
+      throw new Error("Please provide correct height unit");
+    }
+  } catch (error) {
+    return 0;
   }
 }
 
 export function calculateBMIFinal(data) {
-  const height = generateHeightStandard(data);
-  const weight = generateWeightStandard(data);
-  return Number((weight / (height * height)).toFixed(1));
+  try {
+    const height = generateHeightStandard(data);
+    const weight = generateWeightStandard(data);
+    return Number((weight / (height * height)).toFixed(1));
+  } catch (error) {
+    return 0;
+  }
 }
 
 export function calculateIdealWeightFinal(data) {
-  const height = generateHeightStandard(data);
-  return Number((23.0 * height ** 2).toFixed(2));
+  try {
+    const height = generateHeightStandard(data);
+    return Number((23.0 * height ** 2).toFixed(2));
+  } catch (error) {
+    return 0;
+  }
 }
 
 // calculate skeletal mass percentage
 export function calculateSMPFinal(data) {
-  const height = generateHeightStandard(data);
-  const weight = generateWeightStandard(data);
-  const genderInt = data?.gender?.toLowerCase() === 'male' ? 1 : 0;
-  let skeletalMuscleMass = (0.22 * weight) + (6.5 * height) - (0.1 * data.age) + (5.8 * genderInt) - 3.5;
-  let skeletalMassPercentage = (skeletalMuscleMass / weight) * 100;
-  switch (data.bodyComposition?.toLowerCase()) {
-    case "slim":
-      skeletalMassPercentage += 0.5;
-      break;
-    case "medium":
-      skeletalMassPercentage += 1.0;
-      break;
-    case "fat":
-      skeletalMassPercentage -= 2.0;
-      break;
-    default:
-      break;
+  try {
+    const height = generateHeightStandard(data);
+    const weight = generateWeightStandard(data);
+    const genderInt = data?.gender?.toLowerCase() === 'male' ? 1 : 0;
+    let skeletalMuscleMass = (0.22 * weight) + (6.5 * height) - (0.1 * data.age) + (5.8 * genderInt) - 3.5;
+    let skeletalMassPercentage = (skeletalMuscleMass / weight) * 100;
+    switch (data.bodyComposition?.toLowerCase()) {
+      case "slim":
+        skeletalMassPercentage += 0.5;
+        break;
+      case "medium":
+        skeletalMassPercentage += 1.0;
+        break;
+      case "fat":
+        skeletalMassPercentage -= 2.0;
+        break;
+      default:
+        break;
+    }
+    skeletalMassPercentage = Math.max(25.0, Math.min(42.0, skeletalMassPercentage));
+    return Math.round(skeletalMassPercentage * 10) / 10;
+  } catch (error) {
+    return 0;
   }
-  skeletalMassPercentage = Math.max(25.0, Math.min(42.0, skeletalMassPercentage));
-  return Math.round(skeletalMassPercentage * 10) / 10;
 }
 
 export function calculateBodyFatFinal(data) {
-  const bmi = calculateBMIFinal(data);
-  const bmiNum = parseFloat(bmi);
-  const ageNum = parseInt(data.age);
-  const genderInt = data.gender?.toLowerCase() === "male" ? 1 : 0;
+  try {
+    const bmi = calculateBMIFinal(data);
+    const bmiNum = parseFloat(bmi);
+    const ageNum = parseInt(data.age);
+    const genderInt = data.gender?.toLowerCase() === "male" ? 1 : 0;
 
-  let fat;
-  switch (data?.bodyComposition?.toLowerCase()) {
-    case "slim":
-      fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * genderInt - 5.4 - 2.5;
-      break;
-    case 'medium':
-      fat = 1.30 * bmi + 0.23 * (data.age || 0) - 10.8 * genderInt - 5.4;
-      break;
-    case 'fat':
-      fat = 1.30 * bmi + 0.23 * (data.age || 0) - 10.8 * genderInt - 5.4 + 2.5;
-      break;
-    default:
-      throw new Error('Invalid or missing body composition. Use "slim", "medium", or "fat".');
+    let fat;
+    switch (data?.bodyComposition?.toLowerCase()) {
+      case "slim":
+        fat = 1.3 * bmiNum + 0.23 * ageNum - 10.8 * genderInt - 5.4 - 2.5;
+        break;
+      case 'medium':
+        fat = 1.30 * bmi + 0.23 * (data.age || 0) - 10.8 * genderInt - 5.4;
+        break;
+      case 'fat':
+        fat = 1.30 * bmi + 0.23 * (data.age || 0) - 10.8 * genderInt - 5.4 + 2.5;
+        break;
+      default:
+        throw new Error('Invalid or missing body composition. Use "slim", "medium", or "fat".');
+    }
+
+    fat = Math.max(5.0, Math.min(35.0, fat));
+
+    return parseFloat(fat.toFixed(1));
+  } catch (error) {
+    return 0;
   }
-
-  fat = Math.max(5.0, Math.min(35.0, fat));
-
-  return parseFloat(fat.toFixed(1));
 }
 
 export function calculateBMRFinal(data) {
-  const height = generateHeightStandard(data);
-  const weight = generateWeightStandard(data);
-  return Math.round(
-    data.gender?.toLowerCase() === "male"
-      ? 10 * weight + 6.25 * (height * 100) - 5 * data.age + 5
-      : 10 * weight + 6.25 * (height * 100) - 5 * data.age - 161
-  )
+  try {
+    const height = generateHeightStandard(data);
+    const weight = generateWeightStandard(data);
+    return Math.round(
+      data.gender?.toLowerCase() === "male"
+        ? 10 * weight + 6.25 * (height * 100) - 5 * data.age + 5
+        : 10 * weight + 6.25 * (height * 100) - 5 * data.age - 161
+    )
+  } catch (error) {
+    return 0;
+  }
 }
 
 export function calculateBodyAgeFinal(data) {
-  const bmi = calculateBMIFinal(data);
-  const fat = calculateBodyFatFinal(data);
+  try {
+    const bmi = calculateBMIFinal(data);
+    const fat = calculateBodyFatFinal(data);
 
-  let bodyAge = data.age;
+    let bodyAge = data.age;
 
-  const gender = data.gender?.toLowerCase() || '';
-  const bodyComposition = data.bodyComposition?.toLowerCase() || '';
+    const gender = data.gender?.toLowerCase() || '';
+    const bodyComposition = data.bodyComposition?.toLowerCase() || '';
 
-  // BMI-based adjustments
-  if (bmi < 18.5) {
-    bodyAge += 2;
-  } else if (bmi > 25.0) {
-    bodyAge += 3;
-  } else {
-    bodyAge -= 1;
-  }
-
-  // Body fat adjustments by gender
-  if (gender === 'male') {
-    if (fat < 8.0) {
-      bodyAge -= 2;
-    } else if (fat > 25.0) {
-      bodyAge += 4;
-    }
-  } else if (gender === 'female') {
-    if (fat < 21.0) {
-      bodyAge -= 2;
-    } else if (fat > 32.0) {
-      bodyAge += 4;
-    }
-  }
-
-  // Body composition adjustments
-  switch (bodyComposition) {
-    case 'slim':
-      bodyAge -= 1;
-      break;
-    case 'fat':
+    // BMI-based adjustments
+    if (bmi < 18.5) {
       bodyAge += 2;
-      break;
-  }
+    } else if (bmi > 25.0) {
+      bodyAge += 3;
+    } else {
+      bodyAge -= 1;
+    }
 
-  // Ensure bodyAge is not negative
-  return Math.max(0, Math.round(bodyAge));
+    // Body fat adjustments by gender
+    if (gender === 'male') {
+      if (fat < 8.0) {
+        bodyAge -= 2;
+      } else if (fat > 25.0) {
+        bodyAge += 4;
+      }
+    } else if (gender === 'female') {
+      if (fat < 21.0) {
+        bodyAge -= 2;
+      } else if (fat > 32.0) {
+        bodyAge += 4;
+      }
+    }
+
+    // Body composition adjustments
+    switch (bodyComposition) {
+      case 'slim':
+        bodyAge -= 1;
+        break;
+      case 'fat':
+        bodyAge += 2;
+        break;
+    }
+
+    // Ensure bodyAge is not negative
+    return Math.max(0, Math.round(bodyAge));
+  } catch (error) {
+    return 0;
+  }
 }
 
 export function calculateBMI2({

@@ -14,7 +14,6 @@ export default function Page() {
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
   const clientData = data.data;
   clientData.weightLoss = data.weightLost;
-  console.log(clientData)
 
   return <div className="mt-4 grid md:grid-cols-2 items-start gap-4">
     <ClientDetailsCard clientData={clientData} />

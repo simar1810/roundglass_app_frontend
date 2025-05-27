@@ -29,9 +29,7 @@ export default function UpdatePersonalDetails({ coachData }) {
       const data = new FormData();
       for (const field of formFields) {
         data.append(field, formData[field])
-        console.log(field, formData[field])
       }
-      // throw new Error()
       const response = await sendDataWithFormData(`app/updateCoach?id=${_id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);

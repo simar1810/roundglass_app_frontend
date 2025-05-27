@@ -94,18 +94,18 @@ const fields = ["heightCms", "heightFeet", "heightInches", "heightUnit", "weight
 export default function HealthMetrics({ data }) {
   const correctMetrics = fields.every(field => !Boolean(data[field]))
   const payload = {
-    bmi: correctMetrics ? calculateBMIFinal(data) : "",
-    muscle: correctMetrics ? calculateSMPFinal(data) : "",
-    fat: correctMetrics ? calculateBodyFatFinal(data) : "",
-    rm: correctMetrics ? calculateBMRFinal(data) : "",
-    idealWeight: correctMetrics ? calculateIdealWeightFinal(data) : "",
-    bodyAge: correctMetrics ? calculateBodyAgeFinal(data) : "",
+    bmi: calculateBMIFinal(data),
+    muscle: calculateSMPFinal(data),
+    fat: calculateBodyFatFinal(data),
+    rm: calculateBMRFinal(data),
+    idealWeight: calculateIdealWeightFinal(data),
+    bodyAge: calculateBodyAgeFinal(data),
   };
 
   return (
     <>
       {healtMetrics
-        .filter((metric) => !isNaN(payload[metric.name]))
+        .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
         .map((metric) => (
           <MetricProgress
             key={metric.id}

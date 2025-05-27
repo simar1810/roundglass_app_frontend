@@ -62,8 +62,8 @@ function DeleteStory({ id }) {
     description="Are you sure to delete this result?"
     action={(setLoading, closeBtnRef) => deleteStory(setLoading, closeBtnRef)}
   >
-    <AlertDialogTrigger className="absolute top-[2px] right-[2px] z-10">
-      <X className="w-[16px] h-[16px] close" strokeWidth={3} />
+    <AlertDialogTrigger className="bg-[var(--accent-1)] text-white p-[2px] absolute top-[2px] right-[2px] z-10 border-1 rounded-full">
+      <X className="w-[14px] h-[14px] close" strokeWidth={3} />
     </AlertDialogTrigger>
   </DualOptionActionModal>
 }
