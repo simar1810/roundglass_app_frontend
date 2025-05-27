@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -34,16 +34,16 @@ import useDebounce from "@/hooks/useDebounce";
 import Loader from "./Loader";
 import useClickOutside from "@/hooks/useClickOutside";
 import ContentError from "./ContentError";
-import { permit } from "@/lib/permit";
 import { useAppSelector } from "@/providers/global/hooks";
+import PendingClientClubDataModal from "../modals/client/PendingClientClubDataModal";
+import { DialogTrigger } from "../ui/dialog";
+import useSWR, { mutate, useSWRConfig } from "swr";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
-  const { roles, subscription, organisation } = useAppSelector(state => state.coach.data);
+  const { organisation } = useAppSelector(state => state.coach.data);
 
-  const clubFeaturesPermitted = permit("club", roles);
   let sidebarItems = sidebar__coachContent;
-  // if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 10);
   if (organisation !== "Herbalife") sidebarItems = sidebar__coachContent.filter(item => item.id !== 6);
 
   return (
@@ -58,7 +58,7 @@ export default function AppSidebar() {
           className="max-w-[10ch] mx-auto mt-4"
         />
       </SidebarHeader>
-      <ClientSearchBar />
+      <ClientSearchBar setModal={setModal} />
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
@@ -148,7 +148,7 @@ function SidebarItem({ item }) {
   </SidebarMenuItem>
 }
 
-function ClientSearchBar() {
+function ClientSearchBar({ setModal }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -185,32 +185,42 @@ function ClientSearchBar() {
       className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 border-0 text-white !focus:outline-none"
     />
     {open && <div className="w-[calc(100%-16px)] bg-[var(--dark-1)] absolute top-16 left-0 px-2 py-2 rounded-[8px] z-[100] border-1 border-[var(--primary-1)]/40">
-      <SearchedResults loading={loading} data={data} />
+      <SearchedResults
+        query={searchQuery}
+        setQuery={setSearchQuery}
+        setModal={setModal}
+        loading={loading}
+        data={data}
+      />
     </div>}
   </div>
 }
 
-function SearchedResults({ loading, data }) {
+function SearchedResults({ setModal,
+  loading,
+  data,
+  query,
+  setQuery
+}) {
   if (loading) return <div className="h-[150px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (data.length === 0) return <ContentError
     className="!bg-[var(--dark-1)] !min-h-[150px] text-white text-center mt-0 border-0"
-    title="No clients Founds!" />
+    title="No clients Founds!"
+  />
 
   return <div className="divide-y-1 divide-y-white">
-    {data.map(client =>
-      client.isVerified
-        ? <ActiveClient client={client} key={client._id} />
-        : <InactiveClient />
+    {data.map(client => client.isVerified
+      ? <ActiveClient client={client} key={client._id} />
+      : <InactiveClient query={query} setQuery={setQuery} setModal={setModal} client={client} key={client._id} />
     )}
   </div>
 }
 
 function ActiveClient({ client }) {
   return <Link
-    key={client._id}
     href={`/coach/clients/${client._id}`}
     className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
   >
@@ -219,6 +229,31 @@ function ActiveClient({ client }) {
   </Link>
 }
 
-function InactiveClient() {
-  return <></>
+function InactiveClient({ query, setQuery, setModal, client }) {
+  const { cache } = useSWRConfig()
+  return <div
+    className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
+    onClick={() => {
+      setModal(<PendingClientClubDataModal
+        open={true}
+        onClose={() => setModal()}
+        clientData={client}
+        mutateQuery={{
+          search: true,
+          all: true,
+          query: query
+        }}
+        onSubmit={() => {
+          setModal()
+          cache.delete(`app/allClient?limit=5&search=${query}`)
+          setQuery()
+        }}
+      >
+        <DialogTrigger />
+      </PendingClientClubDataModal>)
+    }}
+  >
+    {client.name}
+    <ChevronRight className="w-[16px] h-[16px] ml-auto" />
+  </div>
 }

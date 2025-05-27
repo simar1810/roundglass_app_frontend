@@ -12,16 +12,16 @@ import { sendData } from "@/lib/api";
 import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
 
-export default function ClientClubDataComponent({ clientData }) {
+export default function ClientClubDataComponent({ onSubmit = () => { }, mutateQuery, clientData }) {
   const { roles, clubSystem } = useAppSelector(state => state.coach.data);
-
   async function generateClientRollno(setLoading, closeBtnRef) {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await sendData(`edit-rollno?id=${clientData._id}`, { clientId: clientData._id });
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
       mutate(`clientDetails?id=${clientData._id}`);
+      onSubmit()
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
