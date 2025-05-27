@@ -16,7 +16,6 @@ export default function FeedsPersonal() {
     `app/my-posts?page=${state.page}`,
     () => getAppPersonalFeeds(state)
   );
-
   useEffect(function () {
     if (data?.status_code === 201) {
       dispatch(pageEnd(state.page - 1))

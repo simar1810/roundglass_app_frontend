@@ -4,7 +4,7 @@ import ContentLoader from "@/components/common/ContentLoader";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { getAppFeeds } from "@/lib/fetchers/app";
 import ContentError from "@/components/common/ContentError";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { pageEnd } from "@/config/state-reducers/feed";
 import Feed from "./Feed";
 
@@ -14,10 +14,12 @@ export default function Feeds() {
     `app/getAppFeeds?page=${state.page}&type=${state.type}`,
     () => getAppFeeds(state)
   );
+  const mountedRef = useRef(false);
   useEffect(function () {
-    if (data?.status_code === 201) {
-      // dispatch(pageEnd(state.page - 1))
+    if (data?.status_code === 201 && mountedRef.current && state.page !== 0) {
+      dispatch(pageEnd(state.page - 1))
     }
+    mountedRef.current = true;
   }, [isLoading]);
 
   if (isLoading) return <ContentLoader />

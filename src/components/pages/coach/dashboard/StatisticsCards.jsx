@@ -5,14 +5,20 @@ import { dashboardCards } from "@/config/data/ui";
 import { dashboardStatistics } from "@/lib/fetchers/app";
 import { permit } from "@/lib/permit";
 import { useAppSelector } from "@/providers/global/hooks";
-import useSWR from "swr";
+import { useRouter } from "next/navigation";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function StatisticsCards() {
-  const { isLoading, error, data } = useSWR("dashboardStatistics", dashboardStatistics);
+  const router = useRouter();
+  const { cache } = useSWRConfig();
+  const { isLoading, error, data } = useSWR("dashboardStatistics", () => dashboardStatistics(router, cache));
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError className="!min-h-[150px]" title={error || data.message} />
+  if (error || data?.status_code !== 200 || !Boolean(data)) return <ContentError
+    className="!min-h-[150px]"
+    title={error || data?.message || "Please try again later!"}
+  />
   const statistics = data.data;
 
   return <div className="grid grid-cols-5 gap-4">

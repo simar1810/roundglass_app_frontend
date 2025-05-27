@@ -89,7 +89,10 @@ const payload = {
   idealWeight: 74,
 };
 
+const fields = ["heightCms", "heightFeet", "heightInches", "heightUnit", "weight", "weightInKgs", "weightInPounds", "weightUnit", "bodyComposition"]
+
 export default function HealthMetrics({ data }) {
+  const correctMetrics = fields.every(field => !Boolean(data[field]))
   const payload = {
     bmi: calculateBMIFinal(data),
     muscle: calculateSMPFinal(data),
@@ -102,7 +105,7 @@ export default function HealthMetrics({ data }) {
   return (
     <>
       {healtMetrics
-        .filter((metric) => !isNaN(payload[metric.name]))
+        .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
         .map((metric) => (
           <MetricProgress
             key={metric.id}
