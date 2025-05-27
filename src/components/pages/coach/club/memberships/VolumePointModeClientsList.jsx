@@ -17,7 +17,15 @@ export default function VolumePointModeClientsList() {
   if (data.status_code !== 200 || error) return <ContentError title={error || data.message} />
 
   const clients = data.data
-  // .filter(client => !!client.clientId);
+    .filter(client => !!client.clientId || !!client.name);
+
+  if (clients.length === 0) return <div className="content-container">
+    <Header />
+    <ContentError
+      title="0 clients found!"
+      className="mt-0 border-0"
+    />
+  </div>
 
   return <div className="content-container">
     <Header />

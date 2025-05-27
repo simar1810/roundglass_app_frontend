@@ -45,7 +45,7 @@ export default function UpdateClientDetailsModal({ clientData }) {
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${clientData._id}`);
+      mutate(`clientDetails/${clientData._id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);

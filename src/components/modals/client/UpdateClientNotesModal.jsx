@@ -22,7 +22,7 @@ export default function UpdateClientNotesModal({ id, defaultValue }) {
       const response = await sendData(`app/updateClient?id=${id}`, { notes }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${id}`)
+      mutate(`clientDetails/${id}`)
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
