@@ -26,7 +26,7 @@ jobs:
         sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
         cd /var/www/app.wellnessz.in/ && \
         git pull origin main && \
-        npm install && \
+        npm i --legacy-peer-deps && \
         npm run build && \
         sudo systemctl restart app-front.service && \
         echo 'Deployment successful'" || echo 'Deployment failed'
