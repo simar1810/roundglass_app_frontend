@@ -13,8 +13,18 @@ export function coachMatricesData() {
   return fetchData('app/activity/get?person=coach');
 }
 
-export function dashboardStatistics() {
-  return fetchData('app/coach-statistics');
+export async function dashboardStatistics(router, cache) {
+  const response = await fetchData('app/coach-statistics');
+  if (response?.status_code === 411) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await fetch("/api/logout", { method: "DELETE" });
+    for (const [field] of cache.entries()) {
+      cache.delete(field)
+    }
+    router.push("/login");
+    return;
+  }
+  return response;
 }
 
 export function getCoachNotifications() {

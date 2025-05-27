@@ -43,7 +43,7 @@ export default function AppSidebar() {
 
   const clubFeaturesPermitted = permit("club", roles);
   let sidebarItems = sidebar__coachContent;
-  if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 10);
+  // if (!clubFeaturesPermitted) sidebarItems = sidebar__coachContent.filter(item => item.id !== 10);
   if (organisation !== "Herbalife") sidebarItems = sidebar__coachContent.filter(item => item.id !== 6);
 
   return (

@@ -89,14 +89,17 @@ const payload = {
   idealWeight: 74,
 };
 
+const fields = ["heightCms", "heightFeet", "heightInches", "heightUnit", "weight", "weightInKgs", "weightInPounds", "weightUnit", "bodyComposition"]
+
 export default function HealthMetrics({ data }) {
+  const correctMetrics = fields.every(field => !Boolean(data[field]))
   const payload = {
-    bmi: calculateBMIFinal(data),
-    muscle: calculateSMPFinal(data),
-    fat: calculateBodyFatFinal(data),
-    rm: calculateBMRFinal(data),
-    idealWeight: calculateIdealWeightFinal(data),
-    bodyAge: calculateBodyAgeFinal(data),
+    bmi: correctMetrics ? calculateBMIFinal(data) : "",
+    muscle: correctMetrics ? calculateSMPFinal(data) : "",
+    fat: correctMetrics ? calculateBodyFatFinal(data) : "",
+    rm: correctMetrics ? calculateBMRFinal(data) : "",
+    idealWeight: correctMetrics ? calculateIdealWeightFinal(data) : "",
+    bodyAge: correctMetrics ? calculateBodyAgeFinal(data) : "",
   };
 
   return (

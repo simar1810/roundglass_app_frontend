@@ -138,29 +138,29 @@ export default function ClientStatisticsData({ clientData }) {
   if (error || data.status_code !== 200 || isNaN(selectedDate)) return <TabsContent value="statistics">
     <ContentError title={error || data.message} className="mt-0" />
   </TabsContent>
-
+  return <></>
 
   const payload = {
     ...clientStats?.at(selectedDate),
     age: dob
       ? differenceInYears(new Date(), parse(dob, 'yyyy-MM-dd', new Date()))
       : 0,
-    bodyComposition: clientStats?.at(selectedDate).body_composition,
+    bodyComposition: clientStats?.at(selectedDate)?.body_composition,
     gender,
-    heightCms: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "cm"
-      ? clientStats?.at(selectedDate).height
+    heightCms: clientStats?.at(selectedDate)?.heightUnit?.toLowerCase() === "cm"
+      ? clientStats?.at(selectedDate)?.height
       : "",
-    heightFeet: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "inches"
-      ? (clientStats?.at(selectedDate).height.split("."))[0]
+    heightFeet: clientStats?.at(selectedDate)?.heightUnit?.toLowerCase() === "inches"
+      ? (clientStats?.at(selectedDate)?.height?.split("."))[0]
       : "",
-    heightInches: clientStats?.at(selectedDate).heightUnit.toLowerCase() === "inches"
-      ? (clientStats?.at(selectedDate).height.split("."))[1]
+    heightInches: clientStats?.at(selectedDate)?.heightUnit?.toLowerCase() === "inches"
+      ? (clientStats?.at(selectedDate)?.height?.split("."))[1]
       : "",
-    weightInKgs: clientStats?.at(selectedDate).weightUnit.toLowerCase() === "kg"
-      ? clientStats?.at(selectedDate).weight
+    weightInKgs: clientStats?.at(selectedDate)?.weightUnit?.toLowerCase() === "kg"
+      ? clientStats?.at(selectedDate)?.weight
       : "",
-    weightInPounds: clientStats?.at(selectedDate).weightUnit.toLowerCase() === "pounds"
-      ? clientStats?.at(selectedDate).weight
+    weightInPounds: clientStats?.at(selectedDate)?.weightUnit?.toLowerCase() === "pounds"
+      ? clientStats?.at(selectedDate)?.weight
       : "",
   }
 
