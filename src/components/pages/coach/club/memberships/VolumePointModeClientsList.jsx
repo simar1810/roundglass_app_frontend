@@ -26,7 +26,7 @@ export default function VolumePointModeClientsList() {
       className="mt-0 border-0"
     />
   </div>
-
+  console.log(clients)
   return <div className="content-container">
     <Header />
     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-4 divide-y-1">
