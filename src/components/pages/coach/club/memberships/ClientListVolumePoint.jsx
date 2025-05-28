@@ -34,11 +34,11 @@ export default function ClientListVolumePoint({
       </div>
       <Progress value={daysRemaining} className="w-full mt-2 [&_.progress-bar]:bg-[var(--accent-1)]" />
     </div>
-    <Link
+    {/* {client.isVerified && <Link
       className="text-[12px] text-[var(--accent-1)] font-semibold ml-auto"
       href={"/coach/clients/" + client._id}
     >
       <CircleArrowRight className="w-[20px]" />
-    </Link>
+    </Link>} */}
   </div>
 }
