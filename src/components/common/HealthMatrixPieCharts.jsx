@@ -101,22 +101,27 @@ export default function HealthMetrics({ data }) {
     idealWeight: calculateIdealWeightFinal(data),
     bodyAge: calculateBodyAgeFinal(data),
   };
-
-  return (
-    <>
-      {healtMetrics
-        .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
-        .map((metric) => (
-          <MetricProgress
-            key={metric.id}
-            {...metric}
-            value={payload[metric.name]}
-            maxPossibleValue={metric.getMaxValue(payload[metric.name])}
-            minThreshold={metric.getMinValue(payload[metric.name])}
-          />
-        ))}
-    </>
-  );
+  try {
+    return (
+      <>
+        {healtMetrics
+          .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
+          .map((metric) => (
+            <MetricProgress
+              key={metric.id}
+              {...metric}
+              value={payload[metric.name]}
+              maxPossibleValue={metric.getMaxValue(payload[metric.name])}
+              minThreshold={metric.getMinValue(payload[metric.name])}
+            />
+          ))}
+      </>
+    );
+  } catch (error) {
+    return <div className="h-[200px]">
+      No Health Matrix added!
+    </div>
+  }
 }
 
 export function MetricProgress({
