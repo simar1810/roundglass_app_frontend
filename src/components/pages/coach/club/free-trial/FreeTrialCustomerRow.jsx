@@ -1,12 +1,17 @@
+import AddSubscriptionModal from "@/components/modals/club/AddSubscriptionModal";
+import AddVolumePointsModal from "@/components/modals/club/AddVolumePointsModal";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { useAppSelector } from "@/providers/global/hooks";
 import { Eye } from "lucide-react";
 import Link from "next/link";
+import { mutate } from "swr";
 
 export default function FreeTrialCustomerRow({
   index,
   customer
 }) {
+  const { clubSystem } = useAppSelector(state => state.coach.data)
   return <TableRow>
     <TableCell>{index + 1}</TableCell>
     <TableCell>{customer.clientId.name}</TableCell>
@@ -16,7 +21,14 @@ export default function FreeTrialCustomerRow({
     <TableCell>{customer.clientId.joiningDate}</TableCell>
     <TableCell>{customer.clientId.city}</TableCell>
     <TableCell>
-      <Button size="sm" variant="wz_outline">Add</Button>
+      {clubSystem === 1 && <AddSubscriptionModal
+        _id={customer.clientId._id}
+        onSubmit={() => mutate("free-trial-users")}
+      />}
+      {clubSystem === 2 && <AddVolumePointsModal
+        _id={customer.clientId._id}
+        onSubmit={() => mutate("free-trial-users")}
+      />}
     </TableCell>
     <TableCell>
       <Link

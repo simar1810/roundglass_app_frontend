@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
 export default function VolumePointHistory({ _id }) {
-  console.log(_id)
   const { isLoading, error, data } = useSWR(`getClientVolumePoints/${_id}`, () => getClientVolumePoints(_id));
 
   async function deleteVolumePoints(setLoading, closeBtnRef, id) {
