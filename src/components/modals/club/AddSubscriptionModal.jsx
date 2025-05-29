@@ -13,7 +13,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function AddSubscriptionModal({ _id }) {
+export default function AddSubscriptionModal({ _id, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     amount: "",
@@ -31,6 +31,7 @@ export default function AddSubscriptionModal({ _id }) {
       if (!response.status) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientSubscriptions/${_id}`)
+      if (onSubmit) onSubmit()
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
