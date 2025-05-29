@@ -28,7 +28,7 @@ export function linkGeneratorReducer(state, action) {
       }
     case "RESET_STATE":
       return {
-        linkGeneratorInitialState,
+        ...linkGeneratorInitialState,
         view: 2
       }
 
