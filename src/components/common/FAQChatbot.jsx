@@ -8,6 +8,10 @@ import { MessageCircle, X, ArrowLeft, ChevronRight } from "lucide-react"
 import { useAppSelector } from "@/providers/global/hooks"
 import useClickOutside from "@/hooks/useClickOutside"
 import Link from "next/link"
+import useSWR from "swr"
+import { getChatBotData } from "@/lib/fetchers/app"
+import Loader from "./Loader"
+import ContentError from "./ContentError"
 
 const faqData = [
   {
@@ -449,6 +453,8 @@ const faqData = [
 ]
 
 export default function FAQChatbot() {
+  const { isLoading, error, data } = useSWR("/chatbot", getChatBotData)
+
   const [isOpen, setIsOpen] = useState(false)
   const [currentView, setCurrentView] = useState("categories")
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -480,10 +486,21 @@ export default function FAQChatbot() {
     }
   }
 
+  const categories = Object.groupBy(data?.data || [], (item) => item.category);
+  const faqData = []
+  for (const field in categories) {
+    faqData.push(
+      {
+        category: field,
+        questions: categories[field]
+      }
+    )
+  }
+
   const renderCategories = () => (
     <div className="space-y-0">
       {faqData.map((category, index) => (
-        <div key={category.category}>
+        <div key={index}>
           <button
             className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
             onClick={() => handleCategorySelect(category)}
@@ -511,7 +528,7 @@ export default function FAQChatbot() {
       </div>
 
       {selectedCategory.questions.map((question, index) => (
-        <div key={question.id}>
+        <div key={index}>
           <button
             className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
             onClick={() => handleQuestionSelect(question)}
@@ -575,7 +592,10 @@ export default function FAQChatbot() {
       {isOpen && (<>
         <div className="fixed h-screen w-screen bg-[var(--dark-1)]/20 top-0 left-0 z-[110]" />
         <div ref={chatbotRef} className="h-[80vh] flex flex-col fixed bottom-24 right-6 z-[110] overflow-y-auto border-1 border-[#DEDEDE] rounded-xl">
-          <Card className="w-96 !bg-[var(--comp-2)] grow pt-0 shadow-2xl border-0 overflow-x-hidden gap-0">
+          {isLoading && <div className="w-96 h-full !bg-[var(--comp-2)] flex items-center justify-center">
+            <Loader />
+          </div>}
+          {!isLoading && !Boolean(error) && <Card className="w-96 !bg-[var(--comp-2)] grow pt-0 shadow-2xl border-0 overflow-x-hidden gap-0">
             {/* Green Header */}
             <div className="bg-green-500 text-white p-6 relative">
               <Button
@@ -603,9 +623,13 @@ export default function FAQChatbot() {
                 {currentView === "answer" && renderAnswer()}
               </ScrollArea>
             </CardContent>
-          </Card>
+          </Card>}
+          {error && data.status_code !== 200 && <div className="w-96 h-full !bg-[var(--comp-2)] flex items-center justify-center">
+            <ContentError title={error || data.message || "Something went wrong"} className="w-full h-full border-0" />
+          </div>}
         </div>
-      </>)}
+      </>)
+      }
     </>
   )
 }

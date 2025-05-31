@@ -176,3 +176,7 @@ export function getWorkoutDetails(workoutId) {
 export function getAllSubscriptions() {
   return fetchData("app/allCoachSubscriptions");
 }
+
+export function getChatBotData() {
+  return fetchData("chatbot");
+}
