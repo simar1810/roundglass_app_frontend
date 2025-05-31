@@ -134,7 +134,9 @@ export function getMarathons() {
 }
 
 export function getMarathonLeaderBoard(marathonId) {
-  return fetchData(`app/marathon/coach/points?person=coach&marathonId=${marathonId}`);
+  let query = "person=coach"
+  if (Boolean(marathonId)) query += `&marathonId=${marathonId}`
+  return fetchData(`app/marathon/coach/points?${query}`);
 }
 
 export function getMarathonClientTask(clientId, date = format(new Date(), "dd-MM-yyyy")) {

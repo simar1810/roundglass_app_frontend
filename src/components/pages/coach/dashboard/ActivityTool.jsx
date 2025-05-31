@@ -38,9 +38,9 @@ export default function ActivityTool({ activities }) {
     return () => clearInterval(interval);
   }, [api])
 
-  return <Card className="grow relative !bg-transparent py-0 border-0 shadow-none">
+  return <Card className="grow relative !bg-transparent py-0 border-0 shadow-none mb-8">
     <CardHeader className="w-full absolute top-0 px-0 flex translate-y-[-105%] items-center justify-between">
-      <CardTitle>Programs</CardTitle>
+      {/* <CardTitle>Programs</CardTitle> */}
       {/* <Button variant="wz">+ Add</Button> */}
     </CardHeader>
     <CardContent className="pt-2 px-0">
@@ -48,7 +48,7 @@ export default function ActivityTool({ activities }) {
         <CarouselContent>
           {activities.map((activity, index) => <CarouselItem
             key={index}
-            className="max-h-[180px] aspect-video relative"
+            className="max-h-[300px] aspect-video relative"
           >
             <Link href={activity.link || "#"} target="_blank">
               <Image

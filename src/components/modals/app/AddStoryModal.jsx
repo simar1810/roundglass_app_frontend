@@ -36,11 +36,13 @@ export default function AddStoryModal() {
 
   return <Dialog>
     <DialogTrigger>
-      <div className="min-w-[64px] h-[64px] border-2 border-[var(--accent-1)] relative rounded-full">
-        <Avatar className="w-full h-full p-3">
-          <AvatarImage src="/logo.png" />
-        </Avatar>
-        <Plus className="w-[18px] h-[18px] bg-black text-white absolute bottom-0 right-0 rounded-full" />
+      <div className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2">
+        <div className="w-[64px] h-[64px] border-2 bg-[var(--primary-1)] border-[var(--primary-1)] relative rounded-full">
+          <Avatar className="w-full h-full p-3">
+            <AvatarImage src="/logo.png" />
+          </Avatar>
+          <Plus className="w-[18px] h-[18px] bg-black text-white absolute bottom-0 right-0 rounded-full" />
+        </div>
       </div>
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] text-center border-0 p-0 overflow-auto gap-0">
