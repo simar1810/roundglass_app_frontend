@@ -20,8 +20,10 @@ export function getCoachProfile(_id) {
   return fetchData(`app/coachProfile?id=${_id}`);
 }
 
-export function getCoachHome() {
-  return fetchData('app/coachHomeTrial');
+export async function getCoachHome(router, cache) {
+  const response = await fetchData('app/coachHomeTrial');
+  await logoutUser(response, router, cache)
+  return response
 }
 
 export function coachMatricesData() {
@@ -141,10 +143,8 @@ export function getMarathons() {
 }
 
 export async function getMarathonLeaderBoard(marathonId, router, cache) {
-  console.log(marathonId, router, cache)
   let query = "person=coach"
   if (Boolean(marathonId)) query += `&marathonId=${marathonId}`;
-  console.log(query)
   const response = await fetchData(`app/marathon/coach/points?${query}`);
   await logoutUser(response, router, cache);
   return response;

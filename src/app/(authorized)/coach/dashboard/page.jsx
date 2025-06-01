@@ -21,7 +21,9 @@ export default function Page() {
 }
 
 function Container() {
-  const { isLoading, error, data } = useSWR("coachHomeTrial", getCoachHome);
+  const { cache } = useSWRConfig();
+  const router = useRouter();
+  const { isLoading, error, data } = useSWR("coachHomeTrial", () => getCoachHome(cache, router));
 
   if (isLoading) return <ContentLoader />
 
