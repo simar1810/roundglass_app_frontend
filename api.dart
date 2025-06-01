@@ -10,6 +10,7 @@ class AppUrl {
   // static const String baseUrlSocket = "http://10.0.2.2:8081"; 
   
 
+  
   //Client Routes
   static const String signInClientCode = "/api/app/clientLogin"; // done
   static const String clientProfile = "/api/app/clientProfile"; // done
