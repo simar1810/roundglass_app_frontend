@@ -1,6 +1,21 @@
 import { format } from "date-fns";
 import { fetchData } from "../api";
 
+async function logoutUser(response, router, cache) {
+  if (
+    response?.status_code === 411,
+    response?.message?.toLowerCase() === "something went wrong"
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await fetch("/api/logout", { method: "DELETE" });
+    for (const [field] of cache.entries()) {
+      cache.delete(field)
+    }
+    router.push("/login");
+    return;
+  }
+}
+
 export function getCoachProfile(_id) {
   return fetchData(`app/coachProfile?id=${_id}`);
 }
@@ -15,15 +30,7 @@ export function coachMatricesData() {
 
 export async function dashboardStatistics(router, cache) {
   const response = await fetchData('app/coach-statistics');
-  if (response?.status_code === 411) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await fetch("/api/logout", { method: "DELETE" });
-    for (const [field] of cache.entries()) {
-      cache.delete(field)
-    }
-    router.push("/login");
-    return;
-  }
+  logoutUser(response, router, cache);
   return response;
 }
 
@@ -133,10 +140,14 @@ export function getMarathons() {
   return fetchData("app/marathon/coach/listMarathons");
 }
 
-export function getMarathonLeaderBoard(marathonId) {
+export async function getMarathonLeaderBoard(marathonId, router, cache) {
+  console.log(marathonId, router, cache)
   let query = "person=coach"
-  if (Boolean(marathonId)) query += `&marathonId=${marathonId}`
-  return fetchData(`app/marathon/coach/points?${query}`);
+  if (Boolean(marathonId)) query += `&marathonId=${marathonId}`;
+  console.log(query)
+  const response = await fetchData(`app/marathon/coach/points?${query}`);
+  await logoutUser(response, router, cache);
+  return response;
 }
 
 export function getMarathonClientTask(clientId, date = format(new Date(), "dd-MM-yyyy")) {

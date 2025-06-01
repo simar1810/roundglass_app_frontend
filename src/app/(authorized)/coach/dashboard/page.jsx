@@ -11,7 +11,8 @@ import Tools from "@/components/pages/coach/Tools";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCoachHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
-import useSWR from "swr";
+import { useRouter } from "next/navigation";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
   return <div className="mt-8">
@@ -55,7 +56,9 @@ function getBgColor(index) {
 }
 
 function MarathonLeaderBoard() {
-  const { isLoading, error, data } = useSWR(`app/marathon-points/monthly`, () => getMarathonLeaderBoard());
+  const router = useRouter();
+  const { cache } = useSWRConfig();
+  const { isLoading, error, data } = useSWR(`app/marathon-points/monthly`, () => getMarathonLeaderBoard(null, router, cache));
 
   if (isLoading) return <ContentLoader />
 

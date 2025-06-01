@@ -43,7 +43,7 @@ export default function ActivityTool({ activities }) {
       {/* <CardTitle>Programs</CardTitle> */}
       {/* <Button variant="wz">+ Add</Button> */}
     </CardHeader>
-    <CardContent className="pt-2 px-0">
+    <CardContent className="pt-0 px-0">
       <Carousel setApi={setApi}>
         <CarouselContent>
           {activities.map((activity, index) => <CarouselItem
@@ -55,7 +55,7 @@ export default function ActivityTool({ activities }) {
                 fill
                 src={activity.image}
                 alt=""
-                className="w-full bg-[var(--accent-1)] object-contain object-center pl-4 border-1"
+                className="w-full bg-[var(--primary-1)] object-contain object-center pl-4 border-1"
               />
             </Link>
           </CarouselItem>)}
