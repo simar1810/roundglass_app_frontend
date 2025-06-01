@@ -14,9 +14,9 @@ export default function DashboardClientList({
   fourClients
 }) {
   return <Drawer direction="right">
-    <DrawerTrigger className="flex items-center gap-1 font-bold fixed top-1/2 translate-x-[-5 0%] right-0">
+    <DrawerTrigger className="flex items-center gap-1 font-bold fixed top-1/2 translate-x-[-24px] right-0 opacity-60 hover:opacity-100">
       <ChevronLeft />
-      {/* Clients */}
+      Clients
     </DrawerTrigger>
     <DrawerContent className="p-4">
       <DialogTitle />

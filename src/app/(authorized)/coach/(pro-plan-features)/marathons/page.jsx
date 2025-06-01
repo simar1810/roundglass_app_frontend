@@ -3,7 +3,7 @@ import Image from "next/image";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { getMarathonLeaderBoard, getMarathons } from "@/lib/fetchers/app";
-import useSWR, { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 import FormControl from "@/components/FormControl";
 import { ArrowLeft, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export default function schedule() {
   const { isLoading, error, data } = useSWR("app/getMarathons", getMarathons);
@@ -170,7 +171,9 @@ function getBgColor(index) {
 }
 
 function MarathonLeaderBoard({ marathon, marathonId }) {
-  const { isLoading, error, data } = useSWR(`app/marathon-points/${marathonId}`, () => getMarathonLeaderBoard(marathonId));
+  const router = useRouter();
+  const { cache } = useSWRConfig();
+  const { isLoading, error, data } = useSWR(`app/marathon-points/${marathonId}`, () => getMarathonLeaderBoard(marathonId, router, cache));
 
   if (isLoading) return <ContentLoader />
 
