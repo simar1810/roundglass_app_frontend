@@ -16,7 +16,7 @@ export default function Tools({
   return <div className="mt-10">
     <h4 className="mb-4">Quick Star Tools</h4>
     <div className="flex gap-4">
-      <Card className="w-[180px] !border-1 !shadow-none rounded-[10px] border-1">
+      {/* <Card className="w-[180px] !border-1 !shadow-none rounded-[10px] border-1">
         <Link href="/coach/tools/calorie-counter" className="flex flex-col gap-2">
           <CardHeader className="text-[14px] font-semibold">Calorie Counter</CardHeader>
           <CardContent>
@@ -44,9 +44,8 @@ export default function Tools({
             <p href="/coach/tools/ideal-weight" className="block text-center text-[var(--accent-1)] text-[14px] mt-2">Check Now</p>
           </CardContent>
         </Link>
-      </Card>
+      </Card> */}
       <CoachMatrices />
-      <ActivityTool activities={data.activePrograms} />
     </div>
   </div>
 }

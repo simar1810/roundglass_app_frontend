@@ -1,17 +1,20 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import DashboardClientList from "@/components/drawers/DashboardClientList";
+import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
 import FollowUpList from "@/components/pages/coach/dashboard/FollowUpList";
 import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import Stories from "@/components/pages/coach/dashboard/Stories";
 import TopPerformers from "@/components/pages/coach/dashboard/TopPerformers";
 import Tools from "@/components/pages/coach/Tools";
-import { getCoachHome } from "@/lib/fetchers/app";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getCoachHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
+import { nameInitials } from "@/lib/formatter";
 import useSWR from "swr";
 
 export default function Page() {
   return <div className="mt-8">
-    <StatisticsCards />
     <Container />
   </div>
 }
@@ -24,11 +27,56 @@ function Container() {
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const coachHomeData = data.data;
   return <>
-    <Stories stories={coachHomeData.story} />
-    <Tools data={coachHomeData} />
-    <div className="mt-8 grid grid-cols-2 gap-4">
-      <TopPerformers clients={coachHomeData.topPerformers} />
-      <FollowUpList clients={coachHomeData.fourClients} />
+    <ActivityTool activities={coachHomeData.activePrograms} />
+    <StatisticsCards />
+    <div className="grid grid-cols-2 gap-4">
+      <Stories stories={coachHomeData.story} />
+      <MarathonLeaderBoard />
     </div>
+    <DashboardClientList
+      topPerformers={coachHomeData.topPerformers}
+      fourClients={coachHomeData.fourClients}
+    />
   </>
+}
+
+function getBgColor(index) {
+  switch (index) {
+    case 0:
+      return "bg-[#FFDA47]";
+    case 1:
+      return "bg-[#F1EAEA]";
+    case 2:
+      return "bg-[#D7A07C]";
+
+    default:
+      return "bg-[var(--comp-1)]";
+  }
+}
+
+function MarathonLeaderBoard() {
+  const { isLoading, error, data } = useSWR(`app/marathon-points/monthly`, () => getMarathonLeaderBoard());
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  const clients = data.data;
+  return <div className="content-container max-h-[50vh] overflow-y-auto">
+    <div className="flex items-center gap-4">
+      <h4 className="leading-[1] mb-4 mr-auto">Marathon Leaderboard</h4>
+    </div>
+    <div>
+      {clients.map((client, index) => <div
+        className={`mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px] ${getBgColor(index)}`}
+        key={index}>
+        <span>{index + 1}</span>
+        <Avatar>
+          <AvatarImage src={client.client.profilePhoto} />
+          <AvatarFallback>{nameInitials(client.client.name)}</AvatarFallback>
+        </Avatar>
+        <h3>{client.client.name}</h3>
+        <p className="ml-auto">{client.totalPointsInRange}&nbsp;pts</p>
+      </div>)}
+    </div>
+  </div>;
 }

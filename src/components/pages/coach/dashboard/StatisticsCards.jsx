@@ -21,15 +21,18 @@ export default function StatisticsCards() {
   />
   const statistics = data.data;
 
-  return <div className="grid grid-cols-5 gap-4">
-    {dashboardCards.app.map(item => <DashboardInfoCard
-      key={item.id}
-      trendUp={Math.random() > 0.5}
-      quantity={statistics[item.name]}
-      {...item}
-    />)}
-    <ClubCards statistics={statistics} />
-  </div>
+  return <>
+    <h4 className="mb-4">Overview</h4>
+    <div className="grid grid-cols-5 gap-4">
+      {dashboardCards.app.map(item => <DashboardInfoCard
+        key={item.id}
+        trendUp={Math.random() > 0.5}
+        quantity={statistics[item.name]}
+        {...item}
+      />)}
+      <ClubCards statistics={statistics} />
+    </div>
+  </>
 }
 
 function ClubCards({ statistics }) {

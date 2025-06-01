@@ -101,9 +101,9 @@ function RecipesSearchResults({ fetchDishedData }) {
             <Button
               variant="wz"
               className="add-btn !w-[32px] !h-[32px] ml-auto rounded-full aspect-square"
-              onClick={() => dispatch(toggleRecipe(item._id.$oid))}
+              onClick={() => dispatch(toggleRecipe(item._id))}
             >
-              {!selected.includes(item._id.$oid) ? <Plus /> : <Minus />}
+              {!selected.includes(item._id) ? <Plus /> : <Minus />}
             </Button>
           </div>
         </div>
