@@ -8,6 +8,7 @@ class AppUrl {
   // static const String baseUrl = "http://192.168.29.34:8080";
   static const String baseUrlSocket = "https://chat-backend.wellnessz.in";
   // static const String baseUrlSocket = "http://10.0.2.2:8081"; 
+
   
 
   
