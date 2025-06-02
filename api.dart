@@ -11,7 +11,7 @@ class AppUrl {
 
   
 
-  
+
   //Client Routes
   static const String signInClientCode = "/api/app/clientLogin"; // done
   static const String clientProfile = "/api/app/clientProfile"; // done
