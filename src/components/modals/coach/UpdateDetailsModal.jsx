@@ -10,11 +10,11 @@ import { getOrganisation } from "@/lib/fetchers/app";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-const formFields = ["name", "email", "mobileNumber", "expectedNoOfClients", "file"];
+const formFields = ["name", "email", "mobileNumber", "file", "organisation"];
 
 export default function UpdatePersonalDetails({ coachData }) {
   const [loading, setLoading] = useState(false);

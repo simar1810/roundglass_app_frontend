@@ -7,7 +7,9 @@ import {
   Image,
   StyleSheet,
   Font,
+  PDFViewer,
 } from "@react-pdf/renderer";
+import { Image as NextImage } from "next/image";
 
 // Register custom font
 Font.register({ family: "NotoSans", src: "/fonts/Roboto-Regular.ttf" });
@@ -400,6 +402,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#222",
   },
+  bmiBadgeBodyIndex: {
+    backgroundColor: "#7ed957",
+    borderRadius: 30,
+    width: 110,
+    height: 40,
+    paddingInline: 20,
+    paddingBlock: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    right: 24,
+    top: 40,
+    zIndex: 2,
+  }
 });
 
 const ProgressBar = ({ percent, color }) => (
@@ -424,20 +440,22 @@ const Metric = ({ icon, title, note, value, status, percent, color }) => (
       <ProgressBar percent={percent} color={color} />
     </View>
     <Text style={styles.metricValue}>{value}</Text>
-    <Text style={styles.metricStatus}>{status}</Text>
+    {/* <Text style={styles.metricStatus}>{status}</Text> */}
   </View>
 );
 
 export default function PDFShareStatistics({ data }) {
   return (
-    <Document>
-      <StatisticsPage1 data={data} />
-      <StatisticsPage2 data={data} />
-      <StatisticsPage3 data={data} />
-      <StatisticsPage4 data={data} />
-      <StatisticsPage5 data={data} />
-      <StatisticsPage6 data={data} />
-    </Document>
+    <PDFViewer className="w-full h-full">
+      <Document>
+        <StatisticsPage1 data={data} />
+        <StatisticsPage2 data={data} />
+        <StatisticsPage3 data={data} />
+        <StatisticsPage4 data={data} />
+        <StatisticsPage5 data={data} />
+        <StatisticsPage6 data={data} />
+      </Document>
+    </PDFViewer>
   );
 }
 
@@ -515,7 +533,7 @@ function StatisticsPage1({ data }) {
         icon="/assets/SVG/BMI.svg"
         title="BMI"
         note="Optimal Range: 18 - 24.9"
-        value={bmi}
+        value={bmi || 0}
         status="Not-Healthy"
         percent={30}
         color="#f7b731"
@@ -551,20 +569,10 @@ function StatisticsPage1({ data }) {
 }
 
 function StatisticsPage2({ data }) {
-  // Example data structure (replace with actual data as needed)
-  const { weight = 30.0, clientName = "" } = data || {};
+  const { weight = 30.0, clientName = "", bodyComposition } = data || {};
 
   return (
-    <Page
-      size="A4"
-      style={{
-        padding: 30,
-        fontSize: 11,
-        fontFamily: "Helvetica",
-        lineHeight: 1.5,
-        backgroundColor: "#ffffff",
-      }}
-    >
+    <Page size="A4" style={styles.page}>
       {/* Header Section */}
       <Text style={styles.sectionTitle}>Body Composition</Text>
       <View
@@ -644,20 +652,10 @@ function StatisticsPage2({ data }) {
         and achieving your health objectives.
       </Text>
 
-      {/* Medium Body Comp. Green Bubble */}
-      <View style={{ position: "absolute", right: 60, top: 250 }}>
-        <View
-          style={{
-            backgroundColor: "#98D89E",
-            borderRadius: 30,
-            width: 120,
-            height: 50,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 13, fontWeight: "bold" }}>
-            Medium{"\n"}Body Comp.
+      <View style={styles.bmiBadgeBodyIndex}>
+        <View>
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold", paddingBlock: 16 }}>
+            {bodyComposition} Body Comp.
           </Text>
         </View>
       </View>
@@ -683,7 +681,7 @@ function StatisticsPage2({ data }) {
           }}
         >
           <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-            30.0 KG
+            {weight} KG
           </Text>
           <Text style={{ color: "#fff", fontSize: 10 }}>Body Weight</Text>
         </View>
@@ -734,10 +732,9 @@ function StatisticsPage2({ data }) {
   );
 }
 function StatisticsPage3({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data
 }) {
+  const { bmi = 20 } = data;
   return (
     <Page size="A4" style={styles.page}>
       {/* Header row with title and top-right image */}
@@ -749,19 +746,18 @@ function StatisticsPage3({
             src="/assets/SVG/steps_circle.png"
             style={styles.topRightImage}
           />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
+          {/* <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
             0 Heart Pts, {steps} Steps
-          </Text>
+          </Text> */}
         </View>
       </View>
 
       {/* Yellow bar */}
       <View style={styles.yellowBar} />
 
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      <View style={styles.bmiBadgeBodyIndex}>
+        <Text style={styles.bmiBadgeText}>{Boolean(bmi) || 0}</Text>
+        <Text style={styles.bmiBadgeSub}>{bmi < 18 || bmi > 25 ? "Not-Healthy" : "Healthy"} BMI</Text>
       </View>
 
       {/* Introductory Paragraph */}
@@ -836,38 +832,29 @@ function StatisticsPage3({
     </Page>
   );
 }
+
 function StatisticsPage4({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data: { musclePercentage }
 }) {
   return (
     <Page size="A4" style={styles.page}>
-      {/* Header row with title and top-right image */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Muscle Percentage</Text>
         <View style={styles.topRightBox}>
-          {/* Replace with your own image asset */}
           <Image
             src="/assets/SVG/steps_circle.png"
             style={styles.topRightImage}
           />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
-            0 Heart Pts, {steps} Steps
-          </Text>
         </View>
       </View>
 
-      {/* Yellow bar */}
       <View style={styles.yellowBar} />
 
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      <View style={styles.bmiBadgeBodyIndex}>
+        <Text style={styles.bmiBadgeText}>{Boolean(musclePercentage) ? musclePercentage : 0}</Text>
+        <Text style={styles.bmiBadgeSub}>{(musclePercentage) ? "Healthy" : "Not Healthy"}</Text>
       </View>
 
-      {/* Introductory Paragraph */}
       <Text style={styles.intro}>
         Muscle percentage refers to the proportion of total body weight that is
         composed of muscle tissue. It is an important component of body
@@ -928,35 +915,27 @@ function StatisticsPage4({
     </Page>
   );
 }
+
 function StatisticsPage5({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data: { restingMetabolism }
 }) {
   return (
     <Page size="A4" style={styles.page}>
-      {/* Header row with title and top-right image */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Resting Metabolism</Text>
         <View style={styles.topRightBox}>
-          {/* Replace with your own image asset */}
           <Image
             src="/assets/SVG/steps_circle.png"
             style={styles.topRightImage}
           />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
-            0 Heart Pts, {steps} Steps
-          </Text>
         </View>
       </View>
 
-      {/* Yellow bar */}
       <View style={styles.yellowBar} />
 
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      <View style={styles.bmiBadgeBodyIndex}>
+        <Text style={styles.bmiBadgeText}>{restingMetabolism}</Text>
+        <Text style={styles.bmiBadgeSub}>{restingMetabolism ? "Healthy" : "Not heal;thy"}</Text>
       </View>
 
       {/* Introductory Paragraph */}
@@ -1016,7 +995,13 @@ function StatisticsPage5({
     </Page>
   );
 }
-function StatisticsPage6({ data }) {
+function StatisticsPage6({
+  data: {
+    coachName,
+    coachDescription,
+    coachProfileImage
+  }
+}) {
   return <Page size="A4" style={styles.page}>
     {/* Suggestions Header */}
     <Text style={styles.sectionTitle}>Suggestions</Text>
@@ -1074,12 +1059,13 @@ function StatisticsPage6({ data }) {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
         <View style={{ width: '50%' }}>
           <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50' }}>
-            {data.coachName ?? 'Your Coach'}
+            {coachName ?? 'Your Coach'}
           </Text>
-          <Text style={styles.paragraph}>{data.coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
+          <Text style={styles.paragraph}>{coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
         </View>
         <Image
-          src={data.coachProfileImage || "/assets/PNG/tryimage.png"}
+          alt=""
+          src={coachProfileImage || "/assets/PNG/tryimage.png"}
           style={{ width: 120, height: 120, borderRadius: 60 }}
         />
       </View>

@@ -47,6 +47,8 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
 
 export default function ClientDetailsCard({ clientData }) {
+  const { activity_doc_ref: activities } = clientData;
+
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -69,26 +71,7 @@ export default function ClientDetailsCard({ clientData }) {
       <div className="mt-4">
         <FollowUpModal clientData={clientData} />
       </div>
-      <div className="mt-4 p-4 rounded-[10px] border-1">
-        <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">
-          <div>
-            <p className="text-[var(--accent-1)]">122</p>
-            <p>Steps</p>
-          </div>
-          <div>
-            <p className="text-[var(--accent-1)]">1543</p>
-            <p>Calories</p>
-          </div>
-          <Image
-            src="/svgs/circle-embedded.svg"
-            height={64}
-            width={64}
-            alt=""
-            className="ml-auto"
-          />
-        </div>
-        <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-2">Last 7 Days</p>
-      </div>
+      {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
         <h4>Personal Information</h4>
         <UpdateClientDetailsModal clientData={clientData} />
@@ -101,6 +84,29 @@ export default function ClientDetailsCard({ clientData }) {
       </div>
     </CardContent>
   </Card>
+}
+
+function ClientActivities({ activities }) {
+  return <div className="mt-4 p-4 rounded-[10px] border-1">
+    <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">
+      <div>
+        <p className="text-[var(--accent-1)]">{activities.dailyActivities.reduce((acc, activity) => acc + activity.steps, 0)}</p>
+        <p>Steps</p>
+      </div>
+      <div>
+        <p className="text-[var(--accent-1)]">{activities.dailyActivities.reduce((acc, activity) => acc + activity.calories, 0).toFixed(2)}</p>
+        <p>Calories</p>
+      </div>
+      <Image
+        src="/svgs/circle-embedded.svg"
+        height={64}
+        width={64}
+        alt=""
+        className="ml-auto"
+      />
+    </div>
+    <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-2">Last 7 Days</p>
+  </div>
 }
 
 function Header({ clientData }) {

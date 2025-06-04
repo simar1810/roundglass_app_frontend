@@ -21,10 +21,7 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
       <DialogHeader className="p-0 z-100">
         <DialogTitle className="text-[24px]" />
       </DialogHeader>
-      {PDFViewer && <PDFViewer className="w-full h-full">
-        <Component data={data} />
-      </PDFViewer>}
-
+      {PDFViewer && <Component data={data} />}
     </DialogContent>
   </Dialog>
 }

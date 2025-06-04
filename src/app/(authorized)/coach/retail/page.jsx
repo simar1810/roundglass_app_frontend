@@ -2,18 +2,46 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
+import { invoicePDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock } from "lucide-react";
+import { Clock, EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
+
+const invoiceData = {
+  clientName: 'Simarpreet Singh',
+  age: '21',
+  address: 'New Amritsar, Punjab',
+  city: 'Amritsar',
+  phone: '9876543210',
+  invoiceNo: 'INV123456',
+  date: '2025-05-12',
+  coachName: 'Wellness Coach',
+  coachPhone: '9876543210',
+  coachCity: 'Ludhiana',
+  subtotal: '3500',
+  discount: '500',
+  total: '3000',
+  logoUrl: 'https://wellnessz.in/static/logo.png',
+  products: [
+    { productName: 'Formula 1 Shake', quantity: 2, price: 1000 },
+    { productName: 'Afresh Energy Drink', quantity: 1, price: 500 },
+    { productName: 'Subtotal', quantity: "", price: 3500 },
+    { productName: 'Discount', quantity: "", price: 500 },
+    { productName: 'Total', quantity: "", price: 3000 },
+  ],
+};
 
 export default function Page() {
   const {
@@ -148,12 +176,26 @@ function Orders({ orders }) {
 }
 
 function Order({ order }) {
+  const coach = useAppSelector(state => state.coach.data);
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
-      {order.status === "Completed"
-        ?
-        <RetailCompletedLabel status={order.status} />
-        : <RetailPendingLabel status={order.status} />}
+      <div className="flex justify-between items-center">
+        {order.status === "Completed"
+          ? <RetailCompletedLabel status={order.status} />
+          : <RetailPendingLabel status={order.status} />}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="text-black w-[16px]">
+            <EllipsisVertical className="cursor-pointer" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="font-semibold px-2 py-[6px]">
+            <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
+              <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
+                Invoice
+              </DialogTrigger>
+            </PDFRenderer>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </CardHeader>
     <CardContent className="px-0">
       <div className="flex gap-4">

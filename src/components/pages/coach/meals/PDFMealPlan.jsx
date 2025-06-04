@@ -1,17 +1,29 @@
+import ContentError from '@/components/common/ContentError';
+import ContentLoader from '@/components/common/ContentLoader';
+import { getMealPlanById } from '@/lib/fetchers/app';
+import { useAppSelector } from '@/providers/global/hooks';
 import {
   Page,
   Text,
   View,
   Document,
   StyleSheet,
-  Image
+  Image,
+  PDFViewer,
+  Font
 } from '@react-pdf/renderer';
+import useSWR from 'swr';
+
+Font.register({
+  family: 'Roboto',
+  src: '/assets/fonts/Roboto-Regular.ttf',
+});
 
 const styles = StyleSheet.create({
   page: {
     padding: 30,
     fontSize: 11,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     backgroundColor: '#ffffff'
   },
   header: {
@@ -57,7 +69,8 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   mealDescription: {
-    marginBottom: 4
+    marginBottom: "4px",
+    lineHeight: "20px",
   },
   mealTime: {
     paddingVertical: 2,
@@ -82,51 +95,67 @@ const styles = StyleSheet.create({
 });
 
 export default function PDFMealPlan({ data }) {
+  const { isLoading, error, data: moreData } = useSWR(`app/meal-plan/${data.id}`, () => getMealPlanById(data.id));
+  const coach = useAppSelector(state => state.coach.data)
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || moreData?.status_code !== 200) return <ContentError title={error || data?.message} />
+  const planData = moreData.data;
+
   const {
     planName,
     mealTypes,
-    meals,
-    coachName,
     coachDescription,
     coachImage,
     brandLogo
   } = data;
 
+  const {
+    name: coachName
+  } = coach
+
+  const { meals } = planData
+
   return (
-    <Document>
-      <Page style={styles.page}>
-        <View style={styles.header}>
-          {brandLogo && <Image src={brandLogo} style={styles.logo} />}
-          <Text style={styles.planName}>{planName}</Text>
-        </View>
-
-        {meals.map((mealGroup, idx) => (
-          <View key={idx}>
-            <Text style={styles.sectionTitle}>
-              {mealTypes[idx] || `Meal ${idx + 1}`}
-            </Text>
-            {mealGroup.meals.map((meal, i) => (
-              <View key={i} style={styles.mealCard}>
-                <View style={styles.mealTextContainer}>
-                  <Text style={styles.mealTitle}>{meal.name}</Text>
-                  <Text style={styles.mealDescription}>{meal.description}</Text>
-                  <Text style={styles.mealTime}>Time: {meal.mealTime}</Text>
-                </View>
-                {meal.image && <Image src={meal.image} style={styles.mealImage} />}
-              </View>
-            ))}
+    <PDFViewer className="w-full h-full">
+      <Document>
+        <Page style={styles.page}>
+          <View style={styles.header}>
+            {brandLogo && <Image src={brandLogo} style={styles.logo} />}
+            <Text style={styles.planName}>{planName}</Text>
           </View>
-        ))}
 
-        <View style={styles.footer}>
-          {coachName && <Text>{coachName}</Text>}
-          {coachDescription && <Text>{coachDescription}</Text>}
-          <Text>
-            Disclaimer: This PDF is for informational purposes only and is not a
-            substitute for medical advice.
-          </Text>
-        </View>
-      </Page>
-    </Document>
+          {meals.map((mealGroup, idx) => (
+            <View key={idx}>
+              <Text style={styles.sectionTitle}>
+                {mealTypes[idx] || `Meal ${idx + 1}`}
+              </Text>
+              {mealGroup.meals.map((meal, i) => (
+                <View key={i} style={styles.mealCard}>
+                  <View style={styles.mealTextContainer}>
+                    <Text style={styles.mealTitle}>{meal.name}</Text>
+                    <View>
+                      <Text style={styles.mealDescription}>{meal.description}</Text>
+                    </View>
+                    <Text style={styles.mealTime}>Time: {meal.meal_time}</Text>
+                  </View>
+                  {meal.image && <Image src={meal.image} style={styles.mealImage} />}
+                </View>
+              ))}
+            </View>
+          ))}
+
+          <View style={styles.footer}>
+            {coachName && <Text>{coachName}</Text>}
+            {coachDescription && <Text>{coachDescription}</Text>}
+            <Text>
+              Disclaimer: This PDF is for informational purposes only and is not a
+              substitute for medical advice.
+            </Text>
+          </View>
+        </Page>
+      </Document>
+    </PDFViewer>
   );
 }

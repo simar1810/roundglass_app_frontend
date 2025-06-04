@@ -1,20 +1,23 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { workoutInitialState } from "@/config/state-data/workout";
-import { changeFieldValue, generateRequestPayload, init, workoutReducer } from "@/config/state-reducers/workout";
+import { addWorkout, changeFieldValue, generateRequestPayload, init, removeWorkout, workoutReducer } from "@/config/state-reducers/workout";
 import { sendData, uploadImage } from "@/lib/api";
 import { getAllWorkoutItems } from "@/lib/fetchers/app";
+import { nameInitials } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { ImagePlus, Plus, PlusCircle, X } from "lucide-react";
+import { CloudCog, ImagePlus, Plus, PlusCircle, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import imageCompression from "browser-image-compression";
 
 export default function CreateWorkoutModal({
   children,
@@ -26,7 +29,7 @@ export default function CreateWorkoutModal({
       Add
     </DialogTrigger>}
     {children}
-    <DialogContent className="max-h-[70vh] p-0 overflow-y-auto">
+    <DialogContent className="max-h-[70vh] p-0 overflow-y-auto no-scrollbar">
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Workout Details</DialogTitle>
       </DialogHeader>
@@ -66,6 +69,7 @@ function AddWorkoutContainer() {
   async function saveWorkout() {
     try {
       setLoading(true);
+      if (state.thumbnail instanceof File) state.thumbnail = await imageCompression(state.thumbnail, { maxSizeMB: 0.25 });
       const response = await getLink(state)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Note added successfully!");
@@ -137,7 +141,7 @@ function AddWorkoutContainer() {
 
 function SelectWorkouts() {
   const [query, setQuery] = useState("");
-  const { dispatch, workouts } = useCurrentStateContext();
+  const { dispatch, workouts, selectedWorkouts } = useCurrentStateContext();
 
   const { isLoading, error, data } = useSWR("app/coach/getAllWorkoutItems", getAllWorkoutItems);
 
@@ -153,14 +157,25 @@ function SelectWorkouts() {
   return <Dialog>
     <DialogTrigger className="w-full text-left p-0">
       <div className="mt-4">
-        <div className="flex justify-between gap-4">
+        <div className="flex justify-between items-center gap-2">
           <p className="font-bold mb-2">Select Workouts</p>
+          {set.size > 0 && <PlusCircle size={20} className="text-[var(--accent-1)] mb-2 mr-auto" />}
           <p>{workouts.length} selected!</p>
         </div>
-        <div className="h-[140px] flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-4 relative">
+        {set.size === 0 && <div className="h-[140px] flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-4 relative">
           <PlusCircle size={24} className="text-[var(--accent-1)] mb-2" />
           <p className="text-[var(--accent-1)]">Add Workout</p>
-        </div>
+        </div>}
+        {selectedWorkouts.map((workout, index) => <div key={index} className="mt-3 flex items-center gap-2">
+          <Avatar className="w-[40px] h-[40px] border-1">
+            <AvatarImage src={workout.thumbnail} />
+            <AvatarFallback>{nameInitials(workout.title || "")}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-[14px] mb-1">{workout.title}</p>
+            <p className="text-[10px]">{workout.duration}</p>
+          </div>
+        </div>)}
       </div>
     </DialogTrigger>
     <DialogContent className="h-[70vh] p-0 overflow-y-auto block">
@@ -183,8 +198,8 @@ function SelectWorkouts() {
             className="h-[20px] w-[20px] mt-2"
             id={item._id}
             onChange={() => set.has(item._id)
-              ? dispatch(changeFieldValue("workouts", workouts.filter(workout => workout !== item._id)))
-              : dispatch(changeFieldValue("workouts", [...workouts, item._id]))}
+              ? dispatch(removeWorkout(item))
+              : dispatch(addWorkout(item))}
           />
           <label htmlFor={item._id} className="text-sm grow">
             <Image
