@@ -15,37 +15,58 @@ import { mutate } from "swr";
 import { Image as ImageIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
 
-const formFields = ["name", "email", "mobileNumber", "age", "gender", "file"];
+const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit", "weightUnit"];
+
+function getHeight(formData) {
+  if (formData.heightUnit.toLowerCase() === "cm") {
+    return formData["heightCms"];
+  } else {
+    return `${formData["heightFeet"]}.${formData["heightInches"]}`;
+  }
+}
+
+function getWeight(formData) {
+  if (formData.weightUnit.toLowerCase() === "kg") {
+    return formData["weightInKgs"];
+  } else {
+    return formData["weightInPounds"];
+  }
+}
 
 function generateDefaultPayload(obj) {
   const payload = {};
   for (const field of formFields) {
     payload[field] = obj[field] || "";
   }
-  payload.heightUnit = obj.heightUnit
-  payload.heightCms = obj.heightUnit?.toLowerCase() === "cm"
-    ? obj.height
-    : ""
-  payload.heightFeet = obj.heightUnit?.toLowerCase() === "inches"
-    ? obj.height.split(".")[0] || "0"
-    : ""
-  payload.heightInches = obj.heightUnit?.toLowerCase() === "inches"
-    ? obj.height.split(".")[1] || "0"
-    : ""
+  const healthMatrix = obj.healthMatrix
+  if (healthMatrix) {
+    payload.heightUnit = healthMatrix.heightUnit
+    payload.heightCms = ["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height
+      : ""
+    payload.heightFeet = ["inches"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height.split(".")[0] || "0"
+      : ""
+    payload.heightInches = ["inches"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height.split(".")[1] || "0"
+      : ""
 
-  payload.weightUnit = obj.weightUnit
-  payload.weightInKgs = ["kg", "kgs"].includes(obj.heightUnit?.toLowerCase())
-    ? obj.weight
-    : ""
-  payload.weightInPounds = ["pound", "pounds"].includes(obj.heightUnit?.toLowerCase())
-    ? obj.weight
-    : ""
+    payload.weightUnit = healthMatrix.weightUnit
+    payload.weightInKgs = ["kg", "kgs"].includes(healthMatrix.weightUnit?.toLowerCase())
+      ? healthMatrix.weight
+      : ""
+    payload.weightInPounds = ["pound", "pounds"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.weight
+      : ""
+  }
 
   if (!payload.heightUnit) payload.heightUnit = "inches"
   if (!payload.weightUnit) payload.weightUnit = "kg"
 
-  if (payload.dob && payload.dob.split("-")[0].length === 2) {
-    payload.dob = format(parse(payload.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
+  if (obj.dob && obj.dob.split("-")[0].length === 2) {
+    payload.dob = format(parse(obj.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
+  } else {
+    payload.dob = obj.dob
   }
   return payload;
 }
@@ -60,6 +81,8 @@ export default function UpdateClientDetailsModal({ clientData }) {
   async function updateClientDetails() {
     try {
       const data = new FormData();
+      data.append("height", getHeight(formData))
+      data.append("weight", getWeight(formData))
       for (const field of formFields) {
         data.append(field, formData[field])
       }
@@ -68,6 +91,7 @@ export default function UpdateClientDetailsModal({ clientData }) {
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);
       mutate(`clientDetails/${clientData._id}`);
+      mutate(`app/clientStatsCoach?clientId=/${clientData._id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -198,13 +222,12 @@ function SelectHeight({ formData, setFormData }) {
       <h5 className="mr-auto">Height <span className="!font-[300]">{"(Cm)"}</span></h5>
       <p>Ft/In</p>
       <Switch
-        checked={formData.heightUnit === "cm"}
+        checked={["cm", "cms"].includes(formData.heightUnit.toLowerCase())}
         onCheckedChange={onChangeHeightUnit}
       />
       <p>Cm</p>
     </div>
     <FormControl
-      // label="Cm"
       value={heightCms}
       placeholder="Cm"
       onChange={(e) => changeFieldvalue("heightCms", e.target.value)}
@@ -217,7 +240,7 @@ function SelectHeight({ formData, setFormData }) {
       <h5 className="mr-auto">Height <span className="!font-[300]">{"(Ft/In)"}</span></h5>
       <p>Ft/In</p>
       <Switch
-        checked={formData.heightUnit === "cm"}
+        checked={["cm", "cms"].includes(formData.heightUnit.toLowerCase())}
         onCheckedChange={onChangeHeightUnit}
       />
       <p>Cm</p>
@@ -278,7 +301,7 @@ function SelectWeightUnit({ formData, setFormData }) {
       <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
       <p>Pound</p>
       <Switch
-        checked={formData.weightUnit === "kg"}
+        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
         onCheckedChange={onChangeWeightUnit}
       />
       <p>Kg</p>
@@ -296,7 +319,7 @@ function SelectWeightUnit({ formData, setFormData }) {
       <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
       <p>Pound</p>
       <Switch
-        checked={formData.weightUnit === "kg"}
+        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
         onCheckedChange={onChangeWeightUnit}
       />
       <p>Kg</p>

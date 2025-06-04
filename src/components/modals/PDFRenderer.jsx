@@ -22,7 +22,6 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
         <DialogTitle className="text-[24px]" />
       </DialogHeader>
       {PDFViewer && <Component data={data} />}
-
     </DialogContent>
   </Dialog>
 }

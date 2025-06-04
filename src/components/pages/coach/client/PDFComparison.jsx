@@ -6,6 +6,7 @@ import {
   Document,
   StyleSheet,
   Image,
+  PDFViewer,
 } from "@react-pdf/renderer";
 
 // Create styles
@@ -322,15 +323,17 @@ const styles = StyleSheet.create({
 // Component
 export default function PDFComparison({ data }) {
   return (
-    <Document>
-      <Comparison1 data={data} />
-      <Comparison2 data={data} />
-      <Comparison3 data={data} />
-      <Comparison4 data={data} />
-      <Comparison5 data={data} />
-      <Comparison6 data={data} />
-      <Comparison7 data={data} />
-    </Document>
+    <PDFViewer className="w-full h-full ">
+      <Document>
+        <Comparison1 data={data} />
+        {/* <Comparison2 data={data} /> */}
+        <Comparison3 data={data} />
+        <Comparison4 data={data} />
+        <Comparison5 data={data} />
+        <Comparison6 data={data} />
+        <Comparison7 data={data} />
+      </Document>
+    </PDFViewer>
   );
 }
 
@@ -343,6 +346,7 @@ function Comparison1({ data }) {
     weight = "",
     height = "",
     brandLogo,
+    bmi,
     allStatsList = [],
     sideImage,
     bottomStripImage,
@@ -407,10 +411,6 @@ function Comparison1({ data }) {
 
       {/* Right Border Strip */}
       <Image src={sideImage || "/placeholder.svg"} style={styles.rightStrip} />
-      <image
-        src={bottomStripImage || "/placeholder.svg"}
-        style={styles.bottomBanner}
-      />
     </Page>
   );
 }

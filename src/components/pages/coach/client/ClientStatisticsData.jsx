@@ -16,6 +16,7 @@ import { sendData } from "@/lib/api";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { calculatePieChartAngle } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen } from "lucide-react"
 import Image from "next/image"
@@ -206,17 +207,19 @@ function StatisticsExportingOptions({
   clientData,
   clientStats
 }) {
+  const coach = useAppSelector(state => state.coach.data);
+
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
-    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatisticsPDFData(clientData, clientStats)}>
-      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
-        <FilePen className="w-[14px]" />
-        Share Statistics
-      </DialogTrigger>
-    </PDFRenderer>
     <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
         Share & View Comparison PPT
+      </DialogTrigger>
+    </PDFRenderer>
+    <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatisticsPDFData(clientData, clientStats, coach)}>
+      <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
+        <FilePen className="w-[14px]" />
+        Share Statistics
       </DialogTrigger>
     </PDFRenderer>
   </div>

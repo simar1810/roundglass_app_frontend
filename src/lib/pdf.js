@@ -1,21 +1,23 @@
 import { format } from "date-fns"
+import { calculateBMIFinal } from "./client/statistics"
 
-export function clientStatisticsPDFData(data, statistics) {
+export function clientStatisticsPDFData(data, statistics, coach) {
   return {
     clientName: data.name,
     age: data.age || 0,
+    bodyAge: statistics?.at(0)?.bodyAge || 0,
     gender: data.gender,
     joined: data.joiningDate,
     weight: statistics?.at(0).weight,
     height: `${statistics?.at(0)?.height} ${statistics?.at(0)?.heightUnit}`,
-    bmi: statistics?.at(0)?.bmi,
+    bmi: statistics?.at(0)?.bmi || calculateBMIFinal(statistics?.at(0)),
     fatPercentage: statistics?.at(0)?.fat,
     musclePercentage: statistics?.at(0)?.muscle,
     restingMetabolism: statistics?.at(0)?.rm,
     bodyComposition: statistics?.at(0)?.body_composition,
-    coachName: "Wellness Coach",
-    coachDescription: "A certified wellness coach helping you transform your lifestyle through science-backed fitness and meal plans.",
-    coachProfileImage: ""
+    coachName: coach.name,
+    coachDescription: coach.specialization,
+    coachProfileImage: coach.profilePhoto
   }
 }
 
@@ -27,6 +29,7 @@ export function comparisonPDFData(data, statistics) {
     joined: data.joiningDate,
     weight: statistics?.at(0).weight,
     height: `${statistics?.at(0)?.height} ${statistics?.at(0)?.heightUnit}`,
+    bmi: calculateBMIFinal(statistics[0]),
     brandLogo: "/brandLogo.png",
     sideImage: "/side.png",
     bottomStripImage: "/bottom.png",
@@ -48,6 +51,11 @@ export function mealPlanDetailsPDFData(plan) {
 }
 
 export function invoicePDFData(order, coach) {
+  const subtotal = order.productModule
+    .reduce((acc, product) =>
+      acc + (Number(product.quantity) * Number(product.productMrpList["0"]))
+      , 0)
+
   return {
     clientName: order.clientName,
     age: order?.clientId?.age || '21',
@@ -69,9 +77,9 @@ export function invoicePDFData(order, coach) {
         quantity: product.quantity || 1,
         price: product?.productMrpList["50"] || 0
       })),
-    { productName: 'Subtotal', quantity: "", price: 3500 },
-    { productName: 'Discount', quantity: "", price: 500 },
-    { productName: 'Total', quantity: "", price: 3000 },
+    { productName: 'Subtotal', quantity: "", price: subtotal },
+    { productName: 'Discount', quantity: "", price: Math.abs(subtotal - (Number(order.sellingPrice) || subtotal)) },
+    { productName: 'Total', quantity: "", price: order.sellingPrice || subtotal },
     ]
   }
 }
