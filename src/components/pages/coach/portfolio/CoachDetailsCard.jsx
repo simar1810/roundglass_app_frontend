@@ -16,10 +16,26 @@ import UpdateCoachAboutModal from "@/components/modals/coach/UpdateCoachAboutMod
 import UpdateCoachSpecializationModal from "@/components/modals/coach/UpdateCoachSpecializationModal";
 import Link from "next/link";
 import UpdatePersonalDetails from "@/components/modals/coach/UpdateDetailsModal";
+import { Button } from "@/components/ui/button";
+import { copyText } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { toast } from "sonner";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
 export default function CoachDetailsCard({ coachData }) {
+  const { coachId } = useAppSelector(state => state.coach.data);
+
+  function copyInviteLink() {
+    copyText(`Hey! 👋
+
+I just joined *WellnessZ*, an amazing wellness & coaching app 💚
+
+Register now using my link and let’s begin your health journey together 💪👇
+https://wellnessz.in/app/coachCode?coachID=${coachId}`)
+    toast.success("Invite Link copied")
+  }
+
   return <Card className="bg-white rounded-[18px] shadow-none">
     <CardHeader className="relative flex items-start gap-4 md:gap-8">
       <Avatar className="w-[100px] h-[100px]">
@@ -62,6 +78,17 @@ export default function CoachDetailsCard({ coachData }) {
           <Link2 />
           Go To Store
         </Link>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <h4>Invite Link</h4>
+        <Button
+          variant="wz"
+          className="w-auto h-auto py-1 !font-bold gap-2 rounded-[4px]"
+          onClick={copyInviteLink}
+        >
+          <Link2 size={48} className="!w-[24px] !h-[24px]" />
+          Invite Link
+        </Button>
       </div>
     </CardContent>
   </Card>

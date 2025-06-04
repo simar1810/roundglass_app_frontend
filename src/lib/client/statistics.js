@@ -203,7 +203,6 @@ export function calculateBodyAgeFinal(data) {
   try {
     const bmi = calculateBMIFinal(data);
     const fat = calculateBodyFatFinal(data);
-
     let bodyAge = data.age;
 
     const gender = data.gender?.toLowerCase() || '';

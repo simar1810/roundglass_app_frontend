@@ -153,6 +153,7 @@ const PDFInvoice = ({ data }) => {
     subtotal,
     discount,
     total,
+    invoiceNo,
     logoUrl,
   } = data;
 
@@ -164,7 +165,7 @@ const PDFInvoice = ({ data }) => {
 
         <View style={styles.headerRow}>
           <Text>
-            <Text style={styles.label}>Receipt / invoice</Text>
+            <Text style={styles.label}>Receipt / invoice:</Text> {invoiceNo}
           </Text>
           <Text>
             <Text style={styles.label}>Date:</Text> {date}
@@ -228,7 +229,7 @@ const PDFInvoice = ({ data }) => {
             </View>
           ))}
 
-          
+
         </View>
 
         <Text style={styles.paragraph}>

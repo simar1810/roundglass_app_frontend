@@ -116,7 +116,7 @@ export function updateMatrices(matrices, values) {
 const fields = {
   stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
   requestFields: [
-    "name", "email", "mobileNumber", "notes", "dob", "gender",
+    "name", "email", "mobileNumber", "notes", "gender",
     "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
     "visceral_fat", "activeType", "rm", "muscle",
     "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID"
@@ -155,7 +155,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   } else {
     formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
   }
-  for (const field of ["followUpDate", "joiningDate"]) {
+  for (const field of ["followUpDate", "joiningDate", "dob"]) {
     formData.append(field, format(parse(state[field], 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
   }
   formData.append("coachId", coachId);

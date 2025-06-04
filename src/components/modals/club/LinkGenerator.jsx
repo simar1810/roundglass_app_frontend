@@ -27,6 +27,7 @@ import { getMeetingClientList } from "@/lib/fetchers/club";
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
 import SelectControl from "@/components/Select";
+import imageCompression from "browser-image-compression";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -155,6 +156,7 @@ function MeetingForm({ withZoom }) {
   async function createMeeting() {
     try {
       setLoading(true);
+      if (state.banner) state.banner = await imageCompression(state.banner, { maxSizeMB: 0.25 })
       const data = generateRequestPayload(state);
       const response = await generateMeeting(withZoom, data, state.baseLink);
       if (!response.status && !response.success) throw new Error(response.message || response.error);

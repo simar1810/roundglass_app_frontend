@@ -1,5 +1,6 @@
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,6 +8,7 @@ import {
   CardContent,
   CardHeader
 } from "@/components/ui/card";
+import { DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +17,53 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { sendData } from "@/lib/api";
-import { EllipsisVertical } from "lucide-react";
+import { mealPlanDetailsPDFData } from "@/lib/pdf";
+import { EllipsisVertical, FilePen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+const mealPlan = {
+  planName: 'Fat Burn Plan',
+  coachName: 'John Doe',
+  coachDescription: 'Certified Health Coach',
+  coachImage: '/coach.jpg',
+  brandLogo: '/logo.png',
+  mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
+  meals: [
+    {
+      meals: [
+        {
+          name: 'Oats & Fruits',
+          description: 'Healthy mix of oats and seasonal fruits',
+          mealTime: '8:00 AM',
+          image: '/meals/oats.png'
+        }
+      ]
+    },
+    {
+      meals: [
+        {
+          name: 'Grilled Chicken',
+          description: 'Lean protein with mixed vegetables',
+          mealTime: '1:00 PM',
+          image: '/meals/chicken.png'
+        }
+      ]
+    },
+    {
+      meals: [
+        {
+          name: 'Soup & Salad',
+          description: 'Light dinner with soup and green salad',
+          mealTime: '7:00 PM',
+          image: '/meals/soup.png'
+        }
+      ]
+    }
+  ]
+};
 
 export default function MealDisplayCard({ plan }) {
   async function deleteMealPlan(setLoading, closeBtnRef) {
@@ -38,48 +82,56 @@ export default function MealDisplayCard({ plan }) {
   }
 
   return <Card className="p-0 rounded-[4px] shadow-none gap-2">
-    <Link href={`/coach/meals/list/${plan._id}`}>
-      <CardHeader className="relative aspect-video">
+    <CardHeader className="relative aspect-video">
+      <Link href={`/coach/meals/list/${plan._id}`}>
         <Image
           fill
           src={plan.image || "/"}
           alt=""
           className="object-cover bg-black"
         />
-        <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">{plan.tag}</Badge>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild className="text-white w-[16px] !absolute top-2 right-2">
-            <EllipsisVertical className="cursor-pointer" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="font-semibold">
-            {!plan.admin && <>
-              <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
-                Edit
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="mx-1" />
-            </>}
+      </Link>
+      <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">{plan.tag}</Badge>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild className="text-white w-[16px] !absolute top-2 right-2">
+          <EllipsisVertical className="cursor-pointer" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="font-semibold">
+          {!plan.admin && <>
             <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
-              <Link href={`/coach/meals/add-plan?id=${plan._id}`}>Copy & Edit</Link>
+              Edit
             </DropdownMenuLabel>
-            {!plan.admin &&
-              <>
-                <DropdownMenuSeparator className="mx-1" />
-                <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
-                  <DualOptionActionModal
-                    description="Do you want to delete the meal plan."
-                    action={deleteMealPlan}
-                  >
-                    <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] p-0">
-                      Delete
-                    </AlertDialogTrigger>
-                  </DualOptionActionModal>
-                </DropdownMenuLabel>
-              </>
-            }
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardHeader>
-    </Link>
+            <DropdownMenuSeparator className="mx-1" />
+          </>}
+          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
+            <Link href={`/coach/meals/add-plan?id=${plan._id}`}>Copy & Edit</Link>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>
+            <PDFRenderer pdfTemplate="PDFMealPlan" data={mealPlanDetailsPDFData(plan)}>
+              <DialogTrigger className="text-[12px] font-bold flex items-center gap-2">
+                Meal Plan PDF
+              </DialogTrigger>
+            </PDFRenderer>
+          </DropdownMenuLabel>
+          {!plan.admin &&
+            <>
+              <DropdownMenuSeparator className="mx-1" />
+              <DropdownMenuLabel className="!text-[12px] font-semibold text-[var(--accent-2)] py-0">
+                <DualOptionActionModal
+                  description="Do you want to delete the meal plan."
+                  action={deleteMealPlan}
+                >
+                  <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] p-0">
+                    Delete
+                  </AlertDialogTrigger>
+                </DualOptionActionModal>
+              </DropdownMenuLabel>
+            </>
+          }
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </CardHeader>
     <CardContent className="p-2">
       <div className="flex items-start justify-between gap-1">
         <Link href={`/coach/meals/list/${plan._id}`}>

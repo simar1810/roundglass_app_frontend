@@ -6,7 +6,6 @@ import { getMarathonLeaderBoard, getMarathons } from "@/lib/fetchers/app";
 import useSWR, { mutate, useSWRConfig } from "swr";
 import FormControl from "@/components/FormControl";
 import { ArrowLeft, Eye, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
@@ -18,8 +17,9 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function schedule() {
+export default function Page() {
   const { isLoading, error, data } = useSWR("app/getMarathons", getMarathons);
   const [selectedMarathonId, setSelectedMarathonId] = useState("");
 
@@ -73,13 +73,13 @@ function ListMarathons({ marathons, setSelectedMarathonId }) {
             <Eye className="w-[16px] h-[16px] text-[var(--dark-1)]/50 cursor-pointer" onClick={() => setSelectedMarathonId(marathon._id)} />
             <AssignMarathonModal marathonId={marathon._id} />
           </div>
-          {marathon.clients.slice(0, 4).map((client, index) => <div key={index} className="mb-2 flex items-center gap-2">
+          {marathon.clients.slice(0, 4).map((client, index) => <Link href={`/coach/clients/${client._id}`} key={index} className="mb-2 flex items-center gap-2 hover:opacity-70">
             <Avatar>
               <AvatarImage src={"/"} />
               <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
             </Avatar>
             <div className="text-[12px] font-bold">{client.name}</div>
-          </div>)}
+          </Link>)}
         </div>)
       }
     </div>

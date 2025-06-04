@@ -25,7 +25,7 @@ export default function Page() {
   return <div className="content-container">
     <div className="p-4 grid grid-cols-2 divide-x-1">
       <WorkoutDetails workoutDetails={workoutDetails} />
-      <WorkoutVideos workouts={workoutDetails.workouts} />
+      {workoutDetails.workouts.length > 0 && <WorkoutVideos workouts={workoutDetails.workouts} />}
     </div>
   </div>
 }
@@ -37,14 +37,14 @@ function WorkoutDetails({ workoutDetails }) {
   return <div className="pr-10">
     <div className="flex justify-between">
       <h4>{workoutDetails.title}</h4>
-      {coachId === workoutDetails.coach && <CreateWorkoutModal data={workoutDetails}>
+      <CreateWorkoutModal data={workoutDetails}>
         <DialogTrigger
           className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]"
         >
           <Pencil className="w-[16px]" />
           Edit
         </DialogTrigger>
-      </CreateWorkoutModal>}
+      </CreateWorkoutModal>
     </div>
     <Image
       src={workoutDetails.thumbnail.replaceAll(" ", "")}
@@ -80,6 +80,7 @@ function WorkoutVideos({ workouts }) {
   const filteredWorkouts = workouts
     .filter(workout => Boolean(workout.video_link));
   const workoutVideo = filteredWorkouts[selected]
+  if (filteredWorkouts.length <= 0) return <></>
   return <div className="ml-10">
     <h3 className="mb-4">{workoutVideo.title}</h3>
     <VideoPlayer
