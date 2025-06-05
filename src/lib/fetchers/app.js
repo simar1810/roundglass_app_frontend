@@ -17,7 +17,7 @@ async function logoutUser(response, router, cache) {
 }
 
 export function getCoachProfile(_id) {
-  return fetchData(`app/coachProfile?id=${_id}`);
+  return fetchData(`app/coachProfile?id=${_id}&portal=web`);
 }
 
 export async function getCoachHome(router, cache) {

@@ -1,6 +1,6 @@
 "use client"
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 import { useEffect } from "react";
 import useSWR, { mutate, useSWRConfig } from "swr";
 import { getCoachProfile } from "@/lib/fetchers/app";
@@ -25,20 +25,25 @@ export default function Guardian({
   const dispatchRedux = useAppDispatch();
   const coach = useAppSelector(state => state.coach.data);
 
+
   useEffect(function () {
-    if (data && data.status_code === 200) dispatchRedux(store(data.data));
+    (async function () {
+      if (data && data.status_code === 200) {
+        dispatchRedux(store(data.data))
+      } else if (data?.status_code === 401) {
+        dispatchRedux(destroy());
+        await fetch("/api/logout", { method: "DELETE" });
+        window.location.href = "/login";
+      };
+    }
+    )();
   }, [isLoading]);
 
-  if (
-    error || data?.success === false ||
-    (!!data?.status_code && data?.status_code !== 200)
-  ) {
-    logout();
-    dispatchRedux(destroy());
+  if (data?.status_code === 401) {
     for (const [field] of cache.entries()) {
-      cache.delete(field)
+      if (field !== "coachProfile") cache.delete(field)
     }
-    redirect("/login");
+    return <></>
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">
