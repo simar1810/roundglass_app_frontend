@@ -3,11 +3,8 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import DashboardClientList from "@/components/drawers/DashboardClientList";
 import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
-import FollowUpList from "@/components/pages/coach/dashboard/FollowUpList";
 import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import Stories from "@/components/pages/coach/dashboard/Stories";
-import TopPerformers from "@/components/pages/coach/dashboard/TopPerformers";
-import Tools from "@/components/pages/coach/Tools";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCoachHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
@@ -27,7 +24,7 @@ function Container() {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
+  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
   const coachHomeData = data.data;
   return <>
     <ActivityTool activities={coachHomeData.activePrograms} />
