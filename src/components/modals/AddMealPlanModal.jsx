@@ -1,4 +1,4 @@
-import { ClockFading, ImagePlus } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,

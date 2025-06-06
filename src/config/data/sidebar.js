@@ -1,6 +1,7 @@
 import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import {
+  CalendarRange,
   CircleDollarSign,
   ClipboardPlus,
   Clock12,
@@ -174,7 +175,7 @@ export const sidebar__coachContent = [
         icon: <Unlink className="icon min-w-[20px] min-h-[20px]" />,
         title: "Coach Sync",
         url: "/coach/club/coach-sync"
-      }
+      },
     ]
   },
   {
@@ -206,9 +207,22 @@ export const sidebar__coachContent = [
         icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
         title: "Ideal Weight",
         url: "/coach/tools/ideal-weight"
-      }
+      },
+      {
+        id: 5,
+        icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Add Programs",
+        url: "/coach/tools/programs/add"
+      },
     ]
   },
+  // {
+  //   id: 12,
+  //   title: "Programs",
+  //   icon: <CalendarRange className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/tools",
+  //   items: []
+  // }
 ]
 
 export const sidebar__coachFooter = [

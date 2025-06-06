@@ -2,9 +2,14 @@
 import PDFComparison from "@/components/pages/coach/client/PDFComparison";
 import PDFShareStatistics from "@/components/pages/coach/client/PDFShareStatistics";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PDFViewer } from "@react-pdf/renderer";
 import PDFInvoice from "../pages/coach/meals/PDFInvoice";
 import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
+import useSWR from "swr";
+import { getPersonalBranding } from "@/lib/fetchers/app";
+import ContentLoader from "../common/ContentLoader";
+import ContentError from "../common/ContentError";
+import { useEffect, useState } from "react";
+import { getBase64ImageFromUrl } from "@/lib/utils";
 
 const Templates = {
   PDFComparison,
@@ -21,7 +26,28 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
       <DialogHeader className="p-0 z-100">
         <DialogTitle className="text-[24px]" />
       </DialogHeader>
-      {PDFViewer && <Component data={data} />}
+      <Container
+        Component={Component}
+        pdfData={data}
+      />
     </DialogContent>
   </Dialog>
+}
+
+function Container({ Component, pdfData }) {
+  const [brandLogo, setBrandLogo] = useState();
+  const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
+
+  const brands = data?.data;
+  useEffect(function () {
+    if (brands?.length > 0) getBase64ImageFromUrl(brands[0]?.brandLogo).then(setBrandLogo);
+  }, [])
+
+  if (isLoading) return <ContentLoader />
+  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
+
+  return <Component
+    data={pdfData}
+    brand={brands[0]}
+  />
 }

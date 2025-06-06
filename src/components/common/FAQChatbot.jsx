@@ -5,6 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, ArrowLeft, ChevronRight, ThumbsUp, ThumbsDown, Minimize2, ExternalLink, Heart, HelpCircle, Search, User, Clock } from "lucide-react";
+import { getChatBotData } from "@/lib/fetchers/app";
+import useSWR from "swr";
+import ContentLoader from "./ContentLoader";
+import ContentError from "./ContentError";
+import Link from "next/link";
 
 const faqData = [
   {
@@ -189,6 +194,24 @@ const faqData = [
 ];
 
 export default function FAQChatbot() {
+  const { isLoading, error, data } = useSWR("chatbot-data", getChatBotData);
+
+  if (!data) return <></>
+
+  const categories = Object.groupBy(data?.data || [], (item) => item.category);
+  const faqData = []
+  for (const field in categories) {
+    faqData.push(
+      {
+        category: field,
+        questions: categories[field]
+      }
+    )
+  }
+  return <FAQChatbotContainer faqData={faqData} />
+}
+
+function FAQChatbotContainer({ faqData }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState("categories");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -319,9 +342,9 @@ export default function FAQChatbot() {
             {searchResults.length > 0 ? (
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 mb-3">Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}</p>
-                {searchResults.map((question) => (
+                {searchResults.map((question, index) => (
                   <button
-                    key={question.id}
+                    key={index}
                     className="w-full p-4 text-left bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-sm hover:border-green-200 group"
                     onClick={() => handleSearchQuestionSelect(question)}
                   >
@@ -395,9 +418,9 @@ export default function FAQChatbot() {
 
       <ScrollArea className="flex-1" style={{ height: 'calc(100% - 140px)' }}>
         <div className="p-4 space-y-3">
-          {faqData.map((category) => (
+          {faqData.map((category, index) => (
             <button
-              key={category.category}
+              key={index}
               className="w-full p-4 text-left bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all duration-200 hover:shadow-sm hover:border-green-200 group"
               onClick={() => handleCategorySelect(category)}
             >
@@ -435,7 +458,7 @@ export default function FAQChatbot() {
   );
 
   const renderQuestions = () => (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-y-auto">
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -460,9 +483,9 @@ export default function FAQChatbot() {
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-2">
-          {selectedCategory?.questions.map((question) => (
+          {selectedCategory?.questions.map((question, index) => (
             <button
-              key={question.id}
+              key={index}
               className="w-full p-4 text-left bg-white hover:bg-gray-50 border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-sm hover:border-green-200 group"
               onClick={() => handleQuestionSelect(question)}
             >
@@ -480,7 +503,7 @@ export default function FAQChatbot() {
   );
 
   const renderAnswer = () => (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-y-auto">
       <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
         <Button variant="ghost" size="sm" onClick={handleBack} className="p-1 hover:bg-gray-200">
           <ArrowLeft className="h-4 w-4" />
@@ -495,10 +518,10 @@ export default function FAQChatbot() {
           </div>
 
           {selectedQuestion?.cta && (
-            <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-xl transition-all duration-200 hover:shadow-lg">
+            <Link href={selectedQuestion.link} target="_blank" className="w-fit px-8 mx-auto bg-green-500 hover:bg-green-600 text-white font-medium py-3 flex items-center rounded-xl transition-all duration-200 hover:shadow-lg">
               <ExternalLink className="h-4 w-4 mr-2" />
               {selectedQuestion.cta}
-            </Button>
+            </Link>
           )}
 
           {selectedQuestion?.hasScreenshot && (
@@ -619,11 +642,11 @@ export default function FAQChatbot() {
 
       {/* Modal Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-end p-6">
-          <div className="fixed inset-0 bg-black bg-opacity-20" onClick={() => setIsOpen(false)} />
+        <div className="fixed inset-0 bottom-10 z-50 flex items-end justify-end p-6 py-0">
+          <div className="fixed inset-0 bg-black/10 bg-opacity-20" onClick={() => setIsOpen(false)} />
 
           {/* Chatbot Widget */}
-          <Card className="relative w-full max-w-md h-[600px] bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
+          <Card className="relative w-full max-w-md h-[600px] py-0 gap-0 bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
             {/* Header */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-6">
               <div className="flex items-center justify-between">

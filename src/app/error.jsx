@@ -5,7 +5,7 @@ export default function Error({ error, reset }) {
   useEffect(() => {
 
   }, [error])
-  console.log(error);
+
   return (
     <div>
       <h2>Something went wrong!</h2>

@@ -12,6 +12,7 @@ export default function StatisticsCards() {
   const router = useRouter();
   const { cache } = useSWRConfig();
   const { isLoading, error, data } = useSWR("dashboardStatistics", () => dashboardStatistics(router, cache));
+  const organisation = useAppSelector(state => state.coach.data.organisation);
 
   if (isLoading) return <ContentLoader />
 
@@ -21,10 +22,14 @@ export default function StatisticsCards() {
   />
   const statistics = data.data;
 
+  const statsToDisplay = organisation === "Herbalife"
+    ? dashboardCards.app
+    : dashboardCards.app.filter(stat => stat.id !== 4)
+
   return <>
     <h4 className="mb-4">Overview</h4>
     <div className="grid grid-cols-5 gap-4">
-      {dashboardCards.app.map(item => <DashboardInfoCard
+      {statsToDisplay.map(item => <DashboardInfoCard
         key={item.id}
         trendUp={Math.random() > 0.5}
         quantity={statistics[item.name]}

@@ -52,10 +52,11 @@ export default function ActivityTool({ activities }) {
           >
             <Link href={activity.link || "#"} target="_blank">
               <Image
+                src={activity.image || "/not-found.png"}
                 fill
-                src={activity.image}
                 alt=""
                 className="w-full bg-[var(--primary-1)] object-contain object-center pl-4 border-1"
+                onError={e => e.target.src = "/not-found.png"}
               />
             </Link>
           </CarouselItem>)}

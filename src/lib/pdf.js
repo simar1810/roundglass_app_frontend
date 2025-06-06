@@ -29,7 +29,7 @@ export function comparisonPDFData(data, statistics) {
     joined: data.joiningDate,
     weight: statistics?.at(0).weight,
     height: `${statistics?.at(0)?.height} ${statistics?.at(0)?.heightUnit}`,
-    bmi: calculateBMIFinal(statistics[0]),
+    bmi: statistics[0].bmi,
     brandLogo: "/brandLogo.png",
     sideImage: "/side.png",
     bottomStripImage: "/bottom.png",

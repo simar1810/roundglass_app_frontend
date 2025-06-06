@@ -10,334 +10,340 @@ import {
 } from "@react-pdf/renderer";
 
 // Create styles
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: "row",
-    justifyContent: "center", // Center children horizontally
-    alignItems: "flex-start", // Align to top (you can change to 'center' if you want vertical center)
-    paddingLeft: 50,
-    paddingRight: 10,
-  },
-  leftSection: {
-    width: "85%",
-    paddingTop: 50,
-    paddingRight: 30,
-  },
-  rightStrip: {
-    width: "15%",
-    height: "100%",
-  },
-  logo: {
-    height: 50,
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-  heading: {
-    fontSize: 20,
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  greenBox: {
-    backgroundColor: "#FFA500",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  whiteText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  table: {
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: "#aaa",
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#aaa",
-  },
-  cell: {
-    flex: 1,
-    padding: 5,
-    fontSize: 10,
-  },
-  footerStrip: {
-    marginTop: 20,
-    textAlign: "center",
-    fontSize: 8,
-    color: "#98D89E",
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#98D89E",
-    marginVertical: 10,
-  },
-  flowerStack: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 20,
-  },
-  suggestionStrip: {
-    backgroundColor: "#98D89E",
-    color: "white",
-    padding: 8,
-    fontSize: 12,
-    textAlign: "center",
-    marginVertical: 15,
-    borderRadius: 5,
-  },
-  boldText: {
-    fontWeight: "bold",
-    fontSize: 14,
-    marginVertical: 10,
-  },
-  paragraph: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    marginVertical: 10,
-  },
-  containerBox: {
-    position: "relative",
-    marginVertical: 10,
-  },
-  containerOverlay: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    right: 10,
-    bottom: 10,
-  },
-  boxTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  boxTitleGreen: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#5CB85C",
-  },
-  boxTitleRed: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#D9534F",
-  },
-  boxContent: {
-    fontSize: 11,
-    lineHeight: 1.5,
-  },
-  bottomBanner: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#fff", // Optional: set background to avoid overlap issues
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  bodyWeightCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#4CAF50",
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginVertical: 10,
-  },
-  bodyWeightText: {
-    color: "#ffffff",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  optimalWeightBox: {
-    backgroundColor: "#4CAF50",
-    borderColor: "#ffc107",
-    borderWidth: 1,
-    padding: 4,
-    fontSize: 9,
-    marginVertical: 5,
-    textAlign: "center",
-  },
-  boldHighlight: {
-    fontWeight: "bold",
-    fontSize: 11,
-  },
-  whyHeader: {
-    color: "#ff9800",
-    fontWeight: "bold",
-    fontSize: 12,
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  riskHeader: {
-    color: "#d32f2f",
-    fontWeight: "bold",
-    fontSize: 17,
-    marginTop: 25,
-    marginBottom: 5,
-  },
-  riskBox: {
-    backgroundColor: "#ffe6e6",
-    padding: 8,
-    fontSize: 10,
-    borderRadius: 5,
-    color: "#d32f2f",
-    flex: 1,
-  },
-  disclaimer: {
-    marginTop: 20,
-    fontSize: 8,
-    padding: 6,
-    backgroundColor: "#d4edda",
-    borderColor: "#c3e6cb",
-    color: "#444",
-    borderRadius: 5,
-  },
-  gridContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16, // For spacing between columns (optional)
-  },
-  normalBox: {
-    flex: 1,
-    backgroundColor: "#d4edda", // Light green
-    padding: 10,
-    borderRadius: 10,
-  },
+const getStyles = function (brand) {
+  return StyleSheet.create({
+    page: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      paddingLeft: 50,
+      paddingRight: 10,
+    },
+    leftSection: {
+      width: "85%",
+      paddingTop: 50,
+      paddingRight: 30,
+    },
+    rightStrip: {
+      width: "15%",
+      height: "100%",
+    },
+    logo: {
+      height: 50,
+      alignSelf: "center",
+      marginBottom: 10,
+    },
+    heading: {
+      fontSize: 20,
+      textAlign: "center",
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    greenBox: {
+      backgroundColor: brand.primaryColor,
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10,
+      marginBottom: 10,
+    },
+    whiteText: {
+      color: "#fff",
+      fontSize: 14,
+    },
+    table: {
+      marginTop: 20,
+      borderWidth: 1,
+      borderColor: "#aaa",
+    },
+    row: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderColor: "#aaa",
+    },
+    cell: {
+      flex: 1,
+      padding: 5,
+      fontSize: 10,
+    },
+    footerStrip: {
+      marginTop: 20,
+      textAlign: "center",
+      fontSize: 8,
+      color: "#98D89E",
+    },
+    divider: {
+      borderBottomWidth: 1,
+      borderBottomColor: "#98D89E",
+      marginVertical: 10,
+    },
+    flowerStack: {
+      position: "relative",
+      alignItems: "center",
+      justifyContent: "center",
+      marginVertical: 20,
+    },
+    suggestionStrip: {
+      backgroundColor: "#98D89E",
+      color: "white",
+      padding: 8,
+      fontSize: 12,
+      textAlign: "center",
+      marginVertical: 15,
+      borderRadius: 5,
+    },
+    boldText: {
+      fontWeight: "bold",
+      fontSize: 14,
+      marginVertical: 10,
+    },
+    paragraph: {
+      fontSize: 12,
+      lineHeight: 1.5,
+      marginVertical: 10,
+    },
+    containerBox: {
+      position: "relative",
+      marginVertical: 10,
+    },
+    containerOverlay: {
+      position: "absolute",
+      top: 10,
+      left: 10,
+      right: 10,
+      bottom: 10,
+    },
+    boxTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    boxTitleGreen: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: "#5CB85C",
+    },
+    boxTitleRed: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: "#D9534F",
+    },
+    boxContent: {
+      fontSize: 11,
+      lineHeight: 1.5,
+    },
+    bottomBanner: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      width: "100%",
+      padding: 12,
+      backgroundColor: "#fff",
+      borderTopWidth: 1,
+      borderColor: "#ccc",
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    bodyWeightCircle: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: "#4CAF50",
+      justifyContent: "center",
+      alignItems: "center",
+      alignSelf: "center",
+      marginVertical: 10,
+    },
+    bodyWeightText: {
+      color: "#ffffff",
+      fontSize: 12,
+      textAlign: "center",
+    },
+    optimalWeightBox: {
+      backgroundColor: "#4CAF50",
+      borderColor: "#ffc107",
+      borderWidth: 1,
+      padding: 4,
+      fontSize: 9,
+      marginVertical: 5,
+      textAlign: "center",
+    },
+    boldHighlight: {
+      fontWeight: "bold",
+      fontSize: 11,
+    },
+    whyHeader: {
+      color: "#ff9800",
+      fontWeight: "bold",
+      fontSize: 12,
+      marginTop: 10,
+      marginBottom: 5,
+    },
+    riskHeader: {
+      color: "#d32f2f",
+      fontWeight: "bold",
+      fontSize: 12,
+      marginTop: 10,
+      marginBottom: 5,
+    },
+    riskBox: {
+      backgroundColor: "#ffe6e6",
+      padding: 8,
+      fontSize: 10,
+      borderRadius: 5,
+      color: "#d32f2f",
+      flex: 1,
+    },
+    disclaimer: {
+      marginTop: 20,
+      fontSize: 8,
+      padding: 6,
+      backgroundColor: "#d4edda",
+      borderColor: "#c3e6cb",
+      color: "#444",
+      borderRadius: 5,
+    },
+    gridContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 16,
+    },
+    normalBox: {
+      flex: 1,
+      backgroundColor: "#d4edda",
+      padding: 10,
+      borderRadius: 10,
+    },
 
-  riskHeader: {
-    fontSize: 8,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#721c24",
-  },
-  whyText: {
-    fontSize: 8,
-    color: "#155724",
-  },
-  container: {
-    padding: 16,
-  },
-  topSection: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  highlightBox: {
-    flex: 1,
-    backgroundColor: "#a020f0", // Vibrant purple
-    borderRadius: 12,
-    padding: 16,
-  },
-  highlightTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 12,
-  },
-  weightLossBox: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  weightText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#a020f0",
-  },
-  weightSubText: {
-    fontSize: 12,
-    color: "#a020f0",
-  },
-  highlightContent: {
-    fontSize: 14,
-    color: "#fff",
-  },
-  healthTipsBox: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 16,
-  },
-  tipsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    borderBottomWidth: 2,
-    borderBottomColor: "#50b3a2",
-    marginBottom: 12,
-  },
-  tipItem: {
-    flexDirection: "row",
-    marginBottom: 10,
-    alignItems: "flex-start",
-  },
-  tipEmoji: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-    marginTop: 2,
-    resizeMode: "contain",
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 14,
-  },
-  tipTitle: {
-    fontWeight: "bold",
-  },
-  coachSection: {
-    marginTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: "#f0ad4e",
-    paddingTop: 16,
-  },
-  coachLabel: {
-    fontSize: 16,
-    color: "#555",
-  },
-  coachName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#f0ad4e",
-    marginBottom: 4,
-  },
-  goalText: {
-    fontSize: 14,
-  },
-});
+    riskHeader: {
+      fontSize: 8,
+      fontWeight: "bold",
+      marginBottom: 8,
+      color: "#721c24",
+    },
+    whyText: {
+      fontSize: 8,
+      color: "#155724",
+    },
+    container: {
+      padding: 16,
+    },
+    topSection: {
+      flexDirection: "row",
+      gap: 16,
+    },
+    highlightBox: {
+      flex: 1,
+      backgroundColor: "#a020f0",
+      borderRadius: 12,
+      padding: 16,
+    },
+    highlightTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#fff",
+      marginBottom: 12,
+    },
+    weightLossBox: {
+      backgroundColor: "#fff",
+      padding: 12,
+      borderRadius: 8,
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    weightText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#a020f0",
+    },
+    weightSubText: {
+      fontSize: 12,
+      color: "#a020f0",
+    },
+    highlightContent: {
+      fontSize: 14,
+      color: "#fff",
+    },
+    healthTipsBox: {
+      flex: 1,
+      borderRadius: 12,
+      padding: 16,
+    },
+    tipsTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      borderBottomWidth: 2,
+      borderBottomColor: "#50b3a2",
+      marginBottom: 12,
+    },
+    tipItem: {
+      flexDirection: "row",
+      marginBottom: 10,
+      alignItems: "flex-start",
+    },
+    tipEmoji: {
+      width: 16,
+      height: 16,
+      marginRight: 8,
+      marginTop: 2,
+      resizeMode: "contain",
+    },
+    tipText: {
+      flex: 1,
+      fontSize: 14,
+    },
+    tipTitle: {
+      fontWeight: "bold",
+    },
+    coachSection: {
+      marginTop: 24,
+      borderTopWidth: 1,
+      borderTopColor: "#f0ad4e",
+      paddingTop: 16,
+    },
+    coachLabel: {
+      fontSize: 16,
+      color: "#555",
+    },
+    coachName: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#f0ad4e",
+      marginBottom: 4,
+    },
+    goalText: {
+      fontSize: 14,
+    },
+  })
+};
 
 // Component
-export default function PDFComparison({ data }) {
+export default function PDFComparison({
+  data,
+  brand
+}) {
+  const styles = getStyles(brand)
   return (
     <PDFViewer className="w-full h-full ">
       <Document>
-        <Comparison1 data={data} />
+        <Comparison1 brand={brand} styles={styles} data={data} />
         {/* <Comparison2 data={data} /> */}
-        <Comparison3 data={data} />
-        <Comparison4 data={data} />
-        <Comparison5 data={data} />
-        <Comparison6 data={data} />
-        <Comparison7 data={data} />
+        <Comparison3 brand={brand} styles={styles} data={data} />
+        <Comparison4 brand={brand} styles={styles} data={data} />
+        <Comparison5 brand={brand} styles={styles} data={data} />
+        <Comparison6 brand={brand} styles={styles} data={data} />
+        <Comparison7 brand={brand} styles={styles} data={data} />
       </Document>
     </PDFViewer>
   );
 }
 
-function Comparison1({ data }) {
+function Comparison1({ brand, styles, data }) {
   const {
     clientName = "",
     age = "",
@@ -379,7 +385,7 @@ function Comparison1({ data }) {
 
         {/* Table */}
         <View style={styles.table}>
-          <View style={[styles.row, { backgroundColor: "#FFA500" }]}>
+          <View style={[styles.row, { backgroundColor: brand.primaryColor }]}>
             <Text style={[styles.cell, { color: "#fff" }]}>Date</Text>
             <Text style={[styles.cell, { color: "#fff" }]}>Weight</Text>
             <Text style={[styles.cell, { color: "#fff" }]}>BMI</Text>
@@ -415,7 +421,7 @@ function Comparison1({ data }) {
   );
 }
 
-function Comparison2({ data }) {
+function Comparison2({ brand, styles, data }) {
   const { weight, optimalWeight, weightMessage, description, riskDescription } =
     data;
 
@@ -504,18 +510,9 @@ function Comparison2({ data }) {
   );
 }
 
-function Comparison3({ data }) {
-  const {
-    bmi = "",
-    flowerImage,
-    greenStripImage,
-    greenContainerImage,
-    redContainerImage,
-    bottomStripImage,
-    sideImage,
-    weight,
-  } = data;
-
+function Comparison3({ brand, styles, data }) {
+  const { bmi = "" } = data;
+  const avgBMI = data.allStatsList.reduce((acc, item) => acc + Number(item.bmi), 0) / data.allStatsList.length;
   return (
     <Document>
       <Page
@@ -531,15 +528,15 @@ function Comparison3({ data }) {
         <Text style={styles.sectionTitle}>Body Weight</Text>
 
         <View style={styles.bodyWeightCircle}>
-          <Text style={styles.bodyWeightText}>{bmi} BMI</Text>
+          <Text style={styles.bodyWeightText}>{bmi}</Text>
           <Text style={styles.bodyWeightText}>BMI</Text>
         </View>
 
-        <Text style={styles.optimalWeightBox}>Your Average BMI was 12.9.</Text>
+        <Text style={styles.optimalWeightBox}>Your Average BMI was {avgBMI.toFixed(1)}</Text>
 
         <Text>
           Your Average BMI was
-          <Text style={styles.boldHighlight}>12.9 BMI</Text>.
+          <Text style={styles.boldHighlight}>{avgBMI.toFixed(1)} BMI</Text>.
         </Text>
         <Text>
           Body Mass Index (BMI) is a simple, widely used method for assessing
@@ -623,7 +620,7 @@ function Comparison3({ data }) {
   );
 }
 
-function Comparison4({ data }) {
+function Comparison4({ brand, styles, data }) {
   const {
     bmi,
     musclePercentage = "",
@@ -723,7 +720,7 @@ function Comparison4({ data }) {
   );
 }
 
-function Comparison5({ data }) {
+function Comparison5({ brand, styles, data }) {
   const {
     musclePercentage = "",
     flowerImage,
@@ -837,7 +834,7 @@ function Comparison5({ data }) {
     </Document>
   );
 }
-function Comparison6({ data }) {
+function Comparison6({ brand, styles, data }) {
   const {
     musclePercentage = "",
     flowerImage,
@@ -904,7 +901,7 @@ function Comparison6({ data }) {
 
             {/* Right Column: Overweight Risk (Red Box) */}
             <View style={styles.riskBox}>
-              <Text style={styles.riskHeader}>Risks due to Overweight</Text>
+              <Text style={styles.whyHeader}>Risks due to Overweight</Text>
               <Text style={styles.riskText}>
                 An abnormal resting metabolism for your age, sex, and body
                 composition may indicate metabolic variations affecting health
@@ -946,7 +943,7 @@ function Comparison6({ data }) {
     </Document>
   );
 }
-function Comparison7({ data }) {
+function Comparison7({ brand, styles, data }) {
   const {
     musclePercentage = "",
     flowerImage,
