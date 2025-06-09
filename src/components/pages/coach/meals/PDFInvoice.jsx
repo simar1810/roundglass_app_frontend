@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Page,
   Text,
@@ -9,140 +8,142 @@ import {
   PDFViewer,
 } from "@react-pdf/renderer";
 
-const styles = StyleSheet.create({
-  page: {
-    padding: 20,
-    fontSize: 10,
-    fontFamily: "Helvetica",
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginHorizontal: "auto",
-    marginBottom: 5,
-  },
-  headerText: {
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: "bold",
-    marginBottom: 15,
-    paddingBottom: 2,
-    borderBottom: "1pt solid #000",
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 2,
-    paddingHorizontal: 3,
-  },
-  label: {
-    fontWeight: "bold",
-  },
-  customerBox: {
-    border: "1pt solid #000",
-    borderRadius: 5,
-    padding: 10,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  customerRow: {
-    flexDirection: "row",
-    marginBottom: 4,
-  },
-  customerField: {
-    flex: 1,
-  },
-  customerLabel: {
-    fontWeight: "bold",
-  },
-  customerInput: {
-    borderBottom: "1pt solid #000",
-    paddingBottom: 2,
-    marginLeft: 5,
-    marginRight: 5,
-    flex: 1,
-  },
-  refundBox: {
-    backgroundColor: "#FFA500",
-    color: "white",
-    padding: 6,
-    borderRadius: 4,
-    fontWeight: "bold",
-    width: "auto",
-    marginVertical: 10,
-    fontSize: 9,
-    alignSelf: "flex-start",
-  },
-  paragraph: {
-    fontSize: 14,
-    lineHeight: 1.4,
-    marginBottom: 10,
-  },
-  table: {
-    marginTop: 10,
-    marginBottom: 10,
-    border: "1pt solid black",
-  },
-  tableHeader: {
-    flexDirection: "row",
-    borderBottom: "1pt solid black",
-    backgroundColor: "#f0f0f0",
-    fontWeight: "bold",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottom: "0.5pt solid #ccc",
-  },
-  tableCell: {
-    padding: 4,
-    textAlign: "center",
-    flex: 1,
-    border: "0.5pt solid #ccc",
-  },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  totalLabel: {
-    width: "15%",
-    padding: 4,
-    textAlign: "right",
-    fontWeight: "bold",
-    border: "0.5pt solid #ccc",
-  },
-  totalValue: {
-    width: "15%",
-    padding: 4,
-    textAlign: "left",
-    border: "0.5pt solid #ccc",
-  },
-  footerText: {
-    fontSize: 8,
-    marginTop: 10,
-    textAlign: "center",
-  },
-  signatureRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 40,
-    marginBottom: 20,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 30,
-    left: 0,
-    right: 0,
-    textAlign: "center",
-  },
-  wellnessLogo: {
-    width: 100,
-    height: 30,
-    marginHorizontal: "auto",
-    marginBottom: 5,
-  },
-});
+function getStyles(brand) {
+  return StyleSheet.create({
+    page: {
+      padding: 20,
+      fontSize: 10,
+      fontFamily: "Helvetica",
+    },
+    logo: {
+      width: 60,
+      height: 60,
+      marginHorizontal: "auto",
+      marginBottom: 5,
+    },
+    headerText: {
+      textAlign: "center",
+      fontSize: 12,
+      fontWeight: "bold",
+      marginBottom: 15,
+      paddingBottom: 2,
+      borderBottom: "1pt solid #000",
+    },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginVertical: 2,
+      paddingHorizontal: 3,
+    },
+    label: {
+      fontWeight: "bold",
+    },
+    customerBox: {
+      border: "1pt solid #000",
+      borderRadius: 5,
+      padding: 10,
+      marginTop: 10,
+      marginBottom: 10,
+    },
+    customerRow: {
+      flexDirection: "row",
+      marginBottom: 4,
+    },
+    customerField: {
+      flex: 1,
+    },
+    customerLabel: {
+      fontWeight: "bold",
+    },
+    customerInput: {
+      borderBottom: "1pt solid #000",
+      paddingBottom: 2,
+      marginLeft: 5,
+      marginRight: 5,
+      flex: 1,
+    },
+    refundBox: {
+      backgroundColor: brand.primaryColor,
+      color: "white",
+      padding: 6,
+      borderRadius: 4,
+      fontWeight: "bold",
+      width: "auto",
+      marginVertical: 10,
+      fontSize: 9,
+      alignSelf: "flex-start",
+    },
+    paragraph: {
+      fontSize: 14,
+      lineHeight: 1.4,
+      marginBottom: 10,
+    },
+    table: {
+      marginTop: 10,
+      marginBottom: 10,
+      border: "1pt solid black",
+    },
+    tableHeader: {
+      flexDirection: "row",
+      borderBottom: "1pt solid black",
+      backgroundColor: "#f0f0f0",
+      fontWeight: "bold",
+    },
+    tableRow: {
+      flexDirection: "row",
+      borderBottom: "0.5pt solid #ccc",
+    },
+    tableCell: {
+      padding: 4,
+      textAlign: "center",
+      flex: 1,
+      border: "0.5pt solid #ccc",
+    },
+    totalRow: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+    },
+    totalLabel: {
+      width: "15%",
+      padding: 4,
+      textAlign: "right",
+      fontWeight: "bold",
+      border: "0.5pt solid #ccc",
+    },
+    totalValue: {
+      width: "15%",
+      padding: 4,
+      textAlign: "left",
+      border: "0.5pt solid #ccc",
+    },
+    footerText: {
+      fontSize: 8,
+      marginTop: 10,
+      textAlign: "center",
+    },
+    signatureRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 40,
+      marginBottom: 20,
+    },
+    footer: {
+      position: "absolute",
+      bottom: 30,
+      left: 0,
+      right: 0,
+      textAlign: "center",
+    },
+    wellnessLogo: {
+      width: 100,
+      height: 30,
+      marginHorizontal: "auto",
+      marginBottom: 5,
+    },
+  });
+}
 
-const PDFInvoice = ({ data }) => {
+export default function PDFInvoice({ data, brand }) {
   const {
     clientName,
     age,
@@ -151,18 +152,16 @@ const PDFInvoice = ({ data }) => {
     phone,
     date,
     products = [],
-    subtotal,
-    discount,
-    total,
     invoiceNo,
     logoUrl,
   } = data;
-
+  const styles = getStyles(brand)
   return (
     <PDFViewer className="w-full h-full">
       <Document>
         <Page size="A4" style={styles.page}>
-          {logoUrl && <Image src={logoUrl} style={styles.logo} />}
+          {/* <img src={brand.brandLogo} alt="" /> */}
+          {/* {logoUrl && <Image src={brand.brandLogo} style={styles.logo} />} */}
           <Text style={styles.headerText}>Receipt / invoice</Text>
 
           <View style={styles.headerRow}>
@@ -259,6 +258,4 @@ const PDFInvoice = ({ data }) => {
       </Document>
     </PDFViewer>
   );
-};
-
-export default PDFInvoice;
+}
