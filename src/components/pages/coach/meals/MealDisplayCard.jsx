@@ -24,47 +24,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-const mealPlan = {
-  planName: 'Fat Burn Plan',
-  coachName: 'John Doe',
-  coachDescription: 'Certified Health Coach',
-  coachImage: '/coach.jpg',
-  brandLogo: '/logo.png',
-  mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
-  meals: [
-    {
-      meals: [
-        {
-          name: 'Oats & Fruits',
-          description: 'Healthy mix of oats and seasonal fruits',
-          mealTime: '8:00 AM',
-          image: '/meals/oats.png'
-        }
-      ]
-    },
-    {
-      meals: [
-        {
-          name: 'Grilled Chicken',
-          description: 'Lean protein with mixed vegetables',
-          mealTime: '1:00 PM',
-          image: '/meals/chicken.png'
-        }
-      ]
-    },
-    {
-      meals: [
-        {
-          name: 'Soup & Salad',
-          description: 'Light dinner with soup and green salad',
-          mealTime: '7:00 PM',
-          image: '/meals/soup.png'
-        }
-      ]
-    }
-  ]
-};
-
 export default function MealDisplayCard({ plan }) {
   async function deleteMealPlan(setLoading, closeBtnRef) {
     try {

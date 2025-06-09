@@ -19,82 +19,84 @@ Font.register({
   src: '/assets/fonts/Roboto-Regular.ttf',
 });
 
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontSize: 11,
-    fontFamily: 'Roboto',
-    backgroundColor: '#ffffff'
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 10
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginBottom: 5
-  },
-  planName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center'
-  },
-  sectionTitle: {
-    backgroundColor: '#FFA500', // Orange
-    color: '#ffffff',
-    padding: 6,
-    borderRadius: 8,
-    fontSize: 12,
-    textTransform: 'capitalize',
-    marginTop: 20,
-    marginBottom: 5
-  },
-  mealCard: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 10,
-    borderBottom: '1px solid #ddd'
-  },
-  mealTextContainer: {
-    flex: 1,
-    paddingRight: 10
-  },
-  mealTitle: {
-    color: '#FFA500',
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 2
-  },
-  mealDescription: {
-    marginBottom: "4px",
-    lineHeight: "20px",
-  },
-  mealTime: {
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 12,
-    fontSize: 10,
-    borderWidth: 1,
-    borderColor: '#007f00',
-    alignSelf: 'flex-start'
-  },
-  mealImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 4,
-    objectFit: 'cover'
-  },
-  footer: {
-    marginTop: 30,
-    fontSize: 9,
-    color: '#888'
-  }
-});
+function getStyles(brand) {
+  return StyleSheet.create({
+    page: {
+      padding: 30,
+      fontSize: 11,
+      fontFamily: 'Roboto',
+      backgroundColor: '#ffffff'
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 10
+    },
+    logo: {
+      width: 60,
+      height: 60,
+      marginBottom: 5
+    },
+    planName: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      textAlign: 'center'
+    },
+    sectionTitle: {
+      backgroundColor: brand.primaryColor, // Orange
+      color: '#ffffff',
+      padding: 6,
+      borderRadius: 8,
+      fontSize: 12,
+      textTransform: 'capitalize',
+      marginTop: 20,
+      marginBottom: 5
+    },
+    mealCard: {
+      marginTop: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingBottom: 10,
+      borderBottom: '1px solid #ddd'
+    },
+    mealTextContainer: {
+      flex: 1,
+      paddingRight: 10
+    },
+    mealTitle: {
+      color: brand.primaryColor,
+      fontSize: 13,
+      fontWeight: 'bold',
+      marginBottom: 2
+    },
+    mealDescription: {
+      marginBottom: "4px",
+      lineHeight: "20px",
+    },
+    mealTime: {
+      paddingVertical: 2,
+      paddingHorizontal: 6,
+      borderRadius: 12,
+      fontSize: 10,
+      borderWidth: 1,
+      borderColor: '#007f00',
+      alignSelf: 'flex-start'
+    },
+    mealImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 4,
+      objectFit: 'cover'
+    },
+    footer: {
+      marginTop: 30,
+      fontSize: 9,
+      color: '#888'
+    }
+  });
+}
 
-export default function PDFMealPlan({ data }) {
+export default function PDFMealPlan({ data, brand }) {
   const { isLoading, error, data: moreData } = useSWR(`app/meal-plan/${data.id}`, () => getMealPlanById(data.id));
   const coach = useAppSelector(state => state.coach.data)
 
@@ -111,11 +113,11 @@ export default function PDFMealPlan({ data }) {
     brandLogo
   } = data;
 
-  const {
-    name: coachName
-  } = coach
+  const { name: coachName } = coach
 
   const { meals } = planData
+
+  const styles = getStyles(brand)
 
   return (
     <PDFViewer className="w-full h-full">

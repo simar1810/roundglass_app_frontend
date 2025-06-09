@@ -1,39 +1,66 @@
-import { format } from "date-fns"
-import { calculateBMIFinal } from "./client/statistics"
+import { differenceInYears, format, parse } from "date-fns"
+import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics"
 
-export function clientStatisticsPDFData(data, statistics, coach) {
+function calcAge(data) {
+  if (data?.dob?.split("-")[0]?.length === 2) return differenceInYears(new Date(), parse(data.dob, 'dd-MM-yyyy', new Date()));
+  return data.age || 0
+}
+
+export function clientStatisticsPDFData(data, statistics, coach, index) {
   return {
     clientName: data.name,
-    age: data.age || 0,
-    bodyAge: statistics?.at(0)?.bodyAge || 0,
+    age: calcAge(data),
+    bodyAge: statistics?.at(index)?.bodyAge || 0,
     gender: data.gender,
     joined: data.joiningDate,
-    weight: statistics?.at(0).weight,
-    height: `${statistics?.at(0)?.height} ${statistics?.at(0)?.heightUnit}`,
-    bmi: statistics?.at(0)?.bmi || calculateBMIFinal(statistics?.at(0)),
-    fatPercentage: statistics?.at(0)?.fat,
-    musclePercentage: statistics?.at(0)?.muscle,
-    restingMetabolism: statistics?.at(0)?.rm,
-    bodyComposition: statistics?.at(0)?.body_composition,
+    weight: statistics?.at(index).weight,
+    height: `${statistics?.at(index)?.height} ${statistics?.at(index)?.heightUnit}`,
+    bmi: statistics?.at(index)?.bmi || calculateBMIFinal(statistics?.at(index)),
+    fatPercentage: statistics?.at(index)?.fat,
+    musclePercentage: statistics?.at(index)?.muscle,
+    restingMetabolism: statistics?.at(index)?.rm,
+    bodyComposition: statistics?.at(index)?.body_composition,
     coachName: coach.name,
     coachDescription: coach.specialization,
     coachProfileImage: coach.profilePhoto
   }
 }
 
-export function comparisonPDFData(data, statistics) {
+function standardWeight({
+  weightUnit,
+  weight
+}) {
+  if (weightUnit) {
+    return Number(weight);
+  }
+  return Number(weight) * 0.453592;
+}
+
+export function comparisonPDFData(data, statistics, coach, index) {
   return {
     clientName: data.name,
     age: data.age || 0,
     gender: data.gender,
     joined: data.joiningDate,
-    weight: statistics?.at(0).weight,
-    height: `${statistics?.at(0)?.height} ${statistics?.at(0)?.heightUnit}`,
-    bmi: calculateBMIFinal(statistics[0]),
+    weight: statistics?.at(index).weight,
+    avgWeight: (statistics.reduce((acc, curr) => acc + standardWeight(curr), 0) / statistics.length).toFixed(1),
+    height: `${statistics?.at(index)?.height} ${statistics?.at(index)?.heightUnit}`,
+    bmi: statistics[index].bmi,
+    avgBmi: (statistics.reduce((acc, curr) => acc + (Number(curr.bmi) || calculateBMIFinal(curr)), 0) / statistics.length).toFixed(1),
+    rm: statistics[index].rm,
+    avgRm: (statistics.reduce((acc, curr) => acc + (Number(curr.rm) || calculateBMRFinal(curr)), 0) / statistics.length).toFixed(1),
+    muscle: statistics[index].muscle,
+    avgMuscle: (statistics.reduce((acc, curr) => acc + (Number(curr.muscle) || calculateSMPFinal(curr)), 0) / statistics.length).toFixed(1),
+    fat: statistics[index].fat,
+    avgFat: (statistics.reduce((acc, curr) => acc + (Number(curr.fat) || calculateBodyFatFinal(curr)), 0) / statistics.length).toFixed(1),
     brandLogo: "/brandLogo.png",
     sideImage: "/side.png",
     bottomStripImage: "/bottom.png",
-    allStatsList: statistics
+    allStatsList: statistics,
+    coachName: coach.name,
+    coachDescription: coach.specialization,
+    coachProfileImage: coach.profilePhoto,
+    coachWeightLoss: coach.weightLoss,
   }
 }
 
