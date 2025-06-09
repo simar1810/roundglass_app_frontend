@@ -83,26 +83,26 @@ export const sidebar__coachContent = [
     title: "Meals & Recipes",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/meals",
-    items: [
-      {
-        id: 1,
-        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Meal Plans",
-        url: "/coach/meals/list"
-      },
-      {
-        id: 2,
-        icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Meal Plan",
-        url: "/coach/meals/add-plan"
-      },
-      {
-        id: 3,
-        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Recipes",
-        url: "/coach/meals/recipes"
-      }
-    ]
+    // items: [
+    //   {
+    //     id: 1,
+    //     icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "View Meal Plans",
+    //     url: "/coach/meals/list"
+    //   },
+    //   {
+    //     id: 2,
+    //     icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Add Meal Plan",
+    //     url: "/coach/meals/add-plan"
+    //   },
+    //   {
+    //     id: 3,
+    //     icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Recipes",
+    //     url: "/coach/meals/recipes"
+    //   }
+    // ]
   },
   {
     id: 5,
@@ -126,7 +126,15 @@ export const sidebar__coachContent = [
     id: 8,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/workouts"
+    url: "/coach/workouts",
+    // items: [
+    //   {
+    //     id: 1,
+    //     icon: <PersonStanding className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Workouts",
+    //     url: "Workouts"
+    //   }
+    // ]
   },
   {
     id: 9,
@@ -208,12 +216,12 @@ export const sidebar__coachContent = [
         title: "Ideal Weight",
         url: "/coach/tools/ideal-weight"
       },
-      // {
+      // {`
       //   id: 5,
       //   icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
       //   title: "Add Programs",
       //   url: "/coach/tools/programs/add"
-      // },
+      // },`
     ]
   },
   // {

@@ -14,28 +14,28 @@ export default function FreeTrialCustomerRow({
   const { clubSystem } = useAppSelector(state => state.coach.data)
   return <TableRow>
     <TableCell>{index + 1}</TableCell>
-    <TableCell>{customer.clientId.name}</TableCell>
-    <TableCell>{customer.clientId.mobileNumber}</TableCell>
-    <TableCell>{customer.clientId.rollno}</TableCell>
-    <TableCell>{customer.clientId.sponseredByName}</TableCell>
-    <TableCell>{customer.clientId.joiningDate}</TableCell>
-    <TableCell>{customer.clientId.city}</TableCell>
+    <TableCell>{customer?.user?.name}</TableCell>
+    <TableCell>{customer?.user?.mobileNumber}</TableCell>
+    <TableCell>{customer?.user?.rollno}</TableCell>
+    <TableCell>{customer?.user?.sponseredByName}</TableCell>
+    <TableCell>{customer?.user?.joiningDate}</TableCell>
+    <TableCell>{customer?.user?.city}</TableCell>
     <TableCell>
       {clubSystem === 1 && <AddSubscriptionModal
-        _id={customer.clientId._id}
+        _id={customer?.user?._id}
         onSubmit={() => mutate("free-trial-users")}
       />}
       {clubSystem === 2 && <AddVolumePointsModal
-        _id={customer.clientId._id}
+        _id={customer?.user?._id}
         onSubmit={() => mutate("free-trial-users")}
       />}
     </TableCell>
-    <TableCell>
+    {/* <TableCell>
       <Link
-        href={`/coach/clients/${customer._id}`}
+        href={`/coach/clients/${customer?._id}`}
       >
         <Eye className="w-[16px] mx-auto" />
       </Link>
-    </TableCell>
+    </TableCell> */}
   </TableRow>
 }
