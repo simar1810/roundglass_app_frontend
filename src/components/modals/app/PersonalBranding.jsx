@@ -30,7 +30,11 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
 export default function PersonalBranding({ setModal }) {
-  return <Dialog open={true} onOpenChange={() => setModal(false)}>
+  return <Dialog
+    open={true}
+    onClose={() => setModal(undefined)}
+    onOpenChange={() => setModal(undefined)}
+  >
     <DialogTrigger />
     <DialogContent className="!max-w-[400px] w-full max-h-[70vh] border-0 p-0 overflow-y-auto">
       <DialogHeader className="bg-[var(--comp-1)] p-4 border-b-1">
@@ -50,7 +54,7 @@ export default function PersonalBranding({ setModal }) {
   </Dialog>
 }
 
-function PersonalBrandingContainer() {
+function PersonalBrandingContainer({ onClose }) {
   const { stage } = useCurrentStateContext();
   if (stage === 1) return <Stage1 />
   if (stage === 2) <Stage2 />
@@ -88,8 +92,9 @@ function Stage1() {
   </>
 }
 
-async function getRequestLink(data, type) {
-  if (Boolean(type)) {
+async function getRequestLink(data, type, id) {
+  if (!Boolean(type)) {
+    // data.append("id", id)
     const response = await sendDataWithFormData("app/update", data, "PUT");
     return response;
   } else {
@@ -133,7 +138,7 @@ function Stage2() {
       <input
         type="file"
         ref={brandLogoRef}
-        onChange={e => dispatch(changeFieldvalue("file", e.target.files[0]))}
+        onChange={e => dispatch(changeFieldvalue("brandLogo", e.target.files[0]))}
         hidden
       />
     </div>
@@ -178,8 +183,13 @@ function Stage3() {
 
   async function savePersonalBrandDetails() {
     try {
+      console.log(formData)
       setLoading(true);
-      const data = generateRequestPayload(formData);
+      const data = generateRequestPayload(formData, formData._id);
+      for (const [field, value] of data.entries()) {
+        console.log(field, value)
+      }
+      // throw new Error("test")
       const response = await getRequestLink(data);
       if (response.status_code !== 200) throw new Error(response.message);
       mutate("app/personalBranding");
@@ -202,7 +212,7 @@ function Stage3() {
     />
     <div>
       <h3 className="mb-2">Brand Logo</h3>
-      <SelectBrandLogo fieldName="brandLogo" brandLogoRef={brandLogoRef} />
+      <SelectBrandLogo fieldName="file" brandLogoRef={brandLogoRef} />
       <input
         type="file"
         ref={brandLogoRef}
@@ -246,19 +256,19 @@ function Stage3() {
 
 function SelectBrandLogo({ brandLogoRef, fieldName }) {
   const { formData, selectedBrand, dispatch } = useCurrentStateContext();
-
-  if (formData[fieldName]) return <div className="relative">
+  console.log(formData)
+  if (Boolean(formData["brandLogo"])) return <div className="relative">
     <Image
-      src={getObjectUrl(formData[fieldName]) || "/not-found.png"}
+      src={getObjectUrl(formData["brandLogo"]) || "/not-found.png"}
       alt=""
-      height={200}
       width={200}
+      height={200}
       className="w-full max-h-[250px] object-contain"
       onClick={() => brandLogoRef.current.click()}
     />
     <X
       className="absolute top-2 right-2 cursor-pointer"
-      onClick={e => dispatch(changeFieldvalue([fieldName], undefined))}
+      onClick={e => dispatch(changeFieldvalue(["brandLogo"], undefined))}
     />
   </div>
 

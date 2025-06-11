@@ -158,15 +158,39 @@ export function calculatePieChartAngle(idealValue, calculatedValue, normalMin, n
 }
 
 export async function getBase64ImageFromUrl(imageUrl) {
-  const response = await fetch(imageUrl, {
-    mode: 'cors',
-  });
-  const blob = await response.blob();
-
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
+  try {
+    const response = await fetch(imageUrl, {
+      mode: 'cors',
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: 'no-cache',
+      },
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status} - ${errorText || response.statusText}`);
+    }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result);
+      };
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        reject(new Error("Failed to read image as Base64."));
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error(
+        "Network error or CORS issue: Could not fetch the image. " +
+        "Please ensure your AWS S3 bucket has the correct CORS configuration " +
+        "allowing requests from your application's origin (e.g., http://localhost:3001)."
+      );
+    } else {
+      throw error;
+    }
+  }
+}

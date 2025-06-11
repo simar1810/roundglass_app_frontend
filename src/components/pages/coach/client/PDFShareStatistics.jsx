@@ -503,7 +503,7 @@ function StatisticsPage1({ data, styles, brand }) {
       <Text style={styles.sectionHeader}>Statistics</Text>
       <View style={{ marginTop: 6, marginBottom: 10, display: "block", height: 1, backgroundColor: brand.primaryColor }} />
 
-      <Metric
+      {weight && <Metric
         styles={styles}
         icon="/assets/SVG/weightLog.svg"
         title="Weight"
@@ -512,9 +512,9 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Not-Healthy"
         percent={30}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {fatPercentage && <Metric
         styles={styles}
         icon="/assets/SVG/fat_icon.svg"
         title="Fat Percentage"
@@ -523,9 +523,9 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Not-Healthy"
         percent={40}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {restingMetabolism && <Metric
         styles={styles}
         icon="/assets/SVG/body.svg"
         title="Resting Metabolism"
@@ -534,9 +534,9 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Not-Healthy"
         percent={50}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {bmi && <Metric
         styles={styles}
         icon="/assets/SVG/BMI.svg"
         title="BMI"
@@ -545,9 +545,9 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Not-Healthy"
         percent={30}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {bodyAge && <Metric
         styles={styles}
         icon="/assets/SVG/body.svg"
         title="Body Age"
@@ -556,9 +556,9 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Healthy"
         percent={80}
         color="#2ecc71"
-      />
+      />}
 
-      <Metric
+      {musclePercentage && <Metric
         styles={styles}
         icon="/assets/SVG/muscle.svg"
         title="Muscle Percentage"
@@ -567,7 +567,7 @@ function StatisticsPage1({ data, styles, brand }) {
         status="Healthy"
         percent={85}
         color="#2ecc71"
-      />
+      />}
 
       <Text style={{ ...styles.disclaimer, marginTop: "auto", marginBottom: 32, lineHeight: 1.2 }}>
         Disclaimer: This report does not provide any medical advice & is not a
