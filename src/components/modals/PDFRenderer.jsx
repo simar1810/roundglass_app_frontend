@@ -8,6 +8,8 @@ import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
+import { getBase64ImageFromUrl } from "@/lib/utils";
+import { useEffect } from "react";
 
 const Templates = {
   PDFComparison,
@@ -36,12 +38,19 @@ function Container({ Component, pdfData }) {
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = data?.data;
+  useEffect(function () {
+    if (brands?.at(0)?.brandLogo) getBase64ImageFromUrl(brands[0]?.brandLogo).then(console.log)
+  }, [brands])
 
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
 
+  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
   return <Component
     data={pdfData}
-    brand={brands[0]}
+    brand={{
+      ...(brands[0] || {}),
+      primaryColor: `#${brands[0]?.primaryColor}` || "#000000",
+      textColor: `#${brands[0]?.textColor}` || "#000000",
+    }}
   />
 }

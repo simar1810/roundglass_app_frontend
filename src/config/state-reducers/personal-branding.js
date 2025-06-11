@@ -12,9 +12,15 @@ export function personalBrandingReducer(state, action) {
       return {
         ...state,
         selectedBrand: action.payload.length >= 1 ? action.payload.at(0) : null,
-        formData: action.payload.length >= 1 ? action.payload.at(0) : state.formData,
+        formData: action.payload.length >= 1
+          ? {
+            ...action.payload.at(0),
+            brandLogo: "",
+            file: action.payload.length >= 1 ? action.payload.at(0).brandLogo : undefined
+          }
+          : { ...state.formData },
         type: action.payload.length >= 1 ? "edit" : "new",
-        stage: action.payload.length >= 1 ? 2 : 3
+        stage: action.payload.length >= 1 ? 2 : 3,
       }
     case "PERSONAL_BRAND_UPDATED":
       return {
