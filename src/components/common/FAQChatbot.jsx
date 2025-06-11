@@ -247,7 +247,7 @@ function FAQChatbotContainer({ faqData }) {
   )
 
   const renderCategories = () => (
-    <div className="h-full flex flex-col">
+    <div className="">
       <div className="px-6 py-3 border-b border-gray-100">
         <div className="flex itms-center justify-between">
           <div>
@@ -330,7 +330,7 @@ function FAQChatbotContainer({ faqData }) {
   )
 
   const renderQuestions = () => (
-    <div className="h-full flex flex-col overflow-y-auto">
+    <div className="h-full">
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -538,7 +538,7 @@ function FAQChatbotContainer({ faqData }) {
           <div className="fixed inset-0 bg-black/10 bg-opacity-20" onClick={() => setIsOpen(false)} />
 
           {/* Chatbot Widget */}
-          <Card className="relative w-full max-w-md h-[600px] py-0 gap-0 bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
+          <Card className="relative w-full max-w-md h-[80vh] py-0 gap-0 bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
             {aiOpened ? (
               <AIChat onClose={() => setAiOpened(false)} />
             ) : (
@@ -572,7 +572,7 @@ function FAQChatbotContainer({ faqData }) {
                 </div>
 
                 {/* Content */}
-                <CardContent className="p-0 h-full">
+                <CardContent className="p-0 overflow-y-auto">
                   {showSearch ? (
                     renderSearch()
                   ) : (
