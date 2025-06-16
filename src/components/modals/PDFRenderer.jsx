@@ -8,8 +8,9 @@ import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
-import { getBase64ImageFromUrl } from "@/lib/utils";
-import { useEffect } from "react";
+import { getBase64ImageFromUrl } from "@/lib/image";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const Templates = {
   PDFComparison,
@@ -35,11 +36,12 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
 }
 
 function Container({ Component, pdfData }) {
+  const [brandLogo, setBrandLogo] = useState("");
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = data?.data;
   useEffect(function () {
-    if (brands?.at(0)?.brandLogo) getBase64ImageFromUrl(brands[0]?.brandLogo).then(console.log)
+    if (brands?.at(0)?.brandLogo) getBase64ImageFromUrl(brands[0]?.brandLogo).then(setBrandLogo)
   }, [brands])
 
   if (isLoading) return <ContentLoader />
@@ -49,6 +51,7 @@ function Container({ Component, pdfData }) {
     data={pdfData}
     brand={{
       ...(brands[0] || {}),
+      brandLogo,
       primaryColor: `#${brands[0]?.primaryColor}` || "#000000",
       textColor: `#${brands[0]?.textColor}` || "#000000",
     }}

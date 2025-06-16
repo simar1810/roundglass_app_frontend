@@ -29,11 +29,13 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-export default function PersonalBranding({ setModal }) {
+export default function PersonalBranding({
+  onClose
+}) {
   return <Dialog
     open={true}
-    onClose={() => setModal(undefined)}
-    onOpenChange={() => setModal(undefined)}
+    onClose={onClose}
+    onOpenChange={onClose}
   >
     <DialogTrigger />
     <DialogContent className="!max-w-[400px] w-full max-h-[70vh] border-0 p-0 overflow-y-auto">
@@ -183,13 +185,8 @@ function Stage3() {
 
   async function savePersonalBrandDetails() {
     try {
-      console.log(formData)
       setLoading(true);
       const data = generateRequestPayload(formData, formData._id);
-      for (const [field, value] of data.entries()) {
-        console.log(field, value)
-      }
-      // throw new Error("test")
       const response = await getRequestLink(data);
       if (response.status_code !== 200) throw new Error(response.message);
       mutate("app/personalBranding");
@@ -256,7 +253,6 @@ function Stage3() {
 
 function SelectBrandLogo({ brandLogoRef, fieldName }) {
   const { formData, selectedBrand, dispatch } = useCurrentStateContext();
-  console.log(formData)
   if (Boolean(formData["brandLogo"])) return <div className="relative">
     <Image
       src={getObjectUrl(formData["brandLogo"]) || "/not-found.png"}

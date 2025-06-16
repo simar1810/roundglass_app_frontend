@@ -1,5 +1,5 @@
 "use client";
-import { getBase64ImageFromUrl } from "@/lib/utils";
+import { getBase64ImageFromUrl } from "@/lib/image";
 import {
   Page,
   Text,
@@ -340,21 +340,12 @@ export default function PDFComparison({
 
 function Comparison1({ brand, styles, data }) {
   const { allStatsList = [] } = data;
-
   return (
     <Page size="A4" style={styles.page}>
       <Image
         style={styles.logo}
-        source={{
-          uri: brand.brandLogo,
-          method: 'GET',
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: 'no-cache',
-          },
-          body: undefined,
-          credentials: 'include'
-        }}
+        source={brand.brandLogo}
+        src={brand.brandLogo}
       />
       <Text style={styles.heading}>Health Status Report</Text>
       <View style={styles.divider} />

@@ -17,7 +17,7 @@ import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
-import { mutate, useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -137,7 +137,8 @@ function SearchItem({
 }
 
 function UserOptions({ profilePhoto, name }) {
-  const [modal, setModal] = useState();
+  const [Modal, setModal] = useState();
+  const [opened, setOpened] = useState(false)
   const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
   const { cache } = useSWRConfig();
@@ -161,47 +162,55 @@ function UserOptions({ profilePhoto, name }) {
     }
   }
 
-  return <DropdownMenu>
-    {modal}
-    <DropdownMenuTrigger>
-      <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
-        <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
-          <AvatarImage src={profilePhoto} />
-          <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
-        </Avatar>
-        <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
-        <ChevronDown className="w-[16px] h-[16px]" />
-      </div>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent>
-      {personalizationpermitted && <DropdownMenuItem>
-        <DropdownMenuLabel
-          onClick={() => setModal(<PersonalBranding setModal={setModal} />)}
-          className="text-[14px] py-0"
+  return <>
+    {Modal || <></>}
+    <DropdownMenu open={opened}>
+      <DropdownMenuTrigger
+        onClick={() => setOpened(!opened)}
+      >
+        <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
+          <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
+            <AvatarImage src={profilePhoto} />
+            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
+          </Avatar>
+          <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+          <ChevronDown className="w-[16px] h-[16px]" />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {personalizationpermitted && <DropdownMenuItem
+          onClick={() => setModal(<PersonalBranding
+            onClose={() => {
+              setModal()
+              setOpened(false)
+            }}
+          />)}
         >
-          App personalisation
-        </DropdownMenuLabel>
-      </DropdownMenuItem>}
-      <DropdownMenuItem>
-        <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">
-            Your Website
+            App personalisation
           </DropdownMenuLabel>
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link href="/coach/portfolio" className="w-full">
-          <DropdownMenuLabel className="text-[14px] py-0">
-            Portfolio
+        </DropdownMenuItem>}
+        <DropdownMenuItem onClick={() => setOpened(false)}>
+          <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
+            <DropdownMenuLabel className="text-[14px] py-0">
+              Your Website
+            </DropdownMenuLabel>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setOpened(false)}>
+          <Link href="/coach/portfolio" className="w-full">
+            <DropdownMenuLabel className="text-[14px] py-0">
+              Portfolio
+            </DropdownMenuLabel>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={expireUserSession}>
+          <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
+            <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />
+            Logout
           </DropdownMenuLabel>
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={expireUserSession}>
-        <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
-          <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />
-          Logout
-        </DropdownMenuLabel>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </>
 }
