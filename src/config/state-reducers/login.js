@@ -32,6 +32,11 @@ export default function reducer(state, action) {
           [action.payload.name]: action.payload.value
         }
       }
+    case "CHANGE_CURRENT_STAGE":
+      return {
+        ...state,
+        stage: action.payload
+      }
     default:
       return state;
   }
@@ -51,5 +56,12 @@ export function setFieldValue(name, value) {
       name,
       value
     }
+  }
+}
+
+export function changeCurrentStage(payload) {
+  return {
+    type: "CHANGE_CURRENT_STAGE",
+    payload
   }
 }

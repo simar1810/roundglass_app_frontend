@@ -4,11 +4,12 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from "@/components/ui/input-otp";
-import { coachfirstTimeRegistration } from "@/config/state-reducers/login";
+import { changeCurrentStage, coachfirstTimeRegistration } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppDispatch } from "@/providers/global/hooks";
 import { store } from "@/providers/global/slices/coach";
+import { ArrowLeft, MoveLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -83,7 +84,14 @@ export default function InputOTPContainer() {
   }
 
   return <div>
-    <h3 className="text-[32px] mb-4">Security Code</h3>
+    <h3 className="text-[32px] leading-[1]">Security Code</h3>
+    <button
+      onClick={() => dispatch(changeCurrentStage(1))}
+      className="mb-4 flex items-center gap-1"
+    >
+      <MoveLeft size={20} />
+      <p>Back</p>
+    </button>
     <p className="text-[var(--dark-1)]/25 text-[14px] mb-8">
       <span>Enter 4-Digit OTP sent on</span>
       <span className="text-black">+91 {mobileNumber}</span>

@@ -210,15 +210,12 @@ function EditHealthMatric({ matrix, payload }) {
   const [formData, setFormData] = useState(payload)
   const closeBtnRef = useRef(null);
   const params = useParams()
-  console.log(params)
 
   async function saveHealthMatrix() {
     try {
       setLoading(true);
-      console.log(formData)
       // throw new Error(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`)
       const response = await sendData(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`, { updatedData: formData }, "PUT");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientVolumePoints/${_id}`);
