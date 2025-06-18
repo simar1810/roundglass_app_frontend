@@ -23,7 +23,7 @@ export function addMealPlanReducer(state, action) {
             meals: []
           },
         ],
-        selectedMealType: state.meals.length === 0 ? action.payload : state.selectedMealType
+        selectedMealType: action.payload
       }
     case "ADD_NEW_RECIPE":
       return {
@@ -176,7 +176,7 @@ export function deleteMealTypeValue(payload) {
   }
 }
 
-export function init(data) {
+export function init(data, creationType) {
   const payload = {
     stage: 1,
     name: `Copy of ${data.name}`,
@@ -184,12 +184,15 @@ export function init(data) {
     notes: data.notes,
     image: data.image,
     joiningDate: data.joiningDate,
-    selectedMealType: data.meals?.at(0).mealType
+    selectedMealType: data.meals?.at(0).mealType,
+    creationType
   };
   for (const mealType of data.meals) {
     for (const meal of mealType.meals) {
       meal.id = (Math.random() * 1000000).toFixed(0)
-      meal.meal_time = format(parse(meal.meal_time, "hh:mm a", new Date()), "HH:mm");
+      meal.meal_time = meal.meal_time.length === 5
+        ? meal.meal_time
+        : format(parse(meal.meal_time, "hh:mm a", new Date()), "HH:mm");
     }
   }
   payload.meals = data.meals;
@@ -218,7 +221,7 @@ export function generateRequestPayload(state) {
   }
   for (const mealTypes of state.meals) {
     for (const meal of mealTypes.meals) {
-      for (const mealField of ["name", "description", "meal_time"]) {
+      for (const mealField of ["name", "meal_time"]) {
         if (!meal[mealField]) return { success: false, field: mealField }
       }
     }

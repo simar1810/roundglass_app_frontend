@@ -14,14 +14,28 @@ import { Plus, Upload, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { mutate } from "swr";
+import imageCompression from "browser-image-compression";
+
+const Map = {
+  custom_copy_edit: function (_, closeRef) {
+    closeRef?.current?.click();
+  },
+  edit: function (router) {
+    router.push("/coach/meals/list")
+  },
+  add: function (router) {
+    router.push("/coach/meals/list")
+  }
+}
 
 export default function Stage2() {
   const [loading, setLoading] = useState(false);
   const router = useRouter()
   const { meals, selectedMealType, dispatch, ...state } = useCurrentStateContext();
 
+  const closeRef = useRef()
   const selectedMeals = meals.find(item => item.mealType === selectedMealType)?.meals || [];
-
   async function createMealPlan() {
     const toastId = toast.loading("Creating meal plan. Please wait!");
     try {
@@ -31,7 +45,8 @@ export default function Stage2() {
       const response = await sendData("app/create-plan", payload.data);
       if (response.status_code !== 200) throw new Error(response.message)
       toast.success(response.message || "Successfully created the meal plan!");
-      router.push("/coach/meals/list")
+      mutate("getPlans")
+      Map[state.creationType](router, closeRef)
     } catch (error) {
       toast.error(error.message || "Please try again later!");
     } finally {
@@ -40,7 +55,7 @@ export default function Stage2() {
     }
   }
 
-  return <div>
+  return <div className="">
     <h4 className="pb-2 px-4 border-b-1">Create Meal</h4>
     <div className="p-4">
       <MealTypesList />
@@ -94,7 +109,8 @@ export function RecipeDetails({ recipe, index }) {
   async function uploadRecipeThumbnail(e) {
     try {
       const data = new FormData();
-      data.append("file", e.target.files[0])
+      const thumbnail = await imageCompression(e.target.files[0], { maxSizeMB: 0.25 })
+      data.append("file", thumbnail);
       const response = await sendDataWithFormData("app/getPlanImageWeb", data);
       if (response.status_code !== 200) throw new Error(response.message)
       dispatch(changeRecipeFieldValue(recipe.id, "image", response.img))
