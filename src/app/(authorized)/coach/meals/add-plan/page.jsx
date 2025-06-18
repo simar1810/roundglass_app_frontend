@@ -23,7 +23,7 @@ export default function Page() {
           try {
             const response = await fetchData(`app/get-plan-by-id?id=${params.get("id")}`);
             if (response.status_code !== 200) throw new Error(response.message);
-            setInitialState(init(response.data))
+            setInitialState(init(response.data, "edit"))
             setDataGenerated(true);
           } catch (error) {
             toast.error(error.message || "Please try again later!");
