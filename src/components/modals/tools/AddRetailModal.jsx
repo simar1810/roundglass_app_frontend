@@ -65,18 +65,21 @@ function selectComponent(stage) {
 function Stage1() {
   const { isLoading, error, data } = useSWR("app/clients?isActive=true", () => getAppClients({ isActive: true }));
   const { clientId, dispatch } = useCurrentStateContext();
+  const [query, setQuery] = useState("");
 
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const clients = data.data;
+  const clients = data.data.filter(client => new RegExp(query, "i").test(client.name));
 
   return <div className="p-4">
     <FormControl
       type="text"
       name="search"
+      value={query}
+      onChange={e => setQuery(e.target.value)}
       placeholder="Search Client here"
       className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
     />

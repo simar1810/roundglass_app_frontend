@@ -6,7 +6,7 @@ import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { invoicePDFData } from "@/lib/pdf";
@@ -18,30 +18,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
-
-const invoiceData = {
-  clientName: 'Simarpreet Singh',
-  age: '21',
-  address: 'New Amritsar, Punjab',
-  city: 'Amritsar',
-  phone: '9876543210',
-  invoiceNo: 'INV123456',
-  date: '2025-05-12',
-  coachName: 'Wellness Coach',
-  coachPhone: '9876543210',
-  coachCity: 'Ludhiana',
-  subtotal: '3500',
-  discount: '500',
-  total: '3000',
-  logoUrl: 'https://wellnessz.in/static/logo.png',
-  products: [
-    { productName: 'Formula 1 Shake', quantity: 2, price: 1000 },
-    { productName: 'Afresh Energy Drink', quantity: 1, price: 500 },
-    { productName: 'Subtotal', quantity: "", price: 3500 },
-    { productName: 'Discount', quantity: "", price: 500 },
-    { productName: 'Total', quantity: "", price: 3000 },
-  ],
-};
 
 export default function Page() {
   const {
@@ -163,10 +139,13 @@ function Brand({ brand }) {
 function Orders({ orders }) {
   const myOrders = [...orders.myOrder, ...orders.retailRequest]
     .sort((a, b) => {
+      if (a.status === "Completed" && b.status !== "Completed") return -1;
+      if (a.status !== "Completed" && b.status === "Completed") return 1;
       const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
       return dateA - dateB;
-    });
+    })
+    .sort((a, b) => a.status === "Completed");
 
   return <TabsContent value="order-history">
     <div className="grid grid-cols-3 gap-4">

@@ -1,4 +1,5 @@
 "use client";
+import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "@/lib/client/statistics";
 import { getBase64ImageFromUrl } from "@/lib/image";
 import {
   Page,
@@ -379,10 +380,10 @@ function Comparison1({ brand, styles, data }) {
           <View key={index} style={styles.row}>
             <Text style={styles.cell}>{stat.createdDate}</Text>
             <Text style={styles.cell}>{stat.weight}</Text>
-            <Text style={styles.cell}>{stat.bmi}</Text>
-            <Text style={styles.cell}>{stat.muscle}</Text>
-            <Text style={styles.cell}>{stat.fat}</Text>
-            <Text style={styles.cell}>{stat.rm}</Text>
+            <Text style={styles.cell}>{stat.bmi || calculateBMIFinal(stat) || 0}</Text>
+            <Text style={styles.cell}>{stat.muscle || calculateSMPFinal(stat) || 0}</Text>
+            <Text style={styles.cell}>{stat.fat || calculateBodyFatFinal(stat) || 0}</Text>
+            <Text style={styles.cell}>{stat.rm || calculateBMRFinal(stat) || 0}</Text>
           </View>
         ))}
       </View>
