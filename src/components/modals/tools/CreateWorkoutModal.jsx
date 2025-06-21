@@ -150,7 +150,9 @@ function SelectWorkouts() {
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const workoutItems = data.data.filter(workout => workout.title.toLowerCase().includes(query.toLowerCase()));
+  const workoutItems = data.data
+    .filter(workout => workout.title.toLowerCase().includes(query.toLowerCase()))
+    .filter(workout => Boolean(workout.video_link));
 
   const set = new Set(workouts)
 

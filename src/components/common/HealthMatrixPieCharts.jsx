@@ -89,8 +89,6 @@ const healtMetrics = [
   },
 ];
 
-const fields = ["heightCms", "heightFeet", "heightInches", "heightUnit", "weight", "weightInKgs", "weightInPounds", "weightUnit", "bodyComposition"]
-
 export default function HealthMetrics({ data }) {
   const payload = {
     bmi: data.bmi || calculateBMIFinal(data),
@@ -161,7 +159,7 @@ export function MetricProgress({
             className="object-contain"
           />
           <h2 className="text-[16px] font-bold">{title}</h2>
-          <EditHealthMatric
+          {/* <EditHealthMatric
             matrix={{
               title,
               name,
@@ -169,7 +167,7 @@ export function MetricProgress({
               _id
             }}
             payload={payload}
-          />
+          /> */}
         </div>
       </CardHeader>
       <CardContent className="mt-auto">
