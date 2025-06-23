@@ -139,11 +139,9 @@ function Brand({ brand }) {
 function Orders({ orders }) {
   const myOrders = [...orders.myOrder, ...orders.retailRequest]
     .sort((a, b) => {
-      if (a.status === "Completed" && b.status !== "Completed") return -1;
-      if (a.status !== "Completed" && b.status === "Completed") return 1;
       const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
-      return dateA - dateB;
+      return dateB - dateA;
     })
     .sort((a, b) => a.status === "Completed");
 
