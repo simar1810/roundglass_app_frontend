@@ -109,6 +109,7 @@ export default function HealthMetrics({ data }) {
               {...metric}
               value={payload[metric.name]}
               maxPossibleValue={metric.getMaxValue(payload[metric.name])}
+              maxThreshold={metric.getMaxValue(payload[metric.name])}
               minThreshold={metric.getMinValue(payload[metric.name])}
               name={metric.name}
               payload={payload}
@@ -130,23 +131,15 @@ export function MetricProgress({
   maxThreshold = 100,
   minThreshold,
   icon,
-  className,
-  name,
-  payload,
-  _id
+  className
 }) {
-  const maxPossibleValue = maxThreshold + minThreshold;
-  const progressPercentage = (value / maxPossibleValue) * 100;
   const radius = 70;
-  const circumference = 2 * Math.PI * radius;
-  const progressOffset = ((100 - progressPercentage) / 100) * circumference;
-
-  const getColor = () => {
+  const { strokeDasharray, strokeDashoffset } = getStrokeDashoffset(value, maxThreshold, radius);
+  function getColor() {
     if (value < minThreshold) return "#E8B903";
     if (value > maxThreshold) return "#FF0000";
     return "#67BC2A";
-  };
-
+  }
   return (
     <Card className={cn("max-w-xs shadow-none relative", className)}>
       <CardHeader className="pb-2">
@@ -188,8 +181,8 @@ export function MetricProgress({
               fill="none"
               stroke={getColor()}
               strokeWidth="16"
-              strokeDasharray={circumference}
-              strokeDashoffset={progressOffset}
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               transform="rotate(-90 80 80)"
             />
@@ -212,7 +205,6 @@ function EditHealthMatric({ matrix, payload }) {
   async function saveHealthMatrix() {
     try {
       setLoading(true);
-      // throw new Error(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`)
       const response = await sendData(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`, { updatedData: formData }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
@@ -245,4 +237,17 @@ function EditHealthMatric({ matrix, payload }) {
       <DialogClose ref={closeBtnRef} />
     </DialogContent>
   </Dialog>
+}
+
+function getStrokeDashoffset(value, maxValue, radius) {
+  const circumference = 2 * Math.PI * radius;
+  const fullValue = maxValue * 1.5;
+  const clampedValue = Math.min(value, fullValue);
+  const progressRatio = clampedValue / fullValue;
+  const visibleLength = progressRatio * circumference;
+  const dashOffset = circumference - visibleLength;
+  return {
+    strokeDasharray: circumference,
+    strokeDashoffset: dashOffset,
+  };
 }
