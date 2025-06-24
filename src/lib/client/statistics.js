@@ -208,7 +208,6 @@ export function calculateBodyAgeFinal(data) {
     const gender = data.gender?.toLowerCase() || '';
     const bodyComposition = data.bodyComposition?.toLowerCase() || '';
 
-    // BMI-based adjustments
     if (bmi < 18.5) {
       bodyAge += 2;
     } else if (bmi > 25.0) {
@@ -217,7 +216,6 @@ export function calculateBodyAgeFinal(data) {
       bodyAge -= 1;
     }
 
-    // Body fat adjustments by gender
     if (gender === 'male') {
       if (fat < 8.0) {
         bodyAge -= 2;
