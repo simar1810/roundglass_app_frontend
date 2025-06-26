@@ -44,7 +44,7 @@ function AssignMealPlanContainer({ planId }) {
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
+  console.log(data)
   async function assignMealPlan() {
     try {
       const response = await sendData("app/assign-plan", { planId, clientId: selectedClient })

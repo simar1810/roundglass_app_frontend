@@ -23,9 +23,11 @@ export default function AddMealPlanModal() {
   const { dispatch, ...state } = useCurrentStateContext();
 
   async function changeStage() {
-    const image = await uploadMealPlanThumbnail()
-    const completed = stage1Completed({ ...state, image });
-    if (!completed.success) toast.error(`Field ${completed.field} is required!`)
+    if (thumbnail) {
+      const image = await uploadMealPlanThumbnail()
+      const completed = stage1Completed({ ...state, image });
+      if (!completed.success) toast.error(`Field ${completed.field} is required!`)
+    }
     else dispatch(setCurrentStage(2))
   }
 
