@@ -57,7 +57,10 @@ function AssignMealPlanContainer({ planId }) {
   }
 
   const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
-  const unassignedClients = data.data.unassignedClients.filter(client => client.name.includes(searchQuery));
+  const unassignedClients = [
+    ...data.data.unassignedClients.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    ...data.data.assignedToOtherPlans.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  ];
 
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
