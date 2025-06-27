@@ -40,11 +40,8 @@ function AssignMealPlanContainer({ planId }) {
   const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientForMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
-
   if (isLoading) return <ContentLoader />
-
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  console.log(data)
   async function assignMealPlan() {
     try {
       const response = await sendData("app/assign-plan", { planId, clientId: selectedClient })
@@ -55,13 +52,12 @@ function AssignMealPlanContainer({ planId }) {
       toast.error(error.message);
     }
   }
-
   const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
   const unassignedClients = [
     ...data.data.unassignedClients.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase())),
     ...data.data.assignedToOtherPlans.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase()))
   ];
-
+  console.log(unassignedClients)
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl

@@ -65,7 +65,7 @@ function AssignWorkoutContainer({ workoutId }) {
     ...data.data.unassignedClients.filter(client => client.name.includes(searchQuery)),
     ...data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery)),
   ];
-  console.log(data)
+  console.log(unassignedClients)
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
