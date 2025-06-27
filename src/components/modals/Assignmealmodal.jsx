@@ -44,7 +44,7 @@ function AssignMealPlanContainer({ planId }) {
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
+  console.log(data)
   async function assignMealPlan() {
     try {
       const response = await sendData("app/assign-plan", { planId, clientId: selectedClient })
@@ -57,7 +57,10 @@ function AssignMealPlanContainer({ planId }) {
   }
 
   const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
-  const unassignedClients = data.data.unassignedClients.filter(client => client.name.includes(searchQuery));
+  const unassignedClients = [
+    ...data.data.unassignedClients.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    ...data.data.assignedToOtherPlans.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  ];
 
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>

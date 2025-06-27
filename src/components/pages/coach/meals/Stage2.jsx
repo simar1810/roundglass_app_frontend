@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { addMealType, addNewRecipeBlank, changeFieldvalue, changeRecipeFieldValue, generateRequestPayload, removeSelectedRecipe } from "@/config/state-reducers/add-meal-plan";
+import { addMealType, addNewRecipeBlank, changeFieldvalue, changeRecipeFieldValue, generateRequestPayload, removeSelectedRecipe, setCurrentStage } from "@/config/state-reducers/add-meal-plan";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { Plus, Upload, X } from "lucide-react";
+import { ArrowLeft, Plus, Upload, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -56,7 +56,10 @@ export default function Stage2() {
   }
 
   return <div className="">
-    <h4 className="pb-2 px-4 border-b-1">Create Meal</h4>
+    <div className="w-full pb-2 px-4 flex items-center gap-4 border-b-1">
+      <ArrowLeft className="cursor-pointer" onClick={() => dispatch(setCurrentStage(1))} />
+      <h4>Create Meal</h4>
+    </div>
     <div className="p-4">
       <MealTypesList />
       <div className="min-h-[70vh] flex items-stretch gap-10 overflow-x-auto">

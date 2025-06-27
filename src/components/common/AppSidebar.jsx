@@ -38,6 +38,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 import PendingClientClubDataModal from "../modals/client/PendingClientClubDataModal";
 import { DialogTrigger } from "../ui/dialog";
 import useSWR, { mutate, useSWRConfig } from "swr";
+import { SearchBar } from "./AppNavbar";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
@@ -58,7 +59,7 @@ export default function AppSidebar() {
           className="max-w-[10ch] mx-auto mt-4"
         />
       </SidebarHeader>
-      <ClientSearchBar setModal={setModal} />
+      <SearchBar />
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
@@ -148,7 +149,7 @@ function SidebarItem({ item }) {
   </SidebarMenuItem>
 }
 
-function ClientSearchBar({ setModal }) {
+export function ClientSearchBar({ setModal }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,16 +176,16 @@ function ClientSearchBar({ setModal }) {
     })();
   }, [debouncedQuery]);
 
-  return <div ref={containerRef} className="bg-[var(--dark-4)] relative pt-3 pb-4 pr-4 relative">
-    <Search className="w-[18px] h-[18px] bg-[var(--dark-1)] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
+  return <div ref={containerRef} className="pr-4 relative mx-auto">
+    <Search className="w-[18px] h-[18px] bg-[var(--primary-1)] text-[#808080] absolute left-2 top-1/2 translate-y-[-60%]" />
     <Input
       placeholder="Search Client..."
       onFocus={() => setOpen(true)}
       value={searchQuery}
       onChange={e => setSearchQuery(e.target.value)}
-      className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 border-0 text-white !focus:outline-none"
+      className="bg-[var(--primary-1)] w-full md:max-w-[650px] pl-8 border-1 !focus:outline-none"
     />
-    {open && <div className="w-[calc(100%-16px)] bg-[var(--dark-1)] absolute top-16 left-0 px-2 py-2 rounded-[8px] z-[100] border-1 border-[var(--primary-1)]/40">
+    {open && <div className="w-[calc(100%-16px)] bg-[var(--primary-1)] absolute top-16 left-0 px-2 py-2 rounded-[8px] z-[100] border-1 border-[var(--primary-1)]/40">
       <SearchedResults
         query={searchQuery}
         setQuery={setSearchQuery}
@@ -207,7 +208,7 @@ function SearchedResults({ setModal,
   </div>
 
   if (data.length === 0) return <ContentError
-    className="!bg-[var(--dark-1)] !min-h-[150px] text-white text-center mt-0 border-0"
+    className="!bg-[var(--comp-1)] !min-h-[150px] text-center mt-0 border-0"
     title="No clients Founds!"
   />
 
@@ -222,7 +223,7 @@ function SearchedResults({ setModal,
 function ActiveClient({ client }) {
   return <Link
     href={`/coach/clients/${client._id}`}
-    className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
+    className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--dark-1)] text-[12px] px-2 py-2 flex items-center gap-4"
   >
     {client.name}
     <ChevronRight className="w-[16px] h-[16px] ml-auto" />
@@ -232,7 +233,7 @@ function ActiveClient({ client }) {
 function InactiveClient({ query, setQuery, setModal, client }) {
   const { cache } = useSWRConfig()
   return <div
-    className="hover:bg-[var(--accent-1)] hover:text-[var(--dark-1)] text-[var(--primary-1)] text-[12px] px-2 py-2 flex items-center gap-4"
+    className="hover:bg-[var(--accent-1)] hover:text-[var(--primary-1)] text-[var(--dark-1)] text-[12px] px-2 py-2 flex items-center gap-4"
     onClick={() => {
       setModal(<PendingClientClubDataModal
         open={true}

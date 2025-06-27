@@ -210,7 +210,7 @@ export function stage1Completed(state) {
   return { success: true }
 }
 
-const requestPayloadFields = ["name", "description", "image"];
+const requestPayloadFields = ["name", "description"];
 export function generateRequestPayload(state) {
   const payload = {};
   payload["joiningDate"] = null;

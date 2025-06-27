@@ -18,17 +18,21 @@ import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
 import { useSWRConfig } from "swr";
+import { ClientSearchBar } from "./AppSidebar";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
 export default function AppNavbar() {
+  const [Modal, setModal] = useState();
   const data = useAppSelector(state => state.coach.data)
   if (!data) return <></>
 
   const { profilePhoto, name } = data;
 
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
-    <SearchBar />
+    {/* <SearchBar /> */}
+    {Modal || <></>}
+    <ClientSearchBar setModal={setModal} />
     <NotificationModal />
     <UserOptions
       profilePhoto={profilePhoto}
@@ -51,7 +55,7 @@ const features = [
   { id: 11, title: "Clients", link: "/coach/clients" },
 ]
 
-function SearchBar() {
+export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [previousSearches, setPreviousSearces] = useLocalStorage("searches");
@@ -88,17 +92,17 @@ function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return <div className="grow">
-    <div ref={containerRef} className="md:max-w-[500px] w-full mx-auto relative z-[111] relative">
+  return <div className="bg-[var(--dark-1)] px-2 pt-10">
+    <div ref={containerRef} className="w-full mx-auto z-[111] relative">
       <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
       <Input
         onFocus={() => setOpen(true)}
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search Feature..."
-        className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
+        className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 !focus:outline-none border-1 border-[#808080]/40 focus:bg-black"
       />
-      {open && <div className="max-w-[450px] w-full bg-white absolute top-12 p-4 rounded-[8px] border-1">
+      {open && <div className="max-w-[450px] w-full bg-black text-white absolute top-12 p-4 rounded-[8px] border-1">
         {queriedFeatures.length > 0 && <h3 className="mb-2">Suggested</h3>}
         {queriedFeatures.map(item => <SearchItem
           key={item.id}
@@ -129,7 +133,7 @@ function SearchItem({
 }) {
   return <div
     onClick={() => storeInhistory(link, title)}
-    className="text-[var(--dark-1)]/25 hover:text-[var(--dark-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
+    className="text-[var(--primary-1)]/50 hover:text-[var(--primary-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
   >
     <Search className="w-[16px] h-[16px]" />
     {title}
