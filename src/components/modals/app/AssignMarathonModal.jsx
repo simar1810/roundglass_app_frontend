@@ -67,7 +67,6 @@ function AssignMealPlanContainer({ marathonId }) {
     ...data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery))
   ]
 
-  console.log(data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery)))
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl

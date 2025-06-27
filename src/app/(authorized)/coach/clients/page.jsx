@@ -24,7 +24,7 @@ export default function Page() {
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const clients = data.data
-  console.log(clients)
+
   return <div className="mt-8 content-container">
     <div className="grid grid-cols-2 gap-4 divide-y-1">
       {clients.map((client, index) => <ClientListItemStatus
