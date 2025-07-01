@@ -160,8 +160,8 @@ export default function PDFInvoice({ data, brand }) {
     <PDFViewer className="w-full h-full">
       <Document>
         <Page size="A4" style={styles.page}>
-          <img src={brand.brandLogo} alt="" />
-          {logoUrl && <Image src={brand.brandLogo} style={styles.logo} />}
+          {/* <img src={brand.brandLogo} alt="" /> */}
+          <Image src={brand.brandLogo} style={styles.logo} />
           <Text style={styles.headerText}>Receipt / invoice</Text>
 
           <View style={styles.headerRow}>

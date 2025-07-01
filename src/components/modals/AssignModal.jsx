@@ -60,8 +60,12 @@ function AssignWorkoutContainer({ workoutId }) {
     }
   }
 
-  const assignedToOtherPlans = data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery));
-  const unassignedClients = data.data.unassignedClients.filter(client => client.name.includes(searchQuery));
+  const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
+  const unassignedClients = [
+    ...data.data.unassignedClients.filter(client => client.name.includes(searchQuery)),
+    ...data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery)),
+  ];
+  console.log(unassignedClients)
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
@@ -70,13 +74,13 @@ function AssignWorkoutContainer({ workoutId }) {
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
       />
-      <p className="mt-4 font-medium">{unassignedClients.length + assignedToOtherPlans.length} Clients Available</p>
+      <p className="mt-4 font-medium">{unassignedClients.length} Clients Available</p>
     </div>
     <div className="grid grid-cols-2 gap-6">
       <div>
         <h3 className="font-medium mb-4">Assigned To Other Workouts</h3>
         <div className="space-y-4">
-          {assignedToOtherPlans.map((client, index) => <SelectClient
+          {assignedClients.map((client, index) => <SelectedClient
             key={index}
             client={client}
             selectedClient={selectedClient}

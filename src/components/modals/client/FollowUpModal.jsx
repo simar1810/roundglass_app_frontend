@@ -66,7 +66,7 @@ export default function FollowUpModal({ clientData }) {
 function FollowUpModalContainer({ clientData }) {
   const { clientId, dob } = clientData;
   const age = clientData.dob
-    ? differenceInYears(new Date(), parse(clientData.dob, 'yyyy-MM-dd', new Date()))
+    ? differenceInYears(new Date(), parse(clientData.dob, 'dd-MM-yyyy', new Date()))
     : 0
   const { stage } = useCurrentStateContext();
   if (stage === 1) return <Stage1 clientData={clientData} />;

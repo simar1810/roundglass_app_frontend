@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -103,7 +103,7 @@ function FAQChatbotContainer({ faqData }) {
 
   const handleContactAgent = () => {
     const message = encodeURIComponent(`Hi! I have a question that's not in your FAQ: "${searchQuery}"`)
-    const whatsappURL = `https://wa.me/1234567890?text=${message}`
+    const whatsappURL = `https://wa.me/+917696259940?text=${message}`
     window.open(whatsappURL, "_blank")
   }
 
@@ -147,6 +147,13 @@ function FAQChatbotContainer({ faqData }) {
   const toggleAIChat = () => {
     setAiOpened(!aiOpened)
   }
+
+  useEffect(function () {
+    if (isOpen) document.body.style.overflow = "hidden";
+    return function () {
+      document.body.style.overflow = "auto";
+    }
+  }, [isOpen])
 
   const renderSearch = () => (
     <div className="h-full">
@@ -239,11 +246,11 @@ function FAQChatbotContainer({ faqData }) {
   )
 
   const renderCategories = () => (
-    <div className="h-full">
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-4">
+    <div className="">
+      <div className="px-6 py-3 border-b border-gray-100">
+        <div className="flex itms-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">How can we help you?</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-">How can we help you?</h3>
             <p className="text-sm text-gray-500">Choose a category to get started</p>
           </div>
           <div className="flex gap-2">
@@ -257,7 +264,7 @@ function FAQChatbotContainer({ faqData }) {
         </div>
       </div>
 
-      <ScrollArea className="flex-1" style={{ height: "calc(100% - 140px)" }}>
+      <ScrollArea className="h-full">
         <div className="p-4 space-y-3">
           {faqData.map((category, index) => (
             <button
@@ -304,7 +311,7 @@ function FAQChatbotContainer({ faqData }) {
         </div>
 
         {/* Quick access to human support */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50">
+        <div className="mt-auto p-4 border-t border-gray-100 bg-gray-50">
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-3">Can't find what you're looking for?</p>
             <Button
@@ -322,7 +329,7 @@ function FAQChatbotContainer({ faqData }) {
   )
 
   const renderQuestions = () => (
-    <div className="h-full flex flex-col overflow-y-auto">
+    <div className="h-full">
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -530,7 +537,7 @@ function FAQChatbotContainer({ faqData }) {
           <div className="fixed inset-0 bg-black/10 bg-opacity-20" onClick={() => setIsOpen(false)} />
 
           {/* Chatbot Widget */}
-          <Card className="relative w-full max-w-md h-[600px] py-0 gap-0 bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
+          <Card className="relative w-full max-w-md h-[80vh] py-0 gap-0 bg-white shadow-2xl rounded-2xl overflow-hidden slide-in">
             {aiOpened ? (
               <AIChat onClose={() => setAiOpened(false)} />
             ) : (
@@ -564,7 +571,7 @@ function FAQChatbotContainer({ faqData }) {
                 </div>
 
                 {/* Content */}
-                <CardContent className="p-0 h-[calc(100%-120px)]">
+                <CardContent className="p-0 overflow-y-auto">
                   {showSearch ? (
                     renderSearch()
                   ) : (
@@ -599,8 +606,6 @@ function GPT({ onClose }) {
     setIsLoading(true);
 
     const res = await streamResponse("chatbot/chat", { message: input });
-
-    console.log(res);
     if (!res.body) return;
 
     const reader = res.body.getReader();

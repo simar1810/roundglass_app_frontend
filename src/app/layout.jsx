@@ -7,8 +7,8 @@ import { redirect } from "next/navigation";
 import { use } from "react";
 
 export const metadata = {
-  title: "WellnessZ Web",
-  description: "Powered By WellnessZ",
+  title: "WellnessZ",
+  description: "All in One Business Platform for Wellness Professionals",
 };
 
 export default function RootLayout({ children }) {

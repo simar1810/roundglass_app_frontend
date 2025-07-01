@@ -8,8 +8,8 @@ import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
+import { getBase64ImageFromUrl } from "@/lib/image";
 import { useEffect, useState } from "react";
-import { getBase64ImageFromUrl } from "@/lib/utils";
 
 const Templates = {
   PDFComparison,
@@ -35,19 +35,25 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
 }
 
 function Container({ Component, pdfData }) {
-  const [brandLogo, setBrandLogo] = useState();
+  const [brandLogo, setBrandLogo] = useState("");
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = data?.data;
+  const lastIndex = brands?.length - 1
   useEffect(function () {
-    if (brands?.length > 0) getBase64ImageFromUrl(brands[0]?.brandLogo).then(setBrandLogo);
-  }, [])
+    if (brands?.at(lastIndex)?.brandLogo) getBase64ImageFromUrl(brands[lastIndex]?.brandLogo).then(setBrandLogo)
+  }, [brands])
 
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
 
+  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
   return <Component
     data={pdfData}
-    brand={brands[0]}
+    brand={{
+      ...(brands[0] || {}),
+      brandLogo,
+      primaryColor: `#${brands[lastIndex]?.primaryColor?.slice(0, 6)}` || "#000000",
+      textColor: `#${brands[lastIndex]?.textColor?.slice(0, 6)}` || "#000000",
+    }}
   />
 }

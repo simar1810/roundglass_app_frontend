@@ -9,12 +9,19 @@ export function personalBrandingReducer(state, action) {
         }
       }
     case "SELECT_PERSONAL_BRAND_EDIT":
+      const lastIndex = action.payload.length - 1
       return {
         ...state,
-        selectedBrand: action.payload.length >= 1 ? action.payload.at(0) : null,
-        formData: action.payload.length >= 1 ? action.payload.at(0) : state.formData,
+        selectedBrand: action.payload.length >= 1 ? action.payload.at(lastIndex) : null,
+        formData: action.payload.length >= 1
+          ? {
+            ...action.payload.at(lastIndex),
+            brandLogo: "",
+            file: action.payload.length >= 1 ? action.payload.at(lastIndex).brandLogo : undefined
+          }
+          : { ...state.formData },
         type: action.payload.length >= 1 ? "edit" : "new",
-        stage: action.payload.length >= 1 ? 2 : 3
+        stage: action.payload.length >= 1 ? 2 : 3,
       }
     case "PERSONAL_BRAND_UPDATED":
       return {

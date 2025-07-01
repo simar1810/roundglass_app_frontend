@@ -6,5 +6,6 @@ export const addMealPlanInitialState = {
   joiningDate: "",
   meals: [],
   image: null,
-  selectedMealType: ""
+  selectedMealType: "",
+  creationType: "add"
 }

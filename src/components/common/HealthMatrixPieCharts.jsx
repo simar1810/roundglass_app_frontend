@@ -10,13 +10,22 @@ import {
 } from "@/lib/client/statistics";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Pencil } from "lucide-react";
+import FormControl from "../FormControl";
+import { useRef, useState } from "react";
+import { Button } from "../ui/button";
+import { sendData } from "@/lib/api";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import { useParams } from "next/navigation";
 
 const healtMetrics = [
   {
     title: "BMI",
     value: "23.4",
     desc: "Healthy",
-    optimalRangeText: "Optimal: 18–23\nOverweight: 23–27\nObese: 27–32",
+    optimalRangeText: "Optimal: 18-23\nOverweight: 23-27\nObese: 27-32",
     icon: "/svgs/bmi.svg",
     name: "bmi",
     id: 1,
@@ -80,26 +89,14 @@ const healtMetrics = [
   },
 ];
 
-const payload = {
-  bmi: 21,
-  muscle: 1550,
-  rm: 24,
-  fat: 14,
-  bodyAge: 23,
-  idealWeight: 74,
-};
-
-const fields = ["heightCms", "heightFeet", "heightInches", "heightUnit", "weight", "weightInKgs", "weightInPounds", "weightUnit", "bodyComposition"]
-
 export default function HealthMetrics({ data }) {
-  const correctMetrics = fields.every(field => !Boolean(data[field]))
   const payload = {
-    bmi: calculateBMIFinal(data),
-    muscle: calculateSMPFinal(data),
-    fat: calculateBodyFatFinal(data),
-    rm: calculateBMRFinal(data),
-    idealWeight: calculateIdealWeightFinal(data),
-    bodyAge: calculateBodyAgeFinal(data),
+    bmi: data.bmi || calculateBMIFinal(data),
+    muscle: data.muscle || calculateSMPFinal(data),
+    fat: data.fat || calculateBodyFatFinal(data),
+    rm: data.rm || calculateBMRFinal(data),
+    idealWeight: data.idealWeight || calculateIdealWeightFinal(data),
+    bodyAge: data.bodyAge || calculateBodyAgeFinal(data),
   };
   try {
     return (
@@ -112,7 +109,11 @@ export default function HealthMetrics({ data }) {
               {...metric}
               value={payload[metric.name]}
               maxPossibleValue={metric.getMaxValue(payload[metric.name])}
+              maxThreshold={metric.getMaxValue(payload[metric.name])}
               minThreshold={metric.getMinValue(payload[metric.name])}
+              name={metric.name}
+              payload={payload}
+              _id={data._id}
             />
           ))}
       </>
@@ -130,24 +131,17 @@ export function MetricProgress({
   maxThreshold = 100,
   minThreshold,
   icon,
-  className,
-  optimalRangeText = "Optimal Range: 32-36% for men, 24-30% for women\nAthletes: 38-42%",
+  className
 }) {
-  const maxPossibleValue = maxThreshold + minThreshold;
-
-  const progressPercentage = (value / maxPossibleValue) * 100;
   const radius = 70;
-  const circumference = 2 * Math.PI * radius;
-  const progressOffset = ((100 - progressPercentage) / 100) * circumference;
-
-  const getColor = () => {
+  const { strokeDasharray, strokeDashoffset } = getStrokeDashoffset(value, maxThreshold, radius);
+  function getColor() {
     if (value < minThreshold) return "#E8B903";
     if (value > maxThreshold) return "#FF0000";
     return "#67BC2A";
-  };
-
+  }
   return (
-    <Card className={cn("max-w-xs shadow-none", className)}>
+    <Card className={cn("max-w-xs shadow-none relative", className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Image
@@ -158,6 +152,15 @@ export function MetricProgress({
             className="object-contain"
           />
           <h2 className="text-[16px] font-bold">{title}</h2>
+          {/* <EditHealthMatric
+            matrix={{
+              title,
+              name,
+              defaultValue: payload,
+              _id
+            }}
+            payload={payload}
+          /> */}
         </div>
       </CardHeader>
       <CardContent className="mt-auto">
@@ -178,21 +181,73 @@ export function MetricProgress({
               fill="none"
               stroke={getColor()}
               strokeWidth="16"
-              strokeDasharray={circumference}
-              strokeDashoffset={progressOffset}
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              transform="rotate(-90 80 80)" // This rotates to start at top
+              transform="rotate(-90 80 80)"
             />
           </svg>
-
-          {/* Value text - showing absolute value, not percentage */}
           <div className="absolute text-center">
             <span className="text-4xl font-bold">{value}</span>
           </div>
         </div>
-
-        {/* <p className="text-sm text-gray-700 whitespace-pre-line">{optimalRangeText}</p> */}
       </CardContent>
     </Card>
   );
+}
+
+function EditHealthMatric({ matrix, payload }) {
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState(payload)
+  const closeBtnRef = useRef(null);
+  const params = useParams()
+
+  async function saveHealthMatrix() {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`, { updatedData: formData }, "PUT");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`getClientVolumePoints/${_id}`);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <Dialog>
+    <DialogTrigger>
+      <Pencil className="w-4 h-4 absolute bottom-2 right-2" />
+    </DialogTrigger>
+    <DialogContent className="p-0 gap-0">
+      <DialogHeader className="p-4 border-b-1">
+        <DialogTitle>Edit Health Matrix</DialogTitle>
+      </DialogHeader>
+      <div className="max-h-[65vh] h-full overflow-y-auto p-4">
+        <FormControl
+          placeholder={"Please enter value"}
+          label={matrix.title}
+          value={formData[matrix.name]}
+          onChange={(e) => setFormData(prev => ({ ...prev, [matrix.name]: e.target.value }))}
+          className="block mb-4"
+        />
+        <Button variant="wz" disabled={loading} onClick={saveHealthMatrix}>Save</Button>
+      </div>
+      <DialogClose ref={closeBtnRef} />
+    </DialogContent>
+  </Dialog>
+}
+
+function getStrokeDashoffset(value, maxValue, radius) {
+  const circumference = 2 * Math.PI * radius;
+  const fullValue = maxValue * 1.5;
+  const clampedValue = Math.min(value, fullValue);
+  const progressRatio = clampedValue / fullValue;
+  const visibleLength = progressRatio * circumference;
+  const dashOffset = circumference - visibleLength;
+  return {
+    strokeDasharray: circumference,
+    strokeDashoffset: dashOffset,
+  };
 }

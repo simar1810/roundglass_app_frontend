@@ -1,4 +1,6 @@
+import { sendData } from "@/lib/api"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export function useCustomChat() {
   const [messages, setMessages] = useState([])
@@ -22,54 +24,15 @@ export function useCustomChat() {
     setIsLoading(true)
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input })
-      })
-
-      console.log(res)
-      if (!res.ok || !res.body) throw new Error("Failed to stream response")
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder("utf-8")
-      let aiMessage = { id: Date.now().toString(), role: "assistant", parts: [{ type: "text", text: "" }] }
-
-      setMessages((prev) => [...prev, aiMessage])
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        const lines = chunk.split("\n").filter(line => line.trim().startsWith("data: "))
-
-        for (const line of lines) {
-          const data = line.replace("data: ", "")
-          if (data === "[DONE]") {
-            setIsLoading(false)
-            return
-          }
-
-          try {
-            // Append the streamed token
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiMessage.id
-                  ? {
-                    ...msg,
-                    parts: [{ type: "text", text: msg.parts[0].text + data }]
-                  }
-                  : msg
-              )
-            )
-          } catch (err) {
-            console.error("Error parsing streamed message:", err)
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Stream failed:", err)
+      const response = await sendData("chatbot/chat", { message: input }, "POST")
+      if (response.status_code !== 200) throw new Error(response.message || "Something went wrong.");
+      setMessages((prev) => [...prev, {
+        id: Date.now().toString(),
+        role: "assistant",
+        parts: [{ type: "text", text: response.data }]
+      }])
+    } catch (error) {
+      toast.error(error.message)
     } finally {
       setIsLoading(false)
     }
