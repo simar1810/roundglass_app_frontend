@@ -195,5 +195,5 @@ export function getChatBotData() {
 }
 
 export function getClientWorkouts(id) {
-  return fetchData(`app/client/getWorkout/${id}`)
+  return fetchData(`app/workout/coach/workoutCollections/client/${id}`)
 }
