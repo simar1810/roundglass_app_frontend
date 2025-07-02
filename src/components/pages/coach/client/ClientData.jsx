@@ -17,6 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import AssignWorkoutModal from "@/components/modals/AssignModal";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
@@ -287,6 +288,7 @@ function DatePicker({ date, setDate }) {
 
 function WorkoutContainer({ id }) {
   const { isLoading, error, data } = useSWR("client/workouts", () => getClientWorkouts(id));
+
   if (isLoading) return <TabsContent value="workout">
     <ContentLoader />
   </TabsContent>
@@ -294,9 +296,25 @@ function WorkoutContainer({ id }) {
   if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="workout">
     <ContentError className="mt-0" title={error || data?.message} />
   </TabsContent>
-  const coachHomeData = data.data;
-  console.log(data)
+  const workouts = data.data;
   return <TabsContent value="workout">
-    workouts
+    <div className="grid grid-cols-2 gap-4">
+      {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
+        <div className="relative">
+          <Link href={`/coach/workouts/${workout._id}`}>
+            <Image
+              src={workout?.thumbnail?.trim() || "/not-found.png"}
+              alt="Total Core Workout"
+              width={1024}
+              height={1024}
+              unoptimized
+              onError={e => e.target.src = "/not-found.png"}
+              className="w-full max-h-[250px] aspect-video object-cover rounded-xl border-1"
+            />
+          </Link>
+        </div>
+        <div className="text-md font-bold">{workout.title}</div>
+      </div>)}
+    </div>
   </TabsContent>
 }
