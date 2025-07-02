@@ -193,3 +193,7 @@ export function getAllSubscriptions() {
 export function getChatBotData() {
   return fetchData("chatbot");
 }
+
+export function getClientPrograms() {
+  return fetchData("app/getall-programs?person=client&limit=100")
+}
