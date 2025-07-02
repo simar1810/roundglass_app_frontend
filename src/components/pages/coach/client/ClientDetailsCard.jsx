@@ -48,7 +48,15 @@ import { permit } from "@/lib/permit";
 
 export default function ClientDetailsCard({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
-
+  async function sendAnalysis() {
+    try {
+      const response = await sendData(`app/requestFollowUpRequest?clientId=${clientData?.clientId}`);
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+    }
+  }
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -68,8 +76,9 @@ export default function ClientDetailsCard({ clientData }) {
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-2 gap-4">
         <FollowUpModal clientData={clientData} />
+        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Send Analysis Reminder</Button>
       </div>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">

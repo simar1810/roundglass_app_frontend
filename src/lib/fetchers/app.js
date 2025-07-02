@@ -193,3 +193,7 @@ export function getAllSubscriptions() {
 export function getChatBotData() {
   return fetchData("chatbot");
 }
+
+export function getClientWorkouts(id) {
+  return fetchData(`app/client/getWorkout/${id}`)
+}

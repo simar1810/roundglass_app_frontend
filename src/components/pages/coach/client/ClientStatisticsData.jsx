@@ -5,14 +5,12 @@ import PDFRenderer from "@/components/modals/PDFRenderer";
 import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
-import { sendData } from "@/lib/api";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen } from "lucide-react"
 import { useState } from "react";
-import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function ClientStatisticsData({ clientData }) {
@@ -53,15 +51,6 @@ export default function ClientStatisticsData({ clientData }) {
         : "",
     }
     const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
-    async function sendAnalysis() {
-      try {
-        const response = await sendData(`app/requestFollowUpRequest?clientId=${clientId}`);
-        if (response.status_code !== 200) throw new Error(response.message);
-        toast.success(response.message);
-      } catch (error) {
-        toast.error(error.message || "Please try again later!");
-      }
-    }
 
     return <TabsContent value="statistics">
       <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto">
@@ -83,7 +72,6 @@ export default function ClientStatisticsData({ clientData }) {
       <div className="mt-8 grid grid-cols-3 gap-5">
         <HealthMetrics data={payload} />
       </div>
-      <Button onClick={sendAnalysis} variant="wz" className="mx-auto mt-8 block">Send Analysis Reminder</Button>
     </TabsContent>
   } catch (error) {
     return <TabsContent value="statistics">
@@ -109,7 +97,7 @@ function StatisticsExportingOptions({
     <PDFRenderer pdfTemplate="PDFShareStatistics" data={clientStatisticsPDFData(clientData, clientStats, coach, selectedDate)}>
       <DialogTrigger className="h-9 px-4 flex items-center gap-2 border-1 rounded-[8px]">
         <FilePen className="w-[14px]" />
-        Share Statistics
+        Share Statistics ({clientStats?.at(selectedDate).createdDate})
       </DialogTrigger>
     </PDFRenderer>
   </div>

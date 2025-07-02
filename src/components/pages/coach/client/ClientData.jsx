@@ -4,7 +4,7 @@ import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getClientMealPlanById, getClientOrderHistory, getMarathonClientTask } from "@/lib/fetchers/app";
+import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
 import { CalendarIcon, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +28,7 @@ export default function ClientData({ clientData }) {
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       <ClientClubDataComponent clientData={clientData} />
       <MarathonData clientData={clientData} />
+      <WorkoutContainer id={clientData._id} />
     </Tabs>
   </div>
 }
@@ -177,11 +178,14 @@ function MarathonData({ clientData }) {
   </TabsContent>
   const marathons = data.data;
 
+  const totalPoints = marathons.reduce((acc, marathon) => acc + marathon.totalPoints, 0)
+
   return <TabsContent value="marathon">
-    <div className="mb-4 flex items-center justify-between">
+    <div className="flex items-center justify-between">
       <h3 className="text-[var(--dark-1)] font-semibold text-lg">Marathon Tasks</h3>
       <DatePicker date={date} setDate={setDate} />
     </div>
+    <p className="mb-8 px-2 pt-1">{totalPoints} points</p>
     <div className="w-full max-w-3xl mx-auto">
       <Accordion defaultValue={1} type="single" collapsible className="space-y-2">
         {marathons.map((marathon, index) => (
@@ -189,12 +193,13 @@ function MarathonData({ clientData }) {
             <AccordionTrigger className="bg-[var(--dark-1)]/10 text-left font-semibold text-lg p-4">
               {marathon.marathonTitle} ({marathon.date})
             </AccordionTrigger>
+            <p className="px-4 py-2">{marathon.totalPoints} points</p>
             <AccordionContent>
               <div className="space-y-4 px-4 mt-2">
                 {marathon.tasks.map((task) => (
                   <div
                     key={task.taskId}
-                    className="bg-white p-4 border rounded-lg bg-muted"
+                    className="bg-white p-4 border rounded-lg"
                   >
                     <h4 className="font-medium">{task.title}</h4>
                     <p className="text-sm text-muted-foreground">{task.description}</p>
@@ -218,7 +223,7 @@ function MarathonData({ clientData }) {
 function Header() {
   const { organisation } = useAppSelector(state => state.coach.data);
 
-  return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-5 border-b-2 rounded-none">
+  return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-6 border-b-2 rounded-none">
     <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="statistics"
@@ -230,6 +235,12 @@ function Header() {
       value="meal"
     >
       Meal
+    </TabsTrigger>
+    <TabsTrigger
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      value="workout"
+    >
+      Workout
     </TabsTrigger>
     {organisation.toLowerCase() === "herbalife" && <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
@@ -272,4 +283,20 @@ function DatePicker({ date, setDate }) {
       />
     </PopoverContent>
   </Popover>
+}
+
+function WorkoutContainer({ id }) {
+  const { isLoading, error, data } = useSWR("client/workouts", () => getClientWorkouts(id));
+  if (isLoading) return <TabsContent value="workout">
+    <ContentLoader />
+  </TabsContent>
+
+  if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="workout">
+    <ContentError className="mt-0" title={error || data?.message} />
+  </TabsContent>
+  const coachHomeData = data.data;
+
+  return <TabsContent value="workout">
+    workouts
+  </TabsContent>
 }

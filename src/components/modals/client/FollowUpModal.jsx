@@ -46,7 +46,7 @@ import { mutate } from "swr";
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
     <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
-      <CalendarRange />
+      <CalendarRange className="w-[18px] h-[18px]" />
       Follow-up
     </DialogTrigger>
     <DialogContent className="!max-w-[650px] max-h-[70vh] border-b-1 p-0 gap-0 overflow-y-auto">
