@@ -216,12 +216,12 @@ export const sidebar__coachContent = [
         title: "Ideal Weight",
         url: "/coach/tools/ideal-weight"
       },
-      // {
-      //   id: 5,
-      //   icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Programs",
-      //   url: "/coach/tools/programs"
-      // },
+      {
+        id: 5,
+        icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Programs",
+        url: "/coach/tools/programs"
+      },
     ]
   },
   // {

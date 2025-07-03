@@ -195,7 +195,7 @@ export function getChatBotData() {
 }
 
 export function getClientPrograms() {
-  return fetchData("app/getall-programs?person=client&limit=100")
+  return fetchData("app/programs?person=client&limit=100")
 }
 
 export function getClientWorkouts(id) {

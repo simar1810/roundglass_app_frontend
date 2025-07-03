@@ -16,7 +16,8 @@ export function generateProgramIS(data = {}) {
     id: data._id,
     name: data.name || "",
     link: data.link || "",
-    defaultImage: data.image || ""
+    defaultImage: data.image || "",
+    order: data.order || 0
   }
 }
 
@@ -32,8 +33,9 @@ export function changeProgramFieldValue(name, value) {
 
 export function generateProgramRP(state) {
   const formData = new FormData();
-  for (const field of ["file", "name", "link"]) {
-    if (state[field]) formData.append(field, state[field])
+  for (const field of ["file", "name", "link", "order"]) {
+    if (state[field] || state[field] === 0) formData.append(field, state[field])
   }
+  formData.append("programId", state.id);
   return formData;
 }

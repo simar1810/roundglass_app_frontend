@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { programInitialState } from "@/config/state-data/program";
 import { changeProgramFieldValue, generateProgramIS, generateProgramRP, programReducer } from "@/config/state-reducers/program";
-import { sendData } from "@/lib/api";
+import { sendData, sendDataWithFormData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Pencil, X } from "lucide-react";
@@ -38,7 +38,7 @@ function ProgramContainer() {
   const { dispatch, ...state } = useCurrentStateContext();
   const closeBtnRef = useRef()
   const fileRef = useRef();
-  console.log(state)
+
   async function updateProgram() {
     try {
       setLoading(true);
@@ -46,8 +46,7 @@ function ProgramContainer() {
       for (const [field, value] of data.entries()) {
         console.log(field, value)
       }
-      const response = await sendData(`app/update-program/${state.id}`, data, "PUT");
-      console.log(response)
+      const response = await sendDataWithFormData("app/programs", data, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("client/programs");
@@ -69,6 +68,14 @@ function ProgramContainer() {
       label="Link "
       value={state.link}
       onChange={e => dispatch(changeProgramFieldValue("link", e.target.value))}
+      className="block mt-2"
+    />
+    <FormControl
+      label="Order"
+      type="number"
+      placeholder="Enter the order of the program"
+      value={state.order}
+      onChange={e => dispatch(changeProgramFieldValue("order", e.target.value))}
       className="block mt-2"
     />
     <div className="relative">

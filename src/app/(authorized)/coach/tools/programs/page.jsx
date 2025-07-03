@@ -29,7 +29,7 @@ export default function Page() {
       >
         <div className="relative">
           <div className="bg-white px-2 py-1 rounded-[10px] border-1 actions absolute bottom-2 right-2 opacity-0 flex items-center gap-1">
-            <EditProgramModal program={program} />
+            <EditProgramModal program={{ ...program, order: index }} />
             <DeleteProgramAction id={program._id} />
           </div>
           <Image
@@ -53,7 +53,7 @@ function DeleteProgramAction({ id }) {
   async function deleteProgramAction(setLoading, btnRef) {
     try {
       setLoading(true);
-      const response = await sendData(`app/delete-program/${id}`, {}, "DELETE");
+      const response = await sendData("app/programs", { programId: id }, "DELETE");
       console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);

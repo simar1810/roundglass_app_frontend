@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import imageCompression from "browser-image-compression";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const coachId = useAppSelector(state => state.coach.data._id);
@@ -21,6 +22,7 @@ export default function Page() {
     coachId: coachId,
     file: ""
   })
+  const router = useRouter()
 
   const fileRef = useRef();
 
@@ -33,10 +35,12 @@ export default function Page() {
         data.append(field, formData[field]);
       }
       data.append("file", await imageCompression(formData.file, { maxSizeMB: 0.25 }))
-      const response = await sendDataWithFormData(`app/add-program`, data);
+      data.append("person", "client")
+      const response = await sendDataWithFormData(`app/programs`, data);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate("coachHomeTrial");
+      mutate("client/programs");
+      router.push("/coach/tools/programs")
     } catch (error) {
       toast.error(error.message);
     } finally {
