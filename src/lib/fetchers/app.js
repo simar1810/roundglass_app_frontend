@@ -194,6 +194,10 @@ export function getChatBotData() {
   return fetchData("chatbot");
 }
 
+export function getClientPrograms() {
+  return fetchData("app/programs?person=client&limit=100")
+}
+
 export function getClientWorkouts(id) {
-  return fetchData(`app/workout/coach/workoutCollections/client/${id}`)
+  return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
 }
