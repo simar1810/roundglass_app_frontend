@@ -12,7 +12,7 @@ export function clientStatisticsPDFData(data, statistics, coach, index) {
     age: calcAge(data),
     bodyAge: statistics?.at(index)?.bodyAge || 0,
     gender: data.gender,
-    joined: data.joiningDate,
+    joined: statistics?.at(index).createdDate,
     weight: statistics?.at(index).weight,
     height: `${statistics?.at(index)?.height} ${statistics?.at(index)?.heightUnit}`,
     bmi: statistics?.at(index)?.bmi || calculateBMIFinal(statistics?.at(index)),

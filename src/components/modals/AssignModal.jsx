@@ -60,12 +60,12 @@ function AssignWorkoutContainer({ workoutId }) {
     }
   }
 
-  const assignedClients = data.data.assignedClients.filter(client => client.name.includes(searchQuery));
+  const assignedClients = data.data.assignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name));
   const unassignedClients = [
-    ...data.data.unassignedClients.filter(client => client.name.includes(searchQuery)),
-    ...data.data.assignedToOtherPlans.filter(client => client.name.includes(searchQuery)),
+    ...data.data.unassignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name)),
+    ...data.data.assignedToOtherPlans.filter(client => new RegExp(searchQuery, "i").test(client.name)),
   ];
-  console.log(unassignedClients)
+
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
@@ -134,14 +134,16 @@ function SelectClient({
       <AvatarImage src={client.profilePhoto || "/"} />
       <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
     </Avatar>
-    <span className="flex-1">{client.name}</span>
-    <FormControl
-      type="checkbox"
-      name="assign"
-      value="symond"
-      checked={selectedClient === client._id}
-      onChange={() => setSelectedClient(prev => prev === client._id ? undefined : client._id)}
-      className="w-5 h-5"
-    />
+    <label className="grow flex items-center gap-3">
+      <span className="flex-1 cursor-pointer">{client.name}</span>
+      <FormControl
+        type="checkbox"
+        name="assign"
+        value="symond"
+        checked={selectedClient === client._id}
+        onChange={() => setSelectedClient(prev => prev === client._id ? undefined : client._id)}
+        className="w-5 h-5"
+      />
+    </label>
   </div>
 }

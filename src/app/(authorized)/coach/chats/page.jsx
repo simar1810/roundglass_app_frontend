@@ -69,7 +69,7 @@ function AllChatListings() {
 function ChatPersonCard({ chat, selectedId }) {
   const { dispatch } = useChatSocketContext();
   return <div
-    className={`px-4 py-3 py-1 flex items-center gap-4 relative cursor-pointer hover:bg-[var(--comp-1)] rounded-[8px] ${selectedId === chat._id && "bg-[var(--comp-1)]"}`}
+    className={`px-4 py-1 flex items-center gap-4 relative cursor-pointer hover:bg-[var(--comp-1)] rounded-[8px] ${selectedId === chat._id && "bg-[var(--comp-1)]"}`}
     onClick={() => dispatch(selectChatUser(chat))}
   >
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">

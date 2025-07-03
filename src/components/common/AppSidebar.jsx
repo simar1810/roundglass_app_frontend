@@ -154,6 +154,8 @@ export function ClientSearchBar({ setModal }) {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [data, setData] = useState([]);
+  const pathname = usePathname()
+  console.log(pathname)
 
   const containerRef = useRef();
   useClickOutside(containerRef, () => setOpen(false))
@@ -176,7 +178,9 @@ export function ClientSearchBar({ setModal }) {
     })();
   }, [debouncedQuery]);
 
-  return <div ref={containerRef} className="pr-4 relative mx-auto">
+  if (!["/coach/dashboard", "/coach/chats", "/coach/clients"].includes(pathname)) return <></>
+
+  return <div ref={containerRef} className="min-w-80 pr-4 mx-auto absolute top-4 left-1/2 translate-x-[-50%]">
     <Search className="w-[18px] h-[18px] bg-[var(--primary-1)] text-[#808080] absolute left-2 top-1/2 translate-y-[-60%]" />
     <Input
       placeholder="Search Client..."
@@ -185,7 +189,7 @@ export function ClientSearchBar({ setModal }) {
       onChange={e => setSearchQuery(e.target.value)}
       className="bg-[var(--primary-1)] w-full md:max-w-[650px] pl-8 border-1 !focus:outline-none"
     />
-    {open && <div className="w-[calc(100%-16px)] bg-[var(--primary-1)] absolute top-16 left-0 px-2 py-2 rounded-[8px] z-[100] border-1 border-[var(--primary-1)]/40">
+    {open && <div className="w-[calc(100%-16px)] bg-[var(--primary-1)] absolute top-12 left-0 px-2 py-2 rounded-[8px] z-[100] border-1">
       <SearchedResults
         query={searchQuery}
         setQuery={setSearchQuery}

@@ -8,45 +8,29 @@ import useSWR from "swr";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import Link from "next/link";
+import { useState } from "react";
+import FormControl from "@/components/FormControl";
 
 export default function Page() {
+  const [searchQuery, setSearchQuery] = useState("")
   const { isLoading, error, data } = useSWR("app/coach/workoutCollections", getWorkouts);
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const workouts = data.data;
   return (
-    <main className="min-h-screen bg-white p-6">
+    <main className="content-container content-height-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold mb-6">Workout Library</h1>
-          <CreateWorkoutModal />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-          {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
-            <div className="relative">
-              <Link href={`/coach/workouts/${workout._id}`}>
-                <Image
-                  src={workout?.thumbnail?.trim() || "/not-found.png"}
-                  alt="Total Core Workout"
-                  width={1024}
-                  height={1024}
-                  unoptimized
-                  onError={e => e.target.src = "/not-found.png"}
-                  className="w-full h-[250px] object-cover rounded-xl border-1"
-                />
-              </Link>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="text-lg font-bold">{workout.title}</div>
-              <AssignWorkoutModal workoutId={workout._id} />
-            </div>
-          </div>)}
-        </div>
+        <Header
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+        <WorkoutsContainer
+          allWorkouts={data.data}
+          searchQuery={searchQuery}
+        />
       </div>
     </main>
-
   );
 }
 
@@ -66,5 +50,49 @@ function FilterOptions() {
     <div className="px-4 py-2 rounded-full text-sm whitespace-nowrap text-gray-500 bg-gray-100">
       Light Weight
     </div>
+  </div>
+}
+
+function Header({
+  searchQuery,
+  setSearchQuery
+}) {
+  return <div className="flex items-center justify-between gap-4 mb-10">
+    <h1 className="text-2xl font-semibold">Workout Library</h1>
+    <FormControl
+      className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
+      placeholder="Search Meal.."
+      value={searchQuery}
+      onChange={e => setSearchQuery(e.target.value)}
+    />
+    <CreateWorkoutModal />
+  </div>
+}
+
+function WorkoutsContainer({
+  allWorkouts,
+  searchQuery
+}) {
+  const workouts = allWorkouts.filter(workout => new RegExp(searchQuery, "i").test(workout.title));;
+  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
+    {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
+      <div className="relative">
+        <Link href={`/coach/workouts/${workout._id}`}>
+          <Image
+            src={workout?.thumbnail?.trim() || "/not-found.png"}
+            alt="Total Core Workout"
+            width={1024}
+            height={1024}
+            unoptimized
+            onError={e => e.target.src = "/not-found.png"}
+            className="w-full h-[250px] object-cover rounded-xl border-1"
+          />
+        </Link>
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <div className="text-lg font-bold">{workout.title}</div>
+        <AssignWorkoutModal workoutId={workout._id} />
+      </div>
+    </div>)}
   </div>
 }
