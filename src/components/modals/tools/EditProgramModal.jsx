@@ -17,7 +17,7 @@ export default function EditProgramModal({ program }) {
     <DialogTrigger>
       <Pencil className="w-[16px] h-[16px]" />
     </DialogTrigger>
-    <DialogContent className="p-0 gap-0">
+    <DialogContent className="p-0 gap-0 max-h-[75vh] overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Edit Program</DialogTitle>
       </DialogHeader>
@@ -27,8 +27,6 @@ export default function EditProgramModal({ program }) {
       >
         <ProgramContainer />
       </CurrentStateProvider>
-      <div className="p-4">
-      </div>
     </DialogContent>
   </Dialog>
 }
