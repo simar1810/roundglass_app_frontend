@@ -93,7 +93,7 @@ export default function InputOTPContainer() {
       <p>Back</p>
     </button>
     <p className="text-[var(--dark-1)]/25 text-[14px] mb-8">
-      <span>Enter 4-Digit OTP sent on</span>
+      <span>Enter 4-Digit OTP sent on </span>
       <span className="text-black">+91 {mobileNumber}</span>
     </p>
     <InputOTP

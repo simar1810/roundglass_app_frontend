@@ -20,7 +20,8 @@ export function ChatSocketProvider({ children }) {
     socket.on("receiveMessage", (data) => dispatch(addNewMessageToCurrentChat(data)));
     (async function () {
       try {
-        if (!isLoading && data.status_code !== 200) throw new Error(data.message);
+        if (!data) return
+        if (!isLoading && data.status_code !== 200) throw new Error(data?.message);
         dispatch(storeChats(data.data, socket))
       } catch (error) {
         dispatch(updateCurrentState("error", error.message || "An unknown error occured!"))
@@ -30,7 +31,7 @@ export function ChatSocketProvider({ children }) {
 
   if (state.state === "connecting") return <ContentLoader />
 
-  if (state.state === "error") return <ContentError title={state.message} />
+  if (state.state === "error") return <ContentError title={state?.message} />
 
   return <ChatContext.Provider value={{ ...state, dispatch }}>
     {children}

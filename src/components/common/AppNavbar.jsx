@@ -92,7 +92,7 @@ export function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return <div className="bg-[var(--dark-1)] px-2 pt-10">
+  return <div className="bg-[var(--dark-4)] px-2 pt-10">
     <div ref={containerRef} className="w-full mx-auto z-[111] relative">
       <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
       <Input

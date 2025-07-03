@@ -288,7 +288,6 @@ function DatePicker({ date, setDate }) {
 
 function WorkoutContainer({ id }) {
   const { isLoading, error, data } = useSWR("client/workouts", () => getClientWorkouts(id));
-
   if (isLoading) return <TabsContent value="workout">
     <ContentLoader />
   </TabsContent>
@@ -297,6 +296,7 @@ function WorkoutContainer({ id }) {
     <ContentError className="mt-0" title={error || data?.message} />
   </TabsContent>
   const workouts = data.data;
+
   return <TabsContent value="workout">
     <div className="grid grid-cols-2 gap-4">
       {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
