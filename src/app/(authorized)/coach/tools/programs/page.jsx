@@ -61,7 +61,7 @@ function ProgramList({ programs }) {
       </div>
       <div className="p-4">
         <h2>{program.name}</h2>
-        <Link href={program.link} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
+        <Link href={program.link || "/"} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
       </div>
     </div>)}
   </div>
