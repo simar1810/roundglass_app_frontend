@@ -17,7 +17,7 @@ export function generateProgramIS(data = {}) {
     name: data.name || "",
     link: data.link || "",
     defaultImage: data.image || "",
-    order: data.order || 0
+    // order: data.order || 0
   }
 }
 

@@ -136,7 +136,7 @@ function SortableProgram({ program, index }) {
 function Program({ program }) {
   return <div
     draggable={true}
-    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate- animate-wiggle"
+    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate-wiggle"
   >
     <div>
       <Image
