@@ -201,3 +201,11 @@ export function getClientPrograms() {
 export function getClientWorkouts(id) {
   return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
 }
+
+/**
+ * Client Fetchers
+ */
+
+export function getClientProfile() {
+  return fetchData(`app/viewClient`);
+}
