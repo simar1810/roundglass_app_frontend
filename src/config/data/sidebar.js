@@ -1,6 +1,7 @@
 import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import {
+  CalendarRange,
   CircleDollarSign,
   ClipboardPlus,
   Clock12,
@@ -206,7 +207,13 @@ export const sidebar__coachContent = [
         icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
         title: "Ideal Weight",
         url: "/coach/tools/ideal-weight"
-      }
+      },
+      {
+        id: 5,
+        icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Programs",
+        url: "/coach/tools/programs"
+      },
     ]
   },
 ]
