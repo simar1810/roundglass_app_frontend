@@ -64,6 +64,21 @@ export const clientDetailsFields = [
   { id: 8, label: "Height", name: "height", type: 2 },
 ]
 
+export const clientOwnDetailsFields = [
+  { id: 1, label: "Name", name: "name" },
+  { id: 2, label: "Mobile No.", name: "mobileNumber", type: "number" },
+  { id: 3, label: "Email", name: "email", type: "email" },
+  { id: 4, label: "DOB", name: "dob", type: "date", format: "dd-mm-yyyy" },
+  { id: 5, label: "Age", name: "age", type: "number" },
+  {
+    id: 6, label: "Gender", name: "gender", type: 4,
+    options: [
+      { id: 1, name: "Male", value: "Male" },
+      { id: 2, name: "Female", value: "Female" },
+    ]
+  }
+]
+
 export const linkGeneratorFields = [
   { id: 1, label: "Meeting Topic", inputtype: 1, placeholder: "Enter Topic", name: "topics" },
   {

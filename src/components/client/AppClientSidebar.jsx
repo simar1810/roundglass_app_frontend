@@ -26,13 +26,19 @@ import { useState } from "react";
 import { sidebar__clientContent } from "@/config/data/client-sidebar";
 import { Button } from "../ui/button";
 import { destroyClient } from "@/providers/global/slices/client";
-import { useAppDispatch } from "@/providers/global/hooks";
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import { toast } from "sonner";
 
 export default function AppClientSidebar() {
   const [Modal, setModal] = useState();
   const [loading, setLoading] = useState(false);
   const dispatchRedux = useAppDispatch();
+  const { organisation } = useAppSelector(state => state.client.data)
+
+  let sidebarItems = sidebar__clientContent;
+  if (organisation !== "Herbalife") {
+    sidebarItems = sidebarItems.filter(item => ![6].includes(item.id))
+  }
 
   async function logoutuser() {
     try {
@@ -63,7 +69,7 @@ export default function AppClientSidebar() {
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
-            {sidebar__clientContent.map((item) => item.items && item.items.length > 0
+            {sidebarItems.map((item) => item.items && item.items.length > 0
               ? <SidebarItemWithItems
                 key={item.id}
                 item={item}

@@ -12,7 +12,8 @@ import { mutate } from "swr";
 export default function UpdateNoteModal({
   title,
   description,
-  _id
+  _id,
+  person = "coach"
 }) {
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef();
@@ -28,7 +29,7 @@ export default function UpdateNoteModal({
       for (const field of ["title", "description"]) {
         if (!data[field]) throw new Error(`${field} is required!`);
       }
-      const response = await sendData(`app/notes?person=coach&id=${_id}`, data, "PUT");
+      const response = await sendData(`app/notes?person=${person}&id=${_id}`, data, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Note added successfully!");
       closeBtnRef.current.click();

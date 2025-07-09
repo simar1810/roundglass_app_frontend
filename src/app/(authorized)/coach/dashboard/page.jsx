@@ -24,7 +24,7 @@ function Container() {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const coachHomeData = data.data;
   return <>
     <ActivityTool activities={coachHomeData.activePrograms} />

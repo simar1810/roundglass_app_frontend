@@ -28,7 +28,7 @@ export default function Page() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: response?.data?.refreshToken, _id: "" })
+        body: JSON.stringify({ refreshToken: response?.data?.refreshToken, _id: response?.data?._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);

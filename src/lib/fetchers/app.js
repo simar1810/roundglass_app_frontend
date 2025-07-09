@@ -84,9 +84,9 @@ export function getClientOrderHistory(clientId) {
   return fetchData(`app/client-order-history?clientId=${clientId}`);
 }
 
-export function getAppFeeds(state) {
+export function getAppFeeds(state, person = "coach") {
   const query = `page=${state.page}&type=${state.type}`;
-  return fetchData("app/feeds2?person=coach&" + query);
+  return fetchData(`app/feeds2?person=${person}&` + query);
 }
 
 export function getAppPersonalFeeds(state) {
@@ -106,12 +106,12 @@ export function getOrderHistory() {
   return fetchData("app/order-history");
 }
 
-export function getNotes() {
-  return fetchData("app/notes?person=coach");
+export function getNotes(person = "coach") {
+  return fetchData(`app/notes?person=${person}`);
 }
 
-export function getReminders() {
-  return fetchData("app/getAllReminder?person=coach");
+export function getReminders(person = "coach") {
+  return fetchData(`app/getAllReminder?person=${person}`);
 }
 
 export function getRecipesCalorieCounter(query) {
@@ -182,8 +182,10 @@ export function getAllWorkoutItems() {
   return fetchData("app/workout/coach/getAllWorkoutsItems");
 }
 
-export function getWorkoutDetails(workoutId) {
-  return fetchData(`app/workout/client/getWorkout?id=${workoutId}&person=coach`);
+export function getWorkoutDetails(workoutId, person = "coach") {
+  let endpoint = `app/workout/client/getWorkout?person=${person}`
+  if (workoutId) endpoint += `&id=${workoutId}`;
+  return fetchData(endpoint);
 }
 
 export function getAllSubscriptions() {
@@ -206,6 +208,34 @@ export function getClientWorkouts(id) {
  * Client Fetchers
  */
 
+export function getClientHome(id) {
+  return fetchData(`app/clientHome/${id}`)
+}
+
 export function getClientProfile() {
-  return fetchData(`app/viewClient`);
+  return fetchData(`app/viewClient?wz_client=web`);
+}
+
+export function getClientMatrices(person, id) {
+  return fetchData(`app/get-all-healthmatrix?person=${person}&id=${id}`);
+}
+
+export function getWorkoutForClient(id) {
+  return fetchData(`app/workout/workout-plan/client/${id}`)
+}
+
+export function getClientNextMarathonClient(date) {
+  return fetchData(`app/marathon/client/viewTask?date=${date}`)
+}
+
+export function clientOrderHistory(clientId) {
+  return fetchData(`app/client-order-history?clientId=${clientId}`)
+}
+
+export function getBrands() {
+  return fetchData("app/getBrand");
+}
+
+export function getWzSessions(person) {
+  return fetchData(`app/getAllWzSessionDemos?person=${person}`);
 }

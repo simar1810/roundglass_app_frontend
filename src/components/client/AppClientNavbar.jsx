@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
 import { useSWRConfig } from "swr";
+import useClickOutside from "@/hooks/useClickOutside";
+import { nameInitials } from "@/lib/formatter";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -28,15 +30,11 @@ export default function AppClientNavbar() {
 
   const { profilePhoto, name } = data;
 
-  return <nav className="bg-white h-16 sticky top-0 py-4 px-10 flex items-center justify-center font-bold gap-4 border-b-1 z-[30]">
-    NAVBAR
-    {/* <SearchBar />
-    {Modal || <></>}
-    <NotificationModal />
+  return <nav className="bg-white h-16 sticky top-0 py-4 px-10 flex items-center justify-end font-bold gap-4 border-b-1 z-[30]">
     <UserOptions
       profilePhoto={profilePhoto}
       name={name}
-    /> */}
+    />
   </nav>
 }
 
@@ -142,11 +140,14 @@ function SearchItem({
 function UserOptions({ profilePhoto, name }) {
   const [Modal, setModal] = useState();
   const [opened, setOpened] = useState(false)
-  const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
   const { cache } = useSWRConfig();
+  const dropDownContentRef = useRef()
 
-  const personalizationpermitted = permit("app-personalization", roles);
+  useClickOutside(dropDownContentRef, () => {
+    setModal()
+    setOpened(false)
+  })
 
   const router = useRouter();
 
@@ -159,7 +160,7 @@ function UserOptions({ profilePhoto, name }) {
         cache.delete(field)
       }
       dispatchRedux(destroy());
-      router.push("/login");
+      router.push("/client/login");
     } catch (error) {
       toast.error(error.message || "Please try again later")
     }
@@ -174,39 +175,13 @@ function UserOptions({ profilePhoto, name }) {
         <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
           <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
             <AvatarImage src={profilePhoto} />
-            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
+            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{nameInitials(name)}</AvatarFallback>
           </Avatar>
           <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
           <ChevronDown className="w-[16px] h-[16px]" />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {personalizationpermitted && <DropdownMenuItem
-          onClick={() => setModal(<PersonalBranding
-            onClose={() => {
-              setModal()
-              setOpened(false)
-            }}
-          />)}
-        >
-          <DropdownMenuLabel className="text-[14px] py-0">
-            App personalisation
-          </DropdownMenuLabel>
-        </DropdownMenuItem>}
-        <DropdownMenuItem onClick={() => setOpened(false)}>
-          <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
-            <DropdownMenuLabel className="text-[14px] py-0">
-              Your Website
-            </DropdownMenuLabel>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setOpened(false)}>
-          <Link href="/coach/portfolio" className="w-full">
-            <DropdownMenuLabel className="text-[14px] py-0">
-              Portfolio
-            </DropdownMenuLabel>
-          </Link>
-        </DropdownMenuItem>
+      <DropdownMenuContent ref={dropDownContentRef}>
         <DropdownMenuItem onClick={expireUserSession}>
           <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
             <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />

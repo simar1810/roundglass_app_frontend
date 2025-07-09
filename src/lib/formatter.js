@@ -14,11 +14,11 @@ export function ISO__getTime(timestamp) {
 
 export function nameInitials(name) {
   return name
-    .split(" ")
-    .slice(0, 2)
-    .map(word => word?.at(0))
-    .join("")
-    .toUpperCase();
+    ?.split(" ")
+    ?.slice(0, 2)
+    ?.map(word => word?.at(0))
+    ?.join("")
+    ?.toUpperCase();
 }
 
 export function getRelativeTime(dateString) {

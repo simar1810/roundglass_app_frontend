@@ -33,16 +33,16 @@ export const sidebar__clientContent = [
   },
   {
     id: 4,
-    title: "Meals & Recipes",
+    title: "Meals",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,
     url: "/client/app/meals",
     items: [
-      {
-        id: 1,
-        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Meal Plans",
-        url: "/client/app/meals/list"
-      }
+      // {
+      //   id: 1,
+      //   icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "View Meal Plans",
+      //   url: "/client/app/meals/list"
+      // }
     ]
   },
   {
@@ -71,9 +71,15 @@ export const sidebar__clientContent = [
   },
   {
     id: 9,
-    title: "Marathon",
+    title: "Next Marathon",
     icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
-    url: "/client/app/marathons"
+    url: "/client/app/next-marathon"
+  },
+  {
+    id: 10,
+    title: "Wz Sessions",
+    icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
+    url: "/client/app/sessions"
   },
   // {
   //   id: 10,
@@ -112,12 +118,12 @@ export const sidebar__clientContent = [
         title: "Ideal Weight",
         url: "/client/app/tools/ideal-weight"
       },
-      {
-        id: 5,
-        icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Programs",
-        url: "/client/app/tools/programs"
-      },
+      // {
+      //   id: 5,
+      //   icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Programs",
+      //   url: "/client/app/tools/programs"
+      // },
     ]
   },
 ]
