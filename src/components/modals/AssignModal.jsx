@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import FormControl from "../FormControl";
 import useSWR, { mutate } from "swr";
-import { getClientsForWorkout } from "@/lib/fetchers/app";
+import { getClientsForCustomWorkout, getClientsForWorkout } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
 import { toast } from "sonner";
@@ -18,7 +18,11 @@ import { nameInitials } from "@/lib/formatter";
 import { Button } from "../ui/button";
 import { sendData } from "@/lib/api";
 
-export default function AssignWorkoutModal({ workoutId }) {
+export default function AssignWorkoutModal({
+  type,
+  workoutId
+}) {
+  const Component = selectComponent(type);
   return (
     <Dialog>
       <DialogTrigger className="bg-[var(--accent-1)] text-white text-[12px] font-bold px-4 py-2 rounded-[8px] overflow-auto">
@@ -30,10 +34,70 @@ export default function AssignWorkoutModal({ workoutId }) {
             Assign Workout
           </DialogTitle>
         </DialogHeader>
-        <AssignWorkoutContainer workoutId={workoutId} />
+        <Component workoutId={workoutId} />
       </DialogContent>
     </Dialog>
   );
+}
+
+function AssignCustomWorkoutContainer({ workoutId }) {
+  const { isLoading, error, data } = useSWR(`getClientsForWorkouts/${workoutId}`, () => getClientsForCustomWorkout(workoutId));
+  const [selectedClient, setSelectedClient] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+  if (isLoading) return <ContentLoader />
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  async function assignMealPlan() {
+    try {
+      const response = await sendData(`app/workout/workout-plan/custom/assign?id=${workoutId}`, { id: workoutId, clients: [selectedClient] })
+      if (response.status_code !== 200) throw new Error(response.error || response.message);
+      toast.success(response.message);
+      mutate(`getClientsForWorkouts/${workoutId}`)
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+  const assignedClients = data.data.assignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name));
+  const unassignedClients = data.data.notAssignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name))
+
+  return <div className="p-4 mb-auto text-sm space-y-6">
+    <div>
+      <FormControl
+        placeholder="Search Client here"
+        className="w-full bg-gray-50 rounded-lg"
+        value={searchQuery}
+        onChange={e => setSearchQuery(e.target.value)}
+      />
+      <p className="mt-4 font-medium">{unassignedClients.length} Clients Available</p>
+    </div>
+    <div className="grid grid-cols-2 gap-6">
+      <div>
+        <h3 className="font-medium mb-4">Workouts Already Assigned</h3>
+        <div className="space-y-4">
+          {assignedClients.map((client, index) => <SelectedClient
+            key={index}
+            client={client}
+          />)}
+        </div>
+      </div>
+      <div>
+        <h3 className="font-medium mb-4">Not Assigned</h3>
+        <div className="space-y-4">
+          {unassignedClients.map((client, index) => <SelectClient
+            key={index}
+            client={client}
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+          />)}
+        </div>
+      </div>
+    </div>
+    {selectedClient && <div className="bg-white sticky bottom-0 text-center py-2">
+      <Button onClick={assignMealPlan} variant="wz">
+        Assign Workout
+      </Button>
+    </div>}
+  </div>
 }
 
 function AssignWorkoutContainer({ workoutId }) {
@@ -146,4 +210,13 @@ function SelectClient({
       />
     </label>
   </div>
+}
+
+function selectComponent(type) {
+  switch (type) {
+    case "normal":
+      return AssignWorkoutContainer;
+    case "custom":
+      return AssignCustomWorkoutContainer;
+  }
 }

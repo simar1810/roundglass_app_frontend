@@ -40,7 +40,7 @@ export default function Page() {
             </div>
             <div className="flex items-center justify-between mt-2">
               <div className="text-lg font-bold">{workout.title}</div>
-              <AssignWorkoutModal workoutId={workout._id} />
+              <AssignWorkoutModal type="normal" workoutId={workout._id} />
             </div>
           </div>)}
         </div>

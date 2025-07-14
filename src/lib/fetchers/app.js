@@ -210,8 +210,20 @@ export function getClientWorkouts(id) {
   return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
 }
 
-export function getCustomMealPlans(planId) {
-  let endpoint = "app/meal-plan/custom?person=coach";
-  if (Boolean(planId)) endpoint += `&planId=${planId}`
+export function getCustomMealPlans(person, planId) {
+  if (planId) {
+    return fetchData(`app/meal-plan/custom/${planId}?person=${person}`)
+  } else {
+    return fetchData(`app/meal-plan/custom?person=${person}`)
+  }
+}
+
+export function getCustomWorkoutPlans(person = "coach", workoutId) {
+  let endpoint = `app/workout/workout-plan/custom?person=${person}`;
+  if (workoutId) endpoint += `&workoutId=${workoutId}`
   return fetchData(endpoint)
+}
+
+export function getClientsForCustomWorkout(workoutId) {
+  return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`)
 }
