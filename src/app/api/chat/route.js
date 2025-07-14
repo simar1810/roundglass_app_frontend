@@ -43,9 +43,7 @@ export async function POST(req) {
               if (text) {
                 controller.enqueue(encoder.encode(`data: ${text}\n\n`));
               }
-            } catch (err) {
-              console.error('Stream parse error', err);
-            }
+            } catch (err) { }
           }
         });
 
@@ -55,7 +53,6 @@ export async function POST(req) {
         });
 
         openaiRes.data.on('error', (err) => {
-          console.error('Streaming error from OpenAI:', err);
           controller.error(err);
         });
       },

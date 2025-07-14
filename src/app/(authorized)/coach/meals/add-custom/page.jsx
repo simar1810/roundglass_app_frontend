@@ -4,7 +4,6 @@ import Stage2 from "@/components/pages/coach/meal-plan/add/Stage2";
 import { customMealIS, customMealReducer } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
 
-
 export default function Page() {
   return <div className="content-container">
     <CurrentStateProvider
@@ -28,7 +27,6 @@ function selectCreationStage(stage) {
       return <Stage1 />
     case 2:
       return <Stage2 />
-
     default:
       break;
   }

@@ -155,7 +155,6 @@ export function ClientSearchBar({ setModal }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [data, setData] = useState([]);
   const pathname = usePathname()
-  console.log(pathname)
 
   const containerRef = useRef();
   useClickOutside(containerRef, () => setOpen(false))

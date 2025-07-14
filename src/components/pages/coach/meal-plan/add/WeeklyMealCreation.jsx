@@ -1,31 +1,45 @@
-import { changeWorkoutPlans, customWorkoutUpdateField, weeklyMealRP } from "@/config/state-reducers/custom-meal";
-import { sendData } from "@/lib/api";
+import { customWorkoutUpdateField, dailyMealRP, mealPlanCreated, mealPlanCreationRP } from "@/config/state-reducers/custom-meal";
+import { sendData, uploadImage } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useState } from "react";
 import { toast } from "sonner";
-import WorkoutMetaData from "./WorkoutMetaData";
+import CustomMealMetaData from "./CustomMealMetaData";
 import { Button } from "@/components/ui/button";
-import useSWR from "swr";
-import { getPlans, getWorkouts } from "@/lib/fetchers/app";
-import ContentLoader from "@/components/common/ContentLoader";
-import ContentError from "@/components/common/ContentError";
-import SelectWorkoutCollection from "./SelectWorkoutCollection";
-import { DialogTrigger } from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { nameInitials } from "@/lib/formatter";
+import SelectMeals from "./SelectMeals";
+import { DAYS } from "@/config/data/ui";
 
-const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-
-export default function MonthlyMealCreation() {
+export default function WeeklyMealCreation() {
   const [loading, setLoading] = useState(false);
   const { dispatch, ...state } = useCurrentStateContext();
 
   async function saveCustomWorkout() {
     try {
       setLoading(true);
-      const formData = weeklyMealRP(state);
-      const response = await sendData(`app/meal-plan/custom`, formData);
+      const plans = {}
+      for (const key in state.selectedPlans) {
+        const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+        const createdMealPlan = await sendData("app/create-custom-plan", mealPlanCreationRP(state.selectedPlans[key]))
+        if (createdMealPlan.status_code !== 200) throw new Error(response.message)
+        plans[key] = createdMealPlan?.data?.planId
+        toast.dismiss(toastId);
+      }
+
+      let thumbnail;
+      if (state.file) {
+        const toastId = toast.loading("Uploading Thumbnail...");
+        thumbnail = await uploadImage(state.file)
+        dispatch(customWorkoutUpdateField("image", thumbnail.img))
+        toast.dismiss(toastId);
+      }
+
+      const toastId = toast.loading("Creating The Custom Meal Plan...");
+      const formData = dailyMealRP(state);
+      const response = await sendData(`app/meal-plan/custom`, {
+        ...formData,
+        image: thumbnail?.img,
+        plans
+      });
+      toast.dismiss(toastId);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
     } catch (error) {
@@ -41,15 +55,15 @@ export default function MonthlyMealCreation() {
       <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
         {DAYS.map((day, index) => <Button
           key={index}
-          variant={state.selectedDate === day ? "wz" : "wz_outline"}
-          onClick={() => dispatch(customWorkoutUpdateField("selectedDate", day))}
+          variant={state.selectedPlan === day ? "wz" : "wz_outline"}
+          onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
         >
           {day.at(0).toUpperCase() + day.slice(1)}
         </Button>)}
       </div>
     </div>
-    <WorkoutMetaData />
-    <SelectWorkouts />
+    <CustomMealMetaData />
+    <SelectMeals />
     <Button
       disabled={loading}
       onClick={saveCustomWorkout}
@@ -58,45 +72,4 @@ export default function MonthlyMealCreation() {
       Save
     </Button>
   </div>
-}
-
-function SelectWorkouts() {
-  const [query, setQuery] = useState("");
-  const { dispatch, plans, selectedPlans, selectedDate } = useCurrentStateContext();
-  const { isLoading, error, data } = useSWR("getPlans", getPlans);
-
-  if (isLoading) return <ContentLoader />
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const workoutItems = data.data;
-  const selectedWorkouts = plans[selectedDate] ? [plans[selectedDate]] : []
-
-  if (!selectedDate) return null;
-  const selectedWorkout = selectedPlans[selectedDate]
-  return <div>
-    <SelectWorkoutCollection
-      workouts={workoutItems}
-      selectedWorkouts={selectedWorkouts}
-      onChange={(workout) =>
-        selectedWorkouts.includes(plans[selectedDate]) && workout._id === plans[selectedDate]
-          ? dispatch(changeWorkoutPlans(selectedDate, {}))
-          : dispatch(changeWorkoutPlans(selectedDate, workout))
-      }>
-      {Boolean(selectedWorkouts.length) && <div className="mt-4">
-        <DialogTrigger className="w-full flex items-center justify-between gap-2">
-          <h3 className="text-left">Select Workout</h3>
-          <PlusCircle size={20} className="text-[var(--accent-1)]" />
-        </DialogTrigger>
-        <div className="mt-3 flex items-center gap-2">
-          <Avatar className="w-[40px] h-[40px] border-1">
-            <AvatarImage src={selectedWorkout.thumbnail} />
-            <AvatarFallback>{nameInitials(selectedWorkout.title || "")}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-[14px] mb-1">{selectedWorkout.title}</p>
-            <p className="text-[10px]">{selectedWorkout.duration}</p>
-          </div>
-        </div>
-      </div>}
-    </SelectWorkoutCollection>
-  </div >
 }

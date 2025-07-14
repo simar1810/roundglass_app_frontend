@@ -1,9 +1,8 @@
 "use client";
 import Stage1 from "@/components/pages/coach/workouts/add/Stage1";
 import Stage2 from "@/components/pages/coach/workouts/add/Stage2";
-import { customWorkoutIS, customWorkoutReducer, selectWorkoutType } from "@/config/state-reducers/custom-workout";
+import { customWorkoutIS, customWorkoutReducer } from "@/config/state-reducers/custom-workout";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
-
 
 export default function Page() {
   return <div className="content-container">
@@ -28,7 +27,6 @@ function selectCreationStage(stage) {
       return <Stage1 />
     case 2:
       return <Stage2 />
-
     default:
       break;
   }
