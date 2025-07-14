@@ -8,7 +8,7 @@ import {
 import FormControl from "@/components/FormControl";
 import { Badge } from "../ui/badge";
 import useSWR, { mutate } from "swr";
-import { getClientForMeals } from "@/lib/fetchers/app";
+import { getClientForMeals, getClientsForCustomMeals } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -18,7 +18,11 @@ import { toast } from "sonner";
 import { sendData } from "@/lib/api";
 import { Button } from "../ui/button";
 
-export default function AssignMealModal({ planId }) {
+export default function AssignMealModal({
+  type,
+  planId
+}) {
+  const Component = selectComponent(type);
   return (
     <Dialog>
       <DialogTrigger className="p-0">
@@ -30,10 +34,71 @@ export default function AssignMealModal({ planId }) {
             Assign Meal
           </DialogTitle>
         </DialogHeader>
-        <AssignMealPlanContainer planId={planId} />
+        <Component planId={planId} />
       </DialogContent>
     </Dialog>
   );
+}
+
+function AssignCustomMealPlanContainer({ planId }) {
+  const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientsForCustomMeals(planId));
+  const [selectedClient, setSelectedClient] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+  if (isLoading) return <ContentLoader />
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  async function assignMealPlan() {
+    try {
+      const response = await sendData("app/meal-plan/custom/assign", { id: planId, clients: [selectedClient] })
+      if (response.status_code !== 200) throw new Error(response.error || response.message);
+      toast.success(response.message);
+      mutate(`getClientForMeals/${planId}`)
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
+  const assignedClients = data.data.assignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name));
+  const unassignedClients = data.data.notAssignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name))
+
+  return <div className="p-4 mb-auto text-sm space-y-6">
+    <div>
+      <FormControl
+        placeholder="Search Client here"
+        className="w-full bg-gray-50 rounded-lg"
+        value={searchQuery}
+        onChange={e => setSearchQuery(e.target.value)}
+      />
+      <p className="mt-4 font-medium">{unassignedClients.length} Clients Available</p>
+    </div>
+    <div className="grid grid-cols-2 gap-6">
+      <div>
+        <h3 className="font-medium mb-4">Plan Already Assigned</h3>
+        <div className="space-y-4">
+          {assignedClients.map((client, index) => <SelectedClient
+            key={index}
+            client={client}
+          />)}
+        </div>
+      </div>
+      <div>
+        <h3 className="font-medium mb-4">Not Assigned</h3>
+        <div className="space-y-4">
+          {unassignedClients.map((client, index) => <SelectClient
+            key={index}
+            client={client}
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+          />)}
+        </div>
+      </div>
+    </div>
+    {selectedClient && <div className="bg-white sticky bottom-0 text-center py-2">
+      <Button onClick={assignMealPlan} variant="wz">
+        Assign Meal
+      </Button>
+    </div>}
+  </div>
 }
 
 function AssignMealPlanContainer({ planId }) {
@@ -136,4 +201,13 @@ function SelectClient({
       />
     </label>
   </div>
+}
+
+function selectComponent(type) {
+  switch (type) {
+    case "normal":
+      return AssignMealPlanContainer;
+    case "custom":
+      return AssignCustomMealPlanContainer;
+  }
 }

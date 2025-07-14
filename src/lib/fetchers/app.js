@@ -130,6 +130,14 @@ export function getClientForMeals(planId) {
   return fetchData(`app/getClientForMeals?planId=${planId}`);
 }
 
+export function getCustomMealPlanDetails(planId) {
+  return fetchData(`app/meal-plan/client/${planId}`)
+}
+
+export function getClientsForCustomMeals(planId) {
+  return fetchData(`app/meal-plan/custom/assign?id=${planId}`)
+}
+
 export function getProductByBrand(brandId) {
   return fetchData(`app/getProductByBrand/${brandId}`);
 }
@@ -200,4 +208,10 @@ export function getClientPrograms() {
 
 export function getClientWorkouts(id) {
   return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
+}
+
+export function getCustomMealPlans(planId) {
+  let endpoint = "app/meal-plan/custom?person=coach";
+  if (Boolean(planId)) endpoint += `&planId=${planId}`
+  return fetchData(endpoint)
 }

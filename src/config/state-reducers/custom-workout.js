@@ -1,13 +1,37 @@
 import { format, parse } from "date-fns";
 import { customWorkoutInitialState } from "../state-data/custom-workout";
+import { DAYS } from "../data/ui";
 
 export function customWorkoutReducer(state, action) {
   switch (action.type) {
     case "SELECT_WORKOUT_TYPE":
-      return {
+      if (action.payload === "daily") return {
         ...state,
-        mode: action.payload,
-        stage: 2
+        stage: 2,
+        mode: "daily",
+        selectedPlan: "daily",
+        selectedPlans: {
+          daily: []
+        },
+      }
+      else if (action.payload === "weekly") return {
+        ...state,
+        stage: 2,
+        mode: "weekly",
+        selectedPlan: "sunday",
+        selectedPlans: DAYS.reduce((acc, curr) => {
+          acc[curr] = [];
+          return acc;
+        }, {})
+      }
+      else return {
+        ...state,
+        stage: 2,
+        mode: "monthly",
+        selectedPlan: format(new Date(), 'dd-MM-yyyy'),
+        selectedPlans: {
+          [format(new Date(), 'dd-MM-yyyy')]: []
+        }
       }
     case "CUSTOM_WORKOUT_UPDATE_FIELD":
       return {
@@ -32,7 +56,47 @@ export function customWorkoutReducer(state, action) {
       return {
         ...state
       };
-
+    case "SAVE_WORKOUT":
+      if (action.payload.index || action.payload.index === 0) return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
+            .map((workout, index) => index === action.payload.index
+              ? action.payload.workout
+              : workout)
+        }
+      }
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: [
+            ...state.selectedPlans[state.selectedPlan],
+            action.payload.workout
+          ]
+        }
+      }
+    case "DELETE_WORKOUT":
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
+            .filter((_, index) => index !== action.payload)
+        }
+      }
+    case "ADD_NEW_PLAN_TYPE":
+      const formatted = format(parse(action.payload, "yyyy-MM-dd", new Date()), "dd-MM-yyyy");
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [formatted]: []
+        },
+        selectedPlan: formatted,
+        selectedMealType: "Breakfast"
+      }
     default:
       return state;
   }
@@ -72,6 +136,23 @@ export function removeWorkoutFromPlans(payload) {
   }
 }
 
+export function saveWorkout(workout, index) {
+  return {
+    type: "SAVE_WORKOUT",
+    payload: {
+      workout,
+      index
+    }
+  }
+}
+
+export function deleteWorkout(payload) {
+  return {
+    type: "DELETE_WORKOUT",
+    payload
+  }
+}
+
 export function customWorkoutIS(type, state) {
   if (type === "new") {
     return customWorkoutInitialState;
@@ -79,6 +160,23 @@ export function customWorkoutIS(type, state) {
     return {
       ...customWorkoutInitialState
     }
+  }
+}
+
+export function workoutPlanCreationRP(state) {
+  return {
+    title: null,
+    instructions: null,
+    workouts: null,
+    thumbnail: null,
+    workouts: state
+  }
+}
+
+export function addNewPlanType(payload) {
+  return {
+    type: "ADD_NEW_PLAN_TYPE",
+    payload
   }
 }
 
