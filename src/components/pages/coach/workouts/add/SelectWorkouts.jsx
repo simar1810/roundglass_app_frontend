@@ -12,7 +12,7 @@ export default function SelecWorkouts() {
     selectedPlans
   } = useCurrentStateContext();
 
-  const workouts = selectedPlans[selectedPlan]
+  const workouts = selectedPlans[selectedPlan] || []
 
   return <div>
     <div className="pt-4 flex gap-4 overflow-x-auto no-scrollbar">

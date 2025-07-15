@@ -9,6 +9,7 @@ export function customMealReducer(state, action) {
         ...state,
         stage: 2,
         mode: "daily",
+        creationType: "new",
         selectedPlan: "daily",
         selectedMealType: "Breakfast",
         selectedPlans: {
@@ -19,6 +20,7 @@ export function customMealReducer(state, action) {
         ...state,
         stage: 2,
         mode: "weekly",
+        creationType: "new",
         selectedPlan: "sunday",
         selectedMealType: "Breakfast",
         selectedPlans: DAYS.reduce((acc, curr) => {
@@ -30,11 +32,23 @@ export function customMealReducer(state, action) {
         ...state,
         stage: 2,
         mode: "monthly",
+        creationType: "new",
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedMealType: "Breakfast",
         selectedPlans: {
           [format(new Date(), 'dd-MM-yyyy')]: [{ mealType: "Breakfast", meals: [] }]
         }
+      }
+
+    case "INITIAL_STATE_DIFFERENT_CREATION":
+      return {
+        ...state,
+        stage: 2,
+        mode: action.payload.mode,
+        creationType: action.payload.creationType,
+        selectedPlan: action.payload.selectedPlan,
+        selectedPlans: action.payload.plans,
+        ...action.payload
       }
     case "CUSTOM_MEAL_UPDATE_FIELD":
       return {
@@ -263,6 +277,13 @@ export function customMealIS(type, state) {
     return {
       ...customMealInitialState
     }
+  }
+}
+
+export function changeStateDifferentCreationMeal(payload) {
+  return {
+    type: "INITIAL_STATE_DIFFERENT_CREATION",
+    payload
   }
 }
 

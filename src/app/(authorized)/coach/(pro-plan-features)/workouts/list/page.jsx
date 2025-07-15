@@ -21,7 +21,7 @@ export default function Page() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold mb-6">Workout Library</h1>
-          <CreateWorkoutModal />
+          {/* <CreateWorkoutModal /> */}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
           {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">

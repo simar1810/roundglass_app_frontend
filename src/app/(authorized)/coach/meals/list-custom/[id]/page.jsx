@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useReducer, useState } from "react";
 import useSWR from "swr";
@@ -33,7 +34,23 @@ function MealPlanDetailsContainer({ id }) {
 
 function CustomMealMetaData({ customPlan }) {
   return <div className="p-4 pr-8">
-    <h4>{customPlan.title}</h4>
+    <div className="flex items-center gap-4">
+      <h4 className="mr-auto">{customPlan.title}</h4>
+      <Link
+        href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
+        className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
+        variant="wz_outline"
+      >
+        Edit
+      </Link>
+      <Link
+        href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
+        className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
+        variant="wz"
+      >
+        Copy & Edit
+      </Link>
+    </div>
     <Image
       alt=""
       src={customPlan.image || "/not-found.png"}
@@ -43,7 +60,7 @@ function CustomMealMetaData({ customPlan }) {
       onError={e => e.target.src = "/not-found.png"}
     />
     <p>{customPlan.description}</p>
-  </div>
+  </div >
 }
 
 function CustomMealsListing({ customPlan }) {

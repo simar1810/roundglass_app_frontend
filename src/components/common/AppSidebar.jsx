@@ -21,12 +21,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from "../ui/dropdown-menu";
-import {
-  sidebar__coachContent,
-  sidebar__coachFooter
-} from "@/config/data/sidebar";
+import { sidebar__coachContent, sidebar__coachFooter } from "@/config/data/sidebar";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { fetchData } from "@/lib/api";
@@ -37,7 +37,7 @@ import ContentError from "./ContentError";
 import { useAppSelector } from "@/providers/global/hooks";
 import PendingClientClubDataModal from "../modals/client/PendingClientClubDataModal";
 import { DialogTrigger } from "../ui/dialog";
-import useSWR, { mutate, useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 import { SearchBar } from "./AppNavbar";
 
 export default function AppSidebar() {
@@ -59,94 +59,176 @@ export default function AppSidebar() {
           className="max-w-[10ch] mx-auto mt-4"
         />
       </SidebarHeader>
+
       <SearchBar />
+
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
-            {sidebarItems.map((item) => item.items && item.items.length > 0
-              ? <SidebarItemWithItems
-                key={item.id}
-                item={item}
-                Modal={Modal}
-                setModal={setModal}
-              />
-              : <SidebarItem item={item} key={item.id} />)}
+            {sidebarItems.map((item) =>
+              item.items && item.items.length > 0 ? (
+                <MainMenuItemWithDropdown key={item.id} item={item} Modal={Modal} setModal={setModal} />
+              ) : (
+                <SimpleMenuItem key={item.id} item={item} Modal={Modal} setModal={setModal} />
+              ),
+            )}
           </SidebarMenu>
         </SidebarGroup>
+
         <SidebarGroup>
           <SidebarMenu className="px-0">
-            {sidebar__coachFooter.map((item) => <SidebarItem item={item} key={item.id} />)}
+            {sidebar__coachFooter.map((item) =>
+              item.items && item.items.length > 0 ? (
+                <MainMenuItemWithDropdown key={item.id} item={item} Modal={Modal} setModal={setModal} />
+              ) : (
+                <SimpleMenuItem key={item.id} item={item} Modal={Modal} setModal={setModal} />
+              ),
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   )
 }
-
-function SidebarItemWithItems({ Modal, setModal, item }) {
-  const [open, setOpen] = useState(false);
-  const { isMobile } = useSidebar()
+function NestedDropdownItem({ item, Modal, setModal }) {
   const pathname = usePathname()
-  return <DropdownMenu open={open} key={item.id}>
-    <SidebarMenuItem className="py-[8px]">
-      <DropdownMenuTrigger
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        asChild
-        className="p-0 focus:border-nonefocus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
-      >
-        <SidebarMenuButton className={`w-full !text-[var(--comp-4)] text-[14px] font-[500] px-2 py-[8px] ${pathname.includes(item.url) ? "bg-[var(--accent-1)] !text-[var(--dark-1)]" : "hover:text-white hover:!bg-[var(--dark-1)]"}`}>
+  const isActive = pathname === item.url || pathname.includes(item.url)
+
+  if (!item.items || item.items.length === 0) {
+    if (item.type === "modal") {
+      return (
+        <DropdownMenuItem
+          className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)] ${isActive ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : ""
+            }`}
+          onClick={() => setModal(<item.Component setModal={setModal} />)}
+        >
           {item.icon}
-          <span>{item?.title}</span>
-          <ChevronRight className="absolute right-2 top-1/2 translate-y-[-50%]" />
-        </SidebarMenuButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        side={isMobile ? "bottom" : "right"}
-        align={isMobile ? "end" : "start"}
-        className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 relative rounded-r-[8px]"
-        sideOffset={0}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-      >
-        <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
-        {item.items.map(({ Component, ...item }) => (item.type === "modal"
-          ? <DropdownMenuItem
-            key={item.title}
-            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)]`}
-            onClick={() => setModal(<Component setModal={setModal} />)}
-          >
-            {item.icon}
-            <span>{item.title}</span>
-          </DropdownMenuItem>
-          : <DropdownMenuItem
-            asChild
-            key={item.title}
-            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "bg-white !bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
-          >
-            <Link href={item.url}>
-              {item.icon}
-              <span>{item.title}</span>
-            </Link>
-          </DropdownMenuItem>))}
-      </DropdownMenuContent>
-    </SidebarMenuItem>
-  </DropdownMenu>
-}
+          <span>{item.title}</span>
+        </DropdownMenuItem>
+      )
+    }
 
-function SidebarItem({ item }) {
-  const pathname = usePathname()
-  return <SidebarMenuItem className="py-[8px]" key={item.id}>
-    <SidebarMenuButton asChild>
-      <Link
-        href={item.url}
-        className={`!text-[var(--comp-4)] text-[14px] font-[500] ${pathname === item.url ? "bg-[var(--accent-1)] !text-[var(--dark-1)]" : "hover:!bg-[var(--dark-1)] hover:!text-white"}`}
+    return (
+      <DropdownMenuItem
+        asChild
+        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
+          : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
+          }`}
+      >
+        <Link href={item.url}>
+          {item.icon}
+          <span>{item.title}</span>
+        </Link>
+      </DropdownMenuItem>
+    )
+  }
+
+  // If item has sub-items, render as nested dropdown
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger
+        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
+          : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
+          }`}
       >
         {item.icon}
         <span>{item.title}</span>
-      </Link>
-    </SidebarMenuButton>
-  </SidebarMenuItem>
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent
+        className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 rounded-r-[8px]"
+        sideOffset={0}
+      >
+        <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
+        {item.items.map((subItem) => (
+          <NestedDropdownItem key={subItem.id} item={subItem} Modal={Modal} setModal={setModal} />
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
+
+function MainMenuItemWithDropdown({ item, Modal, setModal }) {
+  const [open, setOpen] = useState(false)
+  const { isMobile } = useSidebar()
+  const pathname = usePathname()
+  const isActive = pathname === item.url || pathname.includes(item.url)
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <SidebarMenuItem className="py-[8px]">
+        <DropdownMenuTrigger
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+          asChild
+          className="p-0 focus:border-none focus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
+        >
+          <SidebarMenuButton
+            className={`w-full !text-[var(--comp-4)] text-[14px] font-[500] px-2 py-[8px] ${isActive ? "bg-[var(--accent-1)] !text-[var(--dark-1)]" : "hover:text-white hover:!bg-[var(--dark-1)]"
+              }`}
+          >
+            {item.icon}
+            <span>{item?.title}</span>
+            <ChevronRight className="absolute right-2 top-1/2 translate-y-[-50%]" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side={isMobile ? "bottom" : "right"}
+          align={isMobile ? "end" : "start"}
+          className="min-w-56 bg-[var(--dark-1)] rounded-none pl-6 pr-2 py-2 border-0 relative rounded-r-[8px]"
+          sideOffset={0}
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <div className="h-full w-[16px] bg-[var(--dark-4)] absolute left-0 top-0" />
+          {item.items.map((subItem) => (
+            <NestedDropdownItem key={subItem.id} item={subItem} Modal={Modal} setModal={setModal} />
+          ))}
+        </DropdownMenuContent>
+      </SidebarMenuItem>
+    </DropdownMenu>
+  )
+}
+
+// Simple menu item without dropdown
+function SimpleMenuItem({ item, Modal, setModal }) {
+  const pathname = usePathname()
+  const isActive = pathname === item.url || pathname.includes(item.url)
+
+  if (item.type === "modal") {
+    return (
+      <SidebarMenuItem className="py-[8px]">
+        <SidebarMenuButton
+          onClick={() => setModal(<item.Component setModal={setModal} />)}
+          className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${isActive
+            ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
+            : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
+            }`}
+        >
+          {item.icon}
+          <span>{item.title}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
+
+  return (
+    <SidebarMenuItem className="py-[8px]">
+      <SidebarMenuButton
+        asChild
+        className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
+          : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
+          }`}
+      >
+        <Link href={item.url}>
+          {item.icon}
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
 }
 
 export function ClientSearchBar({ setModal }) {

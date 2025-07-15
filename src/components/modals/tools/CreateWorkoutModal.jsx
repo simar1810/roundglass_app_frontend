@@ -21,13 +21,15 @@ import imageCompression from "browser-image-compression";
 
 export default function CreateWorkoutModal({
   children,
-  data
+  data,
+  setModal,
 }) {
-  return <Dialog>
-    {!children && <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]">
+  return <Dialog open={true} onOpenChange={() => setModal()}>
+    <DialogTrigger />
+    {/* {!children && <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]">
       <Plus className="w-[16px]" />
       Add
-    </DialogTrigger>}
+    </DialogTrigger>} */}
     {children}
     <DialogContent className="max-h-[70vh] p-0 overflow-y-auto no-scrollbar">
       <DialogHeader className="p-4 border-b-1">

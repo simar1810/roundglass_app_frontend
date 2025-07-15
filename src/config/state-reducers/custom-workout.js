@@ -9,6 +9,7 @@ export function customWorkoutReducer(state, action) {
         ...state,
         stage: 2,
         mode: "daily",
+        creationType: "new",
         selectedPlan: "daily",
         selectedPlans: {
           daily: []
@@ -18,6 +19,7 @@ export function customWorkoutReducer(state, action) {
         ...state,
         stage: 2,
         mode: "weekly",
+        creationType: "new",
         selectedPlan: "sunday",
         selectedPlans: DAYS.reduce((acc, curr) => {
           acc[curr] = [];
@@ -28,10 +30,21 @@ export function customWorkoutReducer(state, action) {
         ...state,
         stage: 2,
         mode: "monthly",
+        creationType: "new",
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedPlans: {
           [format(new Date(), 'dd-MM-yyyy')]: []
         }
+      }
+    case "INITIAL_STATE_DIFFERENT_CREATION":
+      return {
+        ...state,
+        stage: 2,
+        mode: action.payload.mode,
+        creationType: action.payload.creationType,
+        selectedPlan: action.payload.selectedPlan,
+        selectedPlans: action.payload.plans,
+        ...action.payload
       }
     case "CUSTOM_WORKOUT_UPDATE_FIELD":
       return {
@@ -160,6 +173,13 @@ export function customWorkoutIS(type, state) {
     return {
       ...customWorkoutInitialState
     }
+  }
+}
+
+export function changeStateDifferentCreation(payload) {
+  return {
+    type: "INITIAL_STATE_DIFFERENT_CREATION",
+    payload
   }
 }
 

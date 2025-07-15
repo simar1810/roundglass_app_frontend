@@ -1,8 +1,12 @@
 "use client";
 import Stage1 from "@/components/pages/coach/workouts/add/Stage1";
 import Stage2 from "@/components/pages/coach/workouts/add/Stage2";
-import { customWorkoutIS, customWorkoutReducer } from "@/config/state-reducers/custom-workout";
+import { changeStateDifferentCreation, customWorkoutIS, customWorkoutReducer, selectWorkoutType } from "@/config/state-reducers/custom-workout";
+import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   return <div className="content-container">
@@ -16,8 +20,43 @@ export default function Page() {
 }
 
 function CustomWorkoutContainer() {
-  const { stage } = useCurrentStateContext();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode")
+  const creationType = searchParams.get("creationType");
+  const workoutId = searchParams.get("workoutId")
+
+  const router = useRouter();
+
+  const { dispatch, stage } = useCurrentStateContext();
   const Component = selectCreationStage(stage)
+
+  useEffect(function () {
+    ; (async function () {
+      if (creationType === "edit" && Boolean(workoutId)) {
+        const response = await getCustomWorkoutPlans("coach", workoutId)
+        if (response.status_code !== 200) {
+          toast.error(response.message);
+          router.push("/coach/workouts/list-custom");
+        }
+        const workout = response.data[0]
+        const plans = {};
+        for (const field in workout.plans) {
+          plans[field] = workout.plans[field].workouts || []
+        }
+        dispatch(changeStateDifferentCreation({
+          mode,
+          creationType,
+          selectedPlans: plans,
+          selectedPlan: Object.keys(workout.plans)?.at(0),
+          thumbnail: workout.image,
+          title: workout.title,
+          description: workout.description,
+        }))
+      } else if (["daily", "weekly", "monthly"].includes(mode)) {
+        dispatch(selectWorkoutType(mode))
+      }
+    })();
+  }, [])
   return Component
 }
 
