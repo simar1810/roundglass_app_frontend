@@ -48,28 +48,32 @@ export default function DailyWorkoutCreation() {
     }
   }
 
-  return <div className="max-w-[450px] mx-auto flex flex-col gap-y-4">
-    <div>
-      <h3>Days</h3>
-      <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
-        {DAYS.map((day, index) => <Button
-          key={index}
-          variant={state.selectedPlan === day ? "wz" : "wz_outline"}
-          onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+  const days = Object.keys(state.selectedPlans)
+
+  return <div className="flex flex-col gap-y-4">
+    <div className="grid grid-cols-2 divide-x-2">
+      <WorkoutMetaData />
+      <div className="pl-8">
+        <h3>Days</h3>
+        <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {days.map((day, index) => <Button
+            key={index}
+            variant={state.selectedPlan === day ? "wz" : "wz_outline"}
+            onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+          >
+            {day.at(0).toUpperCase() + day.slice(1)}
+          </Button>)}
+        </div>
+        <SelectWorkouts />
+        <Button
+          disabled={loading}
+          variant="wz"
+          className="w-full mt-8"
+          onClick={saveCustomWorkout}
         >
-          {day.at(0).toUpperCase() + day.slice(1)}
-        </Button>)}
+          Save Workout
+        </Button>
       </div>
     </div>
-    <WorkoutMetaData />
-    <SelectWorkouts />
-    <Button
-      disabled={loading}
-      variant="wz"
-      className="mt-8"
-      onClick={saveCustomWorkout}
-    >
-      Add Workout
-    </Button>
   </div>
 }

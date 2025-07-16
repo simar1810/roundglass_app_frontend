@@ -30,7 +30,7 @@ function CustomWorkoutContainer() {
 
   useEffect(function () {
     ; (async function () {
-      if (creationType === "edit" && Boolean(mealId)) {
+      if (["edit", "copy_edit"].includes(creationType) && Boolean(mealId)) {
         const response = await getCustomMealPlans("coach", mealId)
         if (response.status_code !== 200) {
           toast.error(response.message);
@@ -45,7 +45,8 @@ function CustomWorkoutContainer() {
           mode,
           creationType,
           selectedPlans: plans,
-          selectedPlan: Object.keys(mealPlan.plans)?.at(0),
+          selectedPlan: Object.keys(plans)?.at(0),
+          selectedMealType: Object.values(plans)?.at(0)?.at(0).mealType,
           thumbnail: mealPlan.image,
           title: mealPlan.title,
           description: mealPlan.description,

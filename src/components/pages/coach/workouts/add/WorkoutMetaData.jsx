@@ -10,7 +10,7 @@ import { useRef } from "react";
 export default function WorkoutMetaData() {
   const { dispatch, title, description, ...state } = useCurrentStateContext()
   const fileRef = useRef();
-  return <div className="flex flex-col gap-y-4">
+  return <div className="flex flex-col gap-y-4 pr-8">
     <FormControl
       value={title}
       onChange={e => dispatch(customWorkoutUpdateField("title", e.target.value))}
@@ -24,7 +24,7 @@ export default function WorkoutMetaData() {
         alt=""
         height={400}
         width={400}
-        className="max-h-[180px] w-full object-contain"
+        className="max-h-[220px] w-full object-cover rounded-[10px]"
         onClick={() => fileRef.current.click()}
       />
       <input

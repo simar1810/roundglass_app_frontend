@@ -32,7 +32,7 @@ function CustomWorkoutContainer() {
 
   useEffect(function () {
     ; (async function () {
-      if (creationType === "edit" && Boolean(workoutId)) {
+      if (["edit", "copy_edit"].includes(creationType) && Boolean(workoutId)) {
         const response = await getCustomWorkoutPlans("coach", workoutId)
         if (response.status_code !== 200) {
           toast.error(response.message);

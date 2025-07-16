@@ -43,12 +43,12 @@ export function customMealReducer(state, action) {
     case "INITIAL_STATE_DIFFERENT_CREATION":
       return {
         ...state,
+        ...action.payload,
         stage: 2,
         mode: action.payload.mode,
         creationType: action.payload.creationType,
         selectedPlan: action.payload.selectedPlan,
-        selectedPlans: action.payload.plans,
-        ...action.payload
+        selectedPlans: action.payload.selectedPlans,
       }
     case "CUSTOM_MEAL_UPDATE_FIELD":
       return {

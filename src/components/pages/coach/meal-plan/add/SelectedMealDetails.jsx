@@ -56,5 +56,5 @@ export default function SelectedMealDetails({
 }
 
 function isPlanSelected(recipe) {
-  return Boolean(recipe?._id?.$oid) || Boolean(recipe?._id)
+  return Boolean(recipe?._id?.$oid) || Boolean(recipe?._id) || Boolean(recipe?.mealId)
 }

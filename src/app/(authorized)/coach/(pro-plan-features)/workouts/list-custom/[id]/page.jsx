@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import useSWR from "swr";
@@ -32,7 +33,23 @@ function WorkoutDetailsContainer({ id }) {
 
 function WorkoutMetaData({ customPlan }) {
   return <div className="p-4 pr-8">
-    <h4>{customPlan.title}</h4>
+    <div className="flex items-center gap-4">
+      <h4 className="mr-auto">{customPlan.title}</h4>
+      <Link
+        href={`/coach/workouts/add?creationType=edit&mode=${customPlan.mode}&workoutId=${customPlan._id}`}
+        className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
+        variant="wz_outline"
+      >
+        Edit
+      </Link>
+      <Link
+        href={`/coach/workouts/add?creationType=copy_edit&mode=${customPlan.mode}&workoutId=${customPlan._id}`}
+        className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
+        variant="wz"
+      >
+        Copy & Edit
+      </Link>
+    </div>
     <Image
       alt=""
       src={customPlan.image || "/not-found.png"}

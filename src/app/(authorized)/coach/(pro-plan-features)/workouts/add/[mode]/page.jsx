@@ -1,6 +1,6 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
-import Stage2 from "@/components/pages/coach/meal-plan/add/Stage2";
+import Stage2 from "@/components/pages/coach/workouts/add/Stage2";
 import { customWorkoutIS, customWorkoutReducer, selectWorkoutType } from "@/config/state-reducers/custom-workout";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useParams } from "next/navigation";

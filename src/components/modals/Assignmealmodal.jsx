@@ -41,18 +41,17 @@ export default function AssignMealModal({
 }
 
 function AssignCustomMealPlanContainer({ planId }) {
-  const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientsForCustomMeals(planId));
+  const { isLoading, error, data } = useSWR(`getClientForCustomMeals/${planId}`, () => getClientsForCustomMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
   if (isLoading) return <ContentLoader />
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
   async function assignMealPlan() {
     try {
       const response = await sendData("app/meal-plan/custom/assign", { id: planId, clients: [selectedClient] })
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
-      mutate(`getClientForMeals/${planId}`)
+      mutate(`getClientForCustomMeals/${planId}`)
     } catch (error) {
       toast.error(error.message);
     }

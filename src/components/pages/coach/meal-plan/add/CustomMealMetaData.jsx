@@ -10,7 +10,7 @@ import { useRef } from "react";
 export default function CustomMealMetaData() {
   const { dispatch, ...state } = useCurrentStateContext()
   const fileRef = useRef()
-  return <div className="flex flex-col gap-y-4">
+  return <div className="pr-8 flex flex-col gap-y-4">
     <FormControl
       value={state.title}
       onChange={e => dispatch(customWorkoutUpdateField("title", e.target.value))}
@@ -24,7 +24,7 @@ export default function CustomMealMetaData() {
         alt=""
         height={400}
         width={400}
-        className="max-h-[180px] w-full object-contain"
+        className="max-h-[220px] w-full object-cover rounded-[10px]"
         onClick={() => fileRef.current.click()}
       />
       <input

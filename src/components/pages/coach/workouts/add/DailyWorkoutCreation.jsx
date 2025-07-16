@@ -51,7 +51,6 @@ export default function DailyWorkoutCreation() {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
     } catch (error) {
-      console.error(error)
       toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -94,16 +93,20 @@ export default function DailyWorkoutCreation() {
     }
   }
 
-  return <div className="max-w-[450px] mx-auto flex flex-col gap-y-4">
-    <WorkoutMetaData />
-    <SelectWorkouts />
-    <Button
-      disabled={loading}
-      variant="wz"
-      className="mt-8"
-      onClick={saveCustomWorkout}
-    >
-      Add Workout
-    </Button>
+  return <div className="flex flex-col gap-y-4">
+    <div className="grid grid-cols-2 divide-x-2">
+      <WorkoutMetaData />
+      <div className="pl-8">
+        <SelectWorkouts />
+        <Button
+          disabled={loading}
+          variant="wz"
+          className="w-full mt-8"
+          onClick={saveCustomWorkout}
+        >
+          Save Workout
+        </Button>
+      </div>
+    </div>
   </div>
 }

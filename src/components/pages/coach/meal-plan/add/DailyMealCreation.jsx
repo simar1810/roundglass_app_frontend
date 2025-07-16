@@ -51,7 +51,6 @@ export default function DailyMealCreation() {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
     } catch (error) {
-      console.error(error)
       toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -98,16 +97,20 @@ export default function DailyMealCreation() {
     }
   }
 
-  return <div className="max-w-[450px] mx-auto flex flex-col gap-y-4">
-    <CustomMealMetaData />
-    <SelectMeals />
-    <Button
-      disabled={loading}
-      variant="wz"
-      className="mt-8"
-      onClick={saveCustomWorkout}
-    >
-      Save Meal
-    </Button>
+  return <div className="flex flex-col gap-y-4">
+    <div className="grid grid-cols-2 divide-x-2">
+      <CustomMealMetaData />
+      <div className="pl-8">
+        <SelectMeals />
+        <Button
+          disabled={loading}
+          variant="wz"
+          className="w-full mt-8"
+          onClick={saveCustomWorkout}
+        >
+          Save Meal
+        </Button>
+      </div>
+    </div>
   </div>
 }

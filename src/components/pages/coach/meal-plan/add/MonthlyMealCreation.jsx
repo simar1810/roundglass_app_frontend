@@ -52,7 +52,6 @@ export default function MonthlyMealCreation() {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
     } catch (error) {
-      console.error(error)
       toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -101,28 +100,31 @@ export default function MonthlyMealCreation() {
 
   const days = Object.keys(state.selectedPlans);
 
-  return <div className="max-w-[450px] mx-auto flex flex-col gap-y-4">
-    <div>
-      <h3>Days</h3>
-      <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
-        {days.map((day, index) => <Button
-          key={index}
-          variant={state.selectedPlan === day ? "wz" : "wz_outline"}
-          onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+  return <div className="flex flex-col gap-y-4">
+    <div className="grid grid-cols-2 divide-x-2">
+      <CustomMealMetaData />
+      <div className="pl-8">
+        <h3>Days</h3>
+        <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {days.map((day, index) => <Button
+            key={index}
+            variant={state.selectedPlan === day ? "wz" : "wz_outline"}
+            onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+          >
+            {day.at(0).toUpperCase() + day.slice(1)}
+          </Button>)}
+          <AddDayModal />
+        </div>
+        <SelectMeals />
+        <Button
+          disabled={loading}
+          variant="wz"
+          className="w-full mt-8"
+          onClick={saveCustomWorkout}
         >
-          {day.at(0).toUpperCase() + day.slice(1)}
-        </Button>)}
-        <AddDayModal />
+          Save
+        </Button>
       </div>
     </div>
-    <CustomMealMetaData />
-    <SelectMeals />
-    <Button
-      disabled={loading}
-      onClick={saveCustomWorkout}
-      variant="wz"
-    >
-      Save
-    </Button>
   </div>
 }

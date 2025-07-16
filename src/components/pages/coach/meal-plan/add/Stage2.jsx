@@ -8,7 +8,6 @@ import WeeklyMealCreation from "./WeeklyMealCreation";
 
 export default function Stage2() {
   const { mode, dispatch, ...state } = useCurrentStateContext();
-  console.log(state)
   const component = selectWorkoutCreationComponent(mode);
   return <div>
     <Button onClick={() => dispatch(customWorkoutUpdateField("stage", 1))} variant="wz" className="mb-4">

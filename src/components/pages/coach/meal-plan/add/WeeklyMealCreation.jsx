@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import CustomMealMetaData from "./CustomMealMetaData";
 import { Button } from "@/components/ui/button";
 import SelectMeals from "./SelectMeals";
-import { DAYS } from "@/config/data/ui";
 
 export default function WeeklyMealCreation() {
   const [loading, setLoading] = useState(false);
@@ -51,7 +50,6 @@ export default function WeeklyMealCreation() {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
     } catch (error) {
-      console.error(error)
       toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -98,27 +96,32 @@ export default function WeeklyMealCreation() {
     }
   }
 
-  return <div className="max-w-[450px] mx-auto flex flex-col gap-y-4">
-    <div>
-      <h3>Days</h3>
-      <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
-        {DAYS.map((day, index) => <Button
-          key={index}
-          variant={state.selectedPlan === day ? "wz" : "wz_outline"}
-          onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+  const days = Object.keys(state.selectedPlans)
+
+  return <div className="flex flex-col gap-y-4">
+    <div className="grid grid-cols-2 divide-x-2">
+      <CustomMealMetaData />
+      <div className="pl-8">
+        <h3>Days</h3>
+        <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {days.map((day, index) => <Button
+            key={index}
+            variant={state.selectedPlan === day ? "wz" : "wz_outline"}
+            onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+          >
+            {day.at(0).toUpperCase() + day.slice(1)}
+          </Button>)}
+        </div>
+        <SelectMeals />
+        <Button
+          disabled={loading}
+          variant="wz"
+          className="w-full mt-8"
+          onClick={saveCustomWorkout}
         >
-          {day.at(0).toUpperCase() + day.slice(1)}
-        </Button>)}
+          Save
+        </Button>
       </div>
     </div>
-    <CustomMealMetaData />
-    <SelectMeals />
-    <Button
-      disabled={loading}
-      onClick={saveCustomWorkout}
-      variant="wz"
-    >
-      Save
-    </Button>
   </div>
 }
