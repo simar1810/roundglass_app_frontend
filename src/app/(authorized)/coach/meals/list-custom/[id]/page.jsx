@@ -137,7 +137,6 @@ function DeleteCustomMealPlan({ id }) {
     try {
       setLoading(true);
       const response = await sendData(`app/meal-plan/custom?id=${id}`, {}, "DELETE");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       cache.delete("custom-meal-plans")

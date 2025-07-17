@@ -124,7 +124,6 @@ function DeleteCustomWorkoutPlan({ id }) {
     try {
       setLoading(true);
       const response = await sendData("app/workout/workout-plan/custom", { id }, "DELETE");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       cache.delete("custom-workout-plans")

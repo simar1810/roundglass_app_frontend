@@ -303,7 +303,7 @@ export function dailyMealRP(state) {
   return {
     title: state.title,
     description: state.description,
-    mode: "daily",
+    mode: state.mode,
     image: state.image
   }
 }
