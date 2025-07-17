@@ -25,6 +25,7 @@ export function ClientChatStateProvider({ children }) {
       coachId,
       person: "client"
     }
+    console.log(emitData)
     if (socket) socket.emit("joinRoom", emitData);
     if (socket) socket.emit("joinRoom", emitData);
   }, [])

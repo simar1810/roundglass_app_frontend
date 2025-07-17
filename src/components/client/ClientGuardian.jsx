@@ -9,7 +9,7 @@ import { TriangleAlert } from "lucide-react";
 import { destroyClient, storeClient } from "@/providers/global/slices/client";
 
 export default function ClientGuardian({ children }) {
-  const { isLoading, error, data } = useSWR("clientProfile", getClientProfile)
+  const { isLoading, data } = useSWR("clientProfile", getClientProfile)
   const { cache } = useSWRConfig();
 
   const dispatchRedux = useAppDispatch();
