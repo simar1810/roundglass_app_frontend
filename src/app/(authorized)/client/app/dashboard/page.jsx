@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getClientHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import { useAppSelector } from "@/providers/global/hooks";
-import { GlassWater, Plus, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
@@ -27,46 +26,29 @@ function Container() {
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const clientHomeData = data.data;
-
   return <>
     <ActivityTool activities={clientHomeData.programs} />
-    {/* <div className="mty-8 grid grid-cols-2 gap-4">
-      <div className="bg-[var(--primary-1)] p-4 border-1 rounded-[12px]">
-        <h3>Goal</h3>
-        <p className="text-[var(--dark-1)]/40 mt-2">{clientHomeData?.user?.goal}</p>
-      </div>
-      <div className="bg-[var(--primary-1)] p-4 border-1 rounded-[12px]">
-        <h3>Water Intake</h3>
-        <div className="mt-4 flex gap-4 justify-between">
-          <div className="w-fit grid grid-cols-4 gap-4">
-            {Array.from({ length: 4 }, (_, i) => i).map(item => <GlassWater className="w-[32px] h-[32px] text-blue-800" fill="#193cb88D" key={item} />)}
-          </div>
-          <PlusCircle className="w-[32px] h-[32px] text-[var(--accent-1)] cursor-pointer" />
-          <div className="w-fit grid grid-cols-4 gap-4">
-            {Array.from({ length: 4 }, (_, i) => i).map(item => <GlassWater className="w-[32px] h-[32px] text-blue-600" key={item} />)}
-          </div>
-        </div>
-      </div>
-    </div> */}
     <div className="grid grid-cols-2 gap-4">
       <Stories stories={clientHomeData.story} />
-      <div className="bg-[var(--primary-1)] mt-8 p-4 border-1 rounded-[12px]">
-        <Image
-          alt=""
-          height={400}
-          width={400}
-          src={clientHomeData?.meal?.image}
-          className="w-full max-h-[300px] object-contain object-center"
-        />
-        <h3 className="my-2">{clientHomeData?.meal?.name}</h3>
-        <p>{clientHomeData?.meal?.description}</p>
-      </div>
+      {clientHomeData.meal
+        ? <MealDetails meal={clientHomeData.meal} />
+        : <ContentError title="No Meal Plan" className="font-bold !min-h-[200px]" />}
     </div>
-    {/* <DashboardClientList
-      topPerformers={clientHomeData.topPerformers}
-      fourClients={clientHomeData.fourClients}
-    /> */}
   </>
+}
+
+function MealDetails({ meal }) {
+  return <div className="bg-[var(--primary-1)] mt-8 p-4 border-1 rounded-[12px]">
+    <Image
+      alt=""
+      height={400}
+      width={400}
+      src={meal?.image}
+      className="w-full max-h-[300px] object-contain object-center"
+    />
+    <h3 className="my-2">{meal?.name}</h3>
+    <p>{meal?.description}</p>
+  </div>
 }
 
 function getBgColor(index) {

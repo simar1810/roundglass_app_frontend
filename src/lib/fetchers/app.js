@@ -209,7 +209,7 @@ export function getClientWorkouts(id) {
  */
 
 export function getClientHome(id) {
-  return fetchData(`app/clientHome/${id}`)
+  return fetchData(`app/clientHome/${id}/wellnessz`)
 }
 
 export function getClientProfile() {

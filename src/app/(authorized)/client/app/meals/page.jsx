@@ -51,6 +51,10 @@ function MealPlanContainer({
   searchQuery
 }) {
   const plans = allMealPlans.filter(item => new RegExp(searchQuery, "i").test(item.name));
+  if (plans.length === 0) return <ContentError
+    className="font-bold"
+    title="No Meals plans assigned to the client"
+  />
   return <div className="grid grid-cols-4 gap-4">
     {plans.map(plan => <MealDisplayCard
       plan={plan}

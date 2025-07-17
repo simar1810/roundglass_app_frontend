@@ -19,14 +19,14 @@ export function ClientChatStateProvider({ children }) {
       dispatch(storeChats(data, socket))
       dispatch(setCurrentUserMessages(data))
     });
-    socket.on("receiveMessage", (data) => dispatch(addNewMessageToCurrentChat(data)));
+    socket.on("receiveMessage", (data) => {
+      dispatch(addNewMessageToCurrentChat(data))
+    });
     const emitData = {
       clientId,
       coachId,
       person: "client"
     }
-    console.log(emitData)
-    if (socket) socket.emit("joinRoom", emitData);
     if (socket) socket.emit("joinRoom", emitData);
   }, [])
 

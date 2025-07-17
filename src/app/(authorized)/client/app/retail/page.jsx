@@ -27,7 +27,7 @@ function Container() {
   </div>
 }
 
-function RetailContainer({ orders, retails }) {
+function RetailContainer({ orders }) {
   return <Tabs defaultValue="brands">
     <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
       <TabsTrigger
@@ -50,14 +50,20 @@ function RetailContainer({ orders, retails }) {
 
 function Brands() {
   const { isLoading, error, data } = useSWR("app/get-brands", getBrands);
+
   if (isLoading) return <TabsContent value="brands">
     <ContentLoader />
   </TabsContent>
+
   if (error || data.status_code !== 200) return <TabsContent value="brands">
     <ContentError title={error || data.message} />
   </TabsContent>
 
   const brands = data.data;
+
+  if (brands.length === 0) return <TabsContent value="brands">
+    <ContentError title="0 Brands found!" className="mt-0 font-bold" />
+  </TabsContent>
 
   return <TabsContent value="brands">
     <div className="flex items-center gap-2 justify-between">
@@ -99,6 +105,10 @@ function OrderHistory({ orders }) {
       return dateB - dateA;
     })
     .sort((a, b) => a.status === "Completed");
+
+  if (myOrders.length === 0) return <TabsContent value="order-history">
+    <ContentError title="0 Orders Placed!" className="mt-0 font-bold" />
+  </TabsContent>
 
   return <TabsContent value="order-history">
     <div className="grid grid-cols-3 gap-4">

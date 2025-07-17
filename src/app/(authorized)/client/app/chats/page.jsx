@@ -5,21 +5,15 @@ import { Input } from "@/components/ui/input";
 import { getRelativeTime, nameInitials } from "@/lib/formatter";
 import useClientChatSocketContext, { ClientChatStateProvider } from "@/providers/ClientChatStateProvider";
 import { useAppSelector } from "@/providers/global/hooks";
-import { CheckCheck, EllipsisVertical, SendHorizontal } from "lucide-react";
+import { CheckCheck, SendHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function Page() {
   return <div className="content-container bg-white p-4 pt-0 rounded-md border-1">
     <ClientChatStateProvider>
-      <ChatContainer />
+      <SelectedChat />
     </ClientChatStateProvider>
   </div>
-}
-
-function ChatContainer() {
-  const { currentChatMessages, ...data } = useClientChatSocketContext()
-  console.log(data)
-  return <SelectedChat />
 }
 
 function SelectedChat() {
@@ -39,9 +33,9 @@ function SelectedChat() {
     <h4>Please Wait Opening Chat 😊</h4>
   </div>
 
-  return <div className="relative grow w-[200px] flex flex-col border-1 overflow-x-clip">
+  return <div className="relative grow mt-4 flex flex-col border-1 overflow-x-clip">
     <CurrentChatHeader />
-    <div className="text-[12px] font-semibold py-2 px-6">
+    <div className="w-full text-[12px] font-semibold py-2 px-6">
       <ChatMessages />
     </div>
     <CurrentChatMessageBox />
@@ -49,18 +43,16 @@ function SelectedChat() {
 }
 
 function CurrentChatHeader() {
-  return
-  const { currentChat } = useClientChatSocketContext();
+  const { coachName, coachProfilePhoto } = useAppSelector(state => state.client.data)
   return <div className="bg-[var(--primary-1)] px-4 py-4 flex items-center gap-4 sticky top-0 z-[100] border-b-1">
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
-      <AvatarImage src={currentChat.profilePhoto || "/"} className="rounded-[8px]" />
-      <AvatarFallback className="bg-gray-200 rounded-[8px]">{nameInitials(currentChat.name)}</AvatarFallback>
+      <AvatarImage src={coachProfilePhoto || "/"} className="rounded-[8px]" />
+      <AvatarFallback className="bg-gray-200 rounded-[8px]">{nameInitials(coachName)}</AvatarFallback>
     </Avatar>
     <div>
-      <p className="text-[16px] font-semibold mb-[2px]">{currentChat.name}</p>
+      <p className="text-[16px] font-semibold mb-[2px]">{coachName}</p>
       <p className="leading-[1] text-[#82867E] text-[12px]">Active Now</p>
     </div>
-    <EllipsisVertical className="ml-auto text-[#D9D9D9]" />
   </div>
 }
 
@@ -74,32 +66,30 @@ function ChatMessages() {
     }
   }, [currentChatMessages.length])
 
-  return <div ref={messsageContainerRef} className="h-96 pr-4 overflow-y-auto">
-    {currentChatMessages.map(message => message.person === "coach"
-      ? <CurrentUserMessage key={message.createdAt} message={message} />
-      : <CompanionUserMessage key={message.createdAt} message={message} />)}
+  return <div ref={messsageContainerRef} className="h-96 pr-4 overflow-y-auto no-scrollbar">
+    {currentChatMessages.map((message, index) => message.person === "client"
+      ? <CurrentUserMessage key={index} message={message} />
+      : <CompanionUserMessage key={index} message={message} />)}
   </div>
 }
 
 function CurrentChatMessageBox() {
   const [message, setMessage] = useState("");
   const { clientId, coachId } = useAppSelector(state => state.client.data)
-  const { socket, currentChat } = useClientChatSocketContext();
-
-  const data = {
-    coachId: clientId,
-    clientId: coachId,
-    person: "client",
-    message
-  }
+  const { socket } = useClientChatSocketContext();
 
   function sendMessage() {
+    const data = {
+      coachId: coachId,
+      clientId: clientId,
+      person: "client",
+      message
+    }
     socket.emit("sendMessage", data);
     setMessage("");
   }
 
   return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
-    {/* <Paperclip className="text-[#535353] w-[18px]" /> */}
     <Input
       value={message}
       onChange={e => setMessage(e.target.value)}
@@ -136,16 +126,20 @@ function CurrentUserMessage({ message }) {
 }
 
 function CompanionUserMessage({ message }) {
-  return
-  const { currentChat } = useClientChatSocketContext();
+  const { coachName, coachProfilePhoto } = useClientChatSocketContext();
   if (!message || !message?.message) return;
   return <div className="mb-4 flex flex-wrap items-start justify-start gap-4">
     <Avatar className="rounded-[4px] mt-1">
-      <AvatarImage src={currentChat.profilePhoto || "/"} />
-      <AvatarFallback className="rounded-[4px]">{nameInitials(currentChat.name)}</AvatarFallback>
+      <AvatarImage src={coachProfilePhoto || "/"} />
+      <AvatarFallback className="rounded-[4px]">{nameInitials(coachName)}</AvatarFallback>
     </Avatar>
     <div>
-      <div className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0" style={{ borderBottomLeftRadius: 0 }}>{message?.message}</div>
+      <div
+        className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0"
+        style={{ borderBottomLeftRadius: 0 }}
+      >
+        {message?.message}
+      </div>
       <p className="text-[var(--dark-1)]/25 mt-1">{getRelativeTime(message.createdAt)}</p>
     </div>
   </div>
