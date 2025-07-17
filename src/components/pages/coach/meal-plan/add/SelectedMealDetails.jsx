@@ -34,13 +34,12 @@ export default function SelectedMealDetails({
       className="rounded-lg"
     />
     <div>
-      <h3>{recipe.dish_name}</h3>
+      <h3>{recipe.dish_name || recipe.title}</h3>
       <p>{recipe.meal_time}</p>
       <div className="mt-2 flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
-        <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span> {recipe.calories}</Badge>
-        <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
-        <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
-        <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe.fats}</Badge>
+        {typeof recipe.calories === "object"
+          ? <RecipeCalories recipe={recipe} />
+          : <MealCalories recipe={recipe} />}
       </div>
     </div>
     <EditSelectedMealDetails
@@ -57,4 +56,22 @@ export default function SelectedMealDetails({
 
 function isPlanSelected(recipe) {
   return Boolean(recipe?._id?.$oid) || Boolean(recipe?._id) || Boolean(recipe?.mealId)
+}
+
+function MealCalories({ recipe }) {
+  return <>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe.fats}</Badge>
+  </>
+}
+
+function RecipeCalories({ recipe }) {
+  return <>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe?.calories?.proteins}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe?.calories?.carbs}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe?.calories?.fats}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories?.total}</Badge>
+  </>
 }

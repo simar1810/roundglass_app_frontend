@@ -82,8 +82,8 @@ function RecipeDeatils({
   return <label className="w-full flex gap-4 items-start cursor-pointer">
     <FormControl
       type="checkbox"
-      checked={selected?._id?.$oid === recipe?._id?.$oid}
-      onChange={() => setSelected(selected?._id?.$oid === recipe?._id?.$oid ? {} : recipe)}
+      checked={isSameRecipe(selected, recipe)}
+      onChange={() => setSelected(isSameRecipe(selected, recipe) ? {} : recipe)}
       className="min-w-[20px] min-h-[20px]"
     />
     <div className="grow">
@@ -94,7 +94,10 @@ function RecipeDeatils({
         width={150}
         className="h-[140px] w-full object-cover mb-2"
       />
-      <h3>{recipe.dish_name}</h3>
+      <h3>{recipe.dish_name || recipe.title}</h3>
     </div>
   </label>
 }
+
+const isSameRecipe = (selected, currrent) => selected?._id === currrent?._id ||
+  (selected?._id?.$oid === currrent?._id?.$oid && Boolean(selected?._id?.$oid))

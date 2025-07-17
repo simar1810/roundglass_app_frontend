@@ -48,7 +48,7 @@ export default function EditSelectedMealDetails({
           </Button>
         </div>
         <FormControl
-          value={formData.dish_name || ""}
+          value={formData.dish_name || formData.name}
           name="dish_name"
           onChange={onChangeHandler}
           placeholder="Dish Name"
