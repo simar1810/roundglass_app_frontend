@@ -1,6 +1,6 @@
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import { Pen, Search, Image as ImageIcon } from "lucide-react";
+import { Pen, Search, } from "lucide-react";
 import SelectMealCollection from "./SelectMealCollection";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import FormControl from "@/components/FormControl";
 import { useRef, useState } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import UploadImage from "@/components/modals/UploadImage";
 
 export default function EditSelectedMealDetails({
   children,
@@ -42,10 +43,7 @@ export default function EditSelectedMealDetails({
               </Button>
             </DialogTrigger>
           </SelectMealCollection>
-          <Button variant="outline">
-            <ImageIcon />
-            Upload Image
-          </Button>
+          {recipe._id && <UploadImage setter={(image) => setFormData({ ...formData, image })} />}
         </div>
         <FormControl
           value={formData.dish_name || formData.name}
