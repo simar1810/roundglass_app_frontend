@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import useDebounce from "@/hooks/useDebounce";
 import { getRecipesCalorieCounter } from "@/lib/fetchers/app";
+import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { PlusCircle } from "lucide-react";
+import { Flame, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import useSWR from "swr";
@@ -22,7 +23,7 @@ export default function SelectMealCollection({ children, index }) {
         <PlusCircle size={32} className="text-[var(--accent-1)]" />
       </div>
     </DialogTrigger>}
-    <DialogContent className="max-w-[450px] p-0 gap-0">
+    <DialogContent className="min-w-[850px] p-0 gap-0">
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Add Meals</DialogTitle>
       </DialogHeader>
@@ -52,7 +53,12 @@ function RecipeesContainer({ index }) {
       />
       {isFetching && <Loader />}
     </div>
-    <div className="max-h-[55vh] overflow-y-auto flex flex-col items-start gap-y-8 no-scrollbar">
+    <div className="mb-4 flex items-center justify-between gap-4">
+      <strong>{recipees.length} Results found</strong>
+      <p className="ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
+      <Button variant="wz">Add Dish</Button>
+    </div>
+    <div className="max-h-[55vh] overflow-y-auto grid grid-cols-2 gap-4 no-scrollbar">
       {recipees.map((recipe, index) => <RecipeDeatils
         key={index}
         recipe={recipe}
@@ -79,24 +85,33 @@ function RecipeDeatils({
   selected,
   setSelected
 }) {
-  return <label className="w-full flex gap-4 items-start cursor-pointer">
-    <FormControl
-      type="checkbox"
-      checked={isSameRecipe(selected, recipe)}
-      onChange={() => setSelected(isSameRecipe(selected, recipe) ? {} : recipe)}
-      className="min-w-[20px] min-h-[20px]"
-    />
-    <div className="grow">
-      <Image
-        src={recipe.image || "/not-found.png"}
-        alt=""
-        height={400}
-        width={150}
-        className="h-[140px] w-full object-cover mb-2"
-      />
-      <h3>{recipe.dish_name || recipe.title}</h3>
+  return <div
+    className={cn(
+      "w-full flex flex-col cursor-pointer border-1 rounded-[10px] py-2 px-4",
+      isSameRecipe(selected, recipe) && "border-[var(--accent-1)] shadow-lg bg-[var(--comp-2)]"
+    )}
+    onClick={() => !isSameRecipe(selected, recipe) ? setSelected(recipe) : setSelected()}
+  >
+    <h3>{recipe.dish_name || recipe.title}</h3>
+    <div className="text-xs text-black/70 mt-auto pt-2 flex flex-wrap gap-x-6 gap-y-1">
+      <div className="flex items-center gap-1">
+        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+        Calories - <span className="text-black/40 font-bold">{recipe.calories}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+        Protein - <span className="text-black/40 font-bold">{recipe.protein}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+        Fats - <span className="text-black/40 font-bold">{recipe.fats}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+        Carbs - <span className="text-black/40 font-bold">{recipe.carbohydrates}</span>
+      </div>
     </div>
-  </label>
+  </div>
 }
 
 const isSameRecipe = (selected, currrent) => selected?._id === currrent?._id ||

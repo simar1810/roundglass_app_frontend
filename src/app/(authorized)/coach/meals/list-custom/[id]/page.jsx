@@ -41,15 +41,8 @@ function MealPlanDetailsContainer({ id }) {
 
 function CustomMealMetaData({ customPlan }) {
   return <div className="p-4 pr-8">
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       <h4 className="mr-auto">{customPlan.title}</h4>
-      <Link
-        href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
-        className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
-        variant="wz_outline"
-      >
-        Edit
-      </Link>
       <Link
         href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
         className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
@@ -57,7 +50,16 @@ function CustomMealMetaData({ customPlan }) {
       >
         Copy & Edit
       </Link>
-      <DeleteCustomMealPlan id={customPlan._id} />
+      {!customPlan.admin && <>
+        <Link
+          href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
+          className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
+          variant="wz_outline"
+        >
+          Edit
+        </Link>
+        <DeleteCustomMealPlan id={customPlan._id} />
+      </>}
     </div>
     <Image
       alt=""

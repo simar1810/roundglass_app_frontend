@@ -8,11 +8,16 @@ import SelectWorkouts from "./SelectWorkouts"
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { sendData, uploadImage } from "@/lib/api";
+import { useSWRConfig } from "swr";
+import { useRouter } from "next/navigation";
 
 export default function Stage2() {
   const [loading, setLoading] = useState(false);
   const { dispatch, ...state } = useCurrentStateContext();
   const component = selectWorkoutCreationComponent(state.mode);
+  const { cache } = useSWRConfig();
+
+  const router = useRouter();
 
   async function saveCustomWorkout() {
     if (["new", "copy_edit"].includes(state.creationType)) {
@@ -52,7 +57,9 @@ export default function Stage2() {
       }, "PUT");
       toast.dismiss(toastId);
       if (response.status_code !== 200) throw new Error(response.message);
+      cache.delete("custom-workout-plans");
       toast.success(response.message);
+      router.push(`/coach/workouts/list-custom?mode=${state.mode}`);
     } catch (error) {
       toast.error(error.message || "Something went wrong!");
     } finally {
@@ -88,6 +95,8 @@ export default function Stage2() {
       });
       toast.dismiss(toastId);
       if (response.status_code !== 200) throw new Error(response.message);
+      cache.delete("custom-workout-plans");
+      router.push(`/coach/workouts/list-custom?mode=${state.mode}`);
       toast.success(response.message);
     } catch (error) {
       toast.error(error.message || "Something went wrong!");

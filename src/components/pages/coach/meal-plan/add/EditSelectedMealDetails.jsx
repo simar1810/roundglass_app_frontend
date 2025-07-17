@@ -63,8 +63,8 @@ export default function EditSelectedMealDetails({
         />
         <FormControl
           type="time"
-          value={formData.meal_time || ""}
-          name="meal_time"
+          value={formData.time || ""}
+          name="time"
           onChange={onChangeHandler}
           className="block mb-4"
         />
