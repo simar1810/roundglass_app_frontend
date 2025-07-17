@@ -6,20 +6,25 @@ import { Badge } from "@/components/ui/badge";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("custom-meal-plans", () => getCustomMealPlans("coach"));
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
   if (isLoading) return <ContentLoader />
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const meals = data.data
+  const filteredMealPlansmeals = ["daily", "monthly", "weekly"].includes(mode)
+    ? data.data.filter(meal => meal.mode === mode)
+    : data.data
   return <main className="content-container content-height-screen">
     <div className="flex items-center justify-between">
       <h4>Meal Plans</h4>
       <Link className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]" href="/coach/meals/add-custom">Add</Link>
     </div>
     <div className="mt-6 grid grid-cols-4 gap-4">
-      {meals.map(meal => <div
+      {filteredMealPlansmeals.map(meal => <div
         key={meal._id}
         className="bg-[var(--comp-2)] flex flex-col rounded-[12px] border-1 overflow-clip relative"
       >
@@ -38,7 +43,7 @@ export default function Page() {
             <h3>{meal.title}</h3>
           </Link>
           <div className="mt-auto pt-2 flex items-center justify-between">
-            <Badge>{meal.mode}</Badge>
+            <Badge className="capitalize">{meal.mode}</Badge>
             <AssignMealModal planId={meal._id} type="custom" />
           </div>
         </div>
@@ -50,5 +55,6 @@ export default function Page() {
         </Badge>}
       </div>)}
     </div>
+    {(filteredMealPlansmeals.length === 0) && <ContentError title="No Meal Plans Found!" className="font-bold mt-0 border-0" />}
   </main>
 }

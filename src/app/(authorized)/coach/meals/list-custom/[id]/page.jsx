@@ -1,16 +1,21 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { selectMealPlanType } from "@/config/state-reducers/custom-meal";
+import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
+import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useReducer, useState } from "react";
-import useSWR from "swr";
+import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
   const { id } = useParams();
@@ -22,7 +27,9 @@ export default function Page() {
 function MealPlanDetailsContainer({ id }) {
   const { isLoading, error, data } = useSWR(`custom-meal-plans/${id}`, () => getCustomMealPlans("coach", id));
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
+  if (error || data?.status_code !== 200 || data.data.length === 0) return <ContentError
+    title={error || data?.message || "No Such Plan Found!"}
+  />
   const customPlan = data.data;
   return <main className="content-container">
     <div className="content-height-screen grid grid-cols-2 divide-x-1">
@@ -50,6 +57,7 @@ function CustomMealMetaData({ customPlan }) {
       >
         Copy & Edit
       </Link>
+      <DeleteCustomMealPlan id={customPlan._id} />
     </div>
     <Image
       alt=""
@@ -120,4 +128,34 @@ function MealDetails({ meal }) {
       <p className="text-black/60 text-xs mt-1">{meal.description}</p>
     </div>
   </div>
+}
+
+function DeleteCustomMealPlan({ id }) {
+  const { cache } = useSWRConfig()
+  const router = useRouter();
+  async function deleteCustomPlan(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/meal-plan/custom?id=${id}`, {}, "DELETE");
+      console.log(response)
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      cache.delete("custom-meal-plans")
+      router.push("/coach/meals/list-custom")
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure to delete this custom meal plan?"
+    action={(setLoading, closeBtnRef) => deleteCustomPlan(setLoading, closeBtnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="text-[var(--accent-2)]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

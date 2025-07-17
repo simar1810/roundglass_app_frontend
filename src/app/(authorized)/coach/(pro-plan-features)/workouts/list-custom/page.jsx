@@ -6,13 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("custom-workout-plans", () => getCustomWorkoutPlans("coach"));
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
   if (isLoading) return <ContentLoader />
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const workouts = data.data
+  const workouts = ["daily", "monthly", "weekly"].includes(mode)
+    ? data.data.filter(workout => workout.mode === mode)
+    : data.data
 
   return <main className="content-container content-height-screen">
     <div className="flex items-center justify-between">
@@ -44,7 +49,7 @@ export default function Page() {
             <h3>{workout.title}</h3>
           </Link>
           <div className="mt-auto pt-2 flex items-center justify-between">
-            <Badge>{workout.mode}</Badge>
+            <Badge className="capitalize">{workout.mode}</Badge>
             <AssignWorkoutModal
               type="custom"
               workoutId={workout._id}
@@ -60,5 +65,6 @@ export default function Page() {
         </Badge>}
       </div>)}
     </div>
+    {(workouts.length === 0) && <ContentError title="No Workouts Found!" className="font-bold mt-0 border-0" />}
   </main>
 }

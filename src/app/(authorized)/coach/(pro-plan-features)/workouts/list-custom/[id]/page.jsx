@@ -1,15 +1,20 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { sendData } from "@/lib/api";
 import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
+import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
-import useSWR from "swr";
+import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
   const { id } = useParams();
@@ -21,7 +26,9 @@ export default function Page() {
 function WorkoutDetailsContainer({ id }) {
   const { isLoading, error, data } = useSWR(`custom-workouts/${id}`, () => getCustomWorkoutPlans("coach", id));
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
+  if (error || data?.status_code !== 200 || data.data.length === 0) return <ContentError
+    title={error || data?.message || "No Such Plan Found"}
+  />
   const [customPlan] = data.data || [];
   return <main className="content-container">
     <div className="content-height-screen grid grid-cols-2 divide-x-1">
@@ -49,6 +56,7 @@ function WorkoutMetaData({ customPlan }) {
       >
         Copy & Edit
       </Link>
+      <DeleteCustomWorkoutPlan id={customPlan._id} />
     </div>
     <Image
       alt=""
@@ -106,4 +114,35 @@ function WorkoutExercise({ exercise }) {
       </div>
     </div>
   </div>
+}
+
+function DeleteCustomWorkoutPlan({ id }) {
+  const { cache } = useSWRConfig()
+  const router = useRouter();
+
+  async function deleteCustomPlan(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/workout/workout-plan/custom", { id }, "DELETE");
+      console.log(response)
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      cache.delete("custom-workout-plans")
+      router.push("/coach/workouts/list-custom")
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure to delete this custom meal plan?"
+    action={(setLoading, closeBtnRef) => deleteCustomPlan(setLoading, closeBtnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="text-[var(--accent-2)]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

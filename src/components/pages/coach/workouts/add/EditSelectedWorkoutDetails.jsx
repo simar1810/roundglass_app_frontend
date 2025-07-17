@@ -42,10 +42,10 @@ export default function EditSelectedWorkoutDetails({
               </Button>
             </DialogTrigger>
           </SelectCustomWorkout>
-          <Button variant="outline">
+          {/* <Button variant="outline">
             <ImageIcon />
             Upload Image
-          </Button>
+          </Button> */}
         </div>
         <FormControl
           value={formData.title || ""}
