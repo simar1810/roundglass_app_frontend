@@ -20,11 +20,12 @@ import useSWR, { mutate } from "swr";
 import imageCompression from "browser-image-compression";
 
 export default function CreateWorkoutModal({
+  defaultOpen = true,
   children,
   data,
   setModal,
 }) {
-  return <Dialog open={true} onOpenChange={() => setModal()}>
+  return <Dialog defaultOpen={defaultOpen} onOpenChange={() => setModal()}>
     <DialogTrigger />
     {/* {!children && <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]">
       <Plus className="w-[16px]" />

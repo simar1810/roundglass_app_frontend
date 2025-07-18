@@ -77,7 +77,7 @@ export function getClientStatsForCoach(clientId) {
 }
 
 export function getClientMealPlanById(_id) {
-  return fetchData(`app/get-plan-by-id?clientId=${_id}`);
+  return fetchData(`app/meal-plan/client/${_id}`);
 }
 
 export function getClientOrderHistory(clientId) {
@@ -207,7 +207,7 @@ export function getClientPrograms() {
 }
 
 export function getClientWorkouts(id) {
-  return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
+  return fetchData(`app/workout/workout-plan/client/${id}`);
 }
 
 export function getCustomMealPlans(person, planId) {

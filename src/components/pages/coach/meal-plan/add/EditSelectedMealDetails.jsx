@@ -15,7 +15,6 @@ export default function EditSelectedMealDetails({
   recipe,
   index
 }) {
-  console.log(recipe)
   const [formData, setFormData] = useState(recipe);
   const { dispatch } = useCurrentStateContext();
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
