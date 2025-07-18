@@ -34,7 +34,7 @@ export default function Stage2() {
             for (const field of ["time", "dish_name"]) {
               if (!meal[field]) throw new Error(`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`)
             }
-            if (!meal._id) throw new Error(`Please select a dish from the options`);
+            if (!meal._id && !meal.mealId) throw new Error(`Please select a dish from the options`);
             meal.meal_time = format24hr_12hr(meal.time)
           }
         }
@@ -78,7 +78,7 @@ export default function Stage2() {
       const response = await sendData(`app/meal-plan/custom`, {
         ...formData,
         image: thumbnail?.img,
-        plans,
+        plans: state.selectedPlans,
         id: state.id
       }, "PUT");
       toast.dismiss(toastId);

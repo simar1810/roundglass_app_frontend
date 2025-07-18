@@ -15,6 +15,7 @@ export default function EditSelectedMealDetails({
   recipe,
   index
 }) {
+  console.log(recipe)
   const [formData, setFormData] = useState(recipe);
   const { dispatch } = useCurrentStateContext();
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,6 +68,14 @@ export default function EditSelectedMealDetails({
           className="block mb-4"
         />
         <h3>Nutrition Values</h3>
+        <label className="flex justify-between items-center">
+          <span>Serving Size</span>
+          <FormControl
+            value={formData.serving_size || ""}
+            name="serving_size"
+            onChange={onChangeHandler}
+          />
+        </label>
         <label className="flex justify-between items-center">
           <span>Calories</span>
           <FormControl

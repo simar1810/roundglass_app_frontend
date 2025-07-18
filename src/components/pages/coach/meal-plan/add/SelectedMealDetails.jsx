@@ -60,6 +60,7 @@ function isPlanSelected(recipe) {
 
 function MealCalories({ recipe }) {
   return <>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Serving Size -</span>{recipe?.serving_size}</Badge>
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories}</Badge>
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
