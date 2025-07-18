@@ -21,7 +21,12 @@ export default function Page() {
   return <main className="content-container content-height-screen">
     <div className="flex items-center justify-between">
       <h4>Meal Plans</h4>
-      <Link className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]" href="/coach/meals/add-custom">Add</Link>
+      {mode && <Link
+        className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
+        href={`/coach/meals/add-custom/${mode}`}
+      >
+        Add
+      </Link>}
     </div>
     <div className="mt-6 grid grid-cols-4 gap-4">
       {filteredMealPlansmeals.map(meal => <div

@@ -22,12 +22,12 @@ export default function Page() {
   return <main className="content-container content-height-screen">
     <div className="flex items-center justify-between">
       <h4>Custom Workouts</h4>
-      <Link
+      {mode && <Link
         className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
-        href="/coach/workouts/add"
+        href={`/coach/workouts/add/${mode}`}
       >
         Add
-      </Link>
+      </Link>}
     </div>
     <div className="mt-6 grid grid-cols-4 gap-4">
       {workouts.map(workout => <div
