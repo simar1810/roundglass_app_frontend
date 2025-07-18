@@ -1,6 +1,7 @@
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
 import FormControl from "@/components/FormControl";
+import RecipeModal from "@/components/modals/RecipeModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -37,12 +38,12 @@ function RecipeesContainer({ index }) {
   const debouncedSearchQuery = useDebounce(query, 1000);
   const { isFetching, error, data } = useSWR(`recipees/${debouncedSearchQuery}`, () => getRecipesCalorieCounter(debouncedSearchQuery));
 
-  const [selected, setSelected] = useState()
-  const closeRef = useRef()
+  const [selected, setSelected] = useState();
+  const closeRef = useRef();
   const { dispatch } = useCurrentStateContext();
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const recipees = data.data
+  const recipees = data.data;
 
   return <div className="p-4">
     <div className="flex items-center gap-4 pb-2">
@@ -56,7 +57,7 @@ function RecipeesContainer({ index }) {
     <div className="mb-4 flex items-center justify-between gap-4">
       <strong>{recipees.length} Results found</strong>
       <p className="ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
-      <Button variant="wz">Add Dish</Button>
+      <RecipeModal type="new" />
     </div>
     <div className="max-h-[55vh] overflow-y-auto grid grid-cols-2 gap-4 no-scrollbar">
       {recipees.map((recipe, index) => <RecipeDeatils
@@ -93,23 +94,50 @@ function RecipeDeatils({
     onClick={() => !isSameRecipe(selected, recipe) ? setSelected(recipe) : setSelected()}
   >
     <h3>{recipe.dish_name || recipe.title}</h3>
-    <div className="text-xs text-black/70 mt-auto pt-2 flex flex-wrap gap-x-6 gap-y-1">
-      <div className="flex items-center gap-1">
-        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-        Calories - <span className="text-black/40 font-bold">{recipe.calories}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-        Protein - <span className="text-black/40 font-bold">{recipe.protein}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-        Fats - <span className="text-black/40 font-bold">{recipe.fats}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-        Carbs - <span className="text-black/40 font-bold">{recipe.carbohydrates}</span>
-      </div>
+    {typeof recipe.calories === "object"
+      ? <RecipeCalories recipe={recipe} />
+      : <DishCalories recipe={recipe} />}
+  </div>
+}
+
+function DishCalories({ recipe }) {
+  return <div className="text-xs text-black/70 mt-auto pt-2 flex flex-wrap gap-x-6 gap-y-1">
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Calories - <span className="text-black/40 font-bold">{recipe.calories}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Protein - <span className="text-black/40 font-bold">{recipe.protein}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Fats - <span className="text-black/40 font-bold">{recipe.fats}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Carbs - <span className="text-black/40 font-bold">{recipe.carbohydrates}</span>
+    </div>
+  </div>
+}
+
+function RecipeCalories({ recipe }) {
+  return <div className="text-xs text-black/70 mt-auto pt-2 flex flex-wrap gap-x-6 gap-y-1">
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Calories - <span className="text-black/40 font-bold">{recipe?.calories?.total}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Protein - <span className="text-black/40 font-bold">{recipe?.calories.proteins}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Fats - <span className="text-black/40 font-bold">{recipe?.calories.fats}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Flame className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+      Carbs - <span className="text-black/40 font-bold">{recipe?.calories.carbs}</span>
     </div>
   </div>
 }

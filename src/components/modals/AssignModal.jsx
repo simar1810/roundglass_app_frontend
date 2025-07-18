@@ -7,7 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import FormControl from "../FormControl";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { getClientsForCustomWorkout, getClientsForWorkout } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
@@ -17,6 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { nameInitials } from "@/lib/formatter";
 import { Button } from "../ui/button";
 import { sendData } from "@/lib/api";
+import { AlertDialogTrigger } from "../ui/alert-dialog";
+import { X } from "lucide-react";
+import DualOptionActionModal from "./DualOptionActionModal";
 
 export default function AssignWorkoutModal({
   type,
@@ -41,7 +44,7 @@ export default function AssignWorkoutModal({
 }
 
 function AssignCustomWorkoutContainer({ workoutId }) {
-  const { isLoading, error, data } = useSWR(`getClientsForWorkouts/${workoutId}`, () => getClientsForCustomWorkout(workoutId));
+  const { isLoading, error, data, mutate } = useSWR(`getClientsForWorkouts/${workoutId}`, () => getClientsForCustomWorkout(workoutId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
   if (isLoading) return <ContentLoader />
@@ -52,7 +55,7 @@ function AssignCustomWorkoutContainer({ workoutId }) {
       const response = await sendData(`app/workout/workout-plan/custom/assign?id=${workoutId}`, { id: workoutId, clients: [selectedClient] })
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
-      mutate(`getClientsForWorkouts/${workoutId}`)
+      mutate()
     } catch (error) {
       toast.error(error.message);
     }
@@ -76,7 +79,10 @@ function AssignCustomWorkoutContainer({ workoutId }) {
         <div className="space-y-4">
           {assignedClients.map((client, index) => <SelectedClient
             key={index}
+            custom={true}
             client={client}
+            mutate={mutate}
+            workoutId={workoutId}
           />)}
         </div>
       </div>
@@ -101,7 +107,7 @@ function AssignCustomWorkoutContainer({ workoutId }) {
 }
 
 function AssignWorkoutContainer({ workoutId }) {
-  const { isLoading, error, data } = useSWR(`getClientsForWorkouts/${workoutId}`, () => getClientsForWorkout(workoutId));
+  const { isLoading, error, data, mutate } = useSWR(`getClientsForWorkouts/${workoutId}`, () => getClientsForWorkout(workoutId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -118,7 +124,7 @@ function AssignWorkoutContainer({ workoutId }) {
       const response = await sendData("app/workout/coach/assignWorkout", data, "PUT")
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
-      mutate(`getClientsForWorkouts/${workoutId}`)
+      mutate()
     } catch (error) {
       toast.error(error.message);
     }
@@ -172,19 +178,51 @@ function AssignWorkoutContainer({ workoutId }) {
   </div>
 }
 
-function SelectedClient({ client }) {
+function SelectedClient({
+  custom = false,
+  client,
+  workoutId,
+  mutate
+}) {
+  async function unassignClient(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/workout/workout-plan/custom/unassign",
+        { clients: [client._id], id: workoutId },
+        "POST"
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
+      mutate()
+      toast.success(response.message);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message || "Please try again Later!");
+    } finally {
+      setLoading(false);
+    }
+  }
   return <div className="flex items-center gap-3">
     <Avatar>
       <AvatarImage src={client.profilePhoto || "/"} />
       <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
     </Avatar>
     <span className="flex-1">{client.name}</span>
-    <FormControl
-      type="checkbox"
-      checked
-      disabled
-      className="w-5 h-5"
-    />
+    {custom
+      ? <DualOptionActionModal
+        description="Are you sure unassign this client from the meal plan?"
+        action={(setLoading, closeBtnRef) => unassignClient(setLoading, closeBtnRef)}
+      >
+        <AlertDialogTrigger>
+          <X className="w-[20px] h-[20px] text-[var(--accent-2)]" strokeWidth={3} />
+        </AlertDialogTrigger>
+      </DualOptionActionModal>
+      : <FormControl
+        type="checkbox"
+        checked
+        disabled
+        className="w-5 h-5"
+      />}
   </div>
 }
 

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import FormControl from "@/components/FormControl";
 import { Badge } from "../ui/badge";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { getClientForMeals, getClientsForCustomMeals } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
@@ -17,6 +17,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
 import { Button } from "../ui/button";
+import DualOptionActionModal from "./DualOptionActionModal";
+import { X } from "lucide-react";
+import { AlertDialogTrigger } from "../ui/alert-dialog";
 
 export default function AssignMealModal({
   type,
@@ -41,7 +44,7 @@ export default function AssignMealModal({
 }
 
 function AssignCustomMealPlanContainer({ planId }) {
-  const { isLoading, error, data } = useSWR(`getClientForCustomMeals/${planId}`, () => getClientsForCustomMeals(planId));
+  const { isLoading, error, data, mutate } = useSWR(`getClientForCustomMeals/${planId}`, () => getClientsForCustomMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
   if (isLoading) return <ContentLoader />
@@ -51,7 +54,7 @@ function AssignCustomMealPlanContainer({ planId }) {
       const response = await sendData("app/meal-plan/custom/assign", { id: planId, clients: [selectedClient] })
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
-      mutate(`getClientForCustomMeals/${planId}`)
+      mutate()
     } catch (error) {
       toast.error(error.message);
     }
@@ -76,7 +79,10 @@ function AssignCustomMealPlanContainer({ planId }) {
         <div className="space-y-4">
           {assignedClients.map((client, index) => <SelectedClient
             key={index}
+            custom={true}
             client={client}
+            planId={planId}
+            mutate={mutate}
           />)}
         </div>
       </div>
@@ -101,7 +107,7 @@ function AssignCustomMealPlanContainer({ planId }) {
 }
 
 function AssignMealPlanContainer({ planId }) {
-  const { isLoading, error, data } = useSWR(`getClientForMeals/${planId}`, () => getClientForMeals(planId));
+  const { isLoading, error, data, mutate } = useSWR(`/getClientForMeals/${planId}`, () => getClientForMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
   if (isLoading) return <ContentLoader />
@@ -111,7 +117,7 @@ function AssignMealPlanContainer({ planId }) {
       const response = await sendData("app/assign-plan", { planId, clientId: selectedClient })
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
-      mutate(`getClientForMeals/${planId}`)
+      mutate()
     } catch (error) {
       toast.error(error.message);
     }
@@ -162,19 +168,51 @@ function AssignMealPlanContainer({ planId }) {
   </div>
 }
 
-function SelectedClient({ client }) {
+function SelectedClient({
+  custom = false,
+  planId,
+  client,
+  mutate
+}) {
+  async function unassignClient(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/meal-plan/custom/unassign",
+        { clients: [client._id], id: planId },
+        "POST"
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
+      mutate()
+      toast.success(response.message);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message || "Please try again Later!");
+    } finally {
+      setLoading(false);
+    }
+  }
   return <div className="flex items-center gap-3">
     <Avatar>
       <AvatarImage src={client.profilePhoto || "/"} />
       <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
     </Avatar>
     <span className="flex-1">{client.name}</span>
-    <FormControl
-      type="checkbox"
-      checked
-      disabled
-      className="w-5 h-5"
-    />
+    {custom
+      ? <DualOptionActionModal
+        description="Are you sure unassign this client from the meal plan?"
+        action={(setLoading, closeBtnRef) => unassignClient(setLoading, closeBtnRef)}
+      >
+        <AlertDialogTrigger>
+          <X className="w-[20px] h-[20px] text-[var(--accent-2)]" strokeWidth={3} />
+        </AlertDialogTrigger>
+      </DualOptionActionModal>
+      : <FormControl
+        type="checkbox"
+        checked
+        disabled
+        className="w-5 h-5"
+      />}
   </div>
 }
 
