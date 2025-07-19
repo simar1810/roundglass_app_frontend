@@ -61,7 +61,7 @@ function ProgramList({ programs }) {
       </div>
       <div className="p-4">
         <h2>{program.name}</h2>
-        <Link href={program.link} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
+        <Link href={program.link || "/"} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
       </div>
     </div>)}
   </div>
@@ -83,6 +83,7 @@ function ShufflePrograms({ programs, setIsBeingShuffled }) {
     try {
       setLoading(true);
       const response = await sendData("app/programs", { programOrder }, "PATCH");
+      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("client/programs");
@@ -127,21 +128,17 @@ function SortableProgram({ program, index }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Program program={program} index={index} />
+      <Program program={program} />
     </div>
   );
 }
 
-function Program({ program, index }) {
+function Program({ program }) {
   return <div
     draggable={true}
-    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate- animate-wiggle"
+    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate-wiggle"
   >
-    <div className="relative">
-      <div className="bg-white px-2 py-1 rounded-[10px] border-1 actions absolute bottom-2 right-2 opacity-0 flex items-center gap-1">
-        <EditProgramModal program={{ ...program, order: index }} />
-        <DeleteProgramAction id={program._id} />
-      </div>
+    <div>
       <Image
         src={program.image || "/"}
         alt=""
@@ -153,7 +150,6 @@ function Program({ program, index }) {
     </div>
     <div className="p-4">
       <h2>{program.name}</h2>
-      <Link href={program.link} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
     </div>
   </div>
 }
@@ -163,6 +159,7 @@ function DeleteProgramAction({ id }) {
     try {
       setLoading(true);
       const response = await sendData("app/programs", { programId: id }, "DELETE");
+      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("client/programs");

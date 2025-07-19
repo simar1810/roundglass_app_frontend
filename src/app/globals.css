@@ -248,5 +248,5 @@ a {
 }
 
 .animate-wiggle {
-  animation: wiggle 1s ease-in infinite;
+  animation: wiggle 1s ease-in-out infinite;
 }

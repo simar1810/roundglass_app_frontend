@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function Layout({ children }) {
   const { roles, _id } = useAppSelector(state => state.coach.data);
 
-  const clubFeaturesPermitted = permit("club", roles);
+  // const clubFeaturesPermitted = permit("club", roles);
   // if (!clubFeaturesPermitted) return <div className="content-height-screen content-container">
   //   <div className="relative">
   //     <Image
