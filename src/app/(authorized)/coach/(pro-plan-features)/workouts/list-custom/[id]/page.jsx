@@ -90,8 +90,8 @@ function WorkoutsListing({ customPlan }) {
     </div>
     <Separator />
     <div className="mt-8 grid grid-cols-2 gap-4">
-      {selectedPlanWorkouts.map(exercise => <WorkoutExercise
-        key={exercise._id}
+      {selectedPlanWorkouts.map((exercise, index) => <WorkoutExercise
+        key={index}
         exercise={exercise}
       />)}
     </div>

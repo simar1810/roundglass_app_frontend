@@ -21,7 +21,7 @@ export function customMealReducer(state, action) {
         stage: 2,
         mode: "weekly",
         creationType: "new",
-        selectedPlan: "sunday",
+        selectedPlan: "sun",
         selectedMealType: "Breakfast",
         selectedPlans: DAYS.reduce((acc, curr) => {
           acc[curr] = [{ mealType: "Breakfast", meals: [] }];

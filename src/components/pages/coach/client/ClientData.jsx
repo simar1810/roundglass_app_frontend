@@ -46,12 +46,13 @@ function ClientMealData({ _id }) {
   if (error || data.status_code !== 200) return <TabsContent value="meal">
     <ContentError className="mt-0" title={error || data.message} />
   </TabsContent>
-
+  console.log(meals)
   return <TabsContent value="meal">
     {meals.map((meal, index) => <CustomMealDetails
       key={index}
       meal={meal}
     />)}
+    {meals.length === 0 && <ContentError title="No Meal plan assigned to this client" />}
   </TabsContent>
 }
 
@@ -73,19 +74,19 @@ function CustomMealDetails({ meal }) {
       <p>{meal.description}</p>
     </div>
   </Link>
-
-  if (meal.isRoutine) return <Link href={`/coach/meals/list/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+  const routineMealPlan = meal.plans.daily;
+  if (routineMealPlan.isRoutine) return <Link href={`/coach/meals/list/${routineMealPlan._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Image
       alt=""
-      src={meal.image || "/not-found.png"}
+      src={routineMealPlan.image || "/not-found.png"}
       height={400}
       width={400}
       className="w-full object-cover max-h-[200px]"
     />
     <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
     <div className="p-4">
-      <h3 className="mb-2">{meal.name}</h3>
-      <p className="text-sm leading-tight">{meal.description}</p>
+      <h3 className="mb-2">{routineMealPlan.name}</h3>
+      <p className="text-sm leading-tight">{routineMealPlan.description}</p>
     </div>
   </Link>
 }
@@ -325,18 +326,19 @@ function WorkoutDetails({ workout }) {
       <p className="text-sm leading-tight mt-2">{workout.description}</p>
     </div>
   </Link>
-  return <Link href={`/coach/workouts/list/${workout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+  const routineWorkout = workout.plans.daily
+  return <Link href={`/coach/workouts/list/${routineWorkout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Image
       alt=""
-      src={workout.thumbnail || "/not-found.png"}
+      src={routineWorkout.thumbnail || "/not-found.png"}
       height={400}
       width={400}
       className="w-full object-cover max-h-[200px]"
     />
     <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
     <div className="p-4">
-      <h3 className="mb-2">{workout.title}</h3>
-      <p className="text-sm leading-tight">{workout.instructions}</p>
+      <h3 className="mb-2">{routineWorkout.title}</h3>
+      <p className="text-sm leading-tight">{routineWorkout.instructions}</p>
     </div>
   </Link>
 }

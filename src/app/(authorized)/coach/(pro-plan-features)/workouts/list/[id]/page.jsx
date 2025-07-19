@@ -30,7 +30,7 @@ export default function Page() {
 }
 
 function WorkoutDetails({ workoutDetails }) {
-  const [open, setOpen] = useState();
+  const [open, setOpen] = useState(false);
 
   if (!Boolean(workoutDetails)) return <ContentError title="No Workout Details Found" />
   return <div className="pr-10">

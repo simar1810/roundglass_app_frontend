@@ -51,6 +51,7 @@ function CustomWorkoutContainer() {
           thumbnail: workout.image,
           title: workout.title,
           description: workout.description,
+          id: workout._id
         }))
       } else if (["daily", "weekly", "monthly"].includes(mode)) {
         dispatch(selectWorkoutType(mode))

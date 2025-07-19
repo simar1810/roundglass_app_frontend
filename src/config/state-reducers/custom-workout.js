@@ -20,7 +20,7 @@ export function customWorkoutReducer(state, action) {
         stage: 2,
         mode: "weekly",
         creationType: "new",
-        selectedPlan: "sunday",
+        selectedPlan: "sun",
         selectedPlans: DAYS.reduce((acc, curr) => {
           acc[curr] = [];
           return acc;

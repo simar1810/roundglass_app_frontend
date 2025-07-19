@@ -26,7 +26,7 @@ export default function Stage2() {
       editWorkout()
     }
   }
-
+  console.log(state)
   async function editWorkout() {
     try {
       setLoading(true);
@@ -48,8 +48,8 @@ export default function Stage2() {
       }
 
       const toastId = toast.loading("Creating The Custom Meal Plan...");
-      const formData = dailyMealRP(state);
-      const response = await sendData(`app/meal-plan/custom`, {
+      const formData = dailyWorkoutRP(state);
+      const response = await sendData(`app/workout/workout-plan/custom`, {
         ...formData,
         image: thumbnail?.img,
         plans,
