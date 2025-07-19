@@ -1,7 +1,6 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import CreateMarathonModal from "@/components/modals/app/CreateMarathonModal";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
@@ -31,13 +30,13 @@ export default function Page() {
 }
 
 function WorkoutDetails({ workoutDetails }) {
-  const coachId = useAppSelector(state => state.coach.data._id);
+  const [open, setOpen] = useState(false);
 
   if (!Boolean(workoutDetails)) return <ContentError title="No Workout Details Found" />
   return <div className="pr-10">
     <div className="flex justify-between">
       <h4>{workoutDetails.title}</h4>
-      <CreateWorkoutModal data={workoutDetails}>
+      <CreateWorkoutModal setModal={() => setOpen()} defaultOpen={open} data={workoutDetails}>
         <DialogTrigger
           className="bg-[var(--accent-1)] text-white text-[14px] font-bold pl-4 pr-4 py-1 flex items-center gap-1 rounded-[8px]"
         >

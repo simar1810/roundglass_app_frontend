@@ -17,6 +17,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import AssignWorkoutModal from "@/components/modals/AssignModal";
+import { Badge } from "@/components/ui/badge";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
@@ -34,58 +36,59 @@ export default function ClientData({ clientData }) {
 }
 
 function ClientMealData({ _id }) {
-  const [selectedMeal, setSelectedMeal] = useState("")
   const { isLoading, error, data } = useSWR(`app/getClientMealPlanById?clientId=${_id}`, () => getClientMealPlanById(_id));
-
-  const mealsData = data?.data;
-  const mealPlans = mealsData?.at(0)?.meals;
-  const mealsFromSelectedMealPlan = mealPlans?.find(plan => plan.mealType === selectedMeal);
-
-  useEffect(function () {
-    if (!isLoading && !error && data) {
-      setSelectedMeal(mealsData?.at(0)?.meals?.at(0)?.mealType)
-    }
-  }, [isLoading])
+  const meals = data?.data;
 
   if (isLoading) return <TabsContent value="meal">
     <ContentLoader />
   </TabsContent>
 
-  if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <TabsContent value="meal">
+  if (error || data.status_code !== 200) return <TabsContent value="meal">
     <ContentError className="mt-0" title={error || data.message} />
   </TabsContent>
-
+  console.log(meals)
   return <TabsContent value="meal">
-    <div className="mb-4 flex items-center gap-4 overflow-x-auto custom-scrollbar">
-      {mealPlans.map((plan, index) => <Button
-        key={index}
-        variant={selectedMeal === plan.mealType ? "wz" : "outline"}
-        className={selectedMeal !== plan.mealType && "text-[var(--dark-1)]/25"}
-        onClick={() => setSelectedMeal(plan.mealType)}
-      >
-        {plan.mealType}
-      </Button>)}
-    </div>
-    {mealsFromSelectedMealPlan?.meals?.map((meal, index) => <Card
+    {meals.map((meal, index) => <CustomMealDetails
       key={index}
-      className="p-0 mb-8 shadow-none border-0 rounded-none overflow-clip"
-    >
-      <CardContent className="p-0">
-        <Image
-          src={meal.image || "/not-found.png"}
-          height={400}
-          width={240}
-          alt=""
-          className="w-full bg-[var(--accent-1)] object-cover object-center rounded-[10px] border-2 aspect-[8/4]"
-        />
-        <CardTitle className="px-2 mt-2 mb-0">{meal.name}</CardTitle>
-        <div className="text-[var(--dark-1)]/25 text-[12px] px-2 flex items-center gap-2">
-          <Clock className="w-[16px]" />
-          {meal.meal_time}
-        </div>
-      </CardContent>
-    </Card>)}
+      meal={meal}
+    />)}
+    {meals.length === 0 && <ContentError title="No Meal plan assigned to this client" />}
   </TabsContent>
+}
+
+function CustomMealDetails({ meal }) {
+  if (meal.custom) return <Link href={`/coach/meals/list-custom/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+    <Image
+      alt=""
+      src={meal.image || "/not-found.png"}
+      height={400}
+      width={400}
+      className="w-full object-cover max-h-[200px]"
+    />
+    <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Custom</Badge>
+    <div className="p-4">
+      <div className="flex justify-between items-center">
+        <h3>{meal.title}</h3>
+        <Badge className="capitalize">{meal.mode}</Badge>
+      </div>
+      <p>{meal.description}</p>
+    </div>
+  </Link>
+  const routineMealPlan = meal.plans.daily;
+  if (routineMealPlan.isRoutine) return <Link href={`/coach/meals/list/${routineMealPlan._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+    <Image
+      alt=""
+      src={routineMealPlan.image || "/not-found.png"}
+      height={400}
+      width={400}
+      className="w-full object-cover max-h-[200px]"
+    />
+    <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
+    <div className="p-4">
+      <h3 className="mb-2">{routineMealPlan.name}</h3>
+      <p className="text-sm leading-tight">{routineMealPlan.description}</p>
+    </div>
+  </Link>
 }
 
 function ClientRetailData({ clientId }) {
@@ -287,6 +290,7 @@ function DatePicker({ date, setDate }) {
 
 function WorkoutContainer({ id }) {
   const { isLoading, error, data } = useSWR("client/workouts", () => getClientWorkouts(id));
+
   if (isLoading) return <TabsContent value="workout">
     <ContentLoader />
   </TabsContent>
@@ -297,23 +301,44 @@ function WorkoutContainer({ id }) {
   const workouts = data.data;
 
   return <TabsContent value="workout">
-    <div className="grid grid-cols-2 gap-4">
-      {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
-        <div className="relative">
-          <Link href={`/coach/workouts/${workout._id}`}>
-            <Image
-              src={workout?.thumbnail?.trim() || "/not-found.png"}
-              alt="Total Core Workout"
-              width={1024}
-              height={1024}
-              unoptimized
-              onError={e => e.target.src = "/not-found.png"}
-              className="w-full max-h-[250px] aspect-video object-cover rounded-xl border-1"
-            />
-          </Link>
-        </div>
-        <div className="text-md font-bold">{workout.title}</div>
-      </div>)}
-    </div>
+    {workouts.map((workout, index) => <WorkoutDetails
+      key={index}
+      workout={workout}
+    />)}
   </TabsContent>
+}
+
+function WorkoutDetails({ workout }) {
+  if (workout.custom) return <Link href={`/coach/workouts/list-custom/${workout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+    <Image
+      alt=""
+      src={workout.image || "/not-found.png"}
+      height={400}
+      width={400}
+      className="w-full object-cover max-h-[200px]"
+    />
+    <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Custom</Badge>
+    <div className="p-4">
+      <div className="flex justify-between items-center">
+        <h3>{workout.title}</h3>
+        <Badge className="capitalize">{workout.mode}</Badge>
+      </div>
+      <p className="text-sm leading-tight mt-2">{workout.description}</p>
+    </div>
+  </Link>
+  const routineWorkout = workout.plans.daily
+  return <Link href={`/coach/workouts/list/${routineWorkout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+    <Image
+      alt=""
+      src={routineWorkout.thumbnail || "/not-found.png"}
+      height={400}
+      width={400}
+      className="w-full object-cover max-h-[200px]"
+    />
+    <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
+    <div className="p-4">
+      <h3 className="mb-2">{routineWorkout.title}</h3>
+      <p className="text-sm leading-tight">{routineWorkout.instructions}</p>
+    </div>
+  </Link>
 }

@@ -77,7 +77,7 @@ export function getClientStatsForCoach(clientId) {
 }
 
 export function getClientMealPlanById(_id) {
-  return fetchData(`app/get-plan-by-id?clientId=${_id}`);
+  return fetchData(`app/meal-plan/client/${_id}`);
 }
 
 export function getClientOrderHistory(clientId) {
@@ -128,6 +128,14 @@ export function getPersonalBranding() {
 
 export function getClientForMeals(planId) {
   return fetchData(`app/getClientForMeals?planId=${planId}`);
+}
+
+export function getCustomMealPlanDetails(planId) {
+  return fetchData(`app/meal-plan/client/${planId}`)
+}
+
+export function getClientsForCustomMeals(planId) {
+  return fetchData(`app/meal-plan/custom/assign?id=${planId}`)
 }
 
 export function getProductByBrand(brandId) {
@@ -199,5 +207,23 @@ export function getClientPrograms() {
 }
 
 export function getClientWorkouts(id) {
-  return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
+  return fetchData(`app/workout/workout-plan/client/${id}`);
+}
+
+export function getCustomMealPlans(person, planId) {
+  if (planId) {
+    return fetchData(`app/meal-plan/custom/${planId}?person=${person}`)
+  } else {
+    return fetchData(`app/meal-plan/custom?person=${person}`)
+  }
+}
+
+export function getCustomWorkoutPlans(person = "coach", workoutId) {
+  let endpoint = `app/workout/workout-plan/custom?person=${person}`;
+  if (workoutId) endpoint += `&workoutId=${workoutId}`
+  return fetchData(endpoint)
+}
+
+export function getClientsForCustomWorkout(workoutId) {
+  return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`)
 }

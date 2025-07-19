@@ -37,7 +37,6 @@ export default function FAQChatbot() {
       questions: categories[field],
     })
   }
-
   return <FAQChatbotContainer faqData={faqData} />
 }
 

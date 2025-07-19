@@ -44,7 +44,7 @@ export default function Page() {
             <TableHead>Joining Date</TableHead>
             <TableHead>City</TableHead>
             <TableHead>Membership</TableHead>
-            <TableHead>Action</TableHead>
+            {/* <TableHead>Action</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -27,7 +27,7 @@ export default function Page() {
     <ShoppingCartModal />
     <OrderSuccessModal />
     <AddSelectClientModal />
-    <AssignWorkoutModal />
+    <AssignWorkoutModal type="normal" />
     <AssignWorkoutAddModal />
     <RecipieSuccessModal />
     {/* <NewRecipeModal /> */}
