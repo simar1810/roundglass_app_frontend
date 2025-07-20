@@ -203,14 +203,14 @@ function Order({ order }) {
   </Card>
 }
 
-function RetailCompletedLabel({ status }) {
+export function RetailCompletedLabel({ status }) {
   return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>
   </div>
 }
 
-function RetailPendingLabel({ status }) {
+export function RetailPendingLabel({ status }) {
   return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>

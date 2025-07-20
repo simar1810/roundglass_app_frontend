@@ -49,7 +49,12 @@ export function addRetailReducer(state, action) {
     case "ORDER_CREATED":
       return {
         ...state,
-        orderId: action.payload,
+        orderId: action?.payload,
+        stage: 4
+      }
+    case "ORDER_REQUESTED":
+      return {
+        ...state,
         stage: 4
       }
     default:
@@ -115,7 +120,13 @@ export function addProductToProductModule(payload) {
 export function orderCreated(payload) {
   return {
     type: "ORDER_CREATED",
-    payload
+    payload: payload
+  }
+}
+
+export function orderRequested() {
+  return {
+    type: "ORDER_REQUESTED"
   }
 }
 
@@ -140,4 +151,10 @@ export function generateRequestPayload(state) {
     payload[field] = state[field]
   }
   return payload;
+}
+
+export function generateClientRequestPayload() {
+  const payload = {}
+
+  return payload
 }

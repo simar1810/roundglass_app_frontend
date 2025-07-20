@@ -54,9 +54,9 @@ export default function ActivityTool({ activities }) {
               <Image
                 src={activity.image || "/not-found.png"}
                 fill
+                onError={e => e.target.src = "/not-found.png"}
                 alt=""
                 className="w-full bg-[var(--primary-1)] object-contain object-center pl-4 border-1"
-                onError={e => e.target.src = "/not-found.png"}
               />
             </Link>
           </CarouselItem>)}

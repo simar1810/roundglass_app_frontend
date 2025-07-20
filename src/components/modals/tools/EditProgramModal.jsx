@@ -41,9 +41,6 @@ function ProgramContainer() {
     try {
       setLoading(true);
       const data = generateProgramRP(state)
-      for (const [field, value] of data.entries()) {
-        console.log(field, value)
-      }
       const response = await sendDataWithFormData("app/programs", data, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
