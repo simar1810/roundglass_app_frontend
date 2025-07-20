@@ -20,24 +20,28 @@ export default function Stage2() {
   const router = useRouter();
 
   async function saveCustomWorkout() {
-    if (["new", "copy_edit"].includes(state.creationType)) {
-      newWorkout()
-    } else if (["edit"].includes(state.creationType)) {
-      editWorkout()
+    try {
+      for (const field of ["title", "description"]) {
+        if (!Boolean(state[field])) throw new Error(`${field} - for the meal plan is required!`);
+      }
+
+      for (const plan in state.selectedPlans) {
+        if (state.selectedPlans[plan].workouts?.length === 0) throw new Error(`No workouts selected for -${plan}`)
+      }
+
+      if (["new", "copy_edit"].includes(state.creationType)) {
+        newWorkout();
+      } else if (["edit"].includes(state.creationType)) {
+        editWorkout();
+      }
+    } catch (error) {
+      toast.error(error.message)
     }
   }
-  console.log(state)
+
   async function editWorkout() {
     try {
       setLoading(true);
-      const plans = {}
-      for (const key in state.selectedPlans) {
-        const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
-        const createdMealPlan = await sendData("app/workout/create-custom-workout", workoutPlanCreationRP(state.selectedPlans[key]))
-        if (createdMealPlan.status_code !== 200) throw new Error(createdMealPlan.message)
-        plans[key] = createdMealPlan?.data?.planId
-        toast.dismiss(toastId);
-      }
 
       let thumbnail;
       if (state.file) {
@@ -52,7 +56,7 @@ export default function Stage2() {
       const response = await sendData(`app/workout/workout-plan/custom`, {
         ...formData,
         image: thumbnail?.img,
-        plans,
+        plans: state.selectedPlans,
         id: state.id
       }, "PUT");
       toast.dismiss(toastId);
@@ -73,8 +77,11 @@ export default function Stage2() {
       const plans = {}
       for (const key in state.selectedPlans) {
         const toastId = toast.loading(`Creating Workout Plan - ${key}...`);
-        const createdWorkoutPlan = await sendData("app/workout/create-custom-workout", workoutPlanCreationRP(state.selectedPlans[key]))
-        if (createdWorkoutPlan.status_code !== 200) throw new Error(createdWorkoutPlan.message)
+        const createdWorkoutPlan = await sendData("app/workout/create-custom-workout", workoutPlanCreationRP(state.selectedPlans[key]));
+        if (createdWorkoutPlan.status_code !== 200) {
+          toast.dismiss(toastId);
+          throw new Error(createdWorkoutPlan.message)
+        }
         plans[key] = createdWorkoutPlan?.data?._id
         toast.dismiss(toastId);
       }

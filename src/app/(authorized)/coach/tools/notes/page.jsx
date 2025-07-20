@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
 export default function Page() {
-  const { isLoading, error, data } = useSWR("app/getNotes", getNotes);
+  const { isLoading, error, data } = useSWR("app/getNotes", () => getNotes("coach"));
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery);
 

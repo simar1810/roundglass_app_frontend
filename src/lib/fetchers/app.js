@@ -209,7 +209,7 @@ export function getClientPrograms() {
 }
 
 export function getClientWorkouts(id) {
-  return fetchData(`app/workout/coach/workoutCollections/client/${id}`);
+  return fetchData(`app/workout/workout-plan/client/${id}`);
 }
 
 /**

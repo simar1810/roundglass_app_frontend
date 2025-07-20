@@ -32,7 +32,6 @@ export default function Page() {
   const { isLoading, error, data } = useSWR(`custom-meal-plans/${id}`, () => getCustomMealPlans("coach", id));
   if (isLoading) return <ContentLoader />
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  console.log(data.data)
   return <main className="content-container h-[90vh] mx-4">
     <Component data={data} />
   </main>

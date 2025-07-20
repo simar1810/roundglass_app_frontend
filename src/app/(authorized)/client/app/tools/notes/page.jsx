@@ -85,12 +85,12 @@ function Note({ index, note }) {
     <CardContent>
       <p className="leading-[1]">{note.description}</p>
       <div className="my-2 flex gap-1">
-        {/* <UpdateNoteModal
+        <UpdateNoteModal
           title={note.title}
           description={note.description}
           _id={note._id}
           person="client"
-        /> */}
+        />
         <DualOptionActionModal
           description="You are deleting the note!"
           action={(setLoading, btnRef) => deleteNote(setLoading, btnRef)}

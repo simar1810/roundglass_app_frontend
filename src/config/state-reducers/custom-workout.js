@@ -12,7 +12,9 @@ export function customWorkoutReducer(state, action) {
         creationType: "new",
         selectedPlan: "daily",
         selectedPlans: {
-          daily: []
+          daily: {
+            workouts: []
+          }
         },
       }
       else if (action.payload === "weekly") return {
@@ -22,7 +24,9 @@ export function customWorkoutReducer(state, action) {
         creationType: "new",
         selectedPlan: "sun",
         selectedPlans: DAYS.reduce((acc, curr) => {
-          acc[curr] = [];
+          acc[curr] = {
+            workouts: []
+          };
           return acc;
         }, {})
       }
@@ -33,7 +37,9 @@ export function customWorkoutReducer(state, action) {
         creationType: "new",
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedPlans: {
-          [format(new Date(), 'dd-MM-yyyy')]: []
+          [format(new Date(), 'dd-MM-yyyy')]: {
+            workouts: []
+          }
         }
       }
     case "INITIAL_STATE_DIFFERENT_CREATION":
@@ -74,20 +80,26 @@ export function customWorkoutReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-            .map((workout, index) => index === action.payload.index
-              ? action.payload.workout
-              : workout)
+          [state.selectedPlan]: {
+            ...state.selectedPlans[state.selectedPlan],
+            workouts: state.selectedPlans[state.selectedPlan].workouts
+              .map((workout, index) => index === action.payload.index
+                ? action.payload.workout
+                : workout)
+          }
         }
       }
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: [
+          [state.selectedPlan]: {
             ...state.selectedPlans[state.selectedPlan],
-            action.payload.workout
-          ]
+            workouts: [
+              ...state.selectedPlans[state.selectedPlan].workouts,
+              action.payload.workout
+            ]
+          }
         }
       }
     case "DELETE_WORKOUT":
@@ -95,8 +107,11 @@ export function customWorkoutReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-            .filter((_, index) => index !== action.payload)
+          [state.selectedPlan]: {
+            ...state.selectedPlans[state.selectedPlan],
+            workouts: state.selectedPlans[state.selectedPlan].workouts
+              .filter((_, index) => index !== action.payload)
+          }
         }
       }
     case "ADD_NEW_PLAN_TYPE":
@@ -105,10 +120,23 @@ export function customWorkoutReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [formatted]: []
+          [formatted]: {
+            workouts: []
+          }
         },
         selectedPlan: formatted,
         selectedMealType: "Breakfast"
+      }
+    case "UPDATE_WORKOUT_PLAN_META_DATA":
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [action.payload.plan]: {
+            ...state.selectedPlans[action.payload.plan],
+            ...action.payload.data
+          }
+        }
       }
     default:
       return state;
@@ -185,11 +213,20 @@ export function changeStateDifferentCreation(payload) {
 
 export function workoutPlanCreationRP(state) {
   return {
-    title: null,
-    instructions: null,
-    workouts: null,
-    thumbnail: null,
-    workouts: state
+    title: state.title || "",
+    instructions: state.instructions || "",
+    workouts: state.workouts,
+    thumbnail: state.image || ""
+  }
+}
+
+export function updateWorkoutPlanMetaData(plan, data) {
+  return {
+    type: "UPDATE_WORKOUT_PLAN_META_DATA",
+    payload: {
+      plan,
+      data
+    }
   }
 }
 
