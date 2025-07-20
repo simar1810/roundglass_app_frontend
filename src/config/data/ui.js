@@ -114,3 +114,5 @@ export const quickAddClientFormFields = [
   { id: 1, label: "Client Name", name: "name", placeholder: "Enter Name" },
   { id: 2, label: "Mobile Number", name: "mobileNumber", placeholder: " Mobile number" }
 ]
+
+export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]

@@ -52,7 +52,7 @@ function ProgramContainer() {
       setLoading(false);
     }
   }
-  return <div className="px-4 pt-6">
+  return <div className="px-4 py-6">
     <FormControl
       label="Title"
       value={state.name}
@@ -63,14 +63,6 @@ function ProgramContainer() {
       label="Link "
       value={state.link}
       onChange={e => dispatch(changeProgramFieldValue("link", e.target.value))}
-      className="block mt-2"
-    />
-    <FormControl
-      label="Order"
-      type="number"
-      placeholder="Enter the order of the program"
-      value={state.order}
-      onChange={e => dispatch(changeProgramFieldValue("order", e.target.value))}
       className="block mt-2"
     />
     <div className="relative">

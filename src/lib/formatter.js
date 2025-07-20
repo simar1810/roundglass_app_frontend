@@ -4,7 +4,8 @@ import {
   differenceInMinutes,
   differenceInHours,
   differenceInDays,
-  parseISO
+  parseISO,
+  parse
 } from 'date-fns';
 
 export function ISO__getTime(timestamp) {
@@ -38,4 +39,8 @@ export function getRelativeTime(dateString) {
   if (days < 2) return 'yesterday';
 
   return format(date, 'dd-MM');
+}
+
+export function format24hr_12hr(time24) {
+  return format(parse(time24, 'HH:mm', new Date()), 'hh:mm a');
 }

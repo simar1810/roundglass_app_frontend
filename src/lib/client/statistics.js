@@ -79,9 +79,9 @@ function generateHeightStandard({
 }) {
   try {
     if (["inches", "inch"].includes(heightUnit.toLowerCase())) {
-      return ((heightFeet * 0.3048) + (heightInches * 0.0254)).toFixed(2);
+      return ((Number(heightFeet) * 0.3048) + (Number(heightInches) * 0.0254)).toFixed(2);
     } else if (["cms", "cm"].includes(heightUnit.toLowerCase())) {
-      return (heightCms / 100).toFixed(2);
+      return (Number(heightCms) / 100).toFixed(2);
     } else {
       throw new Error("Please provide correct height unit");
     }
@@ -93,13 +93,13 @@ function generateHeightStandard({
 function generateWeightStandard({
   weightUnit, // e.g. "kg", "kgs", "pounds", "pound"
   weightInPounds,
-  weightInKgs
+  weightInKgs,
 }) {
   try {
     if (["kg", "kgs"].includes(weightUnit.toLowerCase())) {
-      return weightInKgs
+      return Number(weightInKgs)
     } else if (["pounds", "pound"].includes(weightUnit.toLowerCase())) {
-      return (weightInPounds * 0.453592).toFixed(2)
+      return (Number(weightInPounds) * 0.453592).toFixed(2)
     } else {
       throw new Error("Please provide correct height unit");
     }

@@ -157,3 +157,16 @@ export function calculatePieChartAngle(idealValue, calculatedValue, normalMin, n
   return (90 - 360) * Math.min(Math.max(pieChartSlice, 0.0), 1.0);
 }
 
+export async function getBase64ImageFromUrl(imageUrl) {
+  const response = await fetch(imageUrl, {
+    mode: 'cors',
+  });
+  const blob = await response.blob();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};

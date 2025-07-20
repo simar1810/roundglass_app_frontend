@@ -61,7 +61,7 @@ function ProgramList({ programs }) {
       </div>
       <div className="p-4">
         <h2>{program.name}</h2>
-        <Link href={program.link} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
+        <Link href={program.link || "/"} target="_blank" className="text-green-700 text-[14px] hover:text-underline font-bold">Open Link</Link>
       </div>
     </div>)}
   </div>
@@ -135,7 +135,7 @@ function SortableProgram({ program, index }) {
 function Program({ program }) {
   return <div
     draggable={true}
-    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate- animate-wiggle"
+    className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100 animate-wiggle"
   >
     <div>
       <Image

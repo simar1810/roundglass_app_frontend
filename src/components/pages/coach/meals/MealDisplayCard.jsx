@@ -96,7 +96,7 @@ export default function MealDisplayCard({ plan }) {
         <Link href={`/coach/meals/list/${plan._id}`}>
           <h5 className="text-[12px]">{plan.name}</h5>
         </Link>
-        <AssignMealModal planId={plan._id} />
+        <AssignMealModal type="normal" planId={plan._id} />
       </div>
       <p className="text-[14px] text-[var(--dark-1)]/25 leading-tight mt-2">
         {plan.description}

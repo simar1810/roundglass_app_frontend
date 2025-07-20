@@ -92,3 +92,15 @@ export async function uploadImage(file) {
     return error
   }
 }
+
+export async function streamResponse(endpoint, data) {
+  try {
+    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response
+  } catch (error) {
+    return error;
+  }
+}
