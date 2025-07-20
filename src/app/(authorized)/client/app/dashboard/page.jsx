@@ -1,13 +1,13 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import DashboardClientList from "@/components/drawers/DashboardClientList";
 import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
-import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import Stories from "@/components/pages/coach/dashboard/Stories";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getCoachHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
+import { getClientHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
+import { useAppSelector } from "@/providers/global/hooks";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -18,26 +18,37 @@ export default function Page() {
 }
 
 function Container() {
-  const { cache } = useSWRConfig();
-  const router = useRouter();
-  const { isLoading, error, data } = useSWR("coachHomeTrial", () => getCoachHome(cache, router));
+  const { _id } = useAppSelector(state => state.client.data)
+  const client = useAppSelector(state => state.client.data)
+  const { isLoading, error, data } = useSWR("clientHome", () => getClientHome(_id));
 
   if (isLoading) return <ContentLoader />
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const coachHomeData = data.data;
+  const clientHomeData = data.data;
   return <>
-    <ActivityTool activities={coachHomeData.activePrograms} />
-    <StatisticsCards />
+    <ActivityTool activities={clientHomeData.programs} />
     <div className="grid grid-cols-2 gap-4">
-      <Stories stories={coachHomeData.story} />
-      <MarathonLeaderBoard />
+      <Stories stories={clientHomeData.story} />
+      {clientHomeData.meal
+        ? <MealDetails meal={clientHomeData.meal} />
+        : <ContentError title="No Meal Plan" className="font-bold !min-h-[200px]" />}
     </div>
-    <DashboardClientList
-      topPerformers={coachHomeData.topPerformers}
-      fourClients={coachHomeData.fourClients}
-    />
   </>
+}
+
+function MealDetails({ meal }) {
+  return <div className="bg-[var(--primary-1)] mt-8 p-4 border-1 rounded-[12px]">
+    <Image
+      alt=""
+      height={400}
+      width={400}
+      src={meal?.image}
+      className="w-full max-h-[300px] object-contain object-center"
+    />
+    <h3 className="my-2">{meal?.name}</h3>
+    <p>{meal?.description}</p>
+  </div>
 }
 
 function getBgColor(index) {

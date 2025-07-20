@@ -44,7 +44,7 @@ function DropDownContainer() {
           <h3 className="text-black text-[14px] ml-4">
             Notifications
           </h3>
-          <Link href="/coach/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
+          <Link href="/client/app/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
         </div>
         <div className="px-4 py-3 divide-y-1">
           {notifications.map(notification => <Notification

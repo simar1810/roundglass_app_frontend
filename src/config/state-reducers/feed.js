@@ -79,13 +79,13 @@ export function canPost(data) {
   return true;
 }
 
-export function generateFormData(data) {
+export function generateFormData(data, person = "coach") {
   const fields = generateFields(data.contentType);
   const formData = new FormData();
   for (const field of fields) {
     formData.append(field, data[field]);
   }
-  formData.append("person", "coach");
+  formData.append("person", person);
   formData.append("uploadedBy", "app-coach");
   return formData;
 }

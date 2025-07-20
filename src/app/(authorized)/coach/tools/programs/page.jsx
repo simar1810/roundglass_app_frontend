@@ -83,7 +83,6 @@ function ShufflePrograms({ programs, setIsBeingShuffled }) {
     try {
       setLoading(true);
       const response = await sendData("app/programs", { programOrder }, "PATCH");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("client/programs");
@@ -159,7 +158,6 @@ function DeleteProgramAction({ id }) {
     try {
       setLoading(true);
       const response = await sendData("app/programs", { programId: id }, "DELETE");
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("client/programs");
