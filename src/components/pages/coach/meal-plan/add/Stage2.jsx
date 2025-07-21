@@ -53,17 +53,6 @@ export default function Stage2() {
   async function editWorkout() {
     try {
       setLoading(true);
-      const plans = {}
-      for (const key in state.selectedPlans) {
-        const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
-        const createdMealPlan = await sendData("app/create-custom-plan", mealPlanCreationRP(state.selectedPlans[key]))
-        if (createdMealPlan.status_code !== 200) {
-          toast.dismiss(toastId);
-          throw new Error(createdMealPlan.message);
-        }
-        plans[key] = createdMealPlan?.data?.planId
-        toast.dismiss(toastId);
-      }
 
       let thumbnail;
       if (state.file) {

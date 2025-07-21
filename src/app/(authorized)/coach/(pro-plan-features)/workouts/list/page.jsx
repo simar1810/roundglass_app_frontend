@@ -26,7 +26,7 @@ export default function Page() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
           {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
             <div className="relative">
-              <Link href={`/coach/workouts/${workout._id}`}>
+              <Link href={`/coach/workouts/list/${workout._id}`}>
                 <Image
                   src={workout?.thumbnail?.trim() || "/not-found.png"}
                   alt="Total Core Workout"

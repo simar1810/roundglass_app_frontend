@@ -7,6 +7,10 @@ export const customWorkoutInitialState = {
   description: "",
   selectedDate: "",
   plans: {},
-  selectedPlans: {},
+  selectedPlans: {
+    daily: {
+      workouts: []
+    }
+  },
   selectedPlan: "daily"
 }

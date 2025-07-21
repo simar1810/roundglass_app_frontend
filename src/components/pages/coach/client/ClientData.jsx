@@ -37,7 +37,6 @@ export default function ClientData({ clientData }) {
 
 function ClientMealData({ _id }) {
   const { isLoading, error, data } = useSWR(`app/getClientMealPlanById?clientId=${_id}`, () => getClientMealPlanById(_id));
-  const meals = data?.data;
 
   if (isLoading) return <TabsContent value="meal">
     <ContentLoader />
@@ -46,9 +45,9 @@ function ClientMealData({ _id }) {
   if (error || data.status_code !== 200) return <TabsContent value="meal">
     <ContentError className="mt-0" title={error || data.message} />
   </TabsContent>
-  console.log(meals)
+  const meals = data?.data?.plans || data?.data || [];
   return <TabsContent value="meal">
-    {meals.map((meal, index) => <CustomMealDetails
+    {meals && meals?.map((meal, index) => <CustomMealDetails
       key={index}
       meal={meal}
     />)}
@@ -74,19 +73,18 @@ function CustomMealDetails({ meal }) {
       <p>{meal.description}</p>
     </div>
   </Link>
-  const routineMealPlan = meal.plans.daily;
-  if (routineMealPlan.isRoutine) return <Link href={`/coach/meals/list/${routineMealPlan._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+  if (meal?.isRoutine) return <Link href={`/coach/meals/list/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Image
       alt=""
-      src={routineMealPlan.image || "/not-found.png"}
+      src={meal.image || "/not-found.png"}
       height={400}
       width={400}
       className="w-full object-cover max-h-[200px]"
     />
     <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
     <div className="p-4">
-      <h3 className="mb-2">{routineMealPlan.name}</h3>
-      <p className="text-sm leading-tight">{routineMealPlan.description}</p>
+      <h3 className="mb-2">{meal.name}</h3>
+      <p className="text-sm leading-tight">{meal.description}</p>
     </div>
   </Link>
 }
@@ -298,10 +296,10 @@ function WorkoutContainer({ id }) {
   if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="workout">
     <ContentError className="mt-0" title={error || data?.message} />
   </TabsContent>
-  const workouts = data.data;
+  const workouts = data?.data;
 
   return <TabsContent value="workout">
-    {workouts.map((workout, index) => <WorkoutDetails
+    {workouts && workouts?.map((workout, index) => <WorkoutDetails
       key={index}
       workout={workout}
     />)}
@@ -309,10 +307,13 @@ function WorkoutContainer({ id }) {
 }
 
 function WorkoutDetails({ workout }) {
-  if (workout.custom) return <Link href={`/coach/workouts/list-custom/${workout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+  if (workout.custom) return <Link
+    href={`/coach/workouts/list-custom/${workout._id}`}
+    className="relative border-1 rounded-[10px] overflow-clip block mb-4"
+  >
     <Image
       alt=""
-      src={workout.image || "/not-found.png"}
+      src={workout?.image?.trim() || "/not-found.png"}
       height={400}
       width={400}
       className="w-full object-cover max-h-[200px]"
@@ -326,11 +327,14 @@ function WorkoutDetails({ workout }) {
       <p className="text-sm leading-tight mt-2">{workout.description}</p>
     </div>
   </Link>
-  const routineWorkout = workout.plans.daily
-  return <Link href={`/coach/workouts/list/${routineWorkout._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
+  const routineWorkout = workout?.plans?.daily
+  if (routineWorkout) return <Link
+    href={`/coach/workouts/list/${routineWorkout._id}`}
+    className="relative border-1 rounded-[10px] overflow-clip block mb-4"
+  >
     <Image
       alt=""
-      src={routineWorkout.thumbnail || "/not-found.png"}
+      src={routineWorkout?.thumbnail?.trim() || "/not-found.png"}
       height={400}
       width={400}
       className="w-full object-cover max-h-[200px]"
