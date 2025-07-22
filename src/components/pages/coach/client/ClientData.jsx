@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AssignWorkoutModal from "@/components/modals/AssignModal";
 import { Badge } from "@/components/ui/badge";
+import { trimString } from "@/lib/formatter";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
@@ -55,7 +56,7 @@ function ClientMealData({ _id }) {
   </TabsContent>
 }
 
-function CustomMealDetails({ meal }) {
+export function CustomMealDetails({ meal }) {
   if (meal.custom) return <Link href={`/coach/meals/list-custom/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Image
       alt=""
@@ -70,7 +71,7 @@ function CustomMealDetails({ meal }) {
         <h3>{meal.title}</h3>
         <Badge className="capitalize">{meal.mode}</Badge>
       </div>
-      <p>{meal.description}</p>
+      <p>{trimString(meal.description, 80)}</p>
     </div>
   </Link>
   if (meal?.isRoutine) return <Link href={`/coach/meals/list/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
@@ -84,7 +85,7 @@ function CustomMealDetails({ meal }) {
     <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
     <div className="p-4">
       <h3 className="mb-2">{meal.name}</h3>
-      <p className="text-sm leading-tight">{meal.description}</p>
+      <p className="text-sm leading-tight">{trimString(meal.description, 80)}</p>
     </div>
   </Link>
 }
@@ -306,7 +307,7 @@ function WorkoutContainer({ id }) {
   </TabsContent>
 }
 
-function WorkoutDetails({ workout }) {
+export function WorkoutDetails({ workout }) {
   if (workout.custom) return <Link
     href={`/coach/workouts/list-custom/${workout._id}`}
     className="relative border-1 rounded-[10px] overflow-clip block mb-4"
@@ -324,7 +325,7 @@ function WorkoutDetails({ workout }) {
         <h3>{workout.title}</h3>
         <Badge className="capitalize">{workout.mode}</Badge>
       </div>
-      <p className="text-sm leading-tight mt-2">{workout.description}</p>
+      <p className="text-sm leading-tight mt-2">{trimString(workout.description, 80)}</p>
     </div>
   </Link>
   const routineWorkout = workout?.plans?.daily
@@ -342,7 +343,7 @@ function WorkoutDetails({ workout }) {
     <Badge className="absolute top-4 right-4 font-bold" variant="wz_fill">Routine</Badge>
     <div className="p-4">
       <h3 className="mb-2">{routineWorkout.title}</h3>
-      <p className="text-sm leading-tight">{routineWorkout.instructions}</p>
+      <p className="text-sm leading-tight">{trimString(routineWorkout.instructions, 80)}</p>
     </div>
   </Link>
 }

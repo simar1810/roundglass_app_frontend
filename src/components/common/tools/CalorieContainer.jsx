@@ -79,15 +79,13 @@ function RecipesSearchResults({ fetchDishedData }) {
       >
         <div className={`w-full p-4 flex items-start justify-between rounded-md bg-[#67BC2A]/10 hover:bg-[#67BC2A] hover:text-white cursor-pointer`}>
           <div>
-            <h3 className="font-semibold text-[14px] leading-[1] mb-4">{item.dish_name}</h3>
-            <p className="text-[14px] text-[#000000]/40">
-              <span className="pr-4">Carbs&nbsp;{item.carbohydrates}</span>
-              <span className="pr-4">Protein&nbsp;{item.fats}</span>
-              <span className="pr-4">Fat&nbsp;{item.protein}</span>
-            </p>
+            <h3 className="font-semibold text-[14px] leading-[1] mb-4">{item.dish_name || item.title}</h3>
+            {typeof item.calories === "object"
+              ? <RecipeMacros item={item} />
+              : <DishMacros item={item} />}
           </div>
           <div className="text-right">
-            <p className="text-[14px] font-bold">{item.calories}</p>&nbsp;
+            {/* <p className="text-[14px] font-bold">{item.calories}</p>&nbsp; */}
             <Button
               variant="wz"
               className="add-btn !w-[32px] !h-[32px] ml-auto rounded-full aspect-square"
@@ -108,6 +106,22 @@ function RecipesSearchResults({ fetchDishedData }) {
     </Button>
     }
   </div>
+}
+
+function RecipeMacros({ item }) {
+  return <p className="text-[14px] text-[#000000]/40">
+    <span className="pr-4">Carbs&nbsp;{item?.calories?.carbs}</span>
+    <span className="pr-4">Protein&nbsp;{item?.calories?.fats}</span>
+    <span className="pr-4">Fat&nbsp;{item?.calories?.proteins}</span>
+  </p>
+}
+
+function DishMacros({ item }) {
+  return <p className="text-[14px] text-[#000000]/40">
+    <span className="pr-4">Carbs&nbsp;{item.carbohydrates}</span>
+    <span className="pr-4">Protein&nbsp;{item.fats}</span>
+    <span className="pr-4">Fat&nbsp;{item.protein}</span>
+  </p>
 }
 
 function CalorieResult() {

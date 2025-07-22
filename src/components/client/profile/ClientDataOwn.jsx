@@ -2,22 +2,18 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getClientMealPlanById, getClientNextMarathonClient, getClientOrderHistory, getClientWorkouts, getMarathonClientTask, getWorkoutForClient } from "@/lib/fetchers/app";
-import { CalendarIcon, Clock } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { getClientMealPlanById, getClientNextMarathonClient, getWorkoutForClient } from "@/lib/fetchers/app";
+import { CalendarIcon } from "lucide-react";
 import useSWR from "swr";
-import { useEffect, useState } from "react";
 import { useAppSelector } from "@/providers/global/hooks";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import ClientClubDataComponent from "@/components/pages/coach/client/ClientClubDataComponent";
 import ClientStatisticsDataOwn from "./ClientStatisticsDataOwn";
 import { cn } from "@/lib/utils";
+import { CustomMealDetails, WorkoutDetails } from "@/components/pages/coach/client/ClientData";
 
 export default function ClientDataOwn({ clientData }) {
   return <div className="bg-white p-4 rounded-[18px] border-1">
@@ -34,132 +30,23 @@ export default function ClientDataOwn({ clientData }) {
 }
 
 function ClientMealData({ _id }) {
-  const [selectedMeal, setSelectedMeal] = useState("")
   const { isLoading, error, data } = useSWR(`app/getClientMealPlanById?clientId=${_id}`, () => getClientMealPlanById(_id));
-
-  const mealsData = data?.data;
-  const mealPlans = mealsData?.at(0)?.meals;
-  const mealsFromSelectedMealPlan = mealPlans?.find(plan => plan.mealType === selectedMeal);
-
-  useEffect(function () {
-    if (!isLoading && !error && data) {
-      setSelectedMeal(mealsData?.at(0)?.meals?.at(0)?.mealType)
-    }
-  }, [isLoading])
-
-  if (isLoading) return <TabsContent value="meal">
-    <ContentLoader />
-  </TabsContent>
-
-  if (error || data.status_code !== 200 || !mealsFromSelectedMealPlan) return <TabsContent value="meal">
-    <ContentError className="mt-0" title={error || data.message} />
-  </TabsContent>
-
-  return <TabsContent value="meal">
-    <div className="mb-4 flex items-center gap-4 overflow-x-auto custom-scrollbar">
-      {mealPlans.map((plan, index) => <Button
-        key={index}
-        variant={selectedMeal === plan.mealType ? "wz" : "outline"}
-        className={selectedMeal !== plan.mealType && "text-[var(--dark-1)]/25"}
-        onClick={() => setSelectedMeal(plan.mealType)}
-      >
-        {plan.mealType}
-      </Button>)}
-    </div>
-    {mealsFromSelectedMealPlan?.meals?.map((meal, index) => <Card
-      key={index}
-      className="p-0 mb-8 shadow-none border-0 rounded-none overflow-clip"
-    >
-      <CardContent className="p-0">
-        <Image
-          src={meal.image || "/not-found.png"}
-          height={400}
-          width={240}
-          alt=""
-          className="w-full bg-[var(--accent-1)] object-cover object-center rounded-[10px] border-2 aspect-[8/4]"
-        />
-        <CardTitle className="px-2 mt-2 mb-0">{meal.name}</CardTitle>
-        <div className="text-[var(--dark-1)]/25 text-[12px] px-2 flex items-center gap-2">
-          <Clock className="w-[16px]" />
-          {meal.meal_time}
-        </div>
-      </CardContent>
-    </Card>)}
-  </TabsContent>
-}
-
-function ClientRetailData({ clientId }) {
-  const { isLoading, error, data } = useSWR(`app/getClientOrderHistory?clientId=${clientId}`, () => getClientOrderHistory(clientId));
 
   if (isLoading) return <TabsContent value="meal">
     <ContentLoader />
   </TabsContent>
 
   if (error || data.status_code !== 200) return <TabsContent value="meal">
-    <ContentError title={error || data.message} />
+    <ContentError className="mt-0" title={error || data.message} />
   </TabsContent>
-
-  const orderHistoryClient = data.data;
-
-  if (orderHistoryClient.orderHistory.length === 0) return <TabsContent value="retail">
-    <ContentError className="mt-0" title="0 retails for this client!" />
-  </TabsContent>
-
-  return <TabsContent value="retail">
-    {orderHistoryClient.orderHistory.map(order => <RetailOrderDetailCard
-      key={order._id}
-      order={order}
+  const meals = data?.data?.plans || data?.data || [];
+  return <TabsContent value="meal">
+    {meals && meals?.map((meal, index) => <CustomMealDetails
+      key={index}
+      meal={meal}
     />)}
+    {meals.length === 0 && <ContentError title="No Meal plan assigned to this client" />}
   </TabsContent>
-}
-
-function RetailOrderDetailCard({ order }) {
-  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
-    <CardHeader className="px-0">
-      {order.status === "Completed"
-        ?
-        <RetailCompletedLabel />
-        : <RetailPendingLabel />}
-    </CardHeader>
-    <CardContent className="px-0 flex gap-4">
-      <Image
-        height={100}
-        width={100}
-        unoptimized
-        src={order.productModule?.at(0)?.productImage}
-        alt=""
-        className="bg-black w-[64px] h-[64px] object-cover rounded-md"
-      />
-      <div>
-        <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
-        <p className="text-[12px] text-[var(--dark-1)]/25">{order.productModule?.at(0)?.productDescription}</p>
-      </div>
-      <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>
-    </CardContent>
-    <CardFooter className="px-0 items-end justify-between">
-      <div className="text-[12px]">
-        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
-        <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
-      </div>
-      {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
-        Order Now&nbsp;{">"}
-      </Link> */}
-    </CardFooter>
-  </Card>
-}
-
-function RetailCompletedLabel() {
-  return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
-    <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
-    <p>Completed</p>
-  </div>
-}
-
-function RetailPendingLabel() {
-  return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
-    <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
-    <p>Pending</p>
-  </div>
 }
 
 function MarathonData() {
@@ -293,23 +180,9 @@ function WorkoutContainer() {
   const workouts = data.data;
 
   return <TabsContent value="workout">
-    <div className="grid grid-cols-2 gap-4">
-      {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
-        <div className="relative">
-          <Link href={`/client/workouts/${workout._id}`}>
-            <Image
-              src={workout?.thumbnail?.trim() || "/not-found.png"}
-              alt="Total Core Workout"
-              width={1024}
-              height={1024}
-              unoptimized
-              onError={e => e.target.src = "/not-found.png"}
-              className="w-full max-h-[250px] aspect-video object-cover rounded-xl border-1"
-            />
-          </Link>
-        </div>
-        <div className="text-md font-bold">{workout.title}</div>
-      </div>)}
-    </div>
+    {workouts && workouts?.map((workout, index) => <WorkoutDetails
+      key={index}
+      workout={workout}
+    />)}
   </TabsContent>
 }
