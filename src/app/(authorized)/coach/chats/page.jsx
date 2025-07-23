@@ -69,7 +69,7 @@ function AllChatListings() {
 function ChatPersonCard({ chat, selectedId }) {
   const { dispatch } = useChatSocketContext();
   return <div
-    className={`px-4 py-3 py-1 flex items-center gap-4 relative cursor-pointer hover:bg-[var(--comp-1)] rounded-[8px] ${selectedId === chat._id && "bg-[var(--comp-1)]"}`}
+    className={`px-4 py-1 flex items-center gap-4 relative cursor-pointer hover:bg-[var(--comp-1)] rounded-[8px] ${selectedId === chat._id && "bg-[var(--comp-1)]"}`}
     onClick={() => dispatch(selectChatUser(chat))}
   >
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
@@ -158,7 +158,7 @@ function CurrentChatMessageBox() {
   }
 
   return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
-    <Paperclip className="text-[#535353] w-[18px]" />
+    {/* <Paperclip className="text-[#535353] w-[18px]" /> */}
     <Input
       value={message}
       onChange={e => setMessage(e.target.value)}

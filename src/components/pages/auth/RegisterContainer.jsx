@@ -1,28 +1,36 @@
 "use client"
 import FormControl from "@/components/FormControl";
-import SelectControl from "@/components/Select";
+import { SelectOrganisation } from "@/components/modals/coach/UpdateDetailsModal";
 import { Button } from "@/components/ui/button";
-import { setFieldValue } from "@/config/state-reducers/register";
+import { setFieldValue } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { useAppDispatch } from "@/providers/global/hooks";
+import { updateCoachField } from "@/providers/global/slices/coach";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function RegisterContainer() {
+  const [loading, setLoading] = useState(false);
   const { dispatch, ...state } = useCurrentStateContext();
+
+  const router = useRouter();
+  const dispatchRedux = useAppDispatch();
 
   async function registerCoach() {
     try {
-      const data = {
-        name: state.name,
-        expectedNoOfClients: "",
-        role: "",
-        coachId: "",
-        terms: false
-      }
-      const response = await sendData("app/register", data)
+      setLoading(true);
+      const response = await sendData("app/register", state.registration);
+      if (response.status_code !== 200) throw new Error(response.message);
+      dispatchRedux(updateCoachField(response.data))
+      toast.success(response.message);
+      router.push("/coach/dashboard");
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -31,52 +39,57 @@ export default function RegisterContainer() {
     <div className="mt-4 grid grid-cols-2 gap-4">
       <FormControl
         label="Name"
-        placeholder="Enter Phone No."
+        placeholder="Enter Name"
         className="text-[14px] [&_.label]:font-[500]"
         value={state.name}
         onChange={e => dispatch(setFieldValue("name", e.target.value))}
       />
       <FormControl
         label="No. Of Clients"
-        placeholder="Enter Phone No."
+        placeholder="Expected Clients"
         className="text-[14px] [&_.label]:font-[500]"
         value={state.expectedNoOfClients}
         onChange={e => dispatch(setFieldValue("expectedNoOfClients", e.target.value))}
       />
-      <SelectControl
-        label="Your Role"
-        className="text-[14px] [&_.label]:font-[500]"
-        options={[]}
-        placeholder="Select Role"
-        value={state.role}
-        onChange={e => dispatch(setFieldValue("role", e.target.value))}
+      <SelectOrganisation
+        value={state.organisation}
+        onChange={e => dispatch(setFieldValue("organisation", e.target.value))}
       />
       <FormControl
-        label="Coach Code (optional)"
-        placeholder="Coach Code"
+        label="City"
+        placeholder="City"
         className="text-[14px] [&_.label]:font-[500]"
-        value={state.coachId}
-        onChange={e => dispatch(setFieldValue("coachId", e.target.value))}
+        value={state.city}
+        onChange={e => dispatch(setFieldValue("city", e.target.value))}
+      />
+      <FormControl
+        label="Coach Ref (optional)"
+        placeholder="Coach Ref"
+        className="text-[14px] [&_.label]:font-[500]"
+        value={state.coachRef}
+        onChange={e => dispatch(setFieldValue("coachRef", e.target.value))}
       />
     </div>
     <div className="text-[13px] mt-8 flex items-center gap-1">
       <FormControl
+        id="acceptance"
         className="[&_.input]:mt-0"
         type="checkbox"
         checked={state.terms}
-        onChange={e => dispatch(setFieldValue("terms", e.target.value))}
+        onChange={e => dispatch(setFieldValue("terms", !state.terms))}
       />
-      <div>
+      <label htmlFor="acceptance">
         <span>I agree to all the</span>&nbsp;
         <span className="text-[var(--accent-1)]">Terms</span>&nbsp;
         <span>and</span>&nbsp;
         <span className="text-[var(--accent-1)]">Privacy Policies</span>
-      </div>
+      </label>
     </div>
     <Button
       variant="wz"
       className="block px-12 mx-auto mt-10"
       onClick={registerCoach}
+      disabled={loading}
     >
       Register
     </Button>

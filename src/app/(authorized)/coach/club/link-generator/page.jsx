@@ -55,14 +55,14 @@ export default function first() {
 
 function ZoomMeetingOptions() {
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
-  const zoom_doc_ref = useAppSelector(state => state.coach.data.zoom_doc_ref)
+  const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id)
   return <div className="flex items-center border-1 border-[var(--accent-1)] rounded-[10px]">
     <LinkGenerator withZoom={true}>
       <DialogTrigger className="px-4 py-2 flex items-center gap-2 rounded-[8px]">
         <span className="w-[28px] min-h-[28px] bg-[#0B5CFF] text-[var(--primary-1)] text-[8px] text-center font-[500] leading-[28px] aspect-square rounded-full">zoom</span>
         With Zoom Meeting
       </DialogTrigger>
-      {Boolean(zoom_doc_ref) && <DropdownMenu>
+      {Boolean(zoom_doc_id) && <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <EllipsisVertical className="w-[18px] ml-1 mr-2 cursor-pointer" />
         </DropdownMenuTrigger>
@@ -92,7 +92,7 @@ function DisconnectZoomModal({ onClose }) {
       if (!response.success) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       mutate("coachProfile");
-      dispatch(updateCoachField({ name: "zoom_doc_ref", value: undefined }))
+      dispatch(updateCoachField({ zoom_doc_id: undefined }))
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message || "Please try again Later!");

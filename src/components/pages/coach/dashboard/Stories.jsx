@@ -2,28 +2,41 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import StoryModal from "./StoryModal";
 import AddStoryModal from "@/components/modals/app/AddStoryModal";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ClockFading, X } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import { sendData } from "@/lib/api";
+import Image from "next/image";
 
 export default function Stories({ stories }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [modalOpened, setModalOpened] = useState(false);
 
-  return <div className="mt-8">
+  return <div className="bg-[var(--primary-1)] max-h-[50vh] mt-8 p-4 border-1 rounded-[12px] overflow-y-auto">
     <h4 className="mb-4">Results</h4>
-    <div className="max-w-[calc(100vw-204px-64px)] flex items-center gap-2 no-scrollbar">
+    <div className="grid grid-cols-4 gap-4 no-scrollbar">
       <AddStoryModal />
-      <div className="flex items-center gap-2 overflow-x-auto">
-        {stories.map((story, index) => <Avatar
-          key={story._id}
-          className="w-[64px] h-[64px] border-2 border-[var(--accent-1)] cursor-pointer"
-          onClick={() => {
-            setCurrentStory(index)
-            setModalOpened(true)
-          }}
-        >
-          <AvatarImage src={story.img1} />
-          <AvatarFallback className="bg-[var(--accent-1)] text-white">SN</AvatarFallback>
-        </Avatar>)}
-      </div>
+      {stories.map((story, index) => <div
+        key={story._id}
+        className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2 relative border-1 overflow-clip cursor-pointer"
+        onClick={() => {
+          setModalOpened(true)
+          setCurrentStory(index)
+        }}
+      >
+        <div className="hover:[&_.close]:text-[var(--accent-2)]">
+          <DeleteStory id={story._id} />
+          <Image
+            alt=""
+            src={story.img1 || "/"}
+            fill
+            className="object-cover object-center"
+            onError={e => e.target.src = "/not-found.png"}
+          />
+        </div>
+      </div>)}
       {modalOpened && <StoryModal
         story={stories[currentStory]}
         currentStory={currentStory}
@@ -33,4 +46,29 @@ export default function Stories({ stories }) {
       />}
     </div>
   </div>
+}
+
+function DeleteStory({ id }) {
+  async function deleteStory(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/delete-story/${id}`, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("coachHomeTrial");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure to delete this result?"
+    action={(setLoading, closeBtnRef) => deleteStory(setLoading, closeBtnRef)}
+  >
+    <AlertDialogTrigger className="bg-[var(--accent-1)] text-white p-[2px] absolute top-[2px] right-[2px] z-10 border-1 rounded-full">
+      <X className="w-[14px] h-[14px] close" strokeWidth={3} />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

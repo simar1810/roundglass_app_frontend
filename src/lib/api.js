@@ -2,6 +2,7 @@
 
 import { useExpireUserSession } from "@/components/common/AppNavbar";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export async function fetchData(endpoint, expireUserSession) {
@@ -16,10 +17,12 @@ export async function fetchData(endpoint, expireUserSession) {
       cache: "no-store",
     });
     const data = await response.json();
-    if (response.status === 401) {
-      console.error("401 Unauthorized - Logging out user.");
-      if (expireUserSession) await expireUserSession();
-      return null;
+    if (
+      [408].includes(data.status_code)
+      // || data.message?.toLowerCase() === "something went wrong"
+    ) {
+      cookieStore.delete("token");
+      redirect("/login");
     }
     return data;
   } catch (error) {
@@ -93,6 +96,31 @@ export async function sendDataWithFormData(
       return null;
     }
     return retrievedData;
+  } catch (error) {
+    return error;
+  }
+}
+
+
+export async function uploadImage(file) {
+  try {
+    const data = new FormData();
+    data.append("file", file)
+    const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+    if (response.status_code !== 200) throw new Error(response.message)
+    return response;
+  } catch (error) {
+    return error
+  }
+}
+
+export async function streamResponse(endpoint, data) {
+  try {
+    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response
   } catch (error) {
     return error;
   }

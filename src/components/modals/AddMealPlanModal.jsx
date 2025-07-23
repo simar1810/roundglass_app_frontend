@@ -1,4 +1,4 @@
-import { ClockFading, ImagePlus } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,22 +10,40 @@ import FormControl from "@/components/FormControl";
 import { Textarea } from "../ui/textarea";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { changeFieldvalue, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-meal-plan";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { sendDataWithFormData } from "@/lib/api";
+import { getObjectUrl } from "@/lib/utils";
+import imageCompression from "browser-image-compression";
 
 export default function AddMealPlanModal() {
+  const [thumbnail, setThumbnail] = useState();
   const { dispatch, ...state } = useCurrentStateContext();
 
-  async function uploadMealPlanThumbnail(e) {
+  async function changeStage() {
+    if (thumbnail) {
+      const image = await uploadMealPlanThumbnail()
+      const completed = stage1Completed({ ...state, image });
+      if (!completed.success) toast.error(`Field ${completed.field} is required!`)
+    }
+    dispatch(setCurrentStage(2))
+  }
+
+  async function uploadMealPlanThumbnail() {
     try {
       const data = new FormData();
-      data.append("file", e.target.files[0])
-      const response = await sendDataWithFormData("app/getPlanImageWeb", data);
-      if (response.status_code !== 200) throw new Error(response.message)
-      dispatch(changeFieldvalue("image", response.img))
+      if (thumbnail) {
+        const image = await imageCompression(thumbnail, { maxSizeMB: 0.25 })
+        data.append("file", image)
+        const response = await sendDataWithFormData("app/getPlanImageWeb", data);
+        if (response.status_code !== 200) throw new Error(response.message)
+        dispatch(changeFieldvalue("image", response.img))
+        return response.img
+      } else if (state.image) {
+        return state.image
+      } else throw new Error("Please select an image")
     } catch (error) {
       toast.error(error.message || "Please try again later!");
     }
@@ -57,11 +75,11 @@ export default function AddMealPlanModal() {
               <input
                 type="file"
                 hidden ref={fileRef}
-                onChange={uploadMealPlanThumbnail}
+                onChange={(e) => setThumbnail(e.target.files[0])}
               />
-              {state.image
+              {thumbnail || state.image
                 ? <Image
-                  src={state.image}
+                  src={state.image && !thumbnail ? state.image : getObjectUrl(thumbnail)}
                   alt=""
                   height={200}
                   width={200}
@@ -87,11 +105,7 @@ export default function AddMealPlanModal() {
             <Button
               variant="wz"
               className="block mx-auto"
-              onClick={() => {
-                const completed = stage1Completed(state);
-                if (!completed.success) toast.error(`Field ${completed.field} is required!`)
-                else dispatch(setCurrentStage(2))
-              }}
+              onClick={changeStage}
             >
               Start Adding Meal Plan
             </Button>

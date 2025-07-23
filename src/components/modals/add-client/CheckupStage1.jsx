@@ -1,5 +1,7 @@
 import FormControl from "@/components/FormControl";
-import { changeFieldvalue, changeHeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { changeFieldvalue, changeHeightUnit, changeWeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -7,37 +9,28 @@ import { toast } from "sonner";
 
 export default function CheckupStage1() {
   const { dispatch, ...state } = useCurrentStateContext();
-  return <div className="p-6 pt-4">
-    <p className="text-sm font-semibold mb-1">Lets add a New Client</p>
-    <p className="text-xs text-gray-500 mb-6">
-      But before that, we will need some details about them. Select when
-      your customer joined you, New (now or Recently) and Existing (old)
-    </p>
+  return <div className="py-6 pt-4">
     <div className="flex items-center gap-6 mb-6">
-      <div>
-        <p className="font-semibold text-sm">Select Customer type</p>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2">
-            <input
-              onChange={e => dispatch(changeFieldvalue("clientType", "new"))}
-              checked={state.clientType === "new"}
-              type="radio"
-            />
-            New
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              onChange={e => dispatch(changeFieldvalue("clientType", "existing"))}
-              checked={state.clientType === "existing"}
-              type="radio"
-            />
-            Existing
-          </label>
-        </div>
+      <p className="font-semibold text-sm">Select Customer type</p>
+      <div className="flex items-center gap-4">
+        <RadioGroup
+          className="flex items-center gap-4"
+          value={state.clientType}
+          onValueChange={(value) => dispatch(changeFieldvalue("clientType", value))}
+        >
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="new" id="r1" className={state.clientType === "new" && "bg-[var(--accent-1)]"} />
+            <Label className="text-[16px]" htmlFor="r1">New</Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="existing" id="r2" className={state.clientType === "existing" && "bg-[var(--accent-1)]"} />
+            <Label className="text-[16px]" htmlFor="r2">Existing</Label>
+          </div>
+        </RadioGroup>
       </div>
     </div>
 
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-2 gap-y-10 gap-4 mb-4">
       <FormControl
         label="Client Name"
         type="text"
@@ -58,13 +51,13 @@ export default function CheckupStage1() {
         <div className="flex gap-4">
           <button
             onClick={() => dispatch(changeFieldvalue("gender", "male"))}
-            className={`flex-1 p-2 border rounded text-sm ${state.gender === "male" && "border-[var(--accent-1)] text-[var(--accent-1)]"}`}
+            className={`flex-1 p-3 border rounded-[8px] border-[#D6D6D6] text-sm ${state.gender === "male" && "border-[var(--accent-1)] text-[var(--accent-1)]"}`}
           >
             ♂ Male
           </button>
           <button
             onClick={() => dispatch(changeFieldvalue("gender", "female"))}
-            className={`flex-1 p-2 border rounded text-sm ${state.gender === "female" && "border-[var(--accent-1)] text-[var(--accent-1)]"}`}
+            className={`flex-1 p-2 border rounded-[8px] border-[#D6D6D6] text-sm ${state.gender === "female" && "border-[var(--accent-1)] text-[var(--accent-1)]"}`}
           >
             ♀ Female
           </button>
@@ -84,53 +77,52 @@ export default function CheckupStage1() {
       />
 
       <div>
-        <span className="label font-[600] block mb-1">Height</span>
-        <div className="flex items-center gap-4 text-sm mb-2">
-          <label className="flex items-center gap-1">
-            <input
-              onChange={e => dispatch(changeHeightUnit("Inches"))}
-              checked={state.heightUnit === "Inches"}
-              type="radio"
-            />
-            Ft In
-          </label>
-          <label className="flex items-center gap-1">
-            <input
-              onChange={e => dispatch(changeHeightUnit("Cm"))}
-              checked={state.heightUnit === "Cm"}
-              type="radio"
-            />
-            CM
-          </label>
+        <div className="flex items-center justify-between">
+          <div className="label font-[600] block mb-1">Height</div>
+          <div className="flex items-center gap-4 text-sm mb-2">
+            <label className="flex items-center gap-1">
+              <input
+                onChange={e => dispatch(changeHeightUnit("Inches"))}
+                checked={state.heightUnit === "Inches"}
+                type="radio"
+              />
+              Ft In
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                onChange={e => dispatch(changeHeightUnit("Cm"))}
+                checked={state.heightUnit === "Cm"}
+                type="radio"
+              />
+              CM
+            </label>
+          </div>
         </div>
         <Selectheight />
       </div>
       <div>
-        <span className="label font-[600] block mb-2">Weight</span>
-        <div className="flex gap-3 text-sm mb-2">
-          <label className="flex items-center gap-1">
-            <input
-              onChange={e => dispatch(changeFieldvalue("weightUnit", "Kg"))}
-              checked={state.weightUnit === "Kg"}
-              type="radio"
-            />
-            Kg
-          </label>
-          <label className="flex items-center gap-1">
-            <input
-              onChange={e => dispatch(changeFieldvalue("weightUnit", "Pounds"))}
-              checked={state.weightUnit === "Pounds"}
-              type="radio"
-            />
-            Lbs
-          </label>
+        <div className="flex items-center justify-between">
+          <div className="label font-[600] block mb-2">Weight</div>
+          <div className="flex gap-3 text-sm mb-2">
+            <label className="flex items-center gap-1">
+              <input
+                onChange={() => dispatch(changeWeightUnit("Kg"))}
+                checked={state.weightUnit === "Kg"}
+                type="radio"
+              />
+              Kg
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                onChange={() => dispatch(changeWeightUnit("Pounds"))}
+                checked={state.weightUnit === "Pounds"}
+                type="radio"
+              />
+              Lbs
+            </label>
+          </div>
         </div>
-        <FormControl
-          placeholder="Enter weight"
-          value={state.weight}
-          onChange={e => dispatch(changeFieldvalue("weight", e.target.value))}
-          type="number"
-        />
+        <SelectWeightUnit />
       </div>
       <div className="mr-[-10px]">
         <FormControl
@@ -207,19 +199,24 @@ export default function CheckupStage1() {
   </div>
 }
 
-function Selectheight() {
+function Selectheight({
+  onChangeCms,
+  onChangeFeet,
+  onChangeInches
+}) {
   const { heightCms, heightFeet, heightInches, dispatch, heightUnit } = useCurrentStateContext();
 
-  if (heightUnit !== "Inches") return <div className="flex">
+  if (heightUnit.toLowerCase() === "cm") return <div className="flex">
     <FormControl
+      label="Cm"
       value={heightCms}
       placeholder="Cm"
       onChange={(e) => dispatch(changeFieldvalue("heightCms", e.target.value))}
       type="number"
-      className="grow"
+      className="grow mt-1 [&_.label]:font-[400] [&_.label]:text-[14px]"
     />
   </div>
-  return <div className="flex gap-2">
+  return <div className="mt-1 flex gap-2">
     <FormControl
       value={heightFeet}
       label="Ft"
@@ -232,7 +229,7 @@ function Selectheight() {
         }
       }}
       placeholder="Ft"
-      className="w-full"
+      className="w-full [&_.label]:font-[400] [&_.label]:text-[14px]"
       type="number"
     />
     <FormControl
@@ -247,8 +244,29 @@ function Selectheight() {
         }
       }}
       placeholder="In"
-      className="w-full"
+      className="w-full [&_.label]:font-[400] [&_.label]:text-[14px]"
       type="number"
     />
   </div>
+}
+
+function SelectWeightUnit() {
+  const { weightInKgs, weightInPounds, weightUnit, dispatch } = useCurrentStateContext();
+
+  if (weightUnit.toLowerCase() === "kg") return <FormControl
+    label="Kg"
+    placeholder="Enter weight"
+    value={weightInKgs}
+    onChange={e => dispatch(changeFieldvalue("weightInKgs", e.target.value))}
+    type="number"
+    className="[&_.label]:font-[400] [&_.label]:text-[14px]"
+  />
+  return <FormControl
+    label="Pounds"
+    placeholder="Enter weight"
+    value={weightInPounds}
+    onChange={e => dispatch(changeFieldvalue("weightInPounds", e.target.value))}
+    type="number"
+    className="[&_.label]:font-[400] [&_.label]:text-[14px]"
+  />
 }

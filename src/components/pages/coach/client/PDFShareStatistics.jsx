@@ -7,403 +7,425 @@ import {
   Image,
   StyleSheet,
   Font,
+  PDFViewer,
 } from "@react-pdf/renderer";
 
 // Register custom font
 Font.register({ family: "NotoSans", src: "/fonts/Roboto-Regular.ttf" });
 
 // Styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontSize: 10,
-    fontFamily: "Helvetica",
-  },
-  brandTitle: {
-    fontSize: 20,
-    textAlign: "center",
-    color: "#F7941E",
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  subHeader: {
-    textAlign: "center",
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  infoBox: {
-    backgroundColor: "#f7941e",
-    padding: 10,
-    borderRadius: 4,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  leftInfo: {
-    color: "white",
-  },
-  rightInfo: {
-    color: "white",
-    textAlign: "right",
-  },
-  name: {
-    fontWeight: "bold",
-    fontSize: 12,
-  },
-  meta: {
-    fontSize: 10,
-  },
-  sectionHeader: {
-    borderBottom: "1 solid #ccc",
-    fontSize: 13,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  description: {
-    marginBottom: 10,
-  },
-  metricRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 8,
-    borderBottom: "1 solid #eee",
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    marginRight: 6,
-  },
-  metricText: {
-    flex: 1,
-  },
-  metricTitle: {
-    fontWeight: "bold",
-  },
-  metricNote: {
-    fontSize: 8,
-    color: "#666",
-  },
-  metricValue: {
-    width: 60,
-    fontWeight: "bold",
-    color: "#0c8848",
-  },
-  metricStatus: {
-    width: 60,
-    fontSize: 9,
-    color: "#cc0000",
-  },
-  progressContainer: {
-    width: "100%",
-    height: 6,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 3,
-    marginTop: 4,
-  },
-  disclaimer: {
-    fontSize: 8,
-    color: "#999",
-    marginTop: 20,
-    borderTop: "1 solid #ccc",
-    paddingTop: 10,
-  },
-  leftSection: {
-    width: "85%",
-    paddingTop: 50,
-    paddingRight: 30,
-  },
-  rightStrip: {
-    width: "15%",
-    height: "100%",
-  },
-  logo: {
-    height: 50,
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-  heading: {
-    fontSize: 20,
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  greenBox: {
-    backgroundColor: "#FFA500",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  whiteText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  table: {
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: "#aaa",
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#aaa",
-  },
-  cell: {
-    flex: 1,
-    padding: 5,
-    fontSize: 10,
-  },
-  footerStrip: {
-    marginTop: 20,
-    textAlign: "center",
-    fontSize: 8,
-    color: "#98D89E",
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#98D89E",
-    marginVertical: 10,
-  },
-  flowerStack: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 20,
-  },
-  suggestionStrip: {
-    backgroundColor: "#98D89E",
-    color: "white",
-    padding: 8,
-    fontSize: 12,
-    textAlign: "center",
-    marginVertical: 15,
-    borderRadius: 5,
-  },
-  boldText: {
-    fontWeight: "bold",
-    fontSize: 14,
-    marginVertical: 10,
-  },
-  paragraph: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    marginVertical: 10,
-  },
-  containerBox: {
-    position: "relative",
-    marginVertical: 10,
-  },
-  containerOverlay: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    right: 10,
-    bottom: 10,
-  },
-  boxTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  boxTitleGreen: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#5CB85C",
-  },
-  boxTitleRed: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#D9534F",
-  },
-  boxContent: {
-    fontSize: 11,
-    lineHeight: 1.5,
-  },
-  bottomBanner: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#fff", // Optional: set background to avoid overlap issues
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  bodyWeightCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#4CAF50",
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginVertical: 10,
-  },
-  bodyWeightText: {
-    color: "#ffffff",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  optimalWeightBox: {
-    backgroundColor: "#4CAF50",
-    borderColor: "#ffc107",
-    borderWidth: 1,
-    padding: 4,
-    fontSize: 9,
-    marginVertical: 5,
-    textAlign: "center",
-  },
-  boldHighlight: {
-    fontWeight: "bold",
-    fontSize: 11,
-  },
-  whyHeader: {
-    color: "#ff9800",
-    fontWeight: "bold",
-    fontSize: 12,
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  riskHeader: {
-    color: "#d32f2f",
-    fontWeight: "bold",
-    fontSize: 17,
-    marginTop: 25,
-    marginBottom: 5,
-  },
-  tipEmoji: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-    marginTop: 2,
-    resizeMode: "contain",
-  },
-  riskBox: {
-    backgroundColor: "#ffe6e6",
-    padding: 8,
-    fontSize: 10,
-    borderRadius: 5,
-    color: "#d32f2f",
-    flex: 1,
-  },
-  disclaimer: {
-    marginTop: 20,
-    fontSize: 8,
-    padding: 6,
-    backgroundColor: "#d4edda",
-    borderColor: "#c3e6cb",
-    color: "#444",
-    borderRadius: 5,
-  },
-  page: {
-    padding: 24,
-    backgroundColor: "#fff",
-    fontFamily: "Helvetica",
-    fontSize: 11,
-    lineHeight: 1.5,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 6,
-  },
-  topRightBox: {
-    alignItems: "flex-end",
-  },
-  topRightImage: {
-    width: 90,
-    height: 90,
-    marginBottom: 4,
-  },
-  bmiBadge: {
-    backgroundColor: "#7ed957",
-    borderRadius: 30,
-    width: 110,
-    height: 60,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    right: 24,
-    top: 90,
-    zIndex: 2,
-  },
-  bmiBadgeText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  bmiBadgeSub: {
-    color: "#fff",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 2,
-  },
-  intro: {
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  yellowBar: {
-    height: 3,
-    backgroundColor: "#f3c623",
-    marginBottom: 10,
-    marginTop: 2,
-    width: "100%",
-  },
-  sectionBox: {
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 10,
-  },
-  greenBox: {
-    backgroundColor: "#eaf6e9",
-    borderLeft: "5px solid #7ed957",
-  },
-  greenTitle: {
-    color: "#7ed957",
-    fontWeight: "bold",
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  redBox: {
-    backgroundColor: "#ffeaea",
-    borderLeft: "5px solid #f76b6b",
-  },
-  redTitle: {
-    color: "#f76b6b",
-    fontWeight: "bold",
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  suggestions: {
-    fontWeight: "bold",
-    fontSize: 13,
-    marginTop: 6,
-    marginBottom: 2,
-    color: "#444",
-  },
-  suggestionsText: {
-    fontSize: 11,
-    color: "#222",
-  },
-});
+const getStyles = function (brand) {
+  return StyleSheet.create({
+    page: {
+      padding: 30,
+      fontSize: 10,
+      fontFamily: "Helvetica",
+    },
+    brandTitle: {
+      fontSize: 20,
+      textAlign: "center",
+      color: brand.primaryColor,
+      fontWeight: "bold",
+      marginBottom: 2,
+    },
+    subHeader: {
+      textAlign: "center",
+      fontSize: 14,
+      marginBottom: 10,
+    },
+    infoBox: {
+      backgroundColor: brand.primaryColor,
+      padding: 10,
+      borderRadius: 4,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 20,
+    },
+    leftInfo: {
+      color: "white",
+    },
+    rightInfo: {
+      color: "white",
+      textAlign: "right",
+    },
+    name: {
+      fontWeight: "bold",
+      fontSize: 12,
+    },
+    meta: {
+      fontSize: 10,
+    },
+    sectionHeader: {
+      fontSize: 13,
+      fontWeight: "bold",
+    },
+    description: {
+      marginBottom: 10,
+    },
+    metricRow: {
+      backgroundColor: "#F0F9F8",
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 8,
+      marginBottom: "10px",
+      borderRadius: "8px"
+    },
+    icon: {
+      width: 24,
+      height: 24,
+      marginRight: 6,
+      objectFit: "contain",
+      zIndex: 100,
+    },
+    metricText: {
+      flex: 1,
+    },
+    metricTitle: {
+      fontWeight: "bold",
+    },
+    metricNote: {
+      fontSize: 8,
+      color: "#666",
+    },
+    metricValue: {
+      width: 60,
+      fontWeight: "bold",
+      color: "#0c8848",
+    },
+    metricStatus: {
+      width: 60,
+      fontSize: 9,
+      color: "#cc0000",
+    },
+    progressContainer: {
+      width: "100%",
+      height: 6,
+      backgroundColor: "#e0e0e0",
+      borderRadius: 3,
+      marginTop: 4,
+    },
+    disclaimer: {
+      fontSize: 8,
+      color: "#999",
+      marginTop: 20,
+      borderTop: "1 solid #ccc",
+      paddingTop: 10,
+    },
+    leftSection: {
+      width: "85%",
+      paddingTop: 50,
+      paddingRight: 30,
+    },
+    rightStrip: {
+      width: "15%",
+      height: "100%",
+    },
+    logo: {
+      height: 50,
+      alignSelf: "center",
+      marginBottom: 10,
+    },
+    heading: {
+      fontSize: 20,
+      textAlign: "center",
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    greenBox: {
+      backgroundColor: "#FFA500",
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10,
+      marginBottom: 10,
+    },
+    whiteText: {
+      color: "#fff",
+      fontSize: 14,
+    },
+    table: {
+      marginTop: 20,
+      borderWidth: 1,
+      borderColor: "#aaa",
+    },
+    row: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderColor: "#aaa",
+    },
+    cell: {
+      flex: 1,
+      padding: 5,
+      fontSize: 10,
+    },
+    footerStrip: {
+      marginTop: 20,
+      textAlign: "center",
+      fontSize: 8,
+      color: "#98D89E",
+    },
+    divider: {
+      borderBottomWidth: 1,
+      borderBottomColor: "#98D89E",
+      marginVertical: 10,
+    },
+    flowerStack: {
+      position: "relative",
+      alignItems: "center",
+      justifyContent: "center",
+      marginVertical: 20,
+    },
+    suggestionStrip: {
+      backgroundColor: "#98D89E",
+      color: "white",
+      padding: 8,
+      fontSize: 12,
+      textAlign: "center",
+      marginVertical: 15,
+      borderRadius: 5,
+    },
+    boldText: {
+      fontWeight: "bold",
+      fontSize: 14,
+      marginVertical: 10,
+    },
+    paragraph: {
+      fontSize: 12,
+      lineHeight: 1.5,
+      marginVertical: 10,
+    },
+    containerBox: {
+      position: "relative",
+      marginVertical: 10,
+    },
+    containerOverlay: {
+      position: "absolute",
+      top: 10,
+      left: 10,
+      right: 10,
+      bottom: 10,
+    },
+    boxTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    boxTitleGreen: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: "#5CB85C",
+    },
+    boxTitleRed: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: "#D9534F",
+    },
+    boxContent: {
+      fontSize: 11,
+      lineHeight: 1.5,
+    },
+    bottomBanner: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      width: "100%",
+      padding: 12,
+      backgroundColor: "#fff", // Optional: set background to avoid overlap issues
+      borderTopWidth: 1,
+      borderColor: "#ccc",
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    bodyWeightCircle: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: "#4CAF50",
+      justifyContent: "center",
+      alignItems: "center",
+      alignSelf: "center",
+      marginVertical: 10,
+    },
+    bodyWeightText: {
+      color: "#ffffff",
+      fontSize: 12,
+      textAlign: "center",
+    },
+    optimalWeightBox: {
+      backgroundColor: "#4CAF50",
+      borderColor: "#ffc107",
+      borderWidth: 1,
+      padding: 4,
+      fontSize: 9,
+      marginVertical: 5,
+      textAlign: "center",
+    },
+    boldHighlight: {
+      fontWeight: "bold",
+      fontSize: 11,
+    },
+    whyHeader: {
+      color: "#ff9800",
+      fontWeight: "bold",
+      fontSize: 12,
+      marginTop: 10,
+      marginBottom: 5,
+    },
+    riskHeader: {
+      color: "#d32f2f",
+      fontWeight: "bold",
+      fontSize: 17,
+      marginTop: 25,
+      marginBottom: 5,
+    },
+    tipEmoji: {
+      width: 16,
+      height: 16,
+      marginRight: 8,
+      marginTop: 2,
+      resizeMode: "contain",
+    },
+    riskBox: {
+      backgroundColor: "#ffe6e6",
+      padding: 8,
+      fontSize: 10,
+      borderRadius: 5,
+      color: "#d32f2f",
+      flex: 1,
+    },
+    disclaimer: {
+      marginTop: 20,
+      fontSize: 8,
+      padding: 6,
+      backgroundColor: "#d4edda8D",
+      border: "1px solid #c3e6cb",
+      color: "#444",
+      borderRadius: 5,
+    },
+    page: {
+      padding: 24,
+      backgroundColor: "#fff",
+      fontFamily: "Helvetica",
+      fontSize: 11,
+      lineHeight: 1.5,
+    },
+    headerRow: {
+      // flexDirection: "row",
+      // justifyContent: "space-between",
+      // alignItems: "flex-start",
+      // marginBottom: 10,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 6,
+    },
+    topRightBox: {
+      alignItems: "flex-end",
+    },
+    topRightImage: {
+      width: 90,
+      height: 90,
+      marginBottom: 4,
+    },
+    bmiBadge: {
+      backgroundColor: "#7ed957",
+      borderRadius: 30,
+      width: 110,
+      height: 60,
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      right: 24,
+      top: 90,
+      zIndex: 2,
+    },
+    bmiBadgeText: {
+      color: "#fff",
+      fontWeight: "bold",
+      fontSize: 16,
+      textAlign: "center",
+    },
+    bmiBadgeSub: {
+      color: "#fff",
+      fontSize: 12,
+      textAlign: "center",
+      marginTop: 2,
+    },
+    intro: {
+      marginBottom: 10,
+      marginTop: 4,
+    },
+    yellowBar: {
+      height: 3,
+      backgroundColor: "#f3c623",
+      marginBottom: 10,
+      marginTop: 2,
+      width: "100%",
+    },
+    sectionBox: {
+      borderRadius: 6,
+      padding: 8,
+      marginBottom: 10,
+    },
+    greenBox: {
+      backgroundColor: "#eaf6e9",
+      borderLeft: "5px solid #7ed957",
+    },
+    greenTitle: {
+      color: "#7ed957",
+      fontWeight: "bold",
+      fontSize: 13,
+      marginBottom: 2,
+    },
+    redBox: {
+      backgroundColor: "#ffeaea",
+      borderLeft: "5px solid #f76b6b",
+    },
+    redTitle: {
+      color: "#f76b6b",
+      fontWeight: "bold",
+      fontSize: 13,
+      marginBottom: 2,
+    },
+    suggestions: {
+      fontWeight: "bold",
+      fontSize: 13,
+      marginTop: 6,
+      marginBottom: 2,
+      color: "#444",
+    },
+    suggestionsText: {
+      fontSize: 11,
+      color: "#222",
+    },
+    bmiBadgeBodyIndex: {
+      backgroundColor: "#7ed957",
+      borderRadius: 30,
+      width: 110,
+      height: 40,
+      paddingInline: 20,
+      paddingBlock: 20,
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      right: 24,
+      top: 40,
+      zIndex: 2,
+    },
+    flowerClip: {
+      clipPath: 'path("M50,0 C65,15 85,15 100,0 C115,15 135,15 150,0 C165,15 185,15 200,0 C215,15 235,15 250,0 C235,35 235,65 250,100 C235,115 235,135 250,150 C235,165 235,185 250,200 C235,215 235,235 250,250 C215,235 185,235 150,250 C135,235 115,235 100,250 C85,235 65,235 50,250 C35,235 15,235 0,250 C15,215 15,185 0,150 C15,135 15,115 0,100 C15,85 15,65 0,50 C15,35 15,15 0,0 C15,15 35,15 50,0 Z")'
+    }
+  });
+}
 
-const ProgressBar = ({ percent, color }) => (
-  <View style={styles.progressContainer}>
+const ProgressBar = ({ styles, percent, color }) => (
+  <View style={{ ...styles.progressContainer, maxWidth: "30%" }}>
     <View
       style={{
         height: "100%",
@@ -415,33 +437,35 @@ const ProgressBar = ({ percent, color }) => (
   </View>
 );
 
-const Metric = ({ icon, title, note, value, status, percent, color }) => (
-  <View style={styles.metricRow}>
-    <Image style={styles.icon} src={{ uri: icon }} />
+function Metric({ icon, title, note, value, percent, color, styles }) {
+  return <View style={styles.metricRow} >
+    <Image style={styles.icon} src={icon} />
     <View style={styles.metricText}>
       <Text style={styles.metricTitle}>{title}</Text>
       <Text style={styles.metricNote}>{note}</Text>
-      <ProgressBar percent={percent} color={color} />
     </View>
     <Text style={styles.metricValue}>{value}</Text>
-    <Text style={styles.metricStatus}>{status}</Text>
+    <ProgressBar styles={styles} percent={percent} color={color} />
   </View>
-);
+}
 
-export default function PDFShareStatistics({ data }) {
+export default function PDFShareStatistics({ data, brand }) {
+  const styles = getStyles(brand)
   return (
-    <Document>
-      <StatisticsPage1 data={data} />
-      <StatisticsPage2 data={data} />
-      <StatisticsPage3 data={data} />
-      <StatisticsPage4 data={data} />
-      <StatisticsPage5 data={data} />
-      <StatisticsPage6 data={data} />
-    </Document>
+    <PDFViewer className="w-full h-full">
+      <Document>
+        <StatisticsPage1 styles={styles} data={data} brand={brand} />
+        <StatisticsPage2 styles={styles} data={data} brand={brand} />
+        <StatisticsPage3 styles={styles} data={data} brand={brand} />
+        <StatisticsPage4 styles={styles} data={data} brand={brand} />
+        <StatisticsPage5 styles={styles} data={data} brand={brand} />
+        <StatisticsPage6 styles={styles} data={data} brand={brand} />
+      </Document>
+    </PDFViewer>
   );
 }
 
-function StatisticsPage1({ data }) {
+function StatisticsPage1({ data, styles, brand }) {
   const {
     clientName,
     age,
@@ -457,10 +481,10 @@ function StatisticsPage1({ data }) {
   } = data;
 
   return (
-    <Page size="A4" style={styles.page}>
-      <Text style={styles.brandTitle}>Simar Nutrition</Text>
-      <Text style={styles.subHeader}>Checkup Report</Text>
-
+    <Page size="A4" style={{ ...styles.page, display: "flex", flexDirection: "flex-col" }}>
+      <Text style={styles.brandTitle}>{brand.brandName || <>WellnessZ</>}</Text>
+      <Text style={{ ...styles.subHeader, marginTop: 2 }}>Checkup Report</Text>
+      <View style={{ marginBottom: 10, height: 1, backgroundColor: brand.primaryColor }} />
       <View style={styles.infoBox}>
         <View style={styles.leftInfo}>
           <Text style={styles.name}>{clientName}</Text>
@@ -477,11 +501,10 @@ function StatisticsPage1({ data }) {
       </View>
 
       <Text style={styles.sectionHeader}>Statistics</Text>
-      <Text style={styles.description}>
-        Your Statistic Report is here, Analyse and track your progress
-      </Text>
+      <View style={{ marginTop: 6, marginBottom: 10, display: "block", height: 1, backgroundColor: brand.primaryColor }} />
 
-      <Metric
+      {weight && <Metric
+        styles={styles}
         icon="/assets/SVG/weightLog.svg"
         title="Weight"
         note="Optimal Range: Varies by Height & Gender"
@@ -489,9 +512,10 @@ function StatisticsPage1({ data }) {
         status="Not-Healthy"
         percent={30}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {fatPercentage && <Metric
+        styles={styles}
         icon="/assets/SVG/fat_icon.svg"
         title="Fat Percentage"
         note="Optimal: 10–20% men, 20–30% women"
@@ -499,9 +523,10 @@ function StatisticsPage1({ data }) {
         status="Not-Healthy"
         percent={40}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {restingMetabolism && <Metric
+        styles={styles}
         icon="/assets/SVG/body.svg"
         title="Resting Metabolism"
         note="Optimal Range: Varies on activity and age"
@@ -509,19 +534,21 @@ function StatisticsPage1({ data }) {
         status="Not-Healthy"
         percent={50}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {bmi && <Metric
+        styles={styles}
         icon="/assets/SVG/BMI.svg"
         title="BMI"
         note="Optimal Range: 18 - 24.9"
-        value={bmi}
+        value={bmi || 0}
         status="Not-Healthy"
         percent={30}
         color="#f7b731"
-      />
+      />}
 
-      <Metric
+      {bodyAge && <Metric
+        styles={styles}
         icon="/assets/SVG/body.svg"
         title="Body Age"
         note="Optimal Range: Matches actual age"
@@ -529,9 +556,10 @@ function StatisticsPage1({ data }) {
         status="Healthy"
         percent={80}
         color="#2ecc71"
-      />
+      />}
 
-      <Metric
+      {musclePercentage && <Metric
+        styles={styles}
         icon="/assets/SVG/muscle.svg"
         title="Muscle Percentage"
         note="Optimal Range: 32%-36% for men, 24-30% for women, Athletes: 38-42%"
@@ -539,34 +567,29 @@ function StatisticsPage1({ data }) {
         status="Healthy"
         percent={85}
         color="#2ecc71"
-      />
+      />}
 
-      <Text style={styles.disclaimer}>
+      <Text style={{ ...styles.disclaimer, marginTop: "auto", marginBottom: 32, lineHeight: 1.2 }}>
         Disclaimer: This report does not provide any medical advice & is not a
-        clinical report. It is intended for informational purposes only. Please
+        clinical report. It is intended for informational purposes only. It is not
+        a substitute for professional medical advice, diagnosis or treatment. This
+        report is generated based on the information provided by you. Please
         talk to your doctor / health professional for any further treatment.
       </Text>
+      <Image
+        src="/assets/PNG/Bottom.png"
+        styles={{ marginTop: 20 }}
+      />
     </Page>
   );
 }
 
-function StatisticsPage2({ data }) {
-  // Example data structure (replace with actual data as needed)
-  const { weight = 30.0, clientName = "" } = data || {};
+function StatisticsPage2({ data, styles, brand }) {
+  const { weight = 30.0, clientName = "", bodyComposition } = data || {};
 
   return (
-    <Page
-      size="A4"
-      style={{
-        padding: 30,
-        fontSize: 11,
-        fontFamily: "Helvetica",
-        lineHeight: 1.5,
-        backgroundColor: "#ffffff",
-      }}
-    >
-      {/* Header Section */}
-      <Text style={styles.sectionTitle}>Body Composition</Text>
+    <Page size="A4" style={{ ...styles.page, display: "flex", flexDirection: "flex-col" }}>
+      <Text style={{ ...styles.sectionTitle, marginBottom: 0 }}>Body Composition</Text>
       <View
         style={{
           flexDirection: "row",
@@ -574,13 +597,7 @@ function StatisticsPage2({ data }) {
           marginBottom: 5,
         }}
       >
-        <Image
-          src="/assets/SVG/steps_circle.png"
-          style={{ width: 70, height: 70 }}
-        />
       </View>
-
-      {/* Body Composition Description */}
       <Text style={styles.paragraph}>
         Body composition refers to the proportion of fat and non-fat mass in
         your body. Understanding body composition is crucial for assessing
@@ -592,7 +609,6 @@ function StatisticsPage2({ data }) {
         plans to achieve specific health and fitness goals.
       </Text>
 
-      {/* Colorful Body Icons Row */}
       <View
         style={{
           flexDirection: "row",
@@ -634,30 +650,20 @@ function StatisticsPage2({ data }) {
       <Text style={styles.sectionTitle}>
         Personalised Summary & Possible Risk Analysis
       </Text>
-      <Text style={styles.paragraph}>
-        Dear {clientName}, 'Dear ,Body Composition Analysis (BCA) provides
-        insights into your total body water, protein, minerals, body fat mass,
-        and weight. A BCA report helps your physician or health coach establish
-        an accurate baseline and plan your health goals accordingly. This method
-        offers a more comprehensive view of your overall health compared to
-        traditional methods. Regular BCA assessments can assist in monitoring
-        and achieving your health objectives.
-      </Text>
+      <View style={{ display: "flex", gap: 10 }}>
+        <Text style={styles.paragraph}>
+          Dear {clientName}, 'Dear ,Body Composition Analysis (BCA) provides
+          insights into your total body water, protein, minerals, body fat mass,
+          and weight. A BCA report helps your physician or health coach establish
+          an accurate baseline and plan your health goals accordingly. This method
+          offers a more comprehensive view of your overall health compared to
+          traditional methods. Regular BCA assessments can assist in monitoring
+          and achieving your health objectives.
+        </Text>
 
-      {/* Medium Body Comp. Green Bubble */}
-      <View style={{ position: "absolute", right: 60, top: 250 }}>
-        <View
-          style={{
-            backgroundColor: "#98D89E",
-            borderRadius: 30,
-            width: 120,
-            height: 50,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 13, fontWeight: "bold" }}>
-            Medium{"\n"}Body Comp.
+        <View style={{ height: 40, width: 40 }}>
+          <Text>
+            {bodyComposition} Body Comp.
           </Text>
         </View>
       </View>
@@ -683,7 +689,7 @@ function StatisticsPage2({ data }) {
           }}
         >
           <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-            30.0 KG
+            {weight} KG
           </Text>
           <Text style={{ color: "#fff", fontSize: 10 }}>Body Weight</Text>
         </View>
@@ -722,60 +728,53 @@ function StatisticsPage2({ data }) {
       </View>
 
       {/* Disclaimer */}
-      <Text style={styles.disclaimer}>
+      <Text style={{ ...styles.disclaimer, marginTop: "auto", marginBottom: 32, lineHeight: 1.2 }}>
         Disclaimer: This report does not provide any medical advice & is not a
-        clinical report. It is intended for informational purposes only. It is
-        not a substitute for professional medical advice, diagnosis or
-        treatment. This report is generated based on the information provided by
-        you. Please talk to your doctor / health professional for any further
-        treatment.
+        clinical report. It is intended for informational purposes only. It is not
+        a substitute for professional medical advice, diagnosis or treatment. This
+        report is generated based on the information provided by you. Please
+        talk to your doctor / health professional for any further treatment.
       </Text>
+      <Image
+        src="/assets/PNG/Bottom.png"
+        styles={{ marginTop: 20 }}
+      />
     </Page>
   );
 }
+
 function StatisticsPage3({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data,
+  styles,
+  brand,
 }) {
+  const { bmi = 20 } = data;
   return (
     <Page size="A4" style={styles.page}>
-      {/* Header row with title and top-right image */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Body Mass Index (BMI)</Text>
-        <View style={styles.topRightBox}>
-          {/* Replace with your own image asset */}
-          <Image
-            src="/assets/SVG/steps_circle.png"
-            style={styles.topRightImage}
-          />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
-            0 Heart Pts, {steps} Steps
-          </Text>
-        </View>
       </View>
-
-      {/* Yellow bar */}
-      <View style={styles.yellowBar} />
-
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
-      </View>
+      <View style={{ marginVertical: 14, height: 1, backgroundColor: brand.primaryColor }} />
 
       {/* Introductory Paragraph */}
-      <Text style={styles.intro}>
-        Body Mass Index (BMI) is a simple, widely used method for assessing
-        whether a person has a healthy body weight for their height. It is
-        calculated by dividing a person's weight in kilograms by the square of
-        their height in meters (kg/m²). BMI categories include underweight
-        (below 18.5), normal weight (18.5 to 24.9), overweight (25 to 29.9), and
-        obese (30 and above). While BMI is a useful screening tool, it does not
-        directly measure body fat and may not accurately represent the health of
-        individuals with high muscle mass or those with a different body
-        composition.
-      </Text>
+      <View style={{ display: "flex", flexDirection: "row", gap: 10, marginBottom: 10 }}>
+        <Text style={{ width: "80%" }}>
+          Body Mass Index (BMI) is a simple, widely used method for assessing
+          whether a person has a healthy body weight for their height. It is
+          calculated by dividing a person's weight in kilograms by the square of
+          their height in meters (kg/m²). BMI categories include underweight
+          (below 18.5), normal weight (18.5 to 24.9), overweight (25 to 29.9), and
+          obese (30 and above). While BMI is a useful screening tool, it does not
+          directly measure body fat and may not accurately represent the health of
+          individuals with high muscle mass or those with a different body
+          composition.
+        </Text>
+        <View style={{ height: 100, minWidth: 100, backgroundColor: brand.textColor, borderRadius: "100vw", display: "flex", fontWeight: "bold", fontSize: 16, color: "#FFFFFF", flexDirection: "column", justifyContent: "center", alignItems: "center", ...styles.flowerClip }}>
+          <Text>{Boolean(bmi) || 0}&nbsp;BMI</Text>
+          <br />
+          <Text>{bmi < 18 || bmi > 25 ? "Not-Healthy" : "Healthy"}</Text>
+        </View>
+      </View>
 
       {/* If within Normal Range */}
       <View style={[styles.sectionBox, styles.greenBox]}>
@@ -836,49 +835,37 @@ function StatisticsPage3({
     </Page>
   );
 }
+
 function StatisticsPage4({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data: { musclePercentage },
+  styles,
+  brand
 }) {
   return (
     <Page size="A4" style={styles.page}>
-      {/* Header row with title and top-right image */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Muscle Percentage</Text>
-        <View style={styles.topRightBox}>
-          {/* Replace with your own image asset */}
-          <Image
-            src="/assets/SVG/steps_circle.png"
-            style={styles.topRightImage}
-          />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
-            0 Heart Pts, {steps} Steps
-          </Text>
+      </View>
+      <View style={{ marginVertical: 14, height: 1, backgroundColor: "#F7941E" }} />
+
+      <View style={{ display: "flex", flexDirection: "row", gap: 10, marginBottom: 10 }}>
+        <Text style={{ width: "80%" }}>
+          Muscle percentage refers to the proportion of total body weight that is
+          composed of muscle tissue. It is an important component of body
+          composition analysis, providing insights into overall muscle health and
+          fitness level. Muscle percentage can vary significantly based on factors
+          such as age, sex, fitness level, and physical activity. Muscle tissue
+          plays a vital role in metabolism, as it requires more energy (calories)
+          than fat tissue to maintain. Therefore, a higher muscle percentage can
+          contribute to a higher basal metabolic rate (BMR), which may aid in
+          weight management and overall metabolic health.
+        </Text>
+        <View style={{ height: 100, minWidth: 100, backgroundColor: brand.textColor, borderRadius: "100vw", display: "flex", fontWeight: "bold", fontSize: 16, color: "#FFFFFF", flexDirection: "column", justifyContent: "center", alignItems: "center", ...styles.flowerClip }}>
+          <Text>{Boolean(musclePercentage) ? musclePercentage : 0}</Text>
+          <br />
+          <Text>{(musclePercentage) ? "Healthy" : "Not Healthy"}</Text>
         </View>
       </View>
-
-      {/* Yellow bar */}
-      <View style={styles.yellowBar} />
-
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
-      </View>
-
-      {/* Introductory Paragraph */}
-      <Text style={styles.intro}>
-        Muscle percentage refers to the proportion of total body weight that is
-        composed of muscle tissue. It is an important component of body
-        composition analysis, providing insights into overall muscle health and
-        fitness level. Muscle percentage can vary significantly based on factors
-        such as age, sex, fitness level, and physical activity. Muscle tissue
-        plays a vital role in metabolism, as it requires more energy (calories)
-        than fat tissue to maintain. Therefore, a higher muscle percentage can
-        contribute to a higher basal metabolic rate (BMR), which may aid in
-        weight management and overall metabolic health.
-      </Text>
 
       {/* If within Normal Range */}
       <View style={[styles.sectionBox, styles.greenBox]}>
@@ -928,61 +915,54 @@ function StatisticsPage4({
     </Page>
   );
 }
+
 function StatisticsPage5({
-  bmiValue = 12.9,
-  bmiStatus = "Not-Healthy",
-  steps = 555,
+  data: { restingMetabolism },
+  styles,
+  brand
 }) {
   return (
     <Page size="A4" style={styles.page}>
-      {/* Header row with title and top-right image */}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Resting Metabolism</Text>
-        <View style={styles.topRightBox}>
-          {/* Replace with your own image asset */}
-          <Image
-            src="/assets/SVG/steps_circle.png"
-            style={styles.topRightImage}
-          />
-          <Text style={{ fontSize: 10, color: "#444", textAlign: "center" }}>
-            0 Heart Pts, {steps} Steps
-          </Text>
-        </View>
       </View>
+      <View style={{ marginVertical: 14, height: 1, backgroundColor: "#F7941E" }} />
 
-      {/* Yellow bar */}
-      <View style={styles.yellowBar} />
-
-      {/* BMI Badge */}
-      <View style={styles.bmiBadge}>
-        <Text style={styles.bmiBadgeText}>{bmiValue}</Text>
-        <Text style={styles.bmiBadgeSub}>{bmiStatus} BMI</Text>
+      <View style={{ display: "flex", flexDirection: "row", gap: 10, marginBottom: 10 }}>
+        <Text style={{ width: "80%" }}>
+          Resting metabolism, or basal metabolic rate (BMR), is the energy
+          expended by the body at rest to maintain vital functions like
+          breathing and circulation. It varies based on age, sex, body
+          composition, and genetics, with muscle tissue requiring more
+          energy than fat tissue. BMR is essential for managing weight and
+          planning nutrition and exercise, as it determines daily calorie
+          needs. Monitoring changes in BMR helps gauge metabolic health
+          and guides adjustments in lifestyle for optimal energy balance and
+          overall well-being.
+        </Text>
+        <View style={{ height: 100, minWidth: 100, backgroundColor: brand.textColor, borderRadius: "100vw", display: "flex", fontWeight: "bold", fontSize: 16, color: "#FFFFFF", flexDirection: "column", justifyContent: "center", alignItems: "center", ...styles.flowerClip }}>
+          <Text>{Boolean(restingMetabolism) ? restingMetabolism : 0}</Text>
+          <br />
+          <Text>{restingMetabolism ? "Healthy" : "Not Healthy"}</Text>
+        </View>
       </View>
 
       {/* Introductory Paragraph */}
       <Text style={styles.intro}>
-       Resting metabolism, or basal metabolic rate (BMR), is the energy
- expended by the body at rest to maintain vital functions like
- breathing and circulation. It varies based on age, sex, body
- composition, and genetics, with muscle tissue requiring more
- energy than fat tissue. BMR is essential for managing weight and
- planning nutrition and exercise, as it determines daily calorie
- needs. Monitoring changes in BMR helps gauge metabolic health
- and guides adjustments in lifestyle for optimal energy balance and
- overall well-being.
+
       </Text>
 
       {/* If within Normal Range */}
       <View style={[styles.sectionBox, styles.greenBox]}>
         <Text style={styles.greenTitle}>If within Normal Range:</Text>
         <Text>
-         Having a resting metabolism within the normal range for your age, sex, and body composition
- indicates that your body efficiently expends energy to maintain essential functions at rest. This
- suggests a balanced metabolic rate that supports overall health and energy balance. It typically
- reflects a healthy metabolic function, where the body can effectively regulate energy needs based on
- daily activities and dietary intake. Monitoring and maintaining a normal resting metabolism through
- lifestyle habits like regular exercise and balanced nutrition helps support optimal weight management
- and overall well-being.
+          Having a resting metabolism within the normal range for your age, sex, and body composition
+          indicates that your body efficiently expends energy to maintain essential functions at rest. This
+          suggests a balanced metabolic rate that supports overall health and energy balance. It typically
+          reflects a healthy metabolic function, where the body can effectively regulate energy needs based on
+          daily activities and dietary intake. Monitoring and maintaining a normal resting metabolism through
+          lifestyle habits like regular exercise and balanced nutrition helps support optimal weight management
+          and overall well-being.
         </Text>
       </View>
 
@@ -990,13 +970,13 @@ function StatisticsPage5({
       <View style={[styles.sectionBox, styles.redBox]}>
         <Text style={styles.redTitle}>If Outside Normal Range:</Text>
         <Text>
-           If your resting metabolism is outside the normal range for your age, sex, and body composition, it
- indicates potential metabolic variations that could impact overall health and energy balance. A
- higher-than-normal resting metabolism may suggest increased energy expenditure, potentially
- requiring adjustments in diet and exercise. Conversely, a lower-than-normal metabolism could
- indicate reduced energy expenditure, affecting weight management and energy levels. Consulting
- healthcare professionals can help identify underlying causes and develop tailored strategies to
- support metabolic health and well-being.
+          If your resting metabolism is outside the normal range for your age, sex, and body composition, it
+          indicates potential metabolic variations that could impact overall health and energy balance. A
+          higher-than-normal resting metabolism may suggest increased energy expenditure, potentially
+          requiring adjustments in diet and exercise. Conversely, a lower-than-normal metabolism could
+          indicate reduced energy expenditure, affecting weight management and energy levels. Consulting
+          healthcare professionals can help identify underlying causes and develop tailored strategies to
+          support metabolic health and well-being.
         </Text>
       </View>
 
@@ -1016,38 +996,44 @@ function StatisticsPage5({
     </Page>
   );
 }
-function StatisticsPage6({ data }) {
-  return <Page size="A4" style={styles.page}>
+
+function StatisticsPage6({
+  data: {
+    coachName,
+    coachDescription,
+    coachProfileImage
+  },
+  styles,
+  brand
+}) {
+  return <Page size="A4" style={{ display: "flex", flexDirection: "column", gap: 0, ...styles.page }}>
     {/* Suggestions Header */}
-    <Text style={styles.sectionTitle}>Suggestions</Text>
-    <View style={styles.divider} />
+    <Text style={styles.sectionTitle}>Suggestions For Health & Wellbeing</Text>
+    <View style={{ marginVertical: 14, height: 1, backgroundColor: "#F7941E" }} />
 
     {/* 1. Eating Block */}
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
       <View style={{ width: '50%' }}>
-        <Text style={[styles.subsectionTitle]}>1. Nutrition</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", color: brand.textColor }}>Physical Activity</Text>
         <Text style={styles.paragraph}>
-          Eat whole foods, hydrate regularly, and include fiber and protein in every meal.
-          Avoid excessive sugar and processed snacks.
+          It is recommended to do aerobic exercises for at least 30 mins a day for 3 to 4 days in a week such as walking, jogging, swimming, taking stairs instead of lift, etc.
         </Text>
       </View>
       <Image
         src="/assets/PNG/eating.png"
-        style={{ width: 180, height: 120 }}
+        style={{ width: 180, height: 120, objectFit: "contain" }}
       />
     </View>
 
-    {/* 2. Exercise Block */}
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
       <Image
         src="/assets/PNG/dumbell.png"
-        style={{ width: 180, height: 120 }}
+        style={{ width: 180, height: 120, objectFit: "contain" }}
       />
       <View style={{ width: '50%' }}>
-        <Text style={styles.subsectionTitle}>2. Physical Activity</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", color: brand.textColor }}>Balanced Diet And Nutrition</Text>
         <Text style={styles.paragraph}>
-          Engage in strength training, cardio, and flexibility workouts at least 4x/week.
-          Movement is the key to transformation.
+          A diet rich in health fat, lean proteins complex carbohydrates, is recommended. It is vital to stay hydrated and away from all processed junk food.
         </Text>
       </View>
     </View>
@@ -1055,15 +1041,14 @@ function StatisticsPage6({ data }) {
     {/* 3. Stress Management Block */}
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
       <View style={{ width: '50%' }}>
-        <Text style={styles.subsectionTitle}>3. Stress & Sleep</Text>
+        <Text style={{ fontSize: 16, fontWeight: "bold", color: brand.textColor }}>Stress Management</Text>
         <Text style={styles.paragraph}>
-          Prioritize good sleep (7–8 hrs/day), practice meditation, and avoid late-night screen time.
-          Mental peace supports physical results.
+          Certain positive lifestyle changes such as meditation, yoga should be incorporated.
         </Text>
       </View>
       <Image
         src="/assets/PNG/stress.png"
-        style={{ width: 180, height: 120 }}
+        style={{ width: 180, height: 120, objectFit: "contain" }}
       />
     </View>
 
@@ -1074,18 +1059,28 @@ function StatisticsPage6({ data }) {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
         <View style={{ width: '50%' }}>
           <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50' }}>
-            {data.coachName ?? 'Your Coach'}
+            {coachName ?? 'Your Coach'}
           </Text>
-          <Text style={styles.paragraph}>{data.coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
+          <Text style={styles.paragraph}>{coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
         </View>
-        <Image
-          src={data.coachProfileImage || "/assets/PNG/tryimage.png"}
-          style={{ width: 120, height: 120, borderRadius: 60 }}
-        />
+        {/* <Image
+          alt=""
+          src={coachProfileImage || "/assets/PNG/tryimage.png"}
+          style={{ width: 120, height: 120, borderRadius: 60, objectFit: "contain" }}
+        /> */}
       </View>
     </View>
 
-    {/* Footer */}
-    <Image src="/assets/PNG/bottom.png" style={{ width: '100%', marginTop: 8 }} />
+    <Text style={{ ...styles.disclaimer, marginTop: "auto", marginBottom: 32, lineHeight: 1.2 }}>
+      Disclaimer: This report does not provide any medical advice & is not a
+      clinical report. It is intended for informational purposes only. It is not
+      a substitute for professional medical advice, diagnosis or treatment. This
+      report is generated based on the information provided by you. Please
+      talk to your doctor / health professional for any further treatment.
+    </Text>
+    <Image
+      src="/assets/PNG/Bottom.png"
+      styles={{ marginTop: 20 }}
+    />
   </Page>
 }

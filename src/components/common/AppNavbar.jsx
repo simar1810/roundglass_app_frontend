@@ -17,18 +17,22 @@ import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
 import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
-import { mutate } from "swr";
+import { useSWRConfig } from "swr";
+import { ClientSearchBar } from "./AppSidebar";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
 export default function AppNavbar() {
+  const [Modal, setModal] = useState();
   const data = useAppSelector(state => state.coach.data)
   if (!data) return <></>
 
   const { profilePhoto, name } = data;
 
   return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
-    <SearchBar />
+    {/* <SearchBar /> */}
+    {Modal || <></>}
+    <ClientSearchBar setModal={setModal} />
     <NotificationModal />
     <UserOptions
       profilePhoto={profilePhoto}
@@ -55,7 +59,7 @@ export function useExpireUserSession() {
 }
 const features = [
   { id: 1, title: "Meal", link: "/coach/meals/list" },
-  { id: 2, title: "Recipees", link: "/coach/meals/recipes" },
+  { id: 2, title: "Recipes", link: "/coach/meals/recipes" },
   { id: 3, title: "Meetings", link: "/coach/club/meetings" },
   { id: 4, title: "Link Generator", link: "/coach/club/link-generator" },
   { id: 5, title: "Notes", link: "/coach/tools/notes" },
@@ -67,7 +71,7 @@ const features = [
   { id: 11, title: "Clients", link: "/coach/clients" },
 ]
 
-function SearchBar() {
+export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [previousSearches, setPreviousSearces] = useLocalStorage("searches");
@@ -104,17 +108,17 @@ function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return <div className="grow">
-    <div ref={containerRef} className="md:max-w-[500px] w-full mx-auto relative z-[111] relative">
+  return <div className="bg-[var(--dark-4)] px-2 pt-10">
+    <div ref={containerRef} className="w-full mx-auto z-[111] relative">
       <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
       <Input
         onFocus={() => setOpen(true)}
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search Feature..."
-        className="bg-[var(--comp-1)] md:max-w-[450px] pl-8 !focus:outline-none"
+        className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 !focus:outline-none border-1 border-[#808080]/40 focus:bg-black"
       />
-      {open && <div className="max-w-[450px] w-full bg-white absolute top-12 p-4 rounded-[8px] border-1">
+      {open && <div className="max-w-[450px] w-full bg-black text-white absolute top-12 p-4 rounded-[8px] border-1">
         {queriedFeatures.length > 0 && <h3 className="mb-2">Suggested</h3>}
         {queriedFeatures.map(item => <SearchItem
           key={item.id}
@@ -145,7 +149,7 @@ function SearchItem({
 }) {
   return <div
     onClick={() => storeInhistory(link, title)}
-    className="text-[var(--dark-1)]/25 hover:text-[var(--dark-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
+    className="text-[var(--primary-1)]/50 hover:text-[var(--primary-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
   >
     <Search className="w-[16px] h-[16px]" />
     {title}
@@ -153,9 +157,11 @@ function SearchItem({
 }
 
 function UserOptions({ profilePhoto, name }) {
-  const [modal, setModal] = useState();
+  const [Modal, setModal] = useState();
+  const [opened, setOpened] = useState(false)
   const { coachId, roles } = useAppSelector(state => state.coach.data);
   const dispatchRedux = useAppDispatch();
+  const { cache } = useSWRConfig();
 
   const personalizationpermitted = permit("app-personalization", roles);
 
@@ -163,10 +169,12 @@ function UserOptions({ profilePhoto, name }) {
 
   async function expireUserSession() {
     try {
-      // mutate(() => true, undefined, { revalidate: false })
       const response = await fetch("/api/logout", { method: "DELETE" });
       const data = await response.json();
       if (data.status_code !== 200) throw new Error(data.message);
+      for (const [field] of cache.entries()) {
+        cache.delete(field)
+      }
       dispatchRedux(destroy());
       router.push("/login");
     } catch (error) {
@@ -174,47 +182,55 @@ function UserOptions({ profilePhoto, name }) {
     }
   }
 
-  return <DropdownMenu>
-    {modal}
-    <DropdownMenuTrigger>
-      <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
-        <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
-          <AvatarImage src={profilePhoto} />
-          <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
-        </Avatar>
-        <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
-        <ChevronDown className="w-[16px] h-[16px]" />
-      </div>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent>
-      {personalizationpermitted && <DropdownMenuItem>
-        <DropdownMenuLabel
-          onClick={() => setModal(<PersonalBranding setModal={setModal} />)}
-          className="text-[14px] py-0"
+  return <>
+    {Modal || <></>}
+    <DropdownMenu open={opened}>
+      <DropdownMenuTrigger
+        onClick={() => setOpened(!opened)}
+      >
+        <div className="px-4 py-2 flex items-center gap-2 border-1 rounded-[8px]">
+          <Avatar className="w-[24px] h-[24px] border-1  border-[var(--accent-1)]">
+            <AvatarImage src={profilePhoto} />
+            <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
+          </Avatar>
+          <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+          <ChevronDown className="w-[16px] h-[16px]" />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {personalizationpermitted && <DropdownMenuItem
+          onClick={() => setModal(<PersonalBranding
+            onClose={() => {
+              setModal()
+              setOpened(false)
+            }}
+          />)}
         >
-          App personalisation
-        </DropdownMenuLabel>
-      </DropdownMenuItem>}
-      <DropdownMenuItem>
-        <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
           <DropdownMenuLabel className="text-[14px] py-0">
-            Your Website
+            App personalisation
           </DropdownMenuLabel>
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link href="/coach/portfolio" className="w-full">
-          <DropdownMenuLabel className="text-[14px] py-0">
-            Portfolio
+        </DropdownMenuItem>}
+        <DropdownMenuItem onClick={() => setOpened(false)}>
+          <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
+            <DropdownMenuLabel className="text-[14px] py-0">
+              Your Website
+            </DropdownMenuLabel>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setOpened(false)}>
+          <Link href="/coach/portfolio" className="w-full">
+            <DropdownMenuLabel className="text-[14px] py-0">
+              Portfolio
+            </DropdownMenuLabel>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={expireUserSession}>
+          <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
+            <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />
+            Logout
           </DropdownMenuLabel>
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={expireUserSession}>
-        <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
-          <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />
-          Logout
-        </DropdownMenuLabel>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </>
 }

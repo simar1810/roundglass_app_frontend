@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { sendData, sendDataWithFormData } from "@/lib/api";
+import { format, parse } from "date-fns";
 import { Pencil, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -13,7 +14,8 @@ export default function UpdateMealPlanRecipeModal({ mealType, mealPlan, recipe }
   const [formData, setFormData] = useState(() => ({
     name: recipe.name,
     description: recipe.description,
-    file: undefined
+    file: undefined,
+    meal_time: recipe.meal_time ? format(parse(recipe.meal_time, "HH:mm", new Date()), "HH:mm") : ""
   }));
   const closeBtnRef = useRef();
   const fileRef = useRef();
@@ -27,8 +29,18 @@ export default function UpdateMealPlanRecipeModal({ mealType, mealPlan, recipe }
         const response = await sendDataWithFormData("app/getPlanImageWeb", data);
         formData.image = response.img;
       }
+      if (!formData.meal_time) throw new Error("Meal Time is required")
       const payload = mealPlan.meals.map(meals => meals.mealType === mealType
-        ? { ...meals, meals: meals.meals.map(meal => meal.meal_id === recipe.meal_id ? { ...meal, ...formData } : meal) }
+        ? {
+          ...meals,
+          meals: meals.meals.map(meal => meal.meal_id === recipe.meal_id
+            ? {
+              ...meal,
+              ...formData,
+              meal_time: format(parse(formData.meal_time, "HH:mm", new Date()), "hh:mm")
+            }
+            : meal)
+        }
         : meals
       )
       const response = await sendData(`app/update-plan?id=${mealPlan._id}`, { meals: payload }, "PUT");
@@ -42,6 +54,7 @@ export default function UpdateMealPlanRecipeModal({ mealType, mealPlan, recipe }
       setLoading(false);
     }
   }
+
   return <Dialog>
     <DialogTrigger>
       <Pencil className="w-[16px] h-[16px] text-[var(--accent-1)] absolute bottom-4 right-4" />
@@ -77,6 +90,15 @@ export default function UpdateMealPlanRecipeModal({ mealType, mealPlan, recipe }
             type="text"
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
+            className="border-1 border-[var(--dark-1)]/25 rounded-[8px] px-4 py-2"
+          />
+        </div>
+        <div className="flex flex-col gap-4">
+          <label className="text-[14px] font-semibold">Meal Time</label>
+          <input
+            type="time"
+            value={formData.meal_time}
+            onChange={e => setFormData({ ...formData, meal_time: e.target.value })}
             className="border-1 border-[var(--dark-1)]/25 rounded-[8px] px-4 py-2"
           />
         </div>

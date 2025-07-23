@@ -1,8 +1,10 @@
 import FormControl from "@/components/FormControl";
-import { MeetingDescription, MeetingRepeat, MeetingType } from "@/components/modals/club/LinkGenerator";
+import { MeetingBanner, MeetingDescription, MeetingRepeat, MeetingType, SelectOneToOneClient } from "@/components/modals/club/LinkGenerator";
 import { linkGeneratorFields } from "../data/ui";
-import { format, parse } from "date-fns";
+import { formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
+import SelectControl from "@/components/Select";
+import SelectMultiple from "@/components/SelectMultiple";
 
 export function linkGeneratorReducer(state, action) {
   switch (action.type) {
@@ -22,11 +24,16 @@ export function linkGeneratorReducer(state, action) {
       return {
         ...state,
         wellnessZLink: action.payload,
-        view: 3
+        view: 5
+      }
+    case "RESET_STATE":
+      return {
+        ...linkGeneratorInitialState,
+        view: 2
       }
 
     default:
-      break;
+      return state;
   }
 }
 
@@ -54,11 +61,16 @@ export function setWellnessZLink(link) {
   }
 }
 
+export function resetCurrentState() {
+  return { type: "RESET_STATE" }
+}
+
 const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7],
-  scheduled: [1, 2, 3, 4, 6, 7],
-  reocurr: [1, 2, 3, 4, 5, 6, 7],
-  event: [1, 2, 3, 4, 6, 7, 8]
+  quick: [1, 2, 6, 7, 9, 10],
+  scheduled: [1, 2, 3, 4, 6, 7, 9, 10],
+  reocurr: [1, 2, 3, 4, 6, 7, 9, 10],
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10],
+  one_to_one: [1, 2, 3, 4, 6, 7, 9, 11],
 }
 
 export function selectFields(meetingType) {
@@ -76,13 +88,23 @@ export function init(withZoom) {
 
 export function generateRequestPayload(state) {
   const formControls = selectFields(state.meetingType)
-  const payload = {};
+
+  const payload = new FormData;
   for (const field of formControls) {
-    payload[field.name] = state[field.name];
+    payload.append(field.name, state[field.name]);
   }
-  if (state.data && state.time) {
-    const schedulueDate = format(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()), 'dd-MM-yyyy HH:mm:ss');
-    payload.schedulueDate = schedulueDate;
+  if (state.meetingType === "reocurr") {
+    payload.append("reOcurred", JSON.stringify(state["reOcurred"]));
+  }
+  if (state.date && state.time) {
+    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()));
+    payload.append("scheduleDate", scheduleDate);
+  } else {
+    payload.append("scheduleDate", new Date().toISOString());
+  }
+  payload.delete("allowed_client_type");
+  for (const type of state.allowed_client_type) {
+    payload.append("allowed_client_type", type);
   }
   return payload;
 }
@@ -109,6 +131,25 @@ export function selectMeetingFormField(field, formData, dispatch) {
       />
     case 4:
       return <MeetingRepeat
+        key={field.id}
+        field={field}
+      />
+    case 5:
+      return <MeetingBanner
+        key={field.id}
+        field={field}
+      />
+    case 6:
+      return <SelectMultiple
+        key={field.id}
+        className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
+        label={field.label}
+        options={field.options}
+        value={formData.allowed_client_type}
+        onChange={(newValues) => dispatch(changeFieldvalue("allowed_client_type", newValues))}
+      />
+    case 7:
+      return <SelectOneToOneClient
         key={field.id}
         field={field}
       />

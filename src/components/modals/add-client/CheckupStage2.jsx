@@ -1,6 +1,9 @@
+import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
+import { Button } from "@/components/ui/button";
 import { setCurrentStage, updateMatrices } from "@/config/state-reducers/add-client-checkup";
-import { calculateBMI2, calculateBMR, calculateBodyAge, calculateBodyFatPercentage, calculateIdealWeight, calculateSkeletalMassPercentage } from "@/lib/client/statistics";
+import { calculateBMI2, calculateBMIFinal, calculateBMR, calculateBMRFinal, calculateBodyAge, calculateBodyAgeFinal, calculateBodyFatFinal, calculateBodyFatPercentage, calculateIdealWeight, calculateIdealWeightFinal, calculateSkeletalMassPercentage, calculateSMPFinal } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
+import { differenceInYears, parse } from "date-fns";
 import { useEffect } from "react";
 
 const formFields = [
@@ -53,16 +56,18 @@ const formFields = [
 export default function CheckupStage2() {
   const { dispatch, ...state } = useCurrentStateContext();
 
-  const heightinMetres = state.heightUnit === "Cm" ? Number(state.height) / 100 : Number(state.height) / 3.28084;
+  const age = state.dob
+    ? differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))
+    : 0
 
-  const payload = {}
-  payload.bmi = calculateBMI2(state);
-  payload.muscle = calculateSkeletalMassPercentage(state);
-  payload.fat = calculateBodyFatPercentage(state);
-  payload.rm = calculateBMR(state);
-  payload.ideal_weight = (21 * (heightinMetres * heightinMetres)).toFixed(2);
-  payload.bodyAge = calculateBodyAge(state);
-
+  const payload = {
+    bmi: calculateBMIFinal(state),
+    muscle: calculateSMPFinal({ ...state, age }),
+    fat: calculateBodyFatFinal({ ...state, age }),
+    rm: calculateBMRFinal({ ...state, age }),
+    ideal_weight: calculateIdealWeightFinal(state),
+    bodyAge: calculateBodyAgeFinal({ ...state, age }),
+  }
   useEffect(function () {
     dispatch(updateMatrices(formFields, payload));
   }, []);
@@ -73,58 +78,36 @@ export default function CheckupStage2() {
         Name: <span className="font-semibold">{state.name}</span>
       </div>
       <div>
-        Height: <span className="font-semibold">5 Feet 8 Inches</span>
+        Height:&nbsp;
+        <span className="font-semibold">
+          {state.heightUnit.toLowerCase() === "cm"
+            ? `${state.heightCms} cm`
+            : `${state.heightFeet} ft. ${state.heightInches} in`}
+        </span>
       </div>
       <div>
         D.O.B: <span className="font-semibold">{state.dob}</span>
       </div>
       <div>
-        Ideal Weight: <span className="font-semibold">{payload.idealWeight} KG</span>
-      </div>
-      <div>
-        Age: <span className="font-semibold">25 yrs</span>
-      </div>
-      <div>
-        Body Type: <span className="font-semibold">{state.bodyComposition}</span>
+        Age: <span className="font-semibold">{differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))} yrs</span>
       </div>
       <div>
         Gender: <span className="font-semibold">{state.gender.split("")[0]?.toUpperCase() + state.gender.slice(1)}</span>
       </div>
     </div>
     <h3 className="font-semibold my-4">Statistics</h3>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {formFields.filter(({ name }) => payload[name]).map(({ label, value, desc, info, icon, name }) => <div
-        key={label}
-        className="bg-[#F9F9F9] rounded-xl p-4 shadow-sm relative text-center"
-      >
-        <img
-          src={icon}
-          alt={`${label} icon`}
-          className="w-5 h-5 absolute top-3 left-3"
-        />
-        <div className="mt-4 flex flex-col items-center">
-          <div className="text-sm font-semibold mb-2">{label}</div>
-          <div className="relative w-20 h-20 mb-2">
-            <div className="w-full h-full rounded-full border-4 border-green-500 flex items-center justify-center text-xl font-bold text-black">
-              {payload[name]}
-            </div>
-          </div>
-          {desc && (
-            <div className="text-green-600 text-sm font-medium">
-              {desc}
-            </div>
-          )}
-          <p className="text-[11px] text-gray-600 whitespace-pre-wrap mt-1">
-            {info}
-          </p>
-        </div>
-      </div>)}
+    <div className="grid grid-cols-3 gap-4">
+      <HealthMetrics data={{ ...state, age }} />
     </div>
-    <button onClick={() => dispatch(setCurrentStage(1))}>Previous</button>
-    <div className="mt-6">
-      <button onClick={() => dispatch(setCurrentStage(3))} className="bg-[var(--accent-1)] text-white font-bold w-full text-center px-4 py-3 rounded-[4px]">
+    <div className="mt-10 flex items-center gap-4">
+      <Button className="grow" variant="wz_outline" onClick={() => dispatch(setCurrentStage(1))}>Previous</Button>
+      <Button
+        onClick={() => dispatch(setCurrentStage(3))}
+        variant="wz"
+        className="grow"
+      >
         Next
-      </button>
+      </Button>
     </div>
   </div>
 }

@@ -1,5 +1,7 @@
+import FormControl from "@/components/FormControl";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { changeFieldvalue, createdClient, generateRequestPayload, setCurrentStage } from "@/config/state-reducers/add-client-checkup";
+import { changeFieldvalue, changeNextFollowUpType, createdClient, generateRequestPayload, setCurrentStage } from "@/config/state-reducers/add-client-checkup";
 import { sendDataWithFormData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
@@ -23,7 +25,7 @@ export default function CheckupStage3() {
     }
   }
 
-  return <div className="p-6">
+  return <div className="px-6 py-4">
     <div className="relative w-24 h-24 rounded-full border-2 border-green-500 flex items-center justify-center mb-4 mr-[500px]">
       <img
         src={getObjectUrl(file) || "/not-found.png"}
@@ -81,21 +83,26 @@ export default function CheckupStage3() {
         <div className="flex gap-4">
           <label className="flex items-center gap-1 text-sm">
             <input
-              onChange={e => dispatch(changeFieldvalue("nextFollowup", "8-day"))}
-              checked={state.nextFollowup === "8-day"}
+              onChange={e => dispatch(changeNextFollowUpType())}
+              checked={state.nextFollowupType === "8-day"}
               type="radio"
             />
             8 Day
           </label>
           <label className="flex items-center gap-1 text-sm">
             <input
-              onChange={e => dispatch(changeFieldvalue("nextFollowup", "custom"))}
-              checked={state.nextFollowup === "custom"}
+              onChange={e => dispatch(changeFieldvalue("nextFollowupType", "custom"))}
+              checked={state.nextFollowupType === "custom"}
               type="radio"
             />
             Custom
           </label>
         </div>
+        {state.nextFollowupType === "custom" && <FormControl
+          value={state.followUpDate}
+          onChange={e => dispatch(changeFieldvalue("followUpDate", e.target.value))}
+          type="date"
+        />}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -122,12 +129,15 @@ export default function CheckupStage3() {
         </div>
       </div>
     </div>
-    <button onClick={() => dispatch(setCurrentStage(2))}>Previous</button>
-    <button
-      onClick={createClient}
-      className="w-full bg-[var(--accent-1)] hover:bg-[var(--accent-1)] text-white font-bold w-[236px] py-3 rounded mt-2"
-    >
-      Save
-    </button>
+    <div className="mt-6 flex items-center gap-4">
+      <Button variant="wz_outline" className="grow" onClick={() => dispatch(setCurrentStage(2))}>Previous</Button>
+      <Button
+        variant="wz"
+        onClick={createClient}
+        className="grow"
+      >
+        Save
+      </Button>
+    </div>
   </div>
 }

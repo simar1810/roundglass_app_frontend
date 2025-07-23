@@ -10,10 +10,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function Page() {
   const { id } = useParams()
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const { _id } = useAppSelector(state => state.coach.data)
 
   const { isLoading, error, data } = useSWR(`app/meal-plan/${id}`, () => getMealPlanById(id));
   if (isLoading) return <ContentLoader />
@@ -37,7 +39,7 @@ export default function Page() {
       >
         Copy & Edit
       </Link>
-      <UpdateMealPlanModal mealPlan={planData} />
+      {_id === planData.coach && <UpdateMealPlanModal mealPlan={planData} />}
     </div>
     <div className="mt-8 flex gap-4 overflow-x-auto">
       {selectedMeals.map((recipe, index) => <RecipeDetails
@@ -67,6 +69,7 @@ function MealTypesList({
 }
 
 function RecipeDetails({ selectedIndex, mealPlan, recipe }) {
+  const coachId = useAppSelector(state => state.coach.data._id);
   return <div className="min-w-96 max-w-96 border border-grey-500 rounded-md px-4 py-4 pr-4 relative">
     <Image
       src={recipe.image}
@@ -82,11 +85,11 @@ function RecipeDetails({ selectedIndex, mealPlan, recipe }) {
       <Clock size={20} fill="#67BC2A" className="text-[var(--primary-1)]" />
       <span className="text-[14px]">{recipe.meal_time}</span>
     </div>
-    <UpdateMealPlanRecipeModal
+    {mealPlan.coach === coachId && <UpdateMealPlanRecipeModal
       mealPlan={mealPlan}
       recipe={recipe}
       mealType={mealPlan.meals[selectedIndex]?.mealType}
       key={recipe._id}
-    />
+    />}
   </div>
 }

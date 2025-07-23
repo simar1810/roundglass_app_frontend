@@ -38,7 +38,7 @@ export default function RecipeModal({ type, recipe }) {
         : <DialogTrigger className="text-[12px] font-[ 400] px-2">
           Edit
         </DialogTrigger>}
-      <DialogContent className="!max-w-[500px] max-h-[70vh] border-0 p-0 overflow-y-auto">
+      <DialogContent className="!max-w-[500px] max-h-[70vh] border-0 p-0 overflow-y-auto gap-0">
         <DialogHeader className="py-4 px-6 border-b">
           <DialogTitle className="text-lg font-semibold">New Recipe</DialogTitle>
         </DialogHeader>

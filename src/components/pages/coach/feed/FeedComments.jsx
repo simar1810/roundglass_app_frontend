@@ -8,7 +8,7 @@ import { getFeedComments } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function FeedComments({ postId }) {
   const { isLoading, error, data } = useSWR(`app/get-comments?postId=${postId}`, () => getFeedComments(postId));

@@ -47,6 +47,16 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
 
 export default function ClientDetailsCard({ clientData }) {
+  const { activity_doc_ref: activities } = clientData;
+  async function sendAnalysis() {
+    try {
+      const response = await sendData(`app/requestFollowUpRequest?clientId=${clientData?.clientId}`);
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+    }
+  }
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -66,29 +76,11 @@ export default function ClientDetailsCard({ clientData }) {
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
-      <div className="mt-4">
+      <div className="mt-4 grid grid-cols-2 gap-4">
         <FollowUpModal clientData={clientData} />
+        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Send Analysis Reminder</Button>
       </div>
-      <div className="mt-4 p-4 rounded-[10px] border-1">
-        <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">
-          <div>
-            <p className="text-[var(--accent-1)]">122</p>
-            <p>Steps</p>
-          </div>
-          <div>
-            <p className="text-[var(--accent-1)]">1543</p>
-            <p>Calories</p>
-          </div>
-          <Image
-            src="/svgs/circle-embedded.svg"
-            height={64}
-            width={64}
-            alt=""
-            className="ml-auto"
-          />
-        </div>
-        <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-2">Last 7 Days</p>
-      </div>
+      {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
         <h4>Personal Information</h4>
         <UpdateClientDetailsModal clientData={clientData} />
@@ -101,6 +93,29 @@ export default function ClientDetailsCard({ clientData }) {
       </div>
     </CardContent>
   </Card>
+}
+
+function ClientActivities({ activities }) {
+  return <div className="mt-4 p-4 rounded-[10px] border-1">
+    <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">
+      <div>
+        <p className="text-[var(--accent-1)]">{activities.dailyActivities.reduce((acc, activity) => acc + activity.steps, 0)}</p>
+        <p>Steps</p>
+      </div>
+      <div>
+        <p className="text-[var(--accent-1)]">{activities.dailyActivities.reduce((acc, activity) => acc + activity.calories, 0).toFixed(2)}</p>
+        <p>Calories</p>
+      </div>
+      <Image
+        src="/svgs/circle-embedded.svg"
+        height={64}
+        width={64}
+        alt=""
+        className="ml-auto"
+      />
+    </div>
+    <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-2">Last 7 Days</p>
+  </div>
 }
 
 function Header({ clientData }) {
@@ -116,7 +131,7 @@ function Header({ clientData }) {
       const response = await sendData(`edit-rollno?id=${clientData._id}`, { clientId: clientData._id });
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${clientData._id}`);
+      mutate(`clientDetails/${clientData._id}`);
       setModalOpened(false);
     } catch (error) {
       toast.error(error.message);
@@ -135,7 +150,7 @@ function Header({ clientData }) {
       <div className="mb-2 flex items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
         <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
-        {clientData.rollno && <EditClientRollnoModal
+        {clientData.rollno && permit("club", roles) && <EditClientRollnoModal
           defaultValue={clientData.rollno}
           _id={clientData._id}
         />}
@@ -162,7 +177,7 @@ function Header({ clientData }) {
             _id={clientData._id}
           />
         </DropdownMenuItem>
-        {!Boolean(clientData.rollno) && <DropdownMenuItem>
+        {!Boolean(clientData.rollno) && permit("club", roles) && <DropdownMenuItem>
           <DualOptionActionModal
             action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}
             description="Are you sure to generate a new roll number for the client?"
@@ -193,7 +208,7 @@ function ClientStatus({
       const response = await sendData(`app/updateClientActiveStatus?id=${_id}&status=${status}`, {}, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate(`clientDetails/${_id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -242,7 +257,7 @@ function ClientClubStatus({
       const response = await sendData(`updateClubClientStatus?id=${_id}&status=${status}`, {}, "PUT");
       if (!Boolean(response.data)) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${_id}`);
+      mutate(`clientDetails/=${_id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);

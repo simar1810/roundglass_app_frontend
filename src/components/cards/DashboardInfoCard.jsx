@@ -1,8 +1,4 @@
-import {
-  Lock,
-  TrendingDown,
-  TrendingUp
-} from "lucide-react";
+import { Lock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,12 +6,13 @@ import {
 } from "../ui/card";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
+import Link from "next/link";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function DashboardInfoCard({
   icon = "/svgs/users-icon.svg",
-  trendUp = false,
   title,
-  quantity = 100,
+  quantity,
   isSubscribed
 }) {
   return <div className="relative overflow-clip border-1 rounded-[10px]">
@@ -27,9 +24,6 @@ export default function DashboardInfoCard({
             className="w-[40px] h-[40px] !rounded-none"
           />
         </Avatar>
-        {/* {trendUp
-          ? <TrendingUp className="w-[16px] h-[16px] text-[var(--accent-1)]" />
-          : <TrendingDown className="w-[16px] h-[16px] text-[var(--accent-2)]" />} */}
       </CardHeader>
       <CardContent>
         <div className="text-[20px] font-bold">{quantity}</div>
@@ -41,12 +35,16 @@ export default function DashboardInfoCard({
 }
 
 function LockedFeature() {
+  const { _id } = useAppSelector(state => state.coach.data);
+
   return <div className="h-full w-full absolute top-0 left-0 backdrop-blur-[3px] flex items-center justify-center gap-2">
     <Lock className="w-[32px] h-[32px] text-white bg-[var(--accent-1)] p-[6px] rounded-full" />
     <div>
       <h5 className="text-[10px]">This feature is Locked</h5>
       <p className="leading-[1] text-[8px] mt-[2px]">Upgrade now to unlock</p>
-      <Badge variant="wz" size="sm" className="px-[4px] text-[8px] rounded-[2px]">Upgrade</Badge>
+      <Link target="_blank" href={`https://wellnessz.in/plans/${_id}`} className="w-fit text-[var(--accent-1)] text-[8px] font-semibold block mx-auto mt-1 px-[4px] py-1 border-1 border-[var(--accent-1)]">
+        Upgrade
+      </Link>
     </div>
   </div>
 }

@@ -2,14 +2,18 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
+import { invoicePDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock } from "lucide-react";
+import { Clock, EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -137,8 +141,9 @@ function Orders({ orders }) {
     .sort((a, b) => {
       const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
-      return dateA - dateB;
-    });
+      return dateB - dateA;
+    })
+    .sort((a, b) => a.status === "Completed");
 
   return <TabsContent value="order-history">
     <div className="grid grid-cols-3 gap-4">
@@ -148,12 +153,26 @@ function Orders({ orders }) {
 }
 
 function Order({ order }) {
+  const coach = useAppSelector(state => state.coach.data);
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
-      {order.status === "Completed"
-        ?
-        <RetailCompletedLabel status={order.status} />
-        : <RetailPendingLabel status={order.status} />}
+      <div className="flex justify-between items-center">
+        {order.status === "Completed"
+          ? <RetailCompletedLabel status={order.status} />
+          : <RetailPendingLabel status={order.status} />}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="text-black w-[16px]">
+            <EllipsisVertical className="cursor-pointer" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="font-semibold px-2 py-[6px]">
+            <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
+              <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
+                Invoice
+              </DialogTrigger>
+            </PDFRenderer>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </CardHeader>
     <CardContent className="px-0">
       <div className="flex gap-4">
@@ -184,14 +203,14 @@ function Order({ order }) {
   </Card>
 }
 
-function RetailCompletedLabel({ status }) {
+export function RetailCompletedLabel({ status }) {
   return <div className="text-[#03632C] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#03632C] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>
   </div>
 }
 
-function RetailPendingLabel({ status }) {
+export function RetailPendingLabel({ status }) {
   return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>

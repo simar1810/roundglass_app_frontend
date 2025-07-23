@@ -6,22 +6,36 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { addMealType, addNewRecipeBlank, changeFieldvalue, changeRecipeFieldValue, generateRequestPayload } from "@/config/state-reducers/add-meal-plan";
-import { sendData } from "@/lib/api";
+import { addMealType, addNewRecipeBlank, changeFieldvalue, changeRecipeFieldValue, generateRequestPayload, removeSelectedRecipe, setCurrentStage } from "@/config/state-reducers/add-meal-plan";
+import { sendData, sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { Plus, Upload, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Plus, Upload, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { mutate } from "swr";
+import imageCompression from "browser-image-compression";
+
+const Map = {
+  custom_copy_edit: function (_, closeRef) {
+    closeRef?.current?.click();
+  },
+  edit: function (router) {
+    router.push("/coach/meals/list")
+  },
+  add: function (router) {
+    router.push("/coach/meals/list")
+  }
+}
 
 export default function Stage2() {
   const [loading, setLoading] = useState(false);
   const router = useRouter()
   const { meals, selectedMealType, dispatch, ...state } = useCurrentStateContext();
 
+  const closeRef = useRef()
   const selectedMeals = meals.find(item => item.mealType === selectedMealType)?.meals || [];
-
   async function createMealPlan() {
     const toastId = toast.loading("Creating meal plan. Please wait!");
     try {
@@ -31,7 +45,8 @@ export default function Stage2() {
       const response = await sendData("app/create-plan", payload.data);
       if (response.status_code !== 200) throw new Error(response.message)
       toast.success(response.message || "Successfully created the meal plan!");
-      router.push("/coach/meals/list")
+      mutate("getPlans")
+      Map[state.creationType](router, closeRef)
     } catch (error) {
       toast.error(error.message || "Please try again later!");
     } finally {
@@ -40,8 +55,11 @@ export default function Stage2() {
     }
   }
 
-  return <div>
-    <h4 className="pb-2 px-4 border-b-1">Create Meal</h4>
+  return <div className="">
+    <div className="w-full pb-2 px-4 flex items-center gap-4 border-b-1">
+      <ArrowLeft className="cursor-pointer" onClick={() => dispatch(setCurrentStage(1))} />
+      <h4>Create Meal</h4>
+    </div>
     <div className="p-4">
       <MealTypesList />
       <div className="min-h-[70vh] flex items-stretch gap-10 overflow-x-auto">
@@ -67,6 +85,7 @@ export default function Stage2() {
 
 function MealTypesList() {
   const { meals, selectedMealType, dispatch } = useCurrentStateContext();
+  const params = useSearchParams()
 
   return <div className="flex gap-2 mb-6 overflow-x-auto">
     {meals.map((meal, index) => <div
@@ -81,7 +100,7 @@ function MealTypesList() {
         index={index}
       />
     </div >)}
-    <AddMealType />
+    <AddMealType defaultOpen={!Boolean(params.get("id"))} />
   </div>
 }
 
@@ -93,7 +112,8 @@ export function RecipeDetails({ recipe, index }) {
   async function uploadRecipeThumbnail(e) {
     try {
       const data = new FormData();
-      data.append("file", e.target.files[0])
+      const thumbnail = await imageCompression(e.target.files[0], { maxSizeMB: 0.25 })
+      data.append("file", thumbnail);
       const response = await sendDataWithFormData("app/getPlanImageWeb", data);
       if (response.status_code !== 200) throw new Error(response.message)
       dispatch(changeRecipeFieldValue(recipe.id, "image", response.img))
@@ -147,7 +167,7 @@ export function RecipeDetails({ recipe, index }) {
   </div>
 }
 
-function AddMealType() {
+function AddMealType({ defaultOpen }) {
   const [type, setType] = useState("");
   const { dispatch, meals } = useCurrentStateContext();
   const closeBtnRef = useRef();
@@ -162,7 +182,7 @@ function AddMealType() {
     }
   }
 
-  return <Dialog defaultOpen={true}>
+  return <Dialog defaultOpen={defaultOpen}>
     <DialogTrigger className="bg-[var(--comp-1)] whitespace-nowrap text-[14px] px-4 py-2 rounded-[8px] border-1">
       Add New Type
     </DialogTrigger>

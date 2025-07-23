@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 
 export const meetingEditFormControls = [
   {
@@ -14,7 +14,7 @@ export const meetingEditFormControls = [
     placeholder: "Scheduled Date",
     type: "date",
     name: "date",
-    getvalue: (obj) => obj.schedulueDate ? format(parse(obj.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'yyyy-MM-dd') : ""
+    getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), 'yyyy-MM-dd') : ""
   },
   {
     id: 3,
@@ -22,8 +22,8 @@ export const meetingEditFormControls = [
     placeholder: "Scheduled Time",
     type: "time",
     name: "time",
-    getvalue: (obj) => obj.schedulueDate ? format(parse(obj.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'HH:mm') : ""
-  },
+    getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), 'HH:mm') : ""
+  }
 ]
 
 export const meetingEditSelectControls = [
@@ -72,7 +72,7 @@ export const reviewVPFormControls = [
     placeholder: "Enter Requested Points",
     type: "number",
     name: "points"
-  },
+  }
 ]
 
 export const requestSubscriptionFormControls = [
@@ -103,5 +103,5 @@ export const requestSubscriptionFormControls = [
     placeholder: "Enter Amount",
     type: "number",
     name: "amount"
-  },
+  }
 ]

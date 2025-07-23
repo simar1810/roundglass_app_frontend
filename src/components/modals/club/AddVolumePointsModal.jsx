@@ -12,7 +12,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function AddVolumePointsModal({ _id }) {
+export default function AddVolumePointsModal({ _id, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     points: "",
@@ -29,6 +29,7 @@ export default function AddVolumePointsModal({ _id }) {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientVolumePoints/${_id}`);
+      if (onSubmit) onSubmit()
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);

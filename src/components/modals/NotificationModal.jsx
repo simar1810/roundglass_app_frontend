@@ -7,6 +7,7 @@ import { getCoachNotifications } from "@/lib/fetchers/app";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { navigateUserToFeature__notification } from "@/lib/utils";
+import { format, parse } from "date-fns";
 
 export default function NotificationModal() {
   return <DropdownMenu>
@@ -43,7 +44,7 @@ function DropDownContainer() {
           <h3 className="text-black text-[14px] ml-4">
             Notifications
           </h3>
-          <Link href="/coach/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
+          <Link href="/client/app/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
         </div>
         <div className="px-4 py-3 divide-y-1">
           {notifications.map(notification => <Notification
@@ -56,7 +57,7 @@ function DropDownContainer() {
 }
 
 function Notification({ notification }) {
-  const router = useRouter();
+  const formatted = format(parse(notification.createdDate, 'dd-MM-yyyy HH:mm', new Date()), 'dd-MM-yyyy hh:mm a');
   return <Link
     href={navigateUserToFeature__notification(notification.notificationType)}
     className="max-w-[96ch] min-w-[60ch] pb-2 mb-3 flex items-start gap-2 cursor-pointer"
@@ -65,8 +66,7 @@ function Notification({ notification }) {
     <div>
       <h4 className="!text-[12px]">{notification.message}</h4>
       <div className="mt-2 text-[var(--dark-1)]/25 leading-[1.2] text-[8px] font-semibold flex gap-4">
-        <p>{notification.createdDate.slice(0, 10)}</p>
-        <p>{notification.createdDate.slice(11)}</p>
+        <p>{formatted}</p>
       </div>
     </div>
   </Link>

@@ -1,6 +1,7 @@
 "use server";
 import AppNavbar from "@/components/common/AppNavbar";
 import AppSidebar from "@/components/common/AppSidebar";
+import FAQChatbot from "@/components/common/FAQChatbot";
 import Guardian from "@/components/common/Guardian";
 import Loader from "@/components/common/Loader";
 import UpgradeSubscriptionAlert from "@/components/common/UpgradeSubscriptionAlert";
@@ -21,9 +22,10 @@ export default async function Layout({ children }) {
     _id={_id}
     token={token}
   >
+    <FAQChatbot />
     <SidebarProvider className="!bg-white">
       <AppSidebar />
-      <div className="max-w-[calc(100vw-205px)] grow">
+      <div className="max-w-[calc(100vw-205px)] grow no-scrollbar">
         <AppNavbar />
         <div className="bg-[var(--comp-2)] p-4">
           <UpgradeSubscriptionAlert />

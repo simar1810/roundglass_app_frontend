@@ -21,6 +21,7 @@ export default function VolumePointHistory({ _id }) {
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientVolumePoints/${_id}`);
+      mutate(`clientDetails/${_id}`)
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -33,17 +34,18 @@ export default function VolumePointHistory({ _id }) {
     <Loader />
   </div>
 
-  if (error || !data.success) return <ContentError title={error || data?.message} />
-  const volumePoints = data.data;
-  const memberships = volumePoints.pointsHistory;
+  const volumePoints = data?.data;
+  const memberships = volumePoints?.pointsHistory || [];
 
-  if (memberships.length === 0) return <div className="mb-8">
+  if (memberships?.length === 0 || data?.message === "Invalid ClientId OR CoachId") return <div className="mb-8">
     <div className="flex items-center justify-between">
       <h5>Membership History</h5>
       <AddVolumePointsModal _id={_id} />
     </div>
     <ContentError className="!min-h-[200px] mt-4 mb-8" title="This client has 0 subscriptions" />
   </div>
+
+  if (error || !data.success) return <ContentError title={error || data?.message} />
 
   return <div className="mb-8">
     <div className="flex items-center justify-between">

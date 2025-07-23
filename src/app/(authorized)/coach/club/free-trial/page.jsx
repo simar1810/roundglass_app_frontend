@@ -43,8 +43,8 @@ export default function Page() {
             <TableHead>Sponsored By</TableHead>
             <TableHead>Joining Date</TableHead>
             <TableHead>City</TableHead>
-            <TableHead>Subscription</TableHead>
-            <TableHead>Action</TableHead>
+            <TableHead>Membership</TableHead>
+            {/* <TableHead>Action</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>

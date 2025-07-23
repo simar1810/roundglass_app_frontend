@@ -2,10 +2,13 @@ export const followUpInitialState = {
   stage: 1,
   healthMatrix: {
     date: "",
-    weight: "",
-    weightUnit: "Pounds",
-    height: "",
-    heightUnit: "Cm",
+    weightUnit: "Kg", // e.g. Kg Pounds
+    weightInKgs: "",
+    weightInPounds: "",
+    heightUnit: "Cm", // e.g. Inches, Cm
+    heightCms: "",
+    heightFeet: "",
+    heightInches: "",
     bmi: "",
     body_composition: "Slim",
     visceral_fat: "",

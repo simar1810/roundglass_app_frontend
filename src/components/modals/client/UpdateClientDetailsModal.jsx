@@ -13,8 +13,63 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { Image as ImageIcon } from "lucide-react"
+import { Switch } from "@/components/ui/switch";
 
-const formFields = ["name", "email", "mobileNumber", "dob", "age", "height", "weight", "heightUnit", "weightUnit", "gender", "file"];
+const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit", "weightUnit"];
+
+function getHeight(formData) {
+  if (formData.heightUnit.toLowerCase() === "cm") {
+    return formData["heightCms"];
+  } else {
+    return `${formData["heightFeet"]}.${formData["heightInches"]}`;
+  }
+}
+
+function getWeight(formData) {
+  if (formData.weightUnit.toLowerCase() === "kg") {
+    return formData["weightInKgs"];
+  } else {
+    return formData["weightInPounds"];
+  }
+}
+
+function generateDefaultPayload(obj) {
+  const payload = {};
+  for (const field of formFields) {
+    payload[field] = obj[field] || "";
+  }
+  const healthMatrix = obj.healthMatrix
+  if (healthMatrix) {
+    payload.heightUnit = healthMatrix.heightUnit
+    payload.heightCms = ["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height
+      : ""
+    payload.heightFeet = ["inches"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height.split(".")[0] || "0"
+      : ""
+    payload.heightInches = ["inches"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.height.split(".")[1] || "0"
+      : ""
+
+    payload.weightUnit = healthMatrix.weightUnit
+    payload.weightInKgs = ["kg", "kgs"].includes(healthMatrix.weightUnit?.toLowerCase())
+      ? healthMatrix.weight
+      : ""
+    payload.weightInPounds = ["pound", "pounds"].includes(healthMatrix.heightUnit?.toLowerCase())
+      ? healthMatrix.weight
+      : ""
+  }
+
+  if (!payload.heightUnit) payload.heightUnit = "inches"
+  if (!payload.weightUnit) payload.weightUnit = "kg"
+
+  if (obj.dob && obj.dob.split("-")[0].length === 2) {
+    payload.dob = format(parse(obj.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
+  } else {
+    payload.dob = obj.dob
+  }
+  return payload;
+}
 
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
@@ -26,13 +81,17 @@ export default function UpdateClientDetailsModal({ clientData }) {
   async function updateClientDetails() {
     try {
       const data = new FormData();
+      data.append("height", getHeight(formData))
+      data.append("weight", getWeight(formData))
       for (const field of formFields) {
         data.append(field, formData[field])
       }
+      data.append("dob", format(parse(formData.dob, 'yyyy-MM-dd', new Date()), "dd-MM-yyyy"));
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails?id=${clientData._id}`);
+      mutate(`clientDetails/${clientData._id}`);
+      mutate(`app/clientStatsCoach?clientId=/${clientData._id}`);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -102,36 +161,21 @@ function ProfilePhoto({ profilePhoto, value, fileRef, setFormData }) {
   </>
 }
 
-function generateDefaultPayload(obj) {
-  const payload = {};
-  for (const field of formFields) {
-    payload[field] = obj[field];
-  }
-  if (!payload.weightUnit) payload.weightUnit = "kgs"
-  if (!payload.heightUnit) payload.heightUnit = "feet"
-  if (!payload.weight) payload.weight = 0;
-  if (!payload.height) payload.height = 0;
-  if (payload.dob && payload.dob.split("-")[0].length === 2) {
-    payload.dob = format(parse(payload.dob, 'dd-MM-yyyy', new Date()), "yyyy-MM-dd");
-  }
-  return payload;
-}
-
 function Component({ field, formData, setFormData }) {
   switch (field.type) {
     case 2:
-      return <HeightFormControl
+      return <SelectHeight
         key={field.id}
-        height={formData.height}
-        heightUnit={formData.heightUnit}
+        formData={formData}
         setFormData={setFormData}
       />;
     case 3:
-      return <WeightFormControl
+      return <SelectWeightUnit
         key={field.id}
+        formData={formData}
+        setFormData={setFormData}
         weight={formData.weight}
         weightUnit={formData.weightUnit}
-        setFormData={setFormData}
       />;
     case 4:
       return <SelectControl
@@ -150,119 +194,142 @@ function Component({ field, formData, setFormData }) {
   }
 }
 
-function HeightFormControl({
-  height,
-  heightUnit,
-  setFormData
-}) {
+function SelectHeight({ formData, setFormData }) {
+  const { heightCms, heightFeet, heightInches, heightUnit } = formData;
 
-  function onFeetChange(e) {
-    const newFeet = e.target.value;
-    setFeet(newFeet);
-    const cm = (parseFloat(newFeet) || 0) * 30.48 + (parseFloat(inches) || 0) * 2.54;
-    setFormData(prev => ({ ...prev, height: cm.toFixed(2) }));
-  };
+  function changeFieldvalue(name, value) {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
 
-  function onInchesChange(e) {
-    const newInches = Number(e.target.value);
-    if (newInches < 0) return;
-    const feet = Number((newInches / 12).toFixed(0));
+  function onChangeHeightUnit() {
     setFormData(prev => ({
       ...prev,
-      height: prev.height + (feet * 30.48) + ((newInches % 12) * 2.54)
-    }));
-  };
+      heightUnit: heightUnit === "inches" ? "cm" : "inches",
+      heightCms: formData.heightUnit?.toLowerCase() === "cm"
+        ? formData.heightCms
+        : Math.floor(((formData.heightFeet * 30.48) + (formData.heightInches * 2.54))),
+      heightFeet: formData.heightUnit?.toLowerCase() === "inches"
+        ? formData.heightFeet
+        : Math.floor(Number(formData.heightCms) / 30.48),
+      heightInches: formData.heightUnit?.toLowerCase() === "inches"
+        ? formData.heightInches
+        : Math.round(((Number(formData.heightCms) / 30.48) % 1) * 12)
+    }))
+  }
 
-  return <div className="mt-2">
-    <div className="flex items-center gap-4 justify-between">
-      <p className="mr-auto">Last Height</p>
-      <RadioGroup value={heightUnit} className="flex items-center gap-2">
-        <input
-          id="feet"
-          value="feet"
-          type="radio"
-          className="w-[14px] h-[14px]"
-          checked={heightUnit === "feet"}
-          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "feet" }))}
-        />
-        <Label htmlFor="feet">
-          Ft In
-        </Label>
-        <input
-          id="cms"
-          value="cms"
-          type="radio"
-          checked={heightUnit === "cms"}
-          className="w-[14px] h-[14px]"
-          onChange={() => setFormData(prev => ({ ...prev, heightUnit: "cms" }))}
-        />
-        <Label htmlFor="cms">
-          Cm
-        </Label>
-      </RadioGroup>
+  if (heightUnit.toLowerCase() === "cm") return <div className="mt-1">
+    <div className="flex items-center gap-2">
+      <h5 className="mr-auto">Height <span className="!font-[300]">{"(Cm)"}</span></h5>
+      <p>Ft/In</p>
+      <Switch
+        checked={["cm", "cms"].includes(formData.heightUnit.toLowerCase())}
+        onCheckedChange={onChangeHeightUnit}
+      />
+      <p>Cm</p>
     </div>
-    {heightUnit === "feet"
-      ? <div className="flex items-center gap-3">
-        <FormControl
-          type="number"
-          value={((parseFloat(height) || 0) / 30.48).toFixed(0)}
-          onChange={onFeetChange}
-          placeholder="Feet"
-        />
-        <FormControl
-          type="number"
-          value={((height % 30.48) / 2.54).toFixed(0)}
-          onChange={onInchesChange}
-          placeholder="Inches"
-        />
-      </div>
-      : <FormControl
+    <FormControl
+      value={heightCms}
+      placeholder="Cm"
+      onChange={(e) => changeFieldvalue("heightCms", e.target.value)}
+      type="number"
+      className="grow mt-1 [&_.label]:font-[400] [&_.label]:text-[14px]"
+    />
+  </div>
+  return <div className="mt-1">
+    <div className="flex items-center gap-2">
+      <h5 className="mr-auto">Height <span className="!font-[300]">{"(Ft/In)"}</span></h5>
+      <p>Ft/In</p>
+      <Switch
+        checked={["cm", "cms"].includes(formData.heightUnit.toLowerCase())}
+        onCheckedChange={onChangeHeightUnit}
+      />
+      <p>Cm</p>
+    </div>
+    <div className="flex gap-2">
+      <FormControl
+        value={heightFeet}
+        onChange={(e) => {
+          const value = Number(e.target.value);
+          if (value >= 0 && value <= 12) {
+            changeFieldvalue("heightFeet", value);
+          } else {
+            toast.error("Inches should be between 0 and 12");
+          }
+        }}
+        placeholder="Ft"
+        className="w-full [&_.label]:font-[400] [&_.label]:text-[14px]"
         type="number"
-        value={height}
-        onChange={e => setFormData(prev => ({ ...prev, height: e.target.value }))}
-        placeholder="CMs"
-      />}
+      />
+      <FormControl
+        value={heightInches}
+        onChange={(e) => {
+          const value = Number(e.target.value);
+          if (value >= 0 && value <= 12) {
+            changeFieldvalue("heightInches", value);
+          } else {
+            toast.error("Inches should be between 0 and 12");
+          }
+        }}
+        placeholder="In"
+        className="w-full [&_.label]:font-[400] [&_.label]:text-[14px]"
+        type="number"
+      />
+    </div>
   </div>
 }
 
-function WeightFormControl({
-  weight,
-  weightUnit = "KGs",
-  setFormData
-}) {
+function SelectWeightUnit({ formData, setFormData }) {
+  function changeFieldvalue(name, value) {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
 
-  return <div className="mt-2">
-    <div className="flex items-center gap-4 justify-between">
-      <p className="mr-auto">Last Weight</p>
-      <RadioGroup value={weightUnit} className="flex items-center gap-2">
-        <input
-          id="kgs"
-          value="kgs"
-          type="radio"
-          className="w-[14px] h-[14px]"
-          checked={weightUnit === "kgs"}
-          onChange={() => setFormData(prev => ({ ...prev, weightUnit: "kgs" }))}
-        />
-        <Label htmlFor="kgs">
-          KGs
-        </Label>
-        <input
-          id="pounds"
-          value="pounds"
-          type="radio"
-          checked={weightUnit === "pounds"}
-          className="w-[14px] h-[14px]"
-          onChange={() => setFormData(prev => ({ ...prev, weightUnit: "pounds" }))}
-        />
-        <Label htmlFor="pounds">
-          LBS
-        </Label>
-      </RadioGroup>
+  function onChangeWeightUnit() {
+    setFormData(prev => ({
+      ...prev,
+      weightUnit: formData.weightUnit === "kg" ? "pounds" : "kg",
+      weightInKgs: formData.weightUnit?.toLowerCase() === "kg"
+        ? formData.weightInKgs
+        : Math.floor(formData.weightInPounds * 2.20462),
+      weightInPounds: formData.weightUnit?.toLowerCase() === "pounds"
+        ? formData.weightInPounds
+        : Math.floor(formData.weightInKgs / 2.20462),
+    }))
+  }
+
+  if (formData.weightUnit?.toLowerCase() === "kg") return <div className="mt-1">
+    <div className="flex items-center gap-2">
+      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
+      <p>Pound</p>
+      <Switch
+        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
+        onCheckedChange={onChangeWeightUnit}
+      />
+      <p>Kg</p>
     </div>
     <FormControl
-      value={weight}
-      onChange={e => setFormData(prev => ({ ...prev, weight: e.target.value }))}
-      placeholder="Please enter the weight"
+      placeholder="Enter weight"
+      value={formData.weightInKgs}
+      onChange={e => changeFieldvalue("weightInKgs", e.target.value)}
+      type="number"
+      className="[&_.label]:font-[400] [&_.label]:text-[14px]"
+    />
+  </div>
+  return <div className="mt-1">
+    <div className="flex items-center gap-2">
+      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
+      <p>Pound</p>
+      <Switch
+        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
+        onCheckedChange={onChangeWeightUnit}
+      />
+      <p>Kg</p>
+    </div>
+    <FormControl
+      placeholder="Enter weight"
+      value={formData.weightInPounds}
+      onChange={e => changeFieldvalue("weightInPounds", e.target.value)}
+      type="number"
+      className="[&_.label]:font-[400] [&_.label]:text-[14px]"
     />
   </div>
 }

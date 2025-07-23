@@ -2,7 +2,7 @@ import DeleteMeetingModal from "@/components/modals/club/DeleteMeetingModal";
 import EditMeetingModal from "@/components/modals/club/EditMeetingModal";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { copyText } from "@/lib/utils";
-import { format, parse } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import { Clipboard, Eye } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -23,13 +23,13 @@ export default function MeetingDetailRow({
       <Clipboard onClick={copyLink} className="min-w-[16px] cursor-pointer" />
     </TableCell>
     <TableCell>
-      {meeting.schedulueDate
-        ? format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'yyyy-MM-dd')
+      {meeting.scheduleDate
+        ? format(parseISO(meeting.scheduleDate), 'dd-MM-yyyy')
         : <>-</>}
     </TableCell>
     <TableCell>
-      {meeting.schedulueDate
-        ? format(parse(meeting.schedulueDate, 'dd-MM-yyyy HH:mm:ss', new Date()), 'HH:mm')
+      {meeting.scheduleDate
+        ? format(parseISO(meeting.scheduleDate), 'HH:mm')
         : <>-</>}
     </TableCell>
     <TableCell>

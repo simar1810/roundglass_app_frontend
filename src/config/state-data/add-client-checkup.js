@@ -1,3 +1,5 @@
+import { addDays, format } from "date-fns";
+
 export const addClientCheckupInitialState = {
   stage: 1,
   name: "",//done
@@ -8,30 +10,28 @@ export const addClientCheckupInitialState = {
   gender: "male",//done
   coachId: "",
   notes: "",
-  weight: "",
-  weightUnit: "Pounds",
+  weightUnit: "Kg", // e.g. Kg Pounds
   weightInKgs: "",
-  heightInCms: "",
-  height: "",
+  weightInPounds: "",
+  heightUnit: "Cm", // e.g. Inches, Cm
   heightCms: "",
   heightFeet: "",
   heightInches: "",
-  heightUnit: "Cm", // e.g. Inches, Cm
   bmi: "",
   visceral_fat: "",
-  followUpDate: "",
-  activeType: "",
+  followUpDate: format(addDays(new Date(), 8), 'yyyy-MM-dd'),
+  activeType: "active",
   rm: "",
-  joiningDate: "",
+  joiningDate: format(new Date(), 'yyyy-MM-dd'),
   muscle: "",
   fat: "",
-  bodyComposition: "Slim",
+  bodyComposition: "Medium",
   ideal_weight: "",
   bodyAge: "",
   pendingCustomer: "",
   existingClientID: "",
-  nextFollowup: "",
-  clientType: "existing",// e.g. new, existing
+  nextFollowupType: "8-day",
+  clientType: "new",// e.g. new, existing
   file: null,
   pendingCustomer: false,
   existingClientID: ""

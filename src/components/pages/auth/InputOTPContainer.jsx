@@ -4,15 +4,18 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from "@/components/ui/input-otp";
+import { changeCurrentStage, coachfirstTimeRegistration } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppDispatch } from "@/providers/global/hooks";
 import { store } from "@/providers/global/slices/coach";
+import { ArrowLeft, MoveLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function InputOTPContainer() {
   const {
+    isFirstTime,
     mobileNumber,
     otp,
     dispatch,
@@ -41,18 +44,22 @@ export default function InputOTPContainer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: response.refreshToken, _id: user._id })
+        body: JSON.stringify({ refreshToken: user.webRefreshToken, _id: user._id })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
-      delete user.refreshToken;
       dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
-      router.push("/coach/dashboard");
+
+      if (isFirstTime) {
+        dispatch(coachfirstTimeRegistration(user.coachId));
+        return;
+      } else {
+        router.push("/coach/dashboard");
+      }
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
     }
   }
-
 
   async function resendOtp() {
     try {
@@ -77,9 +84,16 @@ export default function InputOTPContainer() {
   }
 
   return <div>
-    <h3 className="text-[32px] mb-4">Security Code</h3>
+    <h3 className="text-[32px] leading-[1]">Security Code</h3>
+    <button
+      onClick={() => dispatch(changeCurrentStage(1))}
+      className="mb-4 flex items-center gap-1"
+    >
+      <MoveLeft size={20} />
+      <p>Back</p>
+    </button>
     <p className="text-[var(--dark-1)]/25 text-[14px] mb-8">
-      <span>Enter 4-Digit OTP sent on</span>
+      <span>Enter 4-Digit OTP sent on </span>
       <span className="text-black">+91 {mobileNumber}</span>
     </p>
     <InputOTP

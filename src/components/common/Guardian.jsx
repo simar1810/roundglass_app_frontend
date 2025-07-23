@@ -1,8 +1,8 @@
 "use client"
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 import { useEffect } from "react";
-import useSWR, { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 import { getCoachProfile } from "@/lib/fetchers/app";
 import { destroy, store } from "@/providers/global/slices/coach";
 import Loader from "./Loader";
@@ -20,22 +20,30 @@ export default function Guardian({
   _id
 }) {
   const { isLoading, error, data } = useSWR("coachProfile", () => getCoachProfile(_id))
+  const { cache } = useSWRConfig();
 
   const dispatchRedux = useAppDispatch();
   const coach = useAppSelector(state => state.coach.data);
 
+
   useEffect(function () {
-    if (data && data.status_code === 200) dispatchRedux(store(data.data));
+    (async function () {
+      if (data && data.status_code === 200) {
+        dispatchRedux(store(data.data))
+      } else if (data?.status_code === 401) {
+        dispatchRedux(destroy());
+        await fetch("/api/logout", { method: "DELETE" });
+        window.location.href = "/login";
+      };
+    }
+    )();
   }, [isLoading]);
 
-  if (
-    error || data?.success === false ||
-    (!!data?.status_code && data?.status_code !== 200)
-  ) {
-    logout();
-    dispatchRedux(destroy());
-    mutate(() => true, undefined);
-    redirect("/login");
+  if (data?.status_code === 401) {
+    for (const [field] of cache.entries()) {
+      if (field !== "coachProfile") cache.delete(field)
+    }
+    return <></>
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">
@@ -46,7 +54,7 @@ export default function Guardian({
     <TriangleAlert className="w-[64px] h-[64px]" />
     <ContentError
       className="min-h-auto border-0 mt-0 p-0"
-      title={`${data?.message}`}
+      title={data?.message || "Please Wait"}
     />
   </div>
 

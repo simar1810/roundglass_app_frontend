@@ -19,8 +19,16 @@ export default function Page() {
 
   if (isLoading) return <ContentLoader />
 
-  if (!allData.status || error) return <ContentError title={error || allData.message} />
-
+  if (!allData.status || error) return <div className="content-container">
+    {allData.message === "No meetings found for the given coach." && <div className="mb-8 flex items-center justify-between gap-4">
+      <h4>Meeting Details</h4>
+      <ClubSystemOptions />
+    </div>}
+    <ContentError
+      title={error || allData.message}
+      className="mt-0 border-0"
+    />
+  </div>
   const data = allData.data;
 
   return <div className="content-container">

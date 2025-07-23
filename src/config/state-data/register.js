@@ -1,9 +1,11 @@
 const registerState = {
   name: "",
   expectedNoOfClients: "",
-  role: "",
+  city: "",
   coachId: "",
-  terms: false
+  organisation: "",
+  terms: false,
+  coachRef: ""
 }
 
 export default registerState;

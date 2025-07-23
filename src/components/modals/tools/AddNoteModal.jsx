@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function AddNoteModal() {
+export default function AddNoteModal({ person = "coach" }) {
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef();
 
@@ -24,7 +24,7 @@ export default function AddNoteModal() {
       for (const field of ["title", "description"]) {
         if (!data[field]) throw new Error(`${field} is required!`);
       }
-      const response = await sendData("app/notes?person=coach", data);
+      const response = await sendData(`app/notes?person=${person}`, data);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Note added successfully!");
       closeBtnRef.current.click();

@@ -21,6 +21,20 @@ export function followUpReducer(state, action) {
         ...state,
         nextFollowUpDate: action.payload
       }
+    case "CHANGE_WEIGHT_UNIT":
+      return {
+        ...state,
+        healthMatrix: {
+          ...state.healthMatrix,
+          weightUnit: action.payload,
+          weightInKgs: action.payload.toLowerCase() === "kg"
+            ? (Number(state.healthMatrix.weightInPounds) * 0.453592).toFixed(2)
+            : state.healthMatrix.weightInKgs,
+          weightInPounds: action.payload.toLowerCase() === "pounds"
+            ? (Number(state.healthMatrix.weightInKgs) / 0.453592).toFixed(2)
+            : state.healthMatrix.weightInPounds,
+        }
+      }
     case "SET_HEALTH_MATRICES":
       return {
         ...state,
@@ -65,26 +79,52 @@ export function setHealthMatrices(payload) {
   }
 }
 
+export function changeWeightUnit(payload) {
+  return {
+    type: "CHANGE_WEIGHT_UNIT",
+    payload
+  }
+}
+
 export function init(data) {
   return {
     ...followUpInitialState,
     healthMatrix: {
       ...followUpInitialState.healthMatrix,
-      height: data.healthMatrix.height,
-      heightUnit: data.healthMatrix.heightUnit
+      heightUnit: data.healthMatrix.heightUnit,
+      heightCms: data.healthMatrix.heightUnit.toLowerCase() === "cm"
+        ? data.healthMatrix.height
+        : "",
+      heightFeet: data.healthMatrix.heightUnit.toLowerCase() === "inches"
+        ? (data.healthMatrix.height.split("."))[0]
+        : "",
+      heightInches: data.healthMatrix.heightUnit.toLowerCase() === "inches"
+        ? (data.healthMatrix.height.split("."))[1]
+        : ""
+
     }
   }
 }
 
-const fields = ["weight", "weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
+const fields = ["weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
 export function generateRequestPayload(state) {
   const payload = {
     healthMatrix: {
 
     }
   };
+  if (state.healthMatrix["weightUnit"].toLowerCase() === "kg") {
+    payload.healthMatrix.weight = String(state.healthMatrix.weightInKgs);
+  } else {
+    payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
+  };
+  if (state.healthMatrix["heightUnit"].toLowerCase() === "cm") {
+    payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
+  } else {
+    payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
+  }
   for (const field of fields) {
-    if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = state.healthMatrix[field];
+    if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = String(state.healthMatrix[field]);
   }
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
@@ -93,11 +133,16 @@ export function generateRequestPayload(state) {
   return payload;
 }
 
-const stage1fields = ["date", "weight", "weightUnit", "visceral_fat", "body_composition"];
+const stage1fields = ["date", "weightUnit", "visceral_fat", "body_composition"];
 export function stage1Completed(data) {
   for (const field of stage1fields) {
     if (!data.healthMatrix[field]) return { success: false, field }
   }
+  if (data.healthMatrix.weightUnit.toLowerCase() === "kg" && !data.healthMatrix.weightInKgs) {
+    return { success: false, field: "weight (kg)" }
+  } else if (data.healthMatrix.weightUnit.toLowerCase() === "pounds" && !data.healthMatrix.weightInPounds) {
+    return { success: false, field: "weight (pounds)" }
+  };
   if (!data.nextFollowUpDate && data.healthMatrix.followUpType === "custom") return { success: false, field: "nextFollowUpDate" }
   return { success: true };
 }

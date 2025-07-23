@@ -25,6 +25,6 @@ export default function ChangeClubSystem({ curentClubSystem, clubSystem }) {
       <div className={`w-[18px] h-[18px] rounded-full ${curentClubSystem === clubSystem.id ? "bg-[var(--accent-1)] outline-2 outline-[var(--accent-1)] outline-offset-1" : "border-1"}`} />
       <p className="text-[14px]">{clubSystem.title}</p>
     </AlertDialogTrigger>
-    <Component clubSystem={clubSystem} />
+    <ClubSystemConfirmation clubSystem={clubSystem} />
   </AlertDialog>
 }
