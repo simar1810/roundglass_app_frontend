@@ -19,6 +19,7 @@ import PersonalBranding from "../modals/app/PersonalBranding";
 import { permit } from "@/lib/permit";
 import { useSWRConfig } from "swr";
 import { ClientSearchBar } from "./AppSidebar";
+import useClickOutside from "@/hooks/useClickOutside";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -147,6 +148,13 @@ function UserOptions({ profilePhoto, name }) {
   const dispatchRedux = useAppDispatch();
   const { cache } = useSWRConfig();
 
+  const dropDownContentRef = useRef()
+
+  useClickOutside(dropDownContentRef, () => {
+    setModal()
+    setOpened(false)
+  })
+
   const personalizationpermitted = permit("app-personalization", roles);
 
   const router = useRouter();
@@ -181,7 +189,7 @@ function UserOptions({ profilePhoto, name }) {
           <ChevronDown className="w-[16px] h-[16px]" />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent ref={dropDownContentRef}>
         {personalizationpermitted && <DropdownMenuItem
           onClick={() => setModal(<PersonalBranding
             onClose={() => {
