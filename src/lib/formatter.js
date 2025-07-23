@@ -44,3 +44,9 @@ export function getRelativeTime(dateString) {
 export function format24hr_12hr(time24) {
   return format(parse(time24, 'HH:mm', new Date()), 'hh:mm a');
 }
+
+export function trimString(str, max = 20) {
+  const total = str.split(" ");
+  const ellipsis = total.length > max ? "..." : "";
+  return total.slice(0, max).join(" ") + ellipsis;
+}
