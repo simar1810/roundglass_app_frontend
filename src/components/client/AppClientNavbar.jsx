@@ -6,25 +6,18 @@ import {
   AvatarFallback,
   AvatarImage
 } from "../ui/avatar";
-import NotificationModal from "../modals/NotificationModal";
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { destroy } from "@/providers/global/slices/coach";
 import { toast } from "sonner";
-import PersonalBranding from "../modals/app/PersonalBranding";
-import { permit } from "@/lib/permit";
 import { useSWRConfig } from "swr";
 import useClickOutside from "@/hooks/useClickOutside";
 import { nameInitials } from "@/lib/formatter";
 
-const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
-
 export default function AppClientNavbar() {
-  const [Modal, setModal] = useState();
   const data = useAppSelector(state => state.client.data)
   if (!data) return <></>
 

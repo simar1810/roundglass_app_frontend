@@ -14,7 +14,7 @@ import useSWR from "swr";
 const dates = generateDatesPayload();
 
 export default function Page() {
-  const { isLoading, error, data } = useSWR("app/getAllReminder?person=coach", getReminders);
+  const { isLoading, error, data } = useSWR("app/getAllReminder?person=coach", () => getReminders());
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "dd-MM-yyyy"));
 
   if (isLoading) return <ContentLoader />
