@@ -204,6 +204,16 @@ export function customMealReducer(state, action) {
         selectedPlan: formatted,
         selectedMealType: "Breakfast"
       }
+
+    case "COPY_ALL_MEAL_PLANS":
+      console.log(action.payload)
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [action.payload.to]: state.selectedPlans[action.payload.from]
+        }
+      }
     default:
       return state;
   }
@@ -316,6 +326,15 @@ export function changeStateDifferentCreationMeal(payload) {
   return {
     type: "INITIAL_STATE_DIFFERENT_CREATION",
     payload
+  }
+}
+
+export function copyAllMealPlans(from, to) {
+  return {
+    type: "COPY_ALL_MEAL_PLANS",
+    payload: {
+      from, to
+    }
   }
 }
 
