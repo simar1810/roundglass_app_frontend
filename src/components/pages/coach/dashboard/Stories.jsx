@@ -19,23 +19,27 @@ export default function Stories({ stories }) {
     <div className="grid grid-cols-4 gap-4 no-scrollbar">
       <AddStoryModal />
       {stories.map((story, index) => <div
+        className="relative"
         key={story._id}
-        className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2 relative border-1 overflow-clip cursor-pointer"
-        onClick={() => {
-          setModalOpened(true)
-          setCurrentStory(index)
-        }}
       >
-        <div className="hover:[&_.close]:text-[var(--accent-2)]">
-          <DeleteStory id={story._id} />
-          <Image
-            alt=""
-            src={story.img1 || "/"}
-            fill
-            className="object-cover object-center"
-            onError={e => e.target.src = "/not-found.png"}
-          />
+        <div
+          className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2 relative border-1 overflow-clip cursor-pointer"
+          onClick={() => {
+            setModalOpened(true)
+            setCurrentStory(index)
+          }}
+        >
+          <div className="hover:[&_.close]:text-[var(--accent-2)]">
+            <Image
+              alt=""
+              src={story.img1 || "/"}
+              fill
+              className="object-cover object-center"
+              onError={e => e.target.src = "/not-found.png"}
+            />
+          </div>
         </div>
+        <DeleteStory id={story._id} />
       </div>)}
       {modalOpened && <StoryModal
         story={stories[currentStory]}

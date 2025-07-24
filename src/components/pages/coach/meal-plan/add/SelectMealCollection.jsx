@@ -85,6 +85,7 @@ function RecipeDeatils({
   selected,
   setSelected
 }) {
+  console.log(recipe)
   return <div
     className={cn(
       "w-full flex flex-col cursor-pointer border-1 rounded-[10px] py-2 px-4",
