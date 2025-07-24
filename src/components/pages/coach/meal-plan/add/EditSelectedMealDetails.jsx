@@ -25,7 +25,7 @@ export default function EditSelectedMealDetails({
 
   function updateDish(open) {
     if (open === true) return;
-    for (const field of ["dish_name" || "meal_time"]) {
+    for (const field of ["dish_name", "time"]) {
       if (!formData[field]) {
         toast.error(`${field} is required.`)
         return
@@ -47,7 +47,7 @@ export default function EditSelectedMealDetails({
           src={recipe.image || "/not-found.png"}
           height={100}
           width={100}
-          className="rounded-lg"
+          className="rounded-lg max-h-[100px] bg-[var(--comp-1)] rounded-lg object-contain border-1"
         />
         <div className="text-left">
           <h3>{recipe.dish_name || recipe.title}</h3>
@@ -69,7 +69,7 @@ export default function EditSelectedMealDetails({
           src={recipe.image || "/not-found.png"}
           height={100}
           width={100}
-          className="w-full h-[140px] rounded-lg object-cover"
+          className="w-full h-[250px] bg-[var(--comp-1)] rounded-lg object-contain border-1"
         />
         <div className="mt-2 mb-6 flex justify-between items-center">
           <SelectMealCollection index={index}>
