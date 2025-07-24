@@ -130,7 +130,16 @@ export function customMealReducer(state, action) {
               ? {
                 ...mealType,
                 meals: mealType.meals.map((meal, index) => index === action.payload.index
-                  ? { ...meal, ...action.payload.recipe }
+                  ? {
+                    ...meal,
+                    ...action.payload.recipe,
+                    dish_name: action.payload.recipe.dish_name || action.payload.recipe.title,
+                    image: action.payload.recipe.image || action.payload.recipe.image,
+                    fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
+                    calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
+                    protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
+                    carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
+                  }
                   : meal)
               } : mealType
             ))
@@ -141,7 +150,17 @@ export function customMealReducer(state, action) {
         selectedPlans: {
           ...state.selectedPlans,
           [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealType => mealType.mealType === state.selectedMealType
-            ? { ...mealType, meals: [...mealType.meals, action.payload.recipe] }
+            ? {
+              ...mealType,
+              meals: [...mealType.meals, {
+                ...action.payload.recipe,
+                dish_name: action.payload.recipe.dish_name || action.payload.recipe.name,
+                fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
+                calories: action.payload.recipe.calories || action.payload.recipe?.calories?.total,
+                protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
+                carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
+              }]
+            }
             : mealType
           ))
         }
