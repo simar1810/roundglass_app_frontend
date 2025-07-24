@@ -59,7 +59,7 @@ function RecipeesContainer({ index }) {
       <p className="ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
       <RecipeModal type="new" />
     </div>
-    <div className="max-h-[55vh] overflow-y-auto grid grid-cols-2 gap-4 no-scrollbar">
+    <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-2 gap-4 no-scrollbar">
       {recipees.map((recipe, index) => <RecipeDeatils
         key={index}
         recipe={recipe}

@@ -46,7 +46,7 @@ export default function EditSelectedMealDetails({
           {recipe._id && <UploadImage setter={(image) => setFormData({ ...formData, image })} />}
         </div>
         <FormControl
-          value={formData.dish_name || formData.name}
+          value={formData.dish_name || formData.name || ""}
           name="dish_name"
           onChange={onChangeHandler}
           placeholder="Dish Name"

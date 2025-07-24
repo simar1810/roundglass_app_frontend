@@ -43,7 +43,7 @@ export default function SelectedMealDetails({
       </div>
     </div>
     <EditSelectedMealDetails
-      key={recipe?._id?.$oid}
+      key={recipe?._id}
       index={index}
       recipe={recipe}
     />
@@ -55,6 +55,7 @@ export default function SelectedMealDetails({
 }
 
 function isPlanSelected(recipe) {
+  return true
   return Boolean(recipe?._id?.$oid) || Boolean(recipe?._id) || Boolean(recipe?.mealId)
 }
 
