@@ -38,7 +38,6 @@ export default function EditSelectedMealDetails({
 
   return <Dialog
     open={opened}
-    onOpenChange={updateDish}
   >
     {!children && <DialogTrigger onClick={() => setOpened(true)} className="w-full">
       <div className="mt-4 flex items-start gap-4">
@@ -47,7 +46,7 @@ export default function EditSelectedMealDetails({
           src={recipe.image || "/not-found.png"}
           height={100}
           width={100}
-          className="rounded-lg max-h-[100px] bg-[var(--comp-1)] rounded-lg object-contain border-1"
+          className="rounded-lg max-h-[100px] bg-[var(--comp-1)] object-contain border-1"
         />
         <div className="text-left">
           <h3>{recipe.dish_name || recipe.title}</h3>
