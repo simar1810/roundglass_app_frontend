@@ -1,27 +1,64 @@
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import { Pen, Search, } from "lucide-react";
+import { Minus, Pen, Search, } from "lucide-react";
 import SelectMealCollection from "./SelectMealCollection";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import FormControl from "@/components/FormControl";
 import { useRef, useState } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import { exportRecipe, saveRecipe } from "@/config/state-reducers/custom-meal";
 import UploadImage from "@/components/modals/UploadImage";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function EditSelectedMealDetails({
   children,
   recipe,
   index
 }) {
+  const [opened, setOpened] = useState(true);
   const [formData, setFormData] = useState(recipe);
   const { dispatch } = useCurrentStateContext();
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
   const closeBtnRef = useRef()
-  return <Dialog>
-    {!children && <DialogTrigger>
-      <Pen size={16} />
+
+  function updateDish(open) {
+    if (open === true) return;
+    for (const field of ["dish_name" || "meal_time"]) {
+      if (!formData[field]) {
+        toast.error(`${field} is required.`)
+        return
+      }
+    }
+    dispatch(saveRecipe(formData, index))
+    closeBtnRef.current.click()
+    setOpened(false)
+  }
+
+  return <Dialog
+    open={opened}
+    onOpenChange={updateDish}
+  >
+    {!children && <DialogTrigger onClick={() => setOpened(true)} className="w-full">
+      <div className="mt-4 flex items-start gap-4">
+        <Image
+          alt=""
+          src={recipe.image || "/not-found.png"}
+          height={100}
+          width={100}
+          className="rounded-lg"
+        />
+        <div className="text-left">
+          <h3>{recipe.dish_name || recipe.title}</h3>
+          <p>{recipe.meal_time}</p>
+          <div className="mt-2 flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
+            {typeof recipe.calories === "object"
+              ? <RecipeCalories recipe={recipe} />
+              : <MealCalories recipe={recipe} />}
+          </div>
+        </div>
+      </div>
     </DialogTrigger>}
     {children}
     <DialogContent className="p-0 gap-0 max-h-[70vh] overflow-y-auto">
@@ -110,10 +147,7 @@ export default function EditSelectedMealDetails({
         <Button
           className="w-full mt-4"
           variant="wz"
-          onClick={() => {
-            dispatch(saveRecipe(formData, index))
-            closeBtnRef.current.click()
-          }}
+          onClick={updateDish}
         >
           Save
         </Button>
@@ -121,4 +155,25 @@ export default function EditSelectedMealDetails({
       </div>
     </DialogContent>
   </Dialog>
+}
+
+
+
+function MealCalories({ recipe }) {
+  return <>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Serving Size -</span>{recipe?.serving_size}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe.fats}</Badge>
+  </>
+}
+
+function RecipeCalories({ recipe }) {
+  return <>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe?.calories?.proteins}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe?.calories?.carbs}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe?.calories?.fats}</Badge>
+    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories?.total}</Badge>
+  </>
 }

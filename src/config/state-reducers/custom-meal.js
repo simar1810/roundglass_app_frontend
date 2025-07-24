@@ -81,7 +81,13 @@ export function customMealReducer(state, action) {
     case "SELECT_MEAL_PLAN_TYPE":
       return {
         ...state,
-        selectedMealType: action.payload
+        selectedMealType: action.payload,
+      }
+    case "CHANGE_SELECTED_PLAN":
+      return {
+        ...state,
+        selectedPlan: action.payload,
+        selectedMealType: state.selectedPlans[action.payload]?.at(0).mealType
       }
     case "SAVE_MEAL_TYPE":
       if (action.payload.type === "new") {
@@ -240,6 +246,13 @@ export function removeWorkoutFromPlans(payload) {
 export function selectMealPlanType(payload) {
   return {
     type: "SELECT_MEAL_PLAN_TYPE",
+    payload
+  }
+}
+
+export function changeSelectedPlan(payload) {
+  return {
+    type: "CHANGE_SELECTED_PLAN",
     payload
   }
 }

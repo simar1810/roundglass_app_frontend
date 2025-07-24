@@ -46,8 +46,12 @@ export default function MealDisplayCard({ plan }) {
         <Image
           fill
           src={plan.image || "/"}
+          onError={e => {
+            e.target.src = "/images/meal_plan.jpeg"
+            e.target.classList.add("blur-xs")
+          }}
           alt=""
-          className="object-cover bg-black"
+          className="object-cover bg-black border-1"
         />
       </Link>
       <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">{plan.tag}</Badge>
