@@ -1,4 +1,4 @@
-import { customWorkoutUpdateField } from "@/config/state-reducers/custom-meal";
+import { changeSelectedPlan } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +11,7 @@ export default function WeeklyMealCreation() {
       {days.map((day, index) => <Button
         key={index}
         variant={selectedPlan === day ? "wz" : "wz_outline"}
-        onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+        onClick={() => dispatch(changeSelectedPlan(day))}
       >
         {day.at(0).toUpperCase() + day.slice(1)}
       </Button>)}

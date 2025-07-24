@@ -44,7 +44,6 @@ function RecipeesContainer({ index }) {
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const recipees = data.data;
-
   return <div className="p-4">
     <div className="flex items-center gap-4 pb-2">
       <Input

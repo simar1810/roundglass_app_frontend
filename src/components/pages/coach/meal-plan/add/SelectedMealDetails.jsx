@@ -1,5 +1,3 @@
-import { Badge } from "@/components/ui/badge"
-import Image from "next/image"
 import EditSelectedMealDetails from "./EditSelectedMealDetails"
 import { CookingPot, Minus, MinusCircle } from "lucide-react"
 import useCurrentStateContext from "@/providers/CurrentStateContext"
@@ -11,6 +9,17 @@ export default function SelectedMealDetails({
   index
 }) {
   const { dispatch } = useCurrentStateContext();
+  return <div className="flex items-start gap-4">
+    <EditSelectedMealDetails
+      key={recipe?._id}
+      index={index}
+      recipe={recipe}
+    />
+    <Minus
+      className="cursor-pointer ml-auto"
+      onClick={() => dispatch(exportRecipe(index))}
+    />
+  </div>
   if (!isPlanSelected(recipe)) return <div className="flex items-center gap-4">
     <EditSelectedMealDetails
       recipe={recipe}
@@ -25,55 +34,10 @@ export default function SelectedMealDetails({
       onClick={() => dispatch(exportRecipe(index))}
     />
   </div>
-  return <div className="mt-4 flex items-start gap-4">
-    <Image
-      alt=""
-      src={recipe.image || "/not-found.png"}
-      height={100}
-      width={100}
-      className="rounded-lg"
-    />
-    <div>
-      <h3>{recipe.dish_name || recipe.title}</h3>
-      <p>{recipe.meal_time}</p>
-      <div className="mt-2 flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
-        {typeof recipe.calories === "object"
-          ? <RecipeCalories recipe={recipe} />
-          : <MealCalories recipe={recipe} />}
-      </div>
-    </div>
-    <EditSelectedMealDetails
-      key={recipe?._id}
-      index={index}
-      recipe={recipe}
-    />
-    <Minus
-      className="cursor-pointer"
-      onClick={() => dispatch(exportRecipe(index))}
-    />
-  </div>
+
 }
 
 function isPlanSelected(recipe) {
   return true
   return Boolean(recipe?._id?.$oid) || Boolean(recipe?._id) || Boolean(recipe?.mealId)
-}
-
-function MealCalories({ recipe }) {
-  return <>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Serving Size -</span>{recipe?.serving_size}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe.fats}</Badge>
-  </>
-}
-
-function RecipeCalories({ recipe }) {
-  return <>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe?.calories?.proteins}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe?.calories?.carbs}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe?.calories?.fats}</Badge>
-    <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Kcal -</span>{recipe?.calories?.total}</Badge>
-  </>
 }
