@@ -31,6 +31,7 @@ export default function Stage2() {
         for (const mealType of state.selectedPlans[day]) {
           if (mealType.meals.length === 0) throw new Error(`On ${day}, for ${mealType.mealType} at least one meal should be assigned!`);
           for (const meal of mealType.meals) {
+            delete meal.isNew
             for (const field of ["time", "dish_name"]) {
               if (!meal[field]) throw new Error(`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`)
             }

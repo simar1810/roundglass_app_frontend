@@ -87,7 +87,7 @@ export const sidebar__coachContent = [
       {
         id: 1,
         icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Custom",
+        title: "Add Meal Plan",
         url: "/coach/meals/add-custom",
         items: [
           {
@@ -113,7 +113,7 @@ export const sidebar__coachContent = [
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Custom",
+        title: "View Meal Plan",
         url: "/coach/meals/list-custom",
         items: [
           {
@@ -191,7 +191,7 @@ export const sidebar__coachContent = [
       {
         id: 1,
         icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Custom",
+        title: "Add Workouts",
         url: "/coach/workouts/add/",
         items: [
           {
@@ -217,7 +217,7 @@ export const sidebar__coachContent = [
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Custom",
+        title: "View Workouts",
         url: "/coach/workouts/list-custom",
         items: [
           {
