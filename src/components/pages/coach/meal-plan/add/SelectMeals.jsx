@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import SaveMealType from "./SaveMealType";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { Pen, PlusCircle } from "lucide-react";
-import SelectedMealDetails from "./SelectedMealDetails";
+import { Minus, Pen, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
+import { exportRecipe, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
+import EditSelectedMealDetails from "./EditSelectedMealDetails";
 
 export default function SelectMeals() {
   const {
@@ -41,11 +41,18 @@ export default function SelectMeals() {
       <SaveMealType type="new" />
     </div>
     <div>
-      {selectedMealTypeRecipee.map((recipe, index) => <SelectedMealDetails
-        key={index}
-        recipe={recipe}
-        index={index}
-      />)}
+      {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-start gap-4">
+        <EditSelectedMealDetails
+          key={recipe?._id}
+          index={index}
+          recipe={recipe}
+          defaultOpen={recipe.isNew}
+        />
+        <Minus
+          className="cursor-pointer ml-auto"
+          onClick={() => dispatch(exportRecipe(index))}
+        />
+      </div>)}
     </div>
     <Button
       onClick={() => dispatch(saveRecipe({}))}

@@ -1,23 +1,23 @@
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import { Minus, Pen, Search, } from "lucide-react";
+import { Search, } from "lucide-react";
 import SelectMealCollection from "./SelectMealCollection";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import FormControl from "@/components/FormControl";
 import { useRef, useState } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { exportRecipe, saveRecipe } from "@/config/state-reducers/custom-meal";
+import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export default function EditSelectedMealDetails({
+  defaultOpen,
   children,
   recipe,
   index
 }) {
-  const [opened, setOpened] = useState(true);
   const [formData, setFormData] = useState(recipe);
   const { dispatch } = useCurrentStateContext();
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,13 +33,10 @@ export default function EditSelectedMealDetails({
     }
     dispatch(saveRecipe(formData, index))
     closeBtnRef.current.click()
-    setOpened(false)
   }
 
-  return <Dialog
-    open={opened}
-  >
-    {!children && <DialogTrigger onClick={() => setOpened(true)} className="w-full">
+  return <Dialog defaultOpen={defaultOpen}>
+    {!children && <DialogTrigger className="w-full">
       <div className="mt-4 flex items-start gap-4">
         <Image
           alt=""
@@ -155,8 +152,6 @@ export default function EditSelectedMealDetails({
     </DialogContent>
   </Dialog>
 }
-
-
 
 function MealCalories({ recipe }) {
   return <>

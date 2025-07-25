@@ -1,6 +1,5 @@
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
-import FormControl from "@/components/FormControl";
 import RecipeModal from "@/components/modals/RecipeModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,7 +10,6 @@ import { getRecipesCalorieCounter } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Flame, PlusCircle } from "lucide-react";
-import Image from "next/image";
 import { useRef, useState } from "react";
 import useSWR from "swr";
 
@@ -47,7 +45,7 @@ function RecipeesContainer({ index }) {
   return <div className="p-4">
     <div className="flex items-center gap-4 pb-2">
       <Input
-        placeholder="Enter search Query"
+        placeholder="Enter Meal Plan"
         value={query}
         onChange={e => setQuery(e.target.value)}
       />
@@ -85,7 +83,6 @@ function RecipeDeatils({
   selected,
   setSelected
 }) {
-  console.log(recipe)
   return <div
     className={cn(
       "w-full flex flex-col cursor-pointer border-1 rounded-[10px] py-2 px-4",

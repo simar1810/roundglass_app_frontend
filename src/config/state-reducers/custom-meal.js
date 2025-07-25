@@ -145,6 +145,7 @@ export function customMealReducer(state, action) {
                     calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
                     protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
                     carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
+                    isNew: false
                   }
                   : meal)
               } : mealType
@@ -165,6 +166,7 @@ export function customMealReducer(state, action) {
                 calories: action.payload.recipe.calories || action.payload.recipe?.calories?.total,
                 protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
                 carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
+                isNew: true
               }]
             }
             : mealType
@@ -206,7 +208,6 @@ export function customMealReducer(state, action) {
       }
 
     case "COPY_ALL_MEAL_PLANS":
-      console.log(action.payload)
       return {
         ...state,
         selectedPlans: {
