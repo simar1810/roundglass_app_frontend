@@ -6,6 +6,7 @@ import { Minus, Pen, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportRecipe, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import EditSelectedMealDetails from "./EditSelectedMealDetails";
+import { useEffect, useState } from "react";
 
 export default function SelectMeals() {
   const {
@@ -41,7 +42,7 @@ export default function SelectMeals() {
       <SaveMealType type="new" />
     </div>
     <div>
-      {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-start gap-4">
+      {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-center gap-4">
         <EditSelectedMealDetails
           key={recipe?._id}
           index={index}
@@ -49,13 +50,14 @@ export default function SelectMeals() {
           defaultOpen={recipe.isNew}
         />
         <Minus
-          className="cursor-pointer ml-auto"
+          className="bg-[var(--accent-2)] text-white cursor-pointer ml-auto rounded-full px-[2px]"
+          strokeWidth={3}
           onClick={() => dispatch(exportRecipe(index))}
         />
       </div>)}
     </div>
     <Button
-      onClick={() => dispatch(saveRecipe({}))}
+      onClick={() => dispatch(saveRecipe({}, undefined, true))}
       className="bg-transparent hover:bg-transparent w-full h-[120px] border-1 mt-4 flex items-center justify-center rounded-[8px]"
     >
       <PlusCircle className="min-w-[32px] min-h-[32px] text-[var(--accent-1)]" />

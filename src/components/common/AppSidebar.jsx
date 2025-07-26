@@ -294,7 +294,7 @@ function SearchedResults({ setModal,
 
   if (data.length === 0) return <ContentError
     className="!bg-[var(--comp-1)] !min-h-[150px] text-center mt-0 border-0"
-    title="No clients Founds!"
+    title="No Client Found!"
   />
 
   return <div className="divide-y-1 divide-y-white">

@@ -5,8 +5,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 
 export default function Page() {
   const clubSystem = useAppSelector(state => state.coach.data?.clubSystem)
-
-  if (clubSystem === 1) return <SubscriptionModeClientList />
+  if ([0, 1].includes(clubSystem)) return <SubscriptionModeClientList />
 
   if (clubSystem === 2) return <VolumePointModeClientsList />
 }

@@ -127,29 +127,38 @@ export function customMealReducer(state, action) {
         }
       }
     case "SAVE_RECIPE":
-      if (action.payload.index || action.payload.index === 0) return {
-        ...state,
-        selectedPlans: {
-          ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-            .map((mealType => mealType.mealType === state.selectedMealType
-              ? {
-                ...mealType,
-                meals: mealType.meals.map((meal, index) => index === action.payload.index
-                  ? {
-                    ...meal,
-                    ...action.payload.recipe,
-                    dish_name: action.payload.recipe.dish_name || action.payload.recipe.title,
-                    image: action.payload.recipe.image || action.payload.recipe.image,
-                    fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
-                    calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
-                    protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
-                    carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
-                    isNew: false
-                  }
-                  : meal)
-              } : mealType
-            ))
+      if (action.payload.index || action.payload.index === 0) {
+        const dishesPayload = !action.payload.isNew
+          ? {
+            ...action.payload.recipe,
+            dish_name: action.payload.recipe.dish_name || action.payload.recipe.title,
+            image: action.payload.recipe.image || action.payload.recipe.image,
+            fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
+            calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
+            protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
+            carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
+            isNew: !action.payload.recipe.time || false
+          }
+          : {
+            isNew: false
+          }
+        return {
+          ...state,
+          selectedPlans: {
+            ...state.selectedPlans,
+            [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
+              .map((mealType => mealType.mealType === state.selectedMealType
+                ? {
+                  ...mealType,
+                  meals: mealType.meals.map((meal, index) => index === action.payload.index
+                    ? {
+                      ...meal,
+                      ...dishesPayload
+                    }
+                    : meal)
+                } : mealType
+              ))
+          }
         }
       }
       return {
@@ -279,12 +288,13 @@ export function saveMealType(mealType, type, index) {
   }
 }
 
-export function saveRecipe(recipe, index) {
+export function saveRecipe(recipe, index, isNew) {
   return {
     type: "SAVE_RECIPE",
     payload: {
       recipe,
-      index
+      index,
+      isNew
     }
   }
 }

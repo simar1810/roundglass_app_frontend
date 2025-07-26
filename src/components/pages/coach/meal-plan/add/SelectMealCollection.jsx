@@ -1,4 +1,5 @@
 import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import Loader from "@/components/common/Loader";
 import RecipeModal from "@/components/modals/RecipeModal";
 import { Button } from "@/components/ui/button";
@@ -34,12 +35,11 @@ export default function SelectMealCollection({ children, index }) {
 function RecipeesContainer({ index }) {
   const [query, setQuery] = useState("rajma");
   const debouncedSearchQuery = useDebounce(query, 1000);
-  const { isFetching, error, data } = useSWR(`recipees/${debouncedSearchQuery}`, () => getRecipesCalorieCounter(debouncedSearchQuery));
-
+  const { isLoading, error, data } = useSWR(`recipees/${debouncedSearchQuery}`, () => getRecipesCalorieCounter(debouncedSearchQuery));
   const [selected, setSelected] = useState();
   const closeRef = useRef();
   const { dispatch } = useCurrentStateContext();
-
+  if (isLoading) return <ContentLoader />
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const recipees = data.data;
   return <div className="p-4">
@@ -49,7 +49,7 @@ function RecipeesContainer({ index }) {
         value={query}
         onChange={e => setQuery(e.target.value)}
       />
-      {isFetching && <Loader />}
+      {isLoading && <Loader />}
     </div>
     <div className="mb-4 flex items-center justify-between gap-4">
       <strong>{recipees.length} Results found</strong>

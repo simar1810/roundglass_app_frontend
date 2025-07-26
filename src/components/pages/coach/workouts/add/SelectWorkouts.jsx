@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { saveWorkout, updateWorkoutPlanMetaData } from "@/config/state-reducers/custom-workout";
+import { deleteWorkout, saveWorkout, updateWorkoutPlanMetaData } from "@/config/state-reducers/custom-workout";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { PlusCircle } from "lucide-react";
-import SelectedWorkoutDetails from "./SelectedWorkoutDetails";
+import { Minus, PlusCircle } from "lucide-react";
 import FormControl from "@/components/FormControl";
+import EditSelectedWorkoutDetails from "./EditSelectedWorkoutDetails";
 
 export default function SelecWorkouts() {
   const {
@@ -23,11 +23,18 @@ export default function SelecWorkouts() {
     <div className="pt-4 flex gap-4 overflow-x-auto no-scrollbar">
       <h3>Select Workouts</h3>
     </div>
-    {workouts.map((workout, index) => <SelectedWorkoutDetails
-      key={index}
-      index={index}
-      workout={workout}
-    />)}
+    {workouts.map((workout, index) => <div key={index + 1} className="flex items-center justify-between">
+      <EditSelectedWorkoutDetails
+        key={workout._id}
+        workout={workout}
+        index={index}
+      />
+      <Minus
+        className="cursor-pointer bg-[var(--accent-2)] text-white rounded-full p-[2px]"
+        strokeWidth={3}
+        onClick={() => dispatch(deleteWorkout(index))}
+      />
+    </div>)}
     <div>
     </div>
     <Button

@@ -3,7 +3,7 @@ export const displayedPostsType = ["myPosts", "mySavedPosts"];
 export const newPostFields = ["file1", "video", "caption", "type", "contentType"];
 
 export const feedDataInitialState = {
-  type: "global", // e.g. "global", "our", "both"
+  type: "our", // e.g. "global", "our", "both"
   displayedPostsType: "myPosts", // e.g. all, saved
   page: 1,
   finalPage: Infinity,

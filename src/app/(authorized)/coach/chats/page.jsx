@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { selectChatUser } from "@/config/state-reducers/chat-scoket";
 import useDebounce from "@/hooks/useDebounce";
+import useKeyPress from "@/hooks/useKeyPress";
 import { getRelativeTime, nameInitials } from "@/lib/formatter";
 import useChatSocketContext, { ChatSocketProvider } from "@/providers/ChatStateProvider";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -144,6 +145,7 @@ function ChatMessages() {
 function CurrentChatMessageBox() {
   const [message, setMessage] = useState("");
   const { socket, currentChat } = useChatSocketContext();
+  useKeyPress("Enter", sendMessage);
 
   const data = {
     coachId: currentChat.coachID,
