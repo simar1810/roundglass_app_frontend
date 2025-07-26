@@ -23,11 +23,11 @@ export default function ClientListMembership({
         <p className="ml-4">Active till 01/01/2026</p>
       </div>} */}
     </div>
-    <Link
+    {/* <Link
       className="text-[12px] text-[var(--accent-1)] font-semibold ml-auto"
       href={"/coach/clients/" + subscription?.user?._id}
     >
       <CircleArrowRight className="w-[20px]" />
-    </Link>
+    </Link> */}
   </div>
 }

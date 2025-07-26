@@ -19,8 +19,20 @@ export default function EditSelectedWorkoutDetails({
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
   const closeBtnRef = useRef()
   return <Dialog>
-    {!children && <DialogTrigger>
-      <Pen size={16} />
+    {!children && <DialogTrigger className="w-full">
+      <div className="mt-4 flex items-start gap-4">
+        <Image
+          alt=""
+          src={workout.thumbnail || "/not-found.png"}
+          height={100}
+          width={100}
+          className="rounded-lg max-h-[100px] bg-[var(--comp-1)] object-contain border-1"
+        />
+        <div className="text-left grow">
+          <h3>{workout.title}</h3>
+          <p>{workout.duration}</p>
+        </div>
+      </div>
     </DialogTrigger>}
     {children}
     <DialogContent className="p-0 gap-0 max-h-[70vh] overflow-y-auto">

@@ -16,8 +16,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-export default function AddRetailModal({ payload, setMargin }) {
-  return <Dialog open={true} onOpenChange={() => setMargin()}>
+export default function AddRetailModal({ open, payload, setOpen }) {
+  return <Dialog open={open} onOpenChange={() => setOpen(false)}>
     <DialogContent className="max-w-[650px] max-h-[70vh] w-full gap-0 p-0 overflow-y-auto">
       <CurrentStateProvider
         state={init(payload)}

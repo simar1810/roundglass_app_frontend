@@ -18,6 +18,7 @@ export default function EditSelectedMealDetails({
   recipe,
   index
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   const [formData, setFormData] = useState(recipe);
   const { dispatch } = useCurrentStateContext();
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,9 +34,15 @@ export default function EditSelectedMealDetails({
     }
     dispatch(saveRecipe(formData, index))
     closeBtnRef.current.click()
+    setOpen(false)
   }
 
-  return <Dialog defaultOpen={defaultOpen}>
+  function onOpenChange() {
+    dispatch(saveRecipe(formData, index, true))
+    setOpen(!open)
+  }
+
+  return <Dialog open={open} onOpenChange={onOpenChange}>
     {!children && <DialogTrigger className="w-full">
       <div className="mt-4 flex items-start gap-4">
         <Image

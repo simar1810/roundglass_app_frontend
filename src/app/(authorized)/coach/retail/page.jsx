@@ -114,6 +114,7 @@ function Brands({ brands }) {
 function Brand({ brand }) {
   const [margin, setMargin] = useState();
   const coachId = useAppSelector(state => state.coach.data._id);
+  const [retailModal, setRetailModal] = useState(false)
   return <Card className="p-0 shadow-none border-0 gap-2 relative">
     <Image
       src={brand.image || "/not-found.png"}
@@ -123,16 +124,21 @@ function Brand({ brand }) {
       className="object-cover shadow-md shadow-[#808080]/80"
     />
     <p className="px-1">{brand.name}</p>
-    <RetailMarginDropDown margins={brand.margins} setMargin={setMargin} />
-    {(margin || margin === 0) && <AddRetailModal
+    <RetailMarginDropDown
+      margins={brand.margins}
+      setMargin={setMargin}
+      setOpen={setRetailModal}
+    />
+    <AddRetailModal
       payload={{
         coachId,
         margin,
         selectedBrandId: brand._id,
         margins: brand.margins
       }}
-      setMargin={setMargin}
-    />}
+      open={retailModal}
+      setOpen={setRetailModal}
+    />
   </Card>
 }
 
