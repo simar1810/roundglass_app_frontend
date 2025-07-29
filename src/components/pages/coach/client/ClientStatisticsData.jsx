@@ -5,12 +5,14 @@ import PDFRenderer from "@/components/modals/PDFRenderer";
 import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
+import { sendData } from "@/lib/api";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen } from "lucide-react"
 import { useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function ClientStatisticsData({ clientData }) {
@@ -18,8 +20,27 @@ export default function ClientStatisticsData({ clientData }) {
     const { dob, clientId, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
 
-    const { isLoading, error, data } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
+    const { isLoading, error, data, mutate } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
     const clientStats = data?.data;
+
+    async function onUpdateHealthMatrix(formData, _, closeBtnRef) {
+      const toastId = toast.loading("Please wait")
+      const matrixId = clientStats?.at(selectedDate)?._id
+      try {
+        const response = await sendData(
+          `app/updateHealthMatrix?id=${matrixId}&clientId=${clientId}`,
+          { updatedData: formData }, "PUT"
+        );
+        if (!response.updatedEntry) throw new Error(response.message);
+        closeBtnRef.current.click()
+        toast.success(response.message);
+        mutate()
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        toast.dismiss(toastId)
+      }
+    }
 
     if (isLoading) return <ContentLoader />
 
@@ -70,7 +91,9 @@ export default function ClientStatisticsData({ clientData }) {
       />
       {!isNaN(weightDifference) && <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid grid-cols-3 gap-5">
-        <HealthMetrics data={payload} />
+        <HealthMetrics
+          onUpdate={onUpdateHealthMatrix}
+          data={payload} />
       </div>
     </TabsContent>
   } catch (error) {

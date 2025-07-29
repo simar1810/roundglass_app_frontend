@@ -15,10 +15,6 @@ import { Pencil } from "lucide-react";
 import FormControl from "../FormControl";
 import { useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { sendData } from "@/lib/api";
-import { toast } from "sonner";
-import { mutate } from "swr";
-import { useParams } from "next/navigation";
 
 const healtMetrics = [
   {
@@ -89,7 +85,7 @@ const healtMetrics = [
   },
 ];
 
-export default function HealthMetrics({ data }) {
+export default function HealthMetrics({ data, onUpdate }) {
   const payload = {
     bmi: data.bmi || calculateBMIFinal(data),
     muscle: data.muscle || calculateSMPFinal(data),
@@ -114,6 +110,7 @@ export default function HealthMetrics({ data }) {
               name={metric.name}
               payload={payload}
               _id={data._id}
+              onUpdate={onUpdate}
             />
           ))}
       </>
@@ -131,7 +128,11 @@ export function MetricProgress({
   maxThreshold = 100,
   minThreshold,
   icon,
-  className
+  className,
+  onUpdate,
+  payload,
+  _id,
+  name
 }) {
   const radius = 70;
   const { strokeDasharray, strokeDashoffset } = getStrokeDashoffset(value, maxThreshold, radius);
@@ -152,15 +153,17 @@ export function MetricProgress({
             className="object-contain"
           />
           <h2 className="text-[16px] font-bold">{title}</h2>
-          {/* <EditHealthMatric
+          {onUpdate && <EditHealthMatric
             matrix={{
               title,
               name,
               defaultValue: payload,
-              _id
+              _id,
             }}
+            name={name}
             payload={payload}
-          /> */}
+            onUpdate={onUpdate}
+          />}
         </div>
       </CardHeader>
       <CardContent className="mt-auto">
@@ -196,25 +199,17 @@ export function MetricProgress({
   );
 }
 
-function EditHealthMatric({ matrix, payload }) {
-  const [loading, setLoading] = useState(false)
+function EditHealthMatric({
+  matrix,
+  payload,
+  onUpdate,
+  name
+}) {
   const [formData, setFormData] = useState(payload)
   const closeBtnRef = useRef(null);
-  const params = useParams()
 
   async function saveHealthMatrix() {
-    try {
-      setLoading(true);
-      const response = await sendData(`app/updateHealthMatrix?id=${matrix._id}&clientId=${params.id}`, { updatedData: formData }, "PUT");
-      if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
-      mutate(`getClientVolumePoints/${_id}`);
-      closeBtnRef.current.click();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+    if (onUpdate) onUpdate(formData, name, closeBtnRef)
   }
   return <Dialog>
     <DialogTrigger>
@@ -226,13 +221,14 @@ function EditHealthMatric({ matrix, payload }) {
       </DialogHeader>
       <div className="max-h-[65vh] h-full overflow-y-auto p-4">
         <FormControl
+          type="number"
           placeholder={"Please enter value"}
           label={matrix.title}
-          value={formData[matrix.name]}
-          onChange={(e) => setFormData(prev => ({ ...prev, [matrix.name]: e.target.value }))}
+          value={formData[name]}
+          onChange={(e) => setFormData(prev => ({ ...prev, [matrix.name]: Number(e.target.value) }))}
           className="block mb-4"
         />
-        <Button variant="wz" disabled={loading} onClick={saveHealthMatrix}>Save</Button>
+        <Button variant="wz" onClick={saveHealthMatrix}>Save</Button>
       </div>
       <DialogClose ref={closeBtnRef} />
     </DialogContent>
