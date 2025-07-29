@@ -84,7 +84,8 @@ function FormContainer() {
 
 function SuccessClientCreated() {
   const { clientId } = useCurrentStateContext();
-  const clientLink = `https://www.wellnessz.in/app/loginClient?clientID=${clientId}`
+  const { coachRefUrl = "https://wellnessz.in/app/loginClient" } = useAppSelector(state => state.coach.data);
+  const clientLink = `${coachRefUrl}?clientID=${clientId}`
   return <div className="px-4">
     <CircleCheckBig className="static w-[120px] h-[120px] text-[var(--accent-1)] aspect-square mx-auto" />
     <h4 className="text-[var(--accent-1)] text-center mb-4">Client Added successfully!</h4>
