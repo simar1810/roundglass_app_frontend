@@ -12,7 +12,7 @@ export default function SubscriptionHistory({ _id }) {
   </div>
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const subscriptions = data.data;
+  const subscriptions = data.data?.at(0)?.history || [];
 
   if (subscriptions.length === 0) return <div className="mb-8">
     <div className="flex items-center justify-between">
@@ -35,6 +35,7 @@ export default function SubscriptionHistory({ _id }) {
           <TableHead>End Date</TableHead>
           <TableHead>Payment Mode</TableHead>
           <TableHead>Amount</TableHead>
+          <TableHead>Description</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -44,6 +45,8 @@ export default function SubscriptionHistory({ _id }) {
           <TableCell>{subscription.endDate}</TableCell>
           <TableCell>{subscription.paymentMode}</TableCell>
           <TableCell>{subscription.amount}</TableCell>
+          <TableCell>{subscription.description}</TableCell>
+          <TableCell>{subscription.description}</TableCell>
         </TableRow>)}
       </TableBody>
     </Table>
