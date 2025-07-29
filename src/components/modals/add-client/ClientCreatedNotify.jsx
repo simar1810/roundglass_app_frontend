@@ -1,10 +1,12 @@
 import { copyText } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { useAppSelector } from "@/providers/global/hooks";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ClientCreatedNotify() {
   const { clientId } = useCurrentStateContext();
+  const { coachRefUrl = "https://wellnessz.in/app/loginClient" } = useAppSelector(state => state.coach.data);
 
   return <>
     <div className="p-2 pt-0">
@@ -20,11 +22,11 @@ export default function ClientCreatedNotify() {
     <div className="flex flex-col gap-0 mb-[100px]">
       <div className="flex items-center border border-gray-300 rounded-lg mx-auto ">
         <div className="px-4 py-2">
-          {`https://www.wellnessz.in/app/loginClient?clientID=${clientId}`}
+          {`${coachRefUrl}?clientID=${clientId}`}
         </div>
         <button
           onClick={() => {
-            copyText(`https://www.wellnessz.in/app/loginClient?clientID=${clientId}`)
+            copyText(`${coachRefUrl}?clientID=${clientId}`)
             toast.success("Client ID copied")
           }}
           className="bg-[var(--accent-1)] rounded-r-md text-white px-4 py-[16px] text-sm font-medium hover:bg-[var(--accent-1)] transition"
