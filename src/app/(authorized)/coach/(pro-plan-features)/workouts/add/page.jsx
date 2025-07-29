@@ -30,12 +30,6 @@ function CustomWorkoutContainer() {
   const { dispatch, stage } = useCurrentStateContext();
   const Component = selectCreationStage(stage);
 
-  function handleBeforeUnload(event) {
-    console.log("User is leaving the page");
-    event.preventDefault();
-    event.returnValue = "";
-  };
-
   useEffect(function () {
     ; (async function () {
       if (["edit", "copy_edit"].includes(creationType) && Boolean(workoutId)) {
@@ -63,12 +57,6 @@ function CustomWorkoutContainer() {
         dispatch(selectWorkoutType(mode));
       }
     })();
-  }, [])
-
-  useEffect(function () {
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [])
 
   return Component;
