@@ -17,7 +17,7 @@ export default function Page() {
 
 function CustomMealPlanContainer() {
   const { mode } = useParams()
-  const { dispatch, ...state } = useCurrentStateContext()
+  const { dispatch } = useCurrentStateContext()
 
   useEffect(function () {
     if (["daily", "weekly", "monthly"].includes(mode)) {

@@ -58,6 +58,7 @@ function CustomWorkoutContainer() {
       }
     })();
   }, [])
+
   return Component;
 }
 

@@ -36,7 +36,7 @@ export default function Page() {
       >
         <Link href={`/coach/workouts/list-custom/${workout._id}`}>
           <Image
-            src={workout.thumbnail || "/not-found.png"}
+            src={workout.image?.trim() || "/not-found.png"}
             alt=""
             height={200}
             width={200}

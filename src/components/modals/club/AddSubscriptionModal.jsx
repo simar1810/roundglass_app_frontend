@@ -20,7 +20,8 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
     endDate: "",
     invoice: "",
     paymentMode: "cash",
-    startDate: ""
+    startDate: "",
+    description: ""
   });
   const closeBtnRef = useRef(null);
 
@@ -70,11 +71,11 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
           className="block mb-4"
         />
         <FormControl
-          value={formData.invoice}
-          onChange={(e) => setFormData({ ...formData, invoice: e.target.value })}
-          label="Invoice"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          label="Description"
           type="text"
-          placeholder="Enter Invoice"
+          placeholder="Enter Description"
           className="block mb-4"
         />
         <SelectControl

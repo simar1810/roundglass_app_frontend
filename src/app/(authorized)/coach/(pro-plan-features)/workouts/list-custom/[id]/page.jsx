@@ -62,7 +62,7 @@ function WorkoutMetaData({ customPlan }) {
     </div>
     <Image
       alt=""
-      src={customPlan.image || "/not-found.png"}
+      src={customPlan.image?.trim() || "/not-found.png"}
       height={500}
       width={500}
       className="w-full max-h-[200px] my-4 rounded-[10px] object-cover"
@@ -102,7 +102,7 @@ function WorkoutExercise({ exercise }) {
   return <div className="border-1 rounded-[10px] overflow-clip">
     <Image
       alt=""
-      src={exercise.thumbnail || "/not-found.png"}
+      src={exercise.thumbnail?.trim() || "/not-found.png"}
       height={200}
       width={200}
       className="w-full max-h-[180px] object-cover border-b-1"

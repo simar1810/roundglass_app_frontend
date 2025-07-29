@@ -135,7 +135,10 @@ export function stage1Completed(state, stage) {
   if (state.heightUnit.toLowerCase() === "cm") {
     if (!state["heightCms"]) return { success: false, field: "Height Cms" };
   } else {
-    if (!state["heightFeet"] || !state["heightInches"]) return { success: false, field: "Height Feet, Height Inches" };
+    if (!state["heightFeet"] || (!state["heightInches"] && state["heightInches"] !== 0)) return {
+      success: false,
+      field: "Height Feet, Height Inches"
+    };
   }
   return { success: true };
 }
