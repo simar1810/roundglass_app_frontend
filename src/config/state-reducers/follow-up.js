@@ -133,7 +133,7 @@ export function generateRequestPayload(state) {
   return payload;
 }
 
-const stage1fields = ["date", "weightUnit", "visceral_fat", "body_composition"];
+const stage1fields = ["date", "weightUnit", "body_composition"];
 export function stage1Completed(data) {
   for (const field of stage1fields) {
     if (!data.healthMatrix[field]) return { success: false, field }

@@ -1,7 +1,7 @@
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { Button } from "@/components/ui/button";
-import { setCurrentStage, updateMatrices } from "@/config/state-reducers/add-client-checkup";
-import { calculateBMI2, calculateBMIFinal, calculateBMR, calculateBMRFinal, calculateBodyAge, calculateBodyAgeFinal, calculateBodyFatFinal, calculateBodyFatPercentage, calculateIdealWeight, calculateIdealWeightFinal, calculateSkeletalMassPercentage, calculateSMPFinal } from "@/lib/client/statistics";
+import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
+import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
 import { differenceInYears, parse } from "date-fns";
 import { useEffect } from "react";
@@ -97,7 +97,13 @@ export default function CheckupStage2() {
     </div>
     <h3 className="font-semibold my-4">Statistics</h3>
     <div className="grid grid-cols-3 gap-4">
-      <HealthMetrics data={{ ...state, age }} />
+      <HealthMetrics
+        onUpdate={(payload, fieldName, closeBtnRef) => {
+          dispatch(changeFieldvalue(fieldName, payload[fieldName]));
+          closeBtnRef.current.click()
+        }}
+        data={{ ...state, age }}
+      />
     </div>
     <div className="mt-10 flex items-center gap-4">
       <Button className="grow" variant="wz_outline" onClick={() => dispatch(setCurrentStage(1))}>Previous</Button>

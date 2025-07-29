@@ -1,13 +1,9 @@
 import FormControl from "@/components/FormControl";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChartContainer } from "@/components/ui/chart";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Label as ChartLabel } from "recharts";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { CalendarRange } from "lucide-react";
-import { PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import useCurrentStateContext, {
   CurrentStateProvider,
 } from "@/providers/CurrentStateContext";
@@ -23,16 +19,11 @@ import {
   stage1Completed,
 } from "@/config/state-reducers/follow-up";
 import {
-  calculateBMI2,
   calculateBMIFinal,
-  calculateBMR,
   calculateBMRFinal,
-  calculateBodyAge,
   calculateBodyAgeFinal,
   calculateBodyFatFinal,
-  calculateBodyFatPercentage,
   calculateIdealWeightFinal,
-  calculateSkeletalMassPercentage,
   calculateSMPFinal,
 } from "@/lib/client/statistics";
 import Image from "next/image";
@@ -204,6 +195,11 @@ function Stage2({ age, clientId }) {
     }
   }
 
+  function onUpdateHealthMatrix(payload, fieldName, closeBtnRef) {
+    dispatch(changeFieldvalue(fieldName, payload[fieldName]))
+    closeBtnRef.current.click();
+  }
+
   useEffect(function () {
     dispatch(setHealthMatrices(clienthealthStats));
   }, []);
@@ -212,7 +208,10 @@ function Stage2({ age, clientId }) {
     <div>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-6">
-          <HealthMetrics data={payload} />
+          <HealthMetrics
+            onUpdate={onUpdateHealthMatrix}
+            data={payload}
+          />
         </div>
         <Button
           onClick={createFollowUp}
