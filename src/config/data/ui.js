@@ -44,7 +44,8 @@ export const clientPortfolioFields = [
   { id: 4, title: "Client ID", name: "clientId" },
   { id: 5, title: "DOB", name: "dob" },
   { id: 6, title: "Age", name: "age" },
-  { id: 7, title: "Weight Lost Till Date", name: "age" },
+  { id: 7, title: "Gender", name: "gender", style: { textTransform: "capitalize" } },
+  // { id: 7, title: "Weight Lost Till Date", name: "age" },
 ]
 
 export const clientDetailsFields = [
@@ -56,8 +57,8 @@ export const clientDetailsFields = [
   {
     id: 6, label: "Gender", name: "gender", type: 4,
     options: [
-      { id: 1, name: "Male", value: "Male" },
-      { id: 2, name: "Female", value: "Female" },
+      { id: 1, name: "Male", value: "male" },
+      { id: 2, name: "Female", value: "female" },
     ]
   },
   { id: 7, label: "Weight", name: "weight", type: 3 },

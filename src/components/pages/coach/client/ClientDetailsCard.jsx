@@ -57,6 +57,11 @@ export default function ClientDetailsCard({ clientData }) {
       toast.error(error.message || "Please try again later!");
     }
   }
+  const clienthealthMatrix = clientData.healthMatrix.healthMatrix
+  const healthMatricesLength = clienthealthMatrix.length
+  const weightLoss = healthMatricesLength <= 1
+    ? false
+    : Number(clienthealthMatrix?.at(0).weight || 0) - Number(clienthealthMatrix?.at(healthMatricesLength - 1).weight || 0)
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -86,10 +91,18 @@ export default function ClientDetailsCard({ clientData }) {
         <UpdateClientDetailsModal clientData={clientData} />
       </div>
       <div className="mt-4 pl-4">
-        {clientPortfolioFields.map(field => <div key={field.id} className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+        {clientPortfolioFields.map(field => <div
+          key={field.id}
+          className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2"
+          {...field}
+        >
           <p>{field.title}</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{clientData[field.name]}</p>
         </div>)}
+        {weightLoss && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Weight Lost Till Date</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss}</p>
+        </div>}
       </div>
     </CardContent>
   </Card>
