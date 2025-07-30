@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export default function ClientCreatedNotify() {
   const { clientId } = useCurrentStateContext();
-  const { coachRefUrl = "https://wellnessz.in/app/loginClient" } = useAppSelector(state => state.coach.data);
+  const { coachRefUrl = "https://wellnessz.in/app" } = useAppSelector(state => state.coach.data);
 
   return <>
     <div className="p-2 pt-0">
@@ -22,11 +22,11 @@ export default function ClientCreatedNotify() {
     <div className="flex flex-col gap-0 mb-[100px]">
       <div className="flex items-center border border-gray-300 rounded-lg mx-auto ">
         <div className="px-4 py-2">
-          {`${coachRefUrl}?clientID=${clientId}`}
+          {`${coachRefUrl}/loginClient?clientID=${clientId}`}
         </div>
         <button
           onClick={() => {
-            copyText(`${coachRefUrl}?clientID=${clientId}`)
+            copyText(`${coachRefUrl}/loginClient?clientID=${clientId}`)
             toast.success("Client ID copied")
           }}
           className="bg-[var(--accent-1)] rounded-r-md text-white px-4 py-[16px] text-sm font-medium hover:bg-[var(--accent-1)] transition"
