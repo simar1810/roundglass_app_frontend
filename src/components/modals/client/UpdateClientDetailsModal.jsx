@@ -2,8 +2,6 @@ import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { RadioGroup } from "@/components/ui/radio-group";
 import { clientDetailsFields } from "@/config/data/ui";
 import { sendDataWithFormData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
@@ -180,6 +178,8 @@ function Component({ field, formData, setFormData }) {
     case 4:
       return <SelectControl
         key={field.id}
+        value={formData[field.name]}
+        onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
         {...field}
       />;
     default:
