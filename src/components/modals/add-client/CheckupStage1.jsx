@@ -28,6 +28,7 @@ export default function CheckupStage1() {
           </div>
         </RadioGroup>
       </div>
+      <p className="ml-auto">Client ID - <strong>{state.clientId}</strong></p>
     </div>
 
     <div className="grid grid-cols-2 gap-y-10 gap-4 mb-4">
