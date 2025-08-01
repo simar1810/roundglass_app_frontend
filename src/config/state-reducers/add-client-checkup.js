@@ -170,7 +170,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
 export function init(type, data) {
   if (type !== "add-details") return addClientCheckupInitialState;
   const payload = addClientCheckupInitialState;
-  for (const field of ["mobileNumber", "name"]) {
+  for (const field of ["mobileNumber", "name", "clientId"]) {
     payload[field] = data[field] || "";
   }
   payload.pendingCustomer = "true";
