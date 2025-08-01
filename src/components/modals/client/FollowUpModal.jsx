@@ -87,7 +87,7 @@ function Stage1({ clientData }) {
     <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-4">
       <div>
         <div className="pr-2 flex items-center gap-2 justify-between">
-          <p>Last Weight</p>
+          <p>Current Weight</p>
           <RadioGroup value={healthMatrix.weightUnit} className="flex items-center gap-1">
             <input
               id="weight-kg"

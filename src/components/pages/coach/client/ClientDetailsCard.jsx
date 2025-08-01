@@ -18,7 +18,6 @@ import {
   ChevronDown,
   EllipsisVertical,
   Plus,
-  Target,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -45,6 +44,7 @@ import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoMo
 import useClickOutside from "@/hooks/useClickOutside";
 import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
+import { generateWeightStandard } from "@/lib/client/statistics";
 
 export default function ClientDetailsCard({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
@@ -61,7 +61,8 @@ export default function ClientDetailsCard({ clientData }) {
   const healthMatricesLength = clienthealthMatrix.length
   const weightLoss = healthMatricesLength <= 1
     ? false
-    : Number(clienthealthMatrix?.at(0).weight || 0) - Number(clienthealthMatrix?.at(healthMatricesLength - 1).weight || 0)
+    : (generateWeightStandard(clienthealthMatrix?.at(0)) - generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1)))
+      .toFixed(2)
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -101,8 +102,12 @@ export default function ClientDetailsCard({ clientData }) {
         </div>)}
         {weightLoss && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Weight Lost Till Date</p>
-          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss}</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss * -1} Pounds</p>
         </div>}
+        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Height</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData.healthMatrix.height} ${clientData.healthMatrix.heightUnit}`}</p>
+        </div>
       </div>
     </CardContent>
   </Card>
@@ -259,7 +264,6 @@ function ClientClubStatus({
   status,
   _id
 }) {
-
   async function changeStatus(
     setLoading,
     closeBtnRef,

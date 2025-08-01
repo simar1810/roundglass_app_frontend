@@ -90,16 +90,17 @@ function generateHeightStandard({
   }
 }
 
-function generateWeightStandard({
+export function generateWeightStandard({
   weightUnit, // e.g. "kg", "kgs", "pounds", "pound"
   weightInPounds,
   weightInKgs,
+  weight
 }) {
   try {
     if (["kg", "kgs"].includes(weightUnit.toLowerCase())) {
-      return Number(weightInKgs)
+      return Number(weightInKgs) || Number(weight)
     } else if (["pounds", "pound"].includes(weightUnit.toLowerCase())) {
-      return (Number(weightInPounds) * 0.453592).toFixed(2)
+      return (Number(weightInPounds) * 0.453592).toFixed(2) || Number(weight)
     } else {
       throw new Error("Please provide correct height unit");
     }
