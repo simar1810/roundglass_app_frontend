@@ -61,7 +61,7 @@ const healtMetrics = [
     getMinValue: () => 1500,
   },
   {
-    title: "Weight",
+    title: "Ideal Weight",
     value: "65 Kg",
     desc: "Ideal 75",
     optimalRangeText:
@@ -83,7 +83,45 @@ const healtMetrics = [
     getMaxValue: () => 67,
     getMinValue: () => 33,
   },
+  {
+    title: "Visceral Fat",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "visceral_fat",
+    id: 7,
+    getMaxValue: () => 12,
+    getMinValue: () => 1,
+  },
+  {
+    title: "Weight In KGs",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "weightInKgs",
+    id: 8,
+    getMaxValue: () => 120,
+    getMinValue: () => 1,
+  },
+  {
+    title: "Weight In Pounds",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "weightInPounds",
+    id: 9,
+    getMaxValue: () => 260,
+    getMinValue: () => 1,
+  },
+
 ];
+
+const weightDabba = {
+  title: "Weight",
+  value: "26",
+  icon: "/svgs/body.svg",
+  optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+}
 
 export default function HealthMetrics({ data, onUpdate }) {
   const payload = {
@@ -93,7 +131,20 @@ export default function HealthMetrics({ data, onUpdate }) {
     rm: data.rm || calculateBMRFinal(data),
     idealWeight: data.idealWeight || calculateIdealWeightFinal(data),
     bodyAge: data.bodyAge || calculateBodyAgeFinal(data),
+    visceral_fat: data.visceral_fat,
+    weightInKgs: updateWeightField() === "weightInKgs"
+      ? data.weightInKgs
+      : undefined,
+    weightInPounds: updateWeightField() === "weightInPounds"
+      ? data.weightInPounds
+      : undefined,
   };
+  function updateWeightField() {
+    if (["kgs", "kg"].includes(data.weightUnit.toLowerCase())) {
+      return "weightInKgs"
+    } else return "weightInPounds"
+  }
+
   try {
     return (
       <>
@@ -225,7 +276,10 @@ function EditHealthMatric({
           placeholder={"Please enter value"}
           label={matrix.title}
           value={formData[name]}
-          onChange={(e) => setFormData(prev => ({ ...prev, [matrix.name]: Number(e.target.value) }))}
+          onChange={(e) => setFormData(prev => ({
+            ...prev,
+            [matrix.name]: Number(e.target.value)
+          }))}
           className="block mb-4"
         />
         <Button variant="wz" onClick={saveHealthMatrix}>Save</Button>

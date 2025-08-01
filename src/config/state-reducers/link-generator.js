@@ -68,7 +68,7 @@ export function resetCurrentState() {
 const meetingTypeFieldsMap = {
   quick: [1, 2, 6, 7, 9, 10],
   scheduled: [1, 2, 3, 4, 6, 7, 9, 10],
-  reocurr: [1, 2, 3, 4, 6, 7, 9, 10],
+  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10],
   event: [1, 2, 3, 4, 6, 7, 8, 9, 10],
   one_to_one: [1, 2, 3, 4, 6, 7, 9, 11],
 }
@@ -94,6 +94,7 @@ export function generateRequestPayload(state) {
     payload.append(field.name, state[field.name]);
   }
   if (state.meetingType === "reocurr") {
+    payload.delete("reOcurred")
     payload.append("reOcurred", JSON.stringify(state["reOcurred"]));
   }
   if (state.date && state.time) {
