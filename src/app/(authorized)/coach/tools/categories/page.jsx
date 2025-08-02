@@ -6,19 +6,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit2, Trash2, Check, X, FolderOpen } from "lucide-react"
-import { useAppSelector } from "@/providers/global/hooks"
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
 import { sendData } from "@/lib/api"
 import { toast } from "sonner"
 import { mutate } from "swr"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import AddCategoryModal from "@/components/modals/client/AddCategoryModal"
+import { updateCoachField } from "@/providers/global/slices/coach"
 
 export default function CategoriesPage() {
-  const { client_categories: categories } = useAppSelector(state => state.coach.data)
+  const categories = useAppSelector(state => state.coach.data.client_categories)
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState("")
+
+  const dispatch = useAppDispatch()
 
   const handleEditStart = (category) => {
     setEditingId(category._id)
@@ -42,6 +45,7 @@ export default function CategoriesPage() {
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate("coachProfile");
+      dispatch(updateCoachField({ "client_categories": response.data }))
       setEditingId(null)
       setEditValue("")
     } catch (error) {
@@ -57,6 +61,7 @@ export default function CategoriesPage() {
       const response = await sendData("app/categories", { deleteKey: [categoryId] });
       if (response.status_code !== 200) throw new Error(response.message);
       mutate("coachProfile");
+      dispatch(updateCoachField({ "client_categories": response.data }))
       toast.success(response.message);
       closeBtnRef.current.click();
     } catch (error) {

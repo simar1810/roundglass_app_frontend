@@ -17,12 +17,15 @@ import { Plus, Loader2 } from "lucide-react"
 import { sendData } from "@/lib/api"
 import { toast } from "sonner"
 import { mutate } from "swr"
+import { useAppDispatch } from "@/providers/global/hooks"
+import { updateCoachField } from "@/providers/global/slices/coach"
 
 export default function AddCategoryModal({ children }) {
   const [open, setOpen] = useState(false)
   const [categoryName, setCategoryName] = useState("")
   const [loading, setLoading] = useState(false)
   const closeBtnRef = useRef(null)
+  const dispatch = useAppDispatch()
 
   const handleClose = () => {
     setOpen(false)
@@ -37,13 +40,10 @@ export default function AddCategoryModal({ children }) {
 
     try {
       setLoading(true)
-      const response = await sendData("app/categories", {
-        addCategory: [categoryName.trim()],
-      })
-
+      const response = await sendData("app/categories", { addCategory: [categoryName.trim()] })
       if (response.status_code !== 200) throw new Error(response.message)
-
       mutate("coachProfile")
+      dispatch(updateCoachField({ "client_categories": response.data }))
       toast.success(response.message)
       handleClose()
     } catch (error) {
