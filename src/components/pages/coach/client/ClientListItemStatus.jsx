@@ -28,7 +28,8 @@ import { copyText } from "@/lib/utils";
 import PendingClientClubDataModal from "@/components/modals/client/PendingClientClubDataModal";
 
 export default function ClientListItemStatus({
-  client
+  client,
+  categories
 }) {
   const [modal, setModal] = useState();
   const [modalOpened, setModalOpened] = useState(false);
@@ -58,6 +59,17 @@ export default function ClientListItemStatus({
       data={client}
       setModal={setModalOpened}
     />}
+    <div className="flex items-center gap-1">
+      {client.categories
+        .filter(category => categories.has(category))
+        .map(category => <Badge
+          key={category}
+          className="text-[8px] font-bold"
+        >
+          {categories.get(category)}
+        </Badge>)}
+    </div>
+
     {client.isVerified
       ? <Badge className="text-white font-semibold bg-[var(--accent-1)] border-[var(--accent-1)]">Active</Badge>
       : <Badge

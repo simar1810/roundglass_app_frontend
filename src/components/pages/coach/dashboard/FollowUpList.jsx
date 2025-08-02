@@ -9,6 +9,7 @@ export default function FollowUpList({ clients }) {
         src={client.profilePhoto}
         name={client.name}
         id={client.clientId}
+        client={client}
       />)}
     </div>
   </div>

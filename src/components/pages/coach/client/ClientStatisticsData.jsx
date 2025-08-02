@@ -23,22 +23,31 @@ export default function ClientStatisticsData({ clientData }) {
     const { isLoading, error, data, mutate } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
     const clientStats = data?.data;
 
-    async function onUpdateHealthMatrix(formData, _, closeBtnRef) {
-      const toastId = toast.loading("Please wait")
-      const matrixId = clientStats?.at(selectedDate)?._id
+    async function onUpdateHealthMatrix(formData, name, closeBtnRef) {
+      const toastId = toast.loading("Please wait");
+      const matrixId = clientStats?.at(selectedDate)?._id;
       try {
+        formData.weight = formData.weightInKgs || formData.weightInPounds;
+        const other = ["weightInKgs", "weightInPounds"].includes(name)
+          ? { weight: formData[name] }
+          : { [name]: formData[name] }
         const response = await sendData(
           `app/updateHealthMatrix?id=${matrixId}&clientId=${clientId}`,
-          { updatedData: formData }, "PUT"
+          {
+            updatedData: {
+              ...clientStats?.at(selectedDate),
+              ...other
+            }
+          }, "PUT"
         );
         if (!response.updatedEntry) throw new Error(response.message);
-        closeBtnRef.current.click()
+        closeBtnRef.current.click();
         toast.success(response.message);
-        mutate()
+        mutate();
       } catch (error) {
         toast.error(error.message);
       } finally {
-        toast.dismiss(toastId)
+        toast.dismiss(toastId);
       }
     }
 
@@ -93,7 +102,8 @@ export default function ClientStatisticsData({ clientData }) {
       <div className="mt-8 grid grid-cols-3 gap-5">
         <HealthMetrics
           onUpdate={onUpdateHealthMatrix}
-          data={payload} />
+          data={payload}
+        />
       </div>
     </TabsContent>
   } catch (error) {
