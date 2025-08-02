@@ -45,6 +45,7 @@ import useClickOutside from "@/hooks/useClickOutside";
 import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
 import { generateWeightStandard } from "@/lib/client/statistics";
+import ClientUpdateCategories from "./ClientUpdateCategories";
 
 export default function ClientDetailsCard({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
@@ -82,9 +83,10 @@ export default function ClientDetailsCard({ clientData }) {
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
-      <div className="mt-4 grid grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <FollowUpModal clientData={clientData} />
-        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Send Analysis Reminder</Button>
+        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Analysis Reminder</Button>
+        <ClientUpdateCategories clientData={clientData} />
       </div>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
@@ -193,6 +195,12 @@ function Header({ clientData }) {
           <DeleteClientModal
             onClose={() => setModalOpened(false)}
             _id={clientData._id}
+          />
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <ClientUpdateCategories
+            onClose={() => setModalOpened(false)}
+            clientData={clientData}
           />
         </DropdownMenuItem>
         {!Boolean(clientData.rollno) && permit("club", roles) && <DropdownMenuItem>

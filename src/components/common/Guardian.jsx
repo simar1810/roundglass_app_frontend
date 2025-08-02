@@ -24,7 +24,6 @@ export default function Guardian({
   const dispatchRedux = useAppDispatch();
   const coach = useAppSelector(state => state.coach.data);
 
-
   useEffect(function () {
     (async function () {
       if (data && data.status_code === 200) {
