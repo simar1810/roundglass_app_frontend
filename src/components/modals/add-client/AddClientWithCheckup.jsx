@@ -27,7 +27,11 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
           try {
             const response = await fetchData(`app/clientProfile?id=${data._id}`);
             if (response.status_code !== 200) throw new Error(response.message);
-            setInitialState(prev => ({ ...prev, mobileNumber: response.data.mobileNumber }))
+            setInitialState(prev => ({
+              ...prev,
+              mobileNumber: response.data.mobileNumber,
+              clientId: response.data.clientId
+            }))
             setDataGenerated(true);
           } catch (error) {
             toast.error(error.message || "Please try again later!");
