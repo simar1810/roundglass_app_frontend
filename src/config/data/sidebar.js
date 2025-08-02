@@ -356,12 +356,12 @@ export const sidebar__coachContent = [
         title: "Programs",
         url: "/coach/tools/programs"
       },
-      // {
-      //   id: 9,
-      //   icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Categories",
-      //   url: "/coach/tools/categories"
-      // },
+      {
+        id: 9,
+        icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Categories",
+        url: "/coach/tools/categories"
+      },
     ]
   },
   // {
