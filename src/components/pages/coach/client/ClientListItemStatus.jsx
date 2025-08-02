@@ -29,7 +29,7 @@ import PendingClientClubDataModal from "@/components/modals/client/PendingClient
 
 export default function ClientListItemStatus({
   client,
-  categories
+  // categories
 }) {
   const [modal, setModal] = useState();
   const [modalOpened, setModalOpened] = useState(false);
@@ -59,7 +59,7 @@ export default function ClientListItemStatus({
       data={client}
       setModal={setModalOpened}
     />}
-    <div className="flex items-center gap-1">
+    {/* <div className="flex items-center gap-1">
       {client.categories
         .filter(category => categories.has(category))
         .map(category => <Badge
@@ -68,7 +68,7 @@ export default function ClientListItemStatus({
         >
           {categories.get(category)}
         </Badge>)}
-    </div>
+    </div> */}
 
     {client.isVerified
       ? <Badge className="text-white font-semibold bg-[var(--accent-1)] border-[var(--accent-1)]">Active</Badge>

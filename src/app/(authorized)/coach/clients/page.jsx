@@ -15,15 +15,15 @@ const initialQuery = {
 
 export default function Page() {
   const [query, setQuery] = useState(() => initialQuery);
-  const { client_categories } = useAppSelector(state => state.coach.data);
+  // const { client_categories } = useAppSelector(state => state.coach.data);
 
-  const categories = useMemo(() => {
-    const map = new Map();
-    for (const category of client_categories) {
-      map.set(category._id, category.name)
-    }
-    return map;
-  })
+  // const categories = useMemo(() => {
+  //   const map = new Map();
+  //   for (const category of client_categories) {
+  //     map.set(category._id, category.name)
+  //   }
+  //   return map;
+  // })
 
   const { isLoading, error, data } = useSWR(
     `getAppClients?page=${query.page}&limit=${query.limit}`,
@@ -39,7 +39,7 @@ export default function Page() {
     <div className="grid grid-cols-2 gap-4 divide-y-1">
       {clients.map((client, index) => <ClientListItemStatus
         key={index}
-        categories={categories}
+        // categories={categories}
         client={client}
       />)}
     </div>
