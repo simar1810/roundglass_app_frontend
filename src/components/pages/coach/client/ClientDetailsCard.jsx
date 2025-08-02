@@ -46,6 +46,8 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { permit } from "@/lib/permit";
 import { generateWeightStandard } from "@/lib/client/statistics";
 import ClientUpdateCategories from "./ClientUpdateCategories";
+import { notesColors } from "@/config/data/other-tools";
+import { Badge } from "@/components/ui/badge";
 
 export default function ClientDetailsCard({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
@@ -82,11 +84,11 @@ export default function ClientDetailsCard({ clientData }) {
           defaultValue={clientData.notes}
         />
       </div>
+      <ClientCategoriesList clientData={clientData} />
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <FollowUpModal clientData={clientData} />
         <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Analysis Reminder</Button>
-        <ClientUpdateCategories clientData={clientData} />
       </div>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
@@ -314,4 +316,28 @@ function ClientClubStatus({
       </MenubarContent>
     </MenubarMenu>
   </Menubar>
+}
+
+function ClientCategoriesList({ clientData }) {
+  const { client_categories } = useAppSelector(state => state.coach.data)
+  const set = new Set(clientData.categories)
+  const selectedCategories = client_categories.filter(category => set.has(category._id))
+  return <div className="my-8">
+    <div className="flex items-center justify-between">
+      <h4>Categories</h4>
+      <ClientUpdateCategories clientData={clientData} />
+    </div>
+    <div className="mt-2 flex items-center gap-1">
+      {selectedCategories.map((category, index) => <Badge
+        key={category._id}
+        style={{
+          backgroundColor: notesColors[index % 5],
+          color: "#000000",
+          fontWeight: "bold"
+        }}
+      >
+        {category.name}
+      </Badge>)}
+    </div>
+  </div>
 }

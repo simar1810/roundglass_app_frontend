@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Separator } from "@/components/ui/separator";
 import { sendData } from "@/lib/api";
 import { useAppSelector } from "@/providers/global/hooks";
+import { Pen } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -64,44 +65,40 @@ export default function ClientUpdateCategories({ clientData }) {
   }
 
   return <Dialog>
-    <DialogTrigger asChild className="w-full">
-      <Button variant="wz">Categories</Button>
+    <DialogTrigger>
+      <Pen className="w-[16px] h-[16px]" />
     </DialogTrigger>
     <DialogContent className="gap-0 p-0">
       <DialogTitle className="p-4 border-b-1">Categories</DialogTitle>
       <div className="p-4">
-        <div className="divide-y-2">
-          {selectedCategories.length > 0 && <div className="pb-4">
-            <h2 className="mb-2 text-[20px]">Assigned</h2>
-            {selectedCategories.map(([categoryId, categoryName]) => <label
-              key={categoryId}
-              className="mb-2 flex items-center gap-4 cursor-pointer"
-            >
-              <p>{categoryName}</p>
-              <FormControl
-                className="ml-auto"
-                type="checkbox"
-                checked={formData.categoryIds.includes(categoryId)}
-                onChange={() => selectClientId(categoryId)}
-              />
-            </label>)}
-          </div>}
-          {notSelectedCategories.length > 0 && <div className="pt-4">
-            <h2 className="mb-2 text-[20px]">Not Assigned</h2>
-            {notSelectedCategories.map(([categoryId, categoryName]) => <label
-              key={categoryId}
-              className="mb-2 flex items-center gap-4 cursor-pointer"
-            >
-              <p>{categoryName}</p>
-              <FormControl
-                className="ml-auto"
-                type="checkbox"
-                checked={formData.categoryIds.includes(categoryId)}
-                onChange={() => selectClientId(categoryId)}
-              />
-            </label>)}
-          </div>}
-        </div>
+        {selectedCategories.length > 0 && <>
+          {selectedCategories.map(([categoryId, categoryName]) => <label
+            key={categoryId}
+            className="mb-2 flex items-center gap-4 cursor-pointer"
+          >
+            <p>{categoryName}</p>
+            <FormControl
+              className="ml-auto"
+              type="checkbox"
+              checked={formData.categoryIds.includes(categoryId)}
+              onChange={() => selectClientId(categoryId)}
+            />
+          </label>)}
+        </>}
+        {notSelectedCategories.length > 0 && <>
+          {notSelectedCategories.map(([categoryId, categoryName]) => <label
+            key={categoryId}
+            className="mb-2 flex items-center gap-4 cursor-pointer"
+          >
+            <p>{categoryName}</p>
+            <FormControl
+              className="ml-auto"
+              type="checkbox"
+              checked={formData.categoryIds.includes(categoryId)}
+              onChange={() => selectClientId(categoryId)}
+            />
+          </label>)}
+        </>}
         {/* {formData.categoryIds.length + formData.removeCategoryIds.length > 0 &&  */}
         <Button
           variant="wz"
