@@ -1,6 +1,5 @@
 "use client"
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
-import { redirect, useRouter } from "next/navigation"
 import { useEffect } from "react";
 import useSWR, { mutate, useSWRConfig } from "swr";
 import { getCoachProfile } from "@/lib/fetchers/app";
@@ -19,7 +18,7 @@ export default function Guardian({
   children,
   _id
 }) {
-  const { isLoading, error, data } = useSWR("coachProfile", () => getCoachProfile(_id))
+  const { isLoading, data } = useSWR("coachProfile", () => getCoachProfile(_id))
   const { cache } = useSWRConfig();
 
   const dispatchRedux = useAppDispatch();
