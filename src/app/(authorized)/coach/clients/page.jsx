@@ -26,7 +26,7 @@ const initialQuery = {
 export default function Page() {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [query, setQuery] = useState(() => initialQuery);
-  const { client_categories } = useAppSelector(state => state.coach.data);
+  const { client_categories = [] } = useAppSelector(state => state.coach.data);
 
   const categories = useMemo(() => {
     const map = new Map();
