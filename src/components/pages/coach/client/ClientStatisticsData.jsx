@@ -1,7 +1,9 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
@@ -10,10 +12,11 @@ import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { FilePen } from "lucide-react"
+import { FilePen, Trash2, X } from "lucide-react"
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 
 export default function ClientStatisticsData({ clientData }) {
   try {
@@ -83,22 +86,30 @@ export default function ClientStatisticsData({ clientData }) {
     const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
 
     return <TabsContent value="statistics">
-      <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto">
-        {clientStats.map((stat, index) => <Button
-          key={index}
-          variant={selectedDate === index ? "wz" : "outline"}
-          className={selectedDate !== index && "text-[var(--dark-1)]/25"}
-          onClick={() => setSelectedDate(index)}
-        >
-          {stat.createdDate}
-        </Button>)}
+      <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto pt-4">
+        {clientStats.map((stat, index) => <div key={index} className="relative">
+          <Button
+            variant={selectedDate === index ? "wz" : "outline"}
+            className={selectedDate !== index && "text-[var(--dark-1)]/25"}
+            onClick={() => setSelectedDate(index)}
+          >
+            {stat.createdDate}
+          </Button>
+          <DeleteHealthMatrix
+            clientId={clientData.clientId}
+            healthMatrixId={clientStats?.at(selectedDate)._id}
+            isLast={clientStats.length <= 1}
+            _id={clientData._id}
+          />
+        </div>
+        )}
       </div>
       <StatisticsExportingOptions
         clientData={clientData}
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
-      {!isNaN(weightDifference) && <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
+      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid grid-cols-3 gap-5">
         <HealthMetrics
           onUpdate={onUpdateHealthMatrix}
@@ -134,4 +145,41 @@ function StatisticsExportingOptions({
       </DialogTrigger>
     </PDFRenderer>
   </div>
+}
+
+function DeleteHealthMatrix({
+  clientId,
+  healthMatrixId,
+  _id,
+  isLast
+}) {
+  const { cache } = useSWRConfig();
+
+  async function deleteHealthMatrix(setLoading, btnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/deleteHealthMatrix?clientId=${clientId}&id=${healthMatrixId}`, {}, "DELETE");
+      if (response.message !== "Entry deleted successfully") throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/clientStatsCoach?clientId=${clientId}`);
+      if (isLast) {
+        window.location = "/coach/clients";
+        cache.delete(`clientDetails/${_id}`);
+      }
+      btnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="You are deleting the Follow Up!"
+    action={(setLoading, btnRef) => deleteHealthMatrix(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild className="absolute top-0 right-0 translate-y-[-40%] translate-x-[40%] ">
+      <X className="bg-[var(--accent-2)] p-[2px] rounded-full text-white w-[16px] h-[16px] cursor-pointer" strokeWidth={2} />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

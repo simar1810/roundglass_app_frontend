@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 export default function ClientUpdateCategories({ clientData }) {
-  const { client_categories } = useAppSelector(state => state.coach.data);
+  const { client_categories = [] } = useAppSelector(state => state.coach.data);
 
   const { categories: clientCategories } = clientData;
   const set = new Set(clientCategories)

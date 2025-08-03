@@ -319,7 +319,7 @@ function ClientClubStatus({
 }
 
 function ClientCategoriesList({ clientData }) {
-  const { client_categories } = useAppSelector(state => state.coach.data)
+  const { client_categories = [] } = useAppSelector(state => state.coach.data)
   const set = new Set(clientData.categories)
   const selectedCategories = client_categories.filter(category => set.has(category._id))
   return <div className="my-8">
