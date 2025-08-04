@@ -91,8 +91,8 @@ export default function CheckupStage1() {
             </label>
             <label className="flex items-center gap-1">
               <input
-                onChange={e => dispatch(changeHeightUnit("Cm"))}
-                checked={state.heightUnit === "Cm"}
+                onChange={e => dispatch(changeHeightUnit("Cms"))}
+                checked={state.heightUnit === "Cms"}
                 type="radio"
               />
               CM
@@ -207,7 +207,7 @@ function Selectheight({
 }) {
   const { heightCms, heightFeet, heightInches, dispatch, heightUnit } = useCurrentStateContext();
 
-  if (heightUnit.toLowerCase() === "cm") return <div className="flex">
+  if (heightUnit.toLowerCase() === "cms") return <div className="flex">
     <FormControl
       label="Cm"
       value={heightCms}

@@ -13,7 +13,7 @@ export const addClientCheckupInitialState = {
   weightUnit: "Kg", // e.g. Kg Pounds
   weightInKgs: "",
   weightInPounds: "",
-  heightUnit: "Cm", // e.g. Inches, Cm
+  heightUnit: "Cms", // e.g. Inches, Cm
   heightCms: "",
   heightFeet: "",
   heightInches: "",

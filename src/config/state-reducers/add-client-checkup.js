@@ -17,7 +17,7 @@ export function addClientCheckupReducer(state, action) {
       return {
         ...state,
         heightUnit: action.payload,
-        heightCms: action.payload.toLowerCase() === "cm"
+        heightCms: action.payload.toLowerCase() === "cms"
           ? (Number(state.heightFeet) * 30.48) + (Number(state.heightInches) * 2.54)
           : state.heightCms,
         heightFeet: action.payload.toLowerCase() === "inches"
@@ -132,7 +132,7 @@ export function stage1Completed(state, stage) {
   } else if (state.weightUnit.toLowerCase() === "pounds" && !state.weightInPounds) {
     return { success: false, field: "Please mention weight in Pounds" };
   }
-  if (state.heightUnit.toLowerCase() === "cm") {
+  if (state.heightUnit.toLowerCase() === "cms") {
     if (!state["heightCms"]) return { success: false, field: "Height Cms" };
   } else {
     if (!state["heightFeet"] || (!state["heightInches"] && state["heightInches"] !== 0)) return {
@@ -153,7 +153,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   } else {
     formData.append("weight", state["weightInPounds"]);
   }
-  if (state.heightUnit.toLowerCase() === "cm") {
+  if (state.heightUnit.toLowerCase() === "cms") {
     formData.append("height", state["heightCms"]);
   } else {
     formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
