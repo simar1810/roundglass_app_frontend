@@ -10,7 +10,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import { Image as ImageIcon } from "lucide-react"
+import { CookingPot, Image as ImageIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
 
 const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit", "weightUnit"];
@@ -79,7 +79,11 @@ export default function UpdateClientDetailsModal({ clientData }) {
   async function updateClientDetails() {
     try {
       const data = new FormData();
-      data.append("height", getHeight(formData))
+      if (formData.heightUnit === "Cms") {
+        data.append("height", formData.heightCms)
+      } else {
+        data.append("height", `${formData.heightFeet}.${formData.heightInches}`)
+      }
       data.append("weight", getWeight(formData))
       for (const field of formFields) {
         data.append(field, formData[field])
@@ -204,8 +208,8 @@ function SelectHeight({ formData, setFormData }) {
   function onChangeHeightUnit() {
     setFormData(prev => ({
       ...prev,
-      heightUnit: heightUnit === "inches" ? "cm" : "inches",
-      heightCms: formData.heightUnit?.toLowerCase() === "cm"
+      heightUnit: heightUnit === "inches" ? "Cms" : "inches",
+      heightCms: formData.heightUnit?.toLowerCase() === "Cms"
         ? formData.heightCms
         : Math.floor(((formData.heightFeet * 30.48) + (formData.heightInches * 2.54))),
       heightFeet: formData.heightUnit?.toLowerCase() === "inches"
@@ -217,7 +221,7 @@ function SelectHeight({ formData, setFormData }) {
     }))
   }
 
-  if (heightUnit.toLowerCase() === "cm") return <div className="mt-1">
+  if (heightUnit.toLowerCase() === "cms") return <div className="mt-1">
     <div className="flex items-center gap-2">
       <h5 className="mr-auto">Height <span className="!font-[300]">{"(Cm)"}</span></h5>
       <p>Ft/In</p>
