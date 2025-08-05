@@ -24,7 +24,7 @@ export default function Feed({
     </div>
     {commentsOpened && <div className={`max-w-[450px] min-w-0 h-full bg-white absolute right-0 top-0 border-1 border-[var(--accent-1)]/50 overflow-y-auto custom-scrollbar ${commentsOpened ? "w-full" : "w-0"}`}>
       <FeedComments
-        commentsOpened={commentsOpened}
+        setCommentsOpened={setCommentsOpened}
         postId={feed.postId}
       />
     </div>}
