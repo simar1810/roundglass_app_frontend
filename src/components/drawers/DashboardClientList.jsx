@@ -18,7 +18,7 @@ export default function DashboardClientList({
       <ChevronLeft />
       Clients
     </DrawerTrigger>
-    <DrawerContent className="p-4">
+    <DrawerContent className="p-4 overflow-auto">
       <DialogTitle />
       <TopPerformers clients={topPerformers} />
       <FollowUpList clients={clientFollowUps} />
