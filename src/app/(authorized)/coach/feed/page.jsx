@@ -27,21 +27,24 @@ function Header() {
 
   return <div className="flex items-center gap-4">
     <Button
-      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] ${type === "our" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
+      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] 
+        ${type === "our" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
       onClick={() => dispatch(changeFeedType("our"))}
     >
       <Users />
       My Community
     </Button>
     <Button
-      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] ${type === "global" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
+      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] 
+        ${type === "global" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
       onClick={() => dispatch(changeFeedType("global"))}
     >
       <Globe />
       Global Community
     </Button>
     <Button
-      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] ${type === "mine" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
+      className={`text-[12px] font-bold hover:bg-[var(--accent-1)] hover:text-white rounded-[16px] 
+        ${type === "mine" ? "bg-[var(--accent-1)] text-white" : "bg-[var(--dark-1)]/10 text-[var(--dark-2)]"}`}
       onClick={() => dispatch(changeFeedType("mine"))}
     >
       <CircleUserRound />

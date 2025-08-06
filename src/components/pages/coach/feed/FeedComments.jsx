@@ -3,17 +3,25 @@ import Loader from "@/components/common/Loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useClickOutside from "@/hooks/useClickOutside";
 import { sendData } from "@/lib/api";
 import { getFeedComments } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
-import { useState } from "react";
+import { X } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-export default function FeedComments({ postId }) {
+export default function FeedComments({
+  postId,
+  setCommentsOpened
+}) {
   const { isLoading, error, data } = useSWR(`app/get-comments?postId=${postId}`, () => getFeedComments(postId));
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const commentContainer = useRef();
+  useClickOutside(commentContainer, () => setCommentsOpened(false))
 
   if (isLoading) return <div className="h-full flex items-center justify-center">
     <Loader />
@@ -42,15 +50,24 @@ export default function FeedComments({ postId }) {
     }
   }
 
-  return <div className="h-full flex flex-col">
-    <h4 className="bg-white p-4 sticky top-0 border-b-1 z-[20]">Comments</h4>
+  return <div
+    ref={commentContainer}
+    className="bg-[var(--comp-2)] h-full flex flex-col"
+  >
+    <div className="p-4 flex items-center justify-between gap-4 border-b-1">
+      <h4 className="sticky top-0 z-[20]">Comments</h4>
+      <X
+        className="w-[18px] h-[18px] cursor-pointer"
+        onClick={() => setCommentsOpened(false)}
+      />
+    </div>
     <div className="p-4">
       {comments.map(comment => <Comment
         comment={comment}
         key={comment._id}
       />)}
     </div>
-    <div className="w-full bg-white mt-auto sticky bottom-0 border-t-1 p-4 flex items-center gap-2">
+    <div className="w-full bg-[var(--comp-2)] mt-auto sticky bottom-0 border-t-1 p-4 flex items-center gap-2">
       <Input
         placeholder="comment..."
         className="bg-[var(--comp-2)] focus:bg-[var(--comp-1)]"

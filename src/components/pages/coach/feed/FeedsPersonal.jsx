@@ -4,16 +4,14 @@ import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { getAppPersonalFeeds } from "@/lib/fetchers/app";
 import ContentError from "@/components/common/ContentError";
 import { useEffect } from "react";
-import { changeDispalyedPostsType, pageEnd } from "@/config/state-reducers/feed";
-import { Button } from "@/components/ui/button";
-import { Bookmark, Images } from "lucide-react";
+import { pageEnd } from "@/config/state-reducers/feed";
 import Feed from "./Feed";
 import NoData from "@/components/common/NoData";
 
 export default function FeedsPersonal() {
   const { dispatch, displayedPostsType, ...state } = useCurrentStateContext();
   const { isLoading, error, data } = useSWR(
-    `app/my-posts?page=${state.page}`,
+    `app/my-posts/page=${state.page}`,
     () => getAppPersonalFeeds(state)
   );
   useEffect(function () {
@@ -36,28 +34,10 @@ export default function FeedsPersonal() {
   </div>
 
   return <div className="max-w-[650px] bg-white mx-auto relative rounded-t-[10px]">
-    <div className="sticky top-0 rounded-t-[10px] divide-x-1 border-b-1 border-[var(--dark-1)]/10 overflow-clip">
-      <Button
-        className={`w-1/2 text-center text-[12px] bg-transparent hover:bg-[var(--comp-1)] shadow-none rounded-none ${displayedPostsType === "myPosts" ? "text-[var(--accent-1)]" : "text-[var(--dark-2)]"}`}
-        onClick={() => dispatch(changeDispalyedPostsType("myPosts"))}
-      >
-        <Images />
-        My Posts
-      </Button>
-      <Button
-        className={`w-1/2 text-center text-[12px] bg-transparent hover:bg-[var(--comp-1)] shadow-none rounded-none ${displayedPostsType === "mySavedPosts" ? "text-[var(--accent-1)]" : "text-[var(--dark-2)]"}`}
-        onClick={() => dispatch(changeDispalyedPostsType("mySavedPosts"))}
-      >
-        <Bookmark />
-        My Posts
-      </Button>
-    </div>
-    <>
-      {feeds.map((feed, index) => <Feed
-        key={index}
-        feeds={data.data}
-        feed={feed}
-      />)}
-    </>
+    {feeds.map((feed, index) => <Feed
+      key={index}
+      feeds={data.data}
+      feed={feed}
+    />)}
   </div>
 }
