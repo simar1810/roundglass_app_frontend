@@ -20,14 +20,12 @@ export default function questionaireReducer(state, action) {
         },
       }
     }
-
     case "REMOVE_SECTION": {
       delete state.sections[action.payload]
       return {
         ...state
       };
     }
-
     case "SAVE_SECTION": {
       return {
         ...state,
@@ -37,7 +35,6 @@ export default function questionaireReducer(state, action) {
         }
       }
     }
-
     case "ADD_NEW_QUESTION_SECTION": {
       return ({
         ...state,
@@ -45,17 +42,29 @@ export default function questionaireReducer(state, action) {
           ...state.sections,
           [action.payload]: {
             ...state.sections[action.payload],
-            questions: [
-              ...state.sections[action.payload].questions,
-              {
-                name: `Question ${state.sections[action.payload].questions.length + 1}`
-              }
+            questions: [...state.sections[action.payload].questions,
+            {
+              id: `Q${Date.now()}`,
+              name: `Question ${state.sections[action.payload].questions.length + 1}`,
+              type: "shortAnswer",
+              text: "",
+              options: [],
+              isMandatory: false,
+              minScale: null,
+              maxScale: null,
+              label1: null,
+              label2: null,
+              dateTime: null,
+              imagePath: null,
+              filePath: null,
+              answerText: null,
+              answer: null
+            }
             ]
           }
         }
       })
     }
-
     case "REMOVE_QUESTION":
       return {
         ...state,
@@ -67,6 +76,21 @@ export default function questionaireReducer(state, action) {
           }
         }
       }
+    case "UPDATE_QUESTION": {
+      const { sectionKey, questionIndex, questionData } = action.payload;
+      return {
+        ...state,
+        sections: {
+          ...state.sections,
+          [sectionKey]: {
+            ...state.sections[sectionKey],
+            questions: state.sections[sectionKey].questions.map((question, index) =>
+              index === questionIndex ? { ...question, ...questionData } : question
+            )
+          }
+        }
+      }
+    }
     default:
       return {
         ...state
@@ -104,6 +128,13 @@ export function addNewQuestionToSection(payload) {
 export function removeQuestion(payload) {
   return {
     type: "REMOVE_QUESTION",
+    payload
+  }
+}
+
+export function updateQuestion(payload) {
+  return {
+    type: "UPDATE_QUESTION",
     payload
   }
 }
