@@ -32,7 +32,7 @@ export default function QuestionDetailsModal({ sectionKey, question, index }) {
           onClick={handleRemoveQuestion}
         />
       </div>
-      <DialogContent className="p-0 max-w-[600px] w-full max-h-[80vh] overflow-hidden">
+      <DialogContent className="p-0 max-w-[600px] w-full max-h-[80vh] overflow-y-auto gap-0">
         <DialogTitle className="p-4 border-b-1">
           Edit Question: {question.name}
         </DialogTitle>

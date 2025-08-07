@@ -3,15 +3,15 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import MultipleChoiceQuestion from "./MultipleChoiceQuestion";
-import ShortAnswerQuestion from "./ShortAnswerQuestion";
-import ParagraphQuestion from "./ParagraphQuestion";
-import CheckboxQuestion from "./CheckboxQuestion";
-import LinearScaleQuestion from "./LinearScaleQuestion";
-import RatingQuestion from "./RatingQuestion";
-import DateQuestion from "./DateQuestion";
+import MultipleChoiceQuestion from "./creation/MultipleChoiceQuestion";
+import ShortAnswerQuestion from "./creation/ShortAnswerQuestion";
+import ParagraphQuestion from "./creation/ParagraphQuestion";
+import CheckboxQuestion from "./creation/CheckboxQuestion";
+import LinearScaleQuestion from "./creation/LinearScaleQuestion";
+import RatingQuestion from "./creation/RatingQuestion";
+import DateQuestion from "./creation/DateQuestion";
 import TimeQuestion from "./TimeQuestion";
-import FileUploadQuestion from "./FileUploadQuestion";
+import FileUploadQuestion from "./creation/FileUploadQuestion";
 import { DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 

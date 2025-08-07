@@ -138,3 +138,70 @@ export function updateQuestion(payload) {
     payload
   }
 }
+
+export function questionaireInitialState(sections = []) {
+  const transformedSections = {}
+
+  sections.forEach((section, sectionIndex) => {
+    const sectionId = `section-${Date.now() + sectionIndex}`
+    const transformedQuestions = []
+
+    section.questions.forEach((question, questionIndex) => {
+      const questionId = `Q${Date.now() + questionIndex}`
+      transformedQuestions.push({
+        id: questionId,
+        name: `Question ${questionIndex + 1}`,
+        type: question.type || null,
+        text: question.text || "",
+        options: question.options || [],
+        isMandatory: question.isMandatory ?? false,
+        answer: null,
+        answerText: null,
+        dateTime: null,
+        filePath: null,
+        imagePath: null,
+        minScale: null,
+        maxScale: null,
+        label1: null,
+        label2: null,
+        ...question,
+      })
+    })
+
+    transformedSections[sectionId] = {
+      name: section.name || `Untitled Section ${sectionIndex + 1}`,
+      questions: transformedQuestions,
+    }
+  })
+
+  return {
+    sections: transformedSections
+  }
+}
+
+export function generateQuestionaireRP(data) {
+  const sections = Object.values(data).map((section, sectionIndex) => {
+    return {
+      name: section.name || `Section ${sectionIndex + 1}`,
+      questions: section.questions.map((q) => {
+        return {
+          type: q.type || undefined,
+          text: q.text || undefined,
+          options: q.options || [],
+          isMandatory: q.isMandatory ?? false,
+          answer: q.answer ?? undefined,
+          answerText: q.answerText ?? undefined,
+          dateTime: q.dateTime ?? undefined,
+          filePath: q.filePath ?? undefined,
+          imagePath: q.imagePath ?? undefined,
+          minScale: q.minScale ?? undefined,
+          maxScale: q.maxScale ?? undefined,
+          label1: q.label1 ?? undefined,
+          label2: q.label2 ?? undefined
+        }
+      })
+    }
+  })
+
+  return sections;
+}
