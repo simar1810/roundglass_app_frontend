@@ -246,7 +246,6 @@ export function getBrands() {
 
 export function getWzSessions(person) {
   return fetchData(`app/getAllWzSessionDemos?person=${person}`);
-  return fetchData(`app/workout/workout-plan/client/${id}`);
 }
 
 export function getCustomMealPlans(person, planId) {
@@ -265,4 +264,8 @@ export function getCustomWorkoutPlans(person = "coach", workoutId) {
 
 export function getClientsForCustomWorkout(workoutId) {
   return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`)
+}
+
+export async function onboardingQuestionaire() {
+  return fetchData("app/onboarding/questionaire")
 }

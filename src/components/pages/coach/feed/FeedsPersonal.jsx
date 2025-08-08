@@ -27,7 +27,7 @@ export default function FeedsPersonal() {
     className="!mt-0 border-0 border-b-1 rounded-none"
   />
 
-  const feeds = displayedPostsType === "saved" ? data.data.mySavedPosts : data.data.myPosts;
+  const feeds = [...data.data.mySavedPosts || [], ...data.data.myPosts || []];
 
   if (feeds.length === 0) return <div className="min-h-[400px] border-b-1 flex items-center justify-center">
     <NoData message="No feeds Available!" />

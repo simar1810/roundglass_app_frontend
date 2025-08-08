@@ -55,7 +55,7 @@ export default function FollowUpModal({ clientData }) {
 }
 
 function FollowUpModalContainer({ clientData }) {
-  const { clientId, dob } = clientData;
+  const { clientId, dob, healthMatrix: { height, heightUnit } } = clientData;
   const age = clientData.dob
     ? differenceInYears(new Date(), parse(clientData.dob, 'dd-MM-yyyy', new Date()))
     : 0
@@ -65,6 +65,8 @@ function FollowUpModalContainer({ clientData }) {
     age={age}
     clientId={clientId}
     dob={dob}
+    height={height}
+    heightUnit={heightUnit}
   />;
 }
 
@@ -162,7 +164,12 @@ function Stage1({ clientData }) {
   </div>
 }
 
-function Stage2({ age, clientId }) {
+function Stage2({
+  age,
+  height,
+  heightUnit,
+  clientId
+}) {
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
 
   const closeBtnRef = useRef();
@@ -172,14 +179,23 @@ function Stage2({ age, clientId }) {
     age,
     bodyComposition: healthMatrix.body_composition
   }
-
+  const statObj = ["cms", "cm"].includes(heightUnit)
+    ? {
+      heightUnit,
+      heightFeet: height.split(".")[0],
+      heightInches: height.split(".")[1]
+    }
+    : {
+      heightUnit,
+      heightCms: height
+    }
   const clienthealthStats = {
-    bmi: calculateBMIFinal(payload),
-    muscle: calculateSMPFinal(payload),
-    fat: calculateBodyFatFinal(payload),
-    rm: calculateBMRFinal(payload),
-    idealWeight: calculateIdealWeightFinal(payload),
-    bodyAge: calculateBodyAgeFinal(payload),
+    bmi: calculateBMIFinal({ ...payload, ...statObj }),
+    muscle: calculateSMPFinal({ ...payload, ...statObj }),
+    fat: calculateBodyFatFinal({ ...payload, ...statObj }),
+    rm: calculateBMRFinal({ ...payload, ...statObj }),
+    idealWeight: calculateIdealWeightFinal({ ...payload, ...statObj }),
+    bodyAge: calculateBodyAgeFinal({ ...payload, ...statObj }),
   }
 
   async function createFollowUp() {

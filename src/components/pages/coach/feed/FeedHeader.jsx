@@ -22,7 +22,7 @@ export default function FeedHeader({ feed }) {
       <AvatarFallback>{nameInitials(feed.userName)}</AvatarFallback>
     </Avatar>
     <p>{feed.userName}</p>
-    {type === "mine" && <FeedActions
+    {["mine", "our"].includes(type) && <FeedActions
       postId={feed.postId}
       feed={feed}
     />}

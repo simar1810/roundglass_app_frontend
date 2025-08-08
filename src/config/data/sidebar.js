@@ -18,6 +18,7 @@ import {
   Hourglass,
   LayoutDashboard,
   Link,
+  ListTodo,
   Logs,
   MessageCircle,
   Newspaper,
@@ -362,6 +363,12 @@ export const sidebar__coachContent = [
         title: "Categories",
         url: "/coach/tools/categories"
       },
+      // {
+      //   id: 10,
+      //   icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Questionaire",
+      //   url: "/coach/tools/questionaire"
+      // },
     ]
   },
   // {
