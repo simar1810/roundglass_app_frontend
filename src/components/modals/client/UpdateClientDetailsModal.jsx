@@ -89,6 +89,7 @@ export default function UpdateClientDetailsModal({ clientData }) {
         data.append(field, formData[field])
       }
       data.append("dob", format(parse(formData.dob, 'yyyy-MM-dd', new Date()), "dd-MM-yyyy"));
+      data.append("bmi", clientData?.healthMatrix?.healthMatrix?.at(0)?.bmi || 0)
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);

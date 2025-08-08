@@ -12,8 +12,7 @@ import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { FilePen, Trash2, X } from "lucide-react"
-import { useRouter } from "next/navigation";
+import { FilePen, X } from "lucide-react"
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate, useSWRConfig } from "swr";
@@ -24,7 +23,11 @@ export default function ClientStatisticsData({ clientData }) {
     const [selectedDate, setSelectedDate] = useState(0);
 
     const { isLoading, error, data, mutate } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
-    const clientStats = data?.data;
+    const clientStats = data?.data.sort((a, b) => {
+      const dateA = parse(a.createdDate, "dd-MM-yyyy", new Date());
+      const dateB = parse(b.createdDate, "dd-MM-yyyy", new Date());
+      return dateA - dateB;
+    });
 
     async function onUpdateHealthMatrix(formData, name, closeBtnRef) {
       const toastId = toast.loading("Please wait");
