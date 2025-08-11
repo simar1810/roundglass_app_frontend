@@ -138,8 +138,7 @@ function DeleteMarathonAction({ marathonId }) {
       const response = await sendData("app/marathon/coach/deleteMarathon", { marathonId }, "DELETE");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate("app/getMarathons");
-      closeBtnRef.current.click();
+      location.reload()
     } catch (error) {
       toast.error(error.message);
     } finally {
