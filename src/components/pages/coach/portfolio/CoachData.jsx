@@ -3,6 +3,8 @@ import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
 import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
 import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
@@ -10,6 +12,7 @@ import state from "@/config/state-data/login";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks } from "@/lib/fetchers/app";
 import { useAppSelector } from "@/providers/global/hooks";
+import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -84,21 +87,27 @@ function CoachSMLinks() {
 function CoachAwards({ awards }) {
   return <TabsContent value="awards">
     <div className="flex items-center gap-2 justify-between">
-      <h4>4 Awards Available</h4>
+      <h4>{awards.length} Awards Available</h4>
       <UpdateCoachAwardModal />
     </div>
     <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4">
-      {awards.map(award => <div key={award._id} className="flex items-center gap-4">
+      {awards.map(award => <div key={award._id} className="flex items-center gap-4 relative">
         <Image
           src={award.image || "/illustrations/award.png"}
+          onError={e => e.target.src = "/illustrations/award.png"}
           alt=""
           height={64}
           width={64}
-          className="w-[64px] h-[64px] object-contain rounded-full border-2 border-[var(--accent-1)]"
+          className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)]"
         />
-        <p>{award.title}</p>
+        <p className="mr-auto">{award.title}</p>
+        <DeleteAward awardId={award._id} />
       </div>)}
     </div>
+    {awards.length === 0 && <div className="h-[200px] flex items-center justify-center">
+      <UpdateCoachAwardModal />
+    </div>
+    }
   </TabsContent>
 }
 
@@ -163,4 +172,29 @@ function CoachClubSettings() {
       Save
     </Button>
   </TabsContent>
+}
+
+function DeleteAward({ awardId }) {
+  async function deleteNote(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/coach/delete-award", { awardId }, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="You are deleting an award. Are you sure?"
+    action={(setLoading, btnRef) => deleteNote(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger>
+      <X strokeWidth={3} className="w-[20px] h-[20px] text-white bg-[var(--accent-2)] p-[2px] rounded-[4px]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

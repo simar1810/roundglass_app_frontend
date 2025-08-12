@@ -50,3 +50,23 @@ export function trimString(str, max = 20) {
   const ellipsis = total.length > max ? "..." : "";
   return total.slice(0, max).join(" ") + ellipsis;
 }
+
+export function meetingAttendaceExcel(meetingType, data) {
+  if (meetingType === "reocurr") {
+    return data.map((attendance, index) => ({
+      "Sr No.": index + 1,
+      "Client Name": (attendance.details || [])?.map(d => d.name)?.join("\n"),
+      "Roll No": (attendance.details || [])?.map(d => d.rollno)?.join("\n"),
+      "Joining Date": attendance.commonDate,
+      "Joining Time": (attendance.details || [])?.map(d => d.time)?.join("\n"),
+    }));
+  }
+
+  return data.map((attendance, index) => ({
+    "Sr No.": index + 1,
+    "Client Name": attendance.name,
+    "Roll No": attendance.rollno,
+    "Joining Date": attendance?.attendance?.date,
+    "Joining Time": attendance?.attendance?.time,
+  }))
+}

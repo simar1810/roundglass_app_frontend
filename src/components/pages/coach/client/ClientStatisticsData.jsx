@@ -26,7 +26,7 @@ export default function ClientStatisticsData({ clientData }) {
     const clientStats = data?.data.sort((a, b) => {
       const dateA = parse(a.createdDate, "dd-MM-yyyy", new Date());
       const dateB = parse(b.createdDate, "dd-MM-yyyy", new Date());
-      return dateA - dateB;
+      return dateB - dateA;
     });
 
     async function onUpdateHealthMatrix(formData, name, closeBtnRef) {
@@ -100,7 +100,7 @@ export default function ClientStatisticsData({ clientData }) {
           </Button>
           <DeleteHealthMatrix
             clientId={clientData.clientId}
-            healthMatrixId={clientStats?.at(selectedDate)._id}
+            healthMatrixId={stat._id}
             isLast={clientStats.length <= 1}
             _id={clientData._id}
           />
@@ -164,10 +164,11 @@ function DeleteHealthMatrix({
       const response = await sendData(`app/deleteHealthMatrix?clientId=${clientId}&id=${healthMatrixId}`, {}, "DELETE");
       if (response.message !== "Entry deleted successfully") throw new Error(response.message);
       toast.success(response.message);
-      mutate(`app/clientStatsCoach?clientId=${clientId}`);
       if (isLast) {
         window.location = "/coach/clients";
         cache.delete(`clientDetails/${_id}`);
+      } else {
+        location.reload()
       }
       btnRef.current.click();
     } catch (error) {
