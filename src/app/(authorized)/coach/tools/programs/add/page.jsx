@@ -11,16 +11,18 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import imageCompression from "browser-image-compression";
 import { useRouter } from "next/navigation";
+import SelectMultiple from "@/components/SelectMultiple";
 
 export default function Page() {
-  const coachId = useAppSelector(state => state.coach.data._id);
+  const { _id: coachId, client_categories } = useAppSelector(state => state.coach.data);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     link: "",
     isActive: true,
     coachId: coachId,
-    file: ""
+    file: "",
+    availability: []
   })
   const router = useRouter()
 
@@ -36,17 +38,26 @@ export default function Page() {
       }
       data.append("file", await imageCompression(formData.file, { maxSizeMB: 0.25 }))
       data.append("person", "client")
+      data.append("availability", JSON.stringify(formData.availability))
       const response = await sendDataWithFormData(`app/programs`, data);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate("client/programs");
-      router.push("/coach/tools/programs")
+      window.location.href = "/coach/tools/programs";
     } catch (error) {
       toast.error(error.message);
     } finally {
       setLoading(false);
     }
   }
+
+  const availabilityOptions = [
+    { id: 1, name: "All Client", value: "client" },
+    ...client_categories.map((category, index) => ({
+      id: index + 2,
+      name: category.name,
+      value: category.name
+    }))
+  ]
 
   return <div className="content-container">
     <div className="max-w-[650px] mx-auto">
@@ -62,6 +73,12 @@ export default function Page() {
         onChange={e => setFormData(prev => ({ ...prev, link: e.target.value }))}
         placeholder="Program Link"
         className="block mb-4"
+      />
+      <SelectMultiple
+        options={availabilityOptions}
+        value={formData.availability}
+        onChange={value => setFormData(prev => ({ ...prev, availability: value }))}
+        className="mb-4"
       />
       {formData.file
         ? <div className="relative">

@@ -12,7 +12,16 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { changeFieldvalue, generateRequestPayload, init, linkGeneratorReducer, resetCurrentState, selectFields, selectMeetingFormField, setCurrentView, setWellnessZLink } from "@/config/state-reducers/link-generator";
+import {
+  changeFieldvalue,
+  generateRequestPayload,
+  init,
+  linkGeneratorReducer,
+  resetCurrentState,
+  selectFields,
+  setCurrentView,
+  setWellnessZLink
+} from "@/config/state-reducers/link-generator";
 import { sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -28,6 +37,7 @@ import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
 import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
+import SelectMultiple from "@/components/SelectMultiple";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -179,7 +189,12 @@ function MeetingForm({ withZoom }) {
       <DialogTitle className="px-4">Meeting Details</DialogTitle>
     </DialogHeader>
     <div className="text-left px-4">
-      {fieldsToBeDisplayed.map(field => selectMeetingFormField(field, state, dispatch))}
+      {fieldsToBeDisplayed.map(field => <SelectMeetingFormField
+        key={field.id}
+        field={field}
+        formData={state}
+        dispatch={dispatch}
+      />)}
       <div className="flex gap-4">
         <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
         <Button
@@ -223,7 +238,7 @@ export function MeetingRepeat({ field }) {
   const { reOcurred, dispatch } = useCurrentStateContext();
   return <div className="mb-4">
     <div className="mb-2">Repeat</div>
-    <div className="w-[418px] flex items-center gap-2 overflow-x-auto">
+    <div className="w-[418px] flex items-center gap-2 overflow-x-auto no-scrollbar">
       {days.map((day, index) => <Badge
         variant="wz_fill"
         className={`rounded-full border-0 font-bold cursor-pointer ${!reOcurred.includes(index) && "text-[var(--dark-1)]/25 bg-[var(--comp-1)] opacity-50"}`}
@@ -305,5 +320,47 @@ export function SelectOneToOneClient({ field }) {
     onChange={e => dispatch(changeFieldvalue("one_to_one_client_id", e.target.value))}
     options={options}
     className="block mb-4"
+  />
+}
+
+function SelectMeetingFormField({ field, formData, dispatch }) {
+  const { client_categories } = useAppSelector(state => state.coach.data)
+  if (field.inputtype === 1) return <FormControl
+    key={field.id}
+    className="text-[14px] [&_.label]:font-[400] block mb-4"
+    value={formData[field.name]}
+    onChange={e => dispatch(changeFieldvalue(field.name, e.target.value))}
+    {...field}
+  />
+  else if (field.inputtype === 2) return <MeetingType
+    key={field.id}
+    field={field}
+  />
+  else if (field.inputtype === 3) return <MeetingDescription
+    key={field.id}
+    field={field}
+  />
+  else if (field.inputtype === 4) return <MeetingRepeat
+    key={field.id}
+    field={field}
+  />
+  else if (field.inputtype === 5) return <MeetingBanner
+    key={field.id}
+    field={field}
+  />
+  else if (field.inputtype === 6) return <SelectMultiple
+    key={field.id}
+    className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
+    label={field.label}
+    options={[
+      ...field.options,
+      ...(client_categories.map((category, index) => ({ id: index + 3, name: category.name, value: category.name })))
+    ]}
+    value={formData.allowed_client_type}
+    onChange={(newValues) => dispatch(changeFieldvalue("allowed_client_type", newValues))}
+  />
+  else if (field.inputtype === 7) return <SelectOneToOneClient
+    key={field.id}
+    field={field}
   />
 }

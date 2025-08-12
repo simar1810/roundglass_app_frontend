@@ -5,6 +5,7 @@ import { formatISO, parse } from "date-fns";
 import { linkGeneratorInitialState } from "../state-data/link-generator";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export function linkGeneratorReducer(state, action) {
   switch (action.type) {
@@ -108,51 +109,4 @@ export function generateRequestPayload(state) {
     payload.append("allowed_client_type", type);
   }
   return payload;
-}
-
-export function selectMeetingFormField(field, formData, dispatch) {
-  switch (field.inputtype) {
-    case 1:
-      return <FormControl
-        key={field.id}
-        className="text-[14px] [&_.label]:font-[400] block mb-4"
-        value={formData[field.name]}
-        onChange={e => dispatch(changeFieldvalue(field.name, e.target.value))}
-        {...field}
-      />
-    case 2:
-      return <MeetingType
-        key={field.id}
-        field={field}
-      />
-    case 3:
-      return <MeetingDescription
-        key={field.id}
-        field={field}
-      />
-    case 4:
-      return <MeetingRepeat
-        key={field.id}
-        field={field}
-      />
-    case 5:
-      return <MeetingBanner
-        key={field.id}
-        field={field}
-      />
-    case 6:
-      return <SelectMultiple
-        key={field.id}
-        className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
-        label={field.label}
-        options={field.options}
-        value={formData.allowed_client_type}
-        onChange={(newValues) => dispatch(changeFieldvalue("allowed_client_type", newValues))}
-      />
-    case 7:
-      return <SelectOneToOneClient
-        key={field.id}
-        field={field}
-      />
-  }
 }
