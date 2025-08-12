@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import SelectMultiple from "@/components/SelectMultiple";
 
 export default function Page() {
-  const { _id: coachId, client_categories } = useAppSelector(state => state.coach.data);
+  const { _id: coachId, client_categories, whitelabel = "wellnessz" } = useAppSelector(state => state.coach.data);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -22,9 +22,9 @@ export default function Page() {
     isActive: true,
     coachId: coachId,
     file: "",
-    availability: []
+    availability: [],
+    whitelabel
   })
-  const router = useRouter()
 
   const fileRef = useRef();
 
@@ -32,7 +32,7 @@ export default function Page() {
     try {
       setLoading(true);
       const data = new FormData();
-      for (const field of ["name", "link", "isActive", "coachId"]) {
+      for (const field of ["name", "link", "isActive", "coachId", "whitelabel"]) {
         if (!Boolean(formData[field])) throw new Error(`${field} is required!`);
         data.append(field, formData[field]);
       }
