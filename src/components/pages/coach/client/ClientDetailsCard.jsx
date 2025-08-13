@@ -77,6 +77,7 @@ export default function ClientDetailsCard({ clientData }) {
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>
+      <ClientCategoriesList clientData={clientData} />
       <div className="flex items-center justify-between">
         <h4>Notes</h4>
         <UpdateClientNotesModal
@@ -84,7 +85,6 @@ export default function ClientDetailsCard({ clientData }) {
           defaultValue={clientData.notes}
         />
       </div>
-      <ClientCategoriesList clientData={clientData} />
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <FollowUpModal clientData={clientData} />

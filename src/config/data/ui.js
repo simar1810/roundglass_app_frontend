@@ -18,7 +18,8 @@ export const coachPortfolioFields = [
   { id: 1, title: "Email ID", name: "email" },
   { id: 2, title: "Contact No.", name: "mobileNumber" },
   { id: 3, title: "Joined", name: "joiningDate" },
-  { id: 4, title: "Coach ID", name: "coachId" }
+  { id: 4, title: "Coach ID", name: "coachId" },
+  { id: 5, title: "Whitelabel", name: "whitelabel" },
 ]
 
 export const coachPortfolioSocialLinks = [
@@ -34,6 +35,7 @@ export const coachDetailsFields = [
   { id: 1, label: "Name", name: "name" },
   { id: 2, label: "Mobile No.", name: "mobileNumber" },
   { id: 3, label: "Email ID", name: "email" },
+  { id: 4, label: "Whitelabel", name: "whitelabel" },
   // { id: 4, label: "No. of Clients", name: "expectedNoOfClients" },
 ]
 

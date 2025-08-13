@@ -54,7 +54,7 @@ export default function UpdateClientNotesModal({ id, defaultValue }) {
           disabled={loading}
           className="mt-8"
         >
-          Update Goal
+          Update Notes
         </Button>
         <DialogClose ref={closeBtnRef} />
       </div>

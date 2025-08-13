@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-const formFields = ["name", "email", "mobileNumber", "file", "organisation"];
+const formFields = ["name", "email", "mobileNumber", "file", "organisation", "whitelabel"];
 
 export default function UpdatePersonalDetails({ coachData }) {
   const [loading, setLoading] = useState(false);
