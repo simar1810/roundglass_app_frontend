@@ -1,4 +1,5 @@
 import FormControl from "@/components/FormControl";
+import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { programInitialState } from "@/config/state-data/program";
@@ -6,6 +7,7 @@ import { changeProgramFieldValue, generateProgramIS, generateProgramRP, programR
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
+import { useAppSelector } from "@/providers/global/hooks";
 import { Pencil, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -33,9 +35,19 @@ export default function EditProgramModal({ program }) {
 
 function ProgramContainer() {
   const [loading, setLoading] = useState(false);
+  const { client_categories } = useAppSelector(state => state.coach.data)
   const { dispatch, ...state } = useCurrentStateContext();
   const closeBtnRef = useRef()
   const fileRef = useRef();
+
+  const availabilityOptions = [
+    { id: 1, name: "All Client", value: "client" },
+    ...client_categories.map((category, index) => ({
+      id: index + 2,
+      name: category.name,
+      value: category.name
+    }))
+  ]
 
   async function updateProgram() {
     try {
@@ -64,6 +76,13 @@ function ProgramContainer() {
       value={state.link}
       onChange={e => dispatch(changeProgramFieldValue("link", e.target.value))}
       className="block mt-2"
+    />
+
+    <SelectMultiple
+      options={availabilityOptions}
+      value={state.availability}
+      onChange={value => dispatch(changeProgramFieldValue("availability", value))}
+      className="mb-4"
     />
     <div className="relative">
       <Image
