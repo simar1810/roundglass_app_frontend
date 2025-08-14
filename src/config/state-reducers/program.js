@@ -17,7 +17,7 @@ export function generateProgramIS(data = {}) {
     name: data.name || "",
     link: data.link || "",
     defaultImage: data.image || "",
-    // order: data.order || 0
+    availability: data.availability
   }
 }
 
@@ -36,6 +36,7 @@ export function generateProgramRP(state) {
   for (const field of ["file", "name", "link", "order"]) {
     if (state[field] || state[field] === 0) formData.append(field, state[field])
   }
+  formData.append("availability", JSON.stringify(state.availability || "[]"))
   formData.append("programId", state.id);
   return formData;
 }
