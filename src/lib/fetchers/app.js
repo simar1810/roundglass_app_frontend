@@ -89,8 +89,9 @@ export function getAppFeeds(state, person = "coach") {
   return fetchData(`app/feeds2?person=${person}&` + query);
 }
 
-export function getAppPersonalFeeds(state) {
-  const query = `page=${state.page}`;
+export function getAppPersonalFeeds(state, limit) {
+  let query = `page=${state.page}`;
+  if (limit) query += `&limit=${limit}`
   return fetchData("app/my-posts?person=coach&" + query);
 }
 

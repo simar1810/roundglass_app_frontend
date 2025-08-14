@@ -11,8 +11,8 @@ import NoData from "@/components/common/NoData";
 export default function FeedsPersonal() {
   const { dispatch, displayedPostsType, ...state } = useCurrentStateContext();
   const { isLoading, error, data } = useSWR(
-    `app/my-posts/page=${state.page}`,
-    () => getAppPersonalFeeds(state)
+    `app/my-posts/page=${state.page}/10000000000`,
+    () => getAppPersonalFeeds(state, 10000000000)
   );
   useEffect(function () {
     if (data?.status_code === 201) {
