@@ -5,6 +5,7 @@ import {
   CalendarRange,
   CircleDollarSign,
   ClipboardPlus,
+  Clock,
   Clock12,
   ContactRound,
   Dumbbell,
@@ -13,6 +14,7 @@ import {
   Flame,
   Footprints,
   ForkKnife,
+  Globe,
   Headset,
   Home,
   Hourglass,
@@ -23,6 +25,7 @@ import {
   MessageCircle,
   Newspaper,
   PersonStanding,
+  Plus,
   PlusCircle,
   Projector,
   Settings,
@@ -244,31 +247,45 @@ export const sidebar__coachContent = [
       },
       {
         id: 3,
-        icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
+        icon: <Hourglass className="icon max-w-[20px] max-h-[20px]" />,
         title: "Routine Workouts Plan",
-        url: "/coach/meals/list/",
+        url: "/coach/workouts/list/",
         items: [
           {
             id: 1,
-            icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
+            icon: <Dumbbell className="icon max-w-[20px] max-h-[20px]" />,
             title: "All Workouts",
             url: "/coach/workouts/list/"
           },
           {
             id: 2,
-            icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
+            icon: <PlusCircle className="icon max-w-[20px] max-h-[20px]" />,
             title: "Add",
             type: "modal",
             Component: CreateWorkoutModal
           }
         ]
       },
-      // {
-      //   id: 4,
-      //   icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Recipes",
-      //   url: "/coach/meals/recipes"
-      // }
+      {
+        id: 4,
+        icon: <Clock className="max-w-[20px] max-h-[20px]" />,
+        title: "Sessions",
+        url: "/coach/workouts/sessions",
+        items: [
+          {
+            id: 1,
+            icon: <Globe className="max-w-[20px] max-h-[20px]" />,
+            title: "All Sessions",
+            url: "/coach/workouts/sessions/list"
+          },
+          {
+            id: 2,
+            icon: <PlusCircle className="max-w-[20px] max-h-[20px]" />,
+            title: "Add Session",
+            url: "/coach/workouts/sessions/add"
+          },
+        ]
+      }
     ]
   },
   {

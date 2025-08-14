@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react'; // Optional: for dropdown icon
-import { cn } from '@/lib/utils';
+import { ChevronDown } from 'lucide-react';
 
 export default function SelectMultiple({
   label,
@@ -26,7 +25,7 @@ export default function SelectMultiple({
         className="w-full px-4 py-2 border border-[#D6D6D6] rounded-[8px] bg-white cursor-pointer flex justify-between items-center"
       >
         <span className="w-full text-sm text-gray-700 truncate overflow-clip">
-          {value.length ? value.slice(0, 2).join(', ') : 'Select options'}
+          {value.length ? value.slice(0, 4).join(', ') : 'Select options'}
         </span>
         <ChevronDown className="w-4 h-4 text-gray-500" />
       </div>
