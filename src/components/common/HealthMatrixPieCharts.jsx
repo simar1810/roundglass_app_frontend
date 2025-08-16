@@ -140,7 +140,7 @@ export default function HealthMetrics({ data, onUpdate }) {
       : undefined,
   };
   function updateWeightField() {
-    if (["kgs", "kg"].includes(data.weightUnit.toLowerCase())) {
+    if (["kgs", "kg"].includes(data?.weightUnit?.toLowerCase())) {
       return "weightInKgs"
     } else return "weightInPounds"
   }
