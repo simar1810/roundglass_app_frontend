@@ -15,7 +15,7 @@ export default function UpdateClientGoalModal({ id,
 }) {
   const [loading, setLoading] = useState(false);
   const [goal, setGoal] = useState(() => defaultValue);
-  console.log(clientData.healthMatrix)
+
   const closeBtnRef = useRef(null);
 
   const healthMatrix = (clientData.healthMatrix || {})
@@ -28,7 +28,7 @@ export default function UpdateClientGoalModal({ id,
         weightUnit: healthMatrix.weightUnit,
         weight: healthMatrix.weight,
         heightUnit: healthMatrix.heightUnit,
-        height: healthMatrix.weightUnit,
+        height: healthMatrix.height,
       }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
