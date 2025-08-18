@@ -15,13 +15,21 @@ export default function UpdateClientGoalModal({ id,
 }) {
   const [loading, setLoading] = useState(false);
   const [goal, setGoal] = useState(() => defaultValue);
-
+  console.log(clientData.healthMatrix)
   const closeBtnRef = useRef(null);
+
+  const healthMatrix = (clientData.healthMatrix || {})
 
   async function updateClientGoal() {
     try {
       setLoading(true);
-      const response = await sendData(`app/updateClient?id=${id}`, { goal, ...clientData.healthMatrix }, "PUT");
+      const response = await sendData(`app/updateClient?id=${id}`, {
+        goal,
+        weightUnit: healthMatrix.weightUnit,
+        weight: healthMatrix.weight,
+        heightUnit: healthMatrix.heightUnit,
+        height: healthMatrix.weightUnit,
+      }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`clientDetails/${id}`);

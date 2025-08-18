@@ -49,6 +49,7 @@ export function customMealReducer(state, action) {
         creationType: action.payload.creationType,
         selectedPlan: action.payload.selectedPlan,
         selectedPlans: action.payload.selectedPlans,
+        editPlans: action.payload.editPlans
       }
     case "CUSTOM_MEAL_UPDATE_FIELD":
       return {

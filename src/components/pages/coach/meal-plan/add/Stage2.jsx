@@ -17,7 +17,7 @@ export default function Stage2() {
   const { dispatch, ...state } = useCurrentStateContext();
   const component = selectWorkoutCreationComponent(state.mode);
   const { cache } = useSWRConfig();
-
+  console.log(state)
   const router = useRouter();
 
   async function saveCustomWorkout() {
@@ -62,9 +62,25 @@ export default function Stage2() {
         dispatch(customWorkoutUpdateField("image", thumbnail.img))
         toast.dismiss(toastId);
       }
+      const plans = {}
+      for (const key in state.selectedPlans) {
+        const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+        const createdMealPlan = await sendData(
+          `app/update-custom-plan?id=${state.editPlans[key]}`,
+          mealPlanCreationRP(state.selectedPlans[key]),
+          "PUT"
+        )
+        if (createdMealPlan.status_code !== 200) {
+          toast.dismiss(toastId)
+          throw new Error(createdMealPlan.message)
+        }
+        plans[key] = createdMealPlan?.data?.planId
+        toast.dismiss(toastId);
+      }
 
       const toastId = toast.loading("Creating The Custom Meal Plan...");
       const formData = dailyMealRP(state);
+
       const response = await sendData(`app/meal-plan/custom`, {
         ...formData,
         image: thumbnail?.img,

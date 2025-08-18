@@ -1,6 +1,7 @@
-import { format, parse, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 export const meetingEditFormControls = [
+  { id: 1, label: "Meeting Topic", inputtype: 1, placeholder: "Enter Topic", name: "topics" },
   {
     id: 1,
     label: "Base Link",
