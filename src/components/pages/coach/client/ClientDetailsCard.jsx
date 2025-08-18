@@ -73,7 +73,7 @@ export default function ClientDetailsCard({ clientData }) {
         <h4>Goal</h4>
         <UpdateClientGoalModal
           id={clientData._id}
-          defaultValue={clientData.goal}
+          clientData={clientData}
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>

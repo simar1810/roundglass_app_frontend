@@ -7,7 +7,12 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function UpdateClientGoalModal({ id, defaultValue }) {
+export default function UpdateClientGoalModal({ id,
+  clientData: {
+    goal: defaultValue,
+    ...clientData
+  }
+}) {
   const [loading, setLoading] = useState(false);
   const [goal, setGoal] = useState(() => defaultValue);
 
@@ -16,8 +21,7 @@ export default function UpdateClientGoalModal({ id, defaultValue }) {
   async function updateClientGoal() {
     try {
       setLoading(true);
-      const data = new FormData();
-      const response = await sendData(`app/updateClient?id=${id}`, { goal }, "PUT");
+      const response = await sendData(`app/updateClient?id=${id}`, { goal, ...clientData.healthMatrix }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`clientDetails/${id}`);
