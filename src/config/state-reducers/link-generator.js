@@ -66,12 +66,12 @@ export function resetCurrentState() {
   return { type: "RESET_STATE" }
 }
 
-const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7, 9, 10],
-  scheduled: [1, 2, 3, 4, 6, 7, 9, 10],
-  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10],
-  event: [1, 2, 3, 4, 6, 7, 8, 9, 10],
-  one_to_one: [1, 2, 3, 4, 6, 7, 9, 11],
+export const meetingTypeFieldsMap = {
+  quick: [1, 2, 6, 7, 9, 10, 12],
+  scheduled: [1, 2, 3, 4, 6, 7, 9, 10, 12],
+  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12],
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10, 12],
+  one_to_one: [1, 2, 3, 4, 6, 7, 9, 11, 12],
 }
 
 export function selectFields(meetingType) {

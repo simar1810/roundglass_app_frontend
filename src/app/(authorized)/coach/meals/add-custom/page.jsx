@@ -40,7 +40,6 @@ function CustomWorkoutContainer() {
         const plans = {};
         const editPlans = {}
         for (const field in mealPlan.plans) {
-          console.log(mealPlan.plans[field]._id)
           plans[field] = mealPlan.plans[field].meals || []
           editPlans[field] = mealPlan.plans[field]._id
         }
