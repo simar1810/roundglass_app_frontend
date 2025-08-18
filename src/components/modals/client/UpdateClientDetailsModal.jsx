@@ -24,7 +24,7 @@ function getHeight(formData) {
 }
 
 function getWeight(formData) {
-  if (formData.weightUnit.toLowerCase() === "kg") {
+  if (formData.weightUnit?.toLowerCase() === "kg") {
     return formData["weightInKgs"];
   } else {
     return formData["weightInPounds"];
@@ -306,7 +306,7 @@ function SelectWeightUnit({ formData, setFormData }) {
       <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
       <p>Pound</p>
       <Switch
-        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
+        checked={["kg", "kgs"].includes(formData.weightUnit?.toLowerCase())}
         onCheckedChange={onChangeWeightUnit}
       />
       <p>Kg</p>
@@ -324,7 +324,7 @@ function SelectWeightUnit({ formData, setFormData }) {
       <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
       <p>Pound</p>
       <Switch
-        checked={["kg", "kgs"].includes(formData.weightUnit.toLowerCase())}
+        checked={["kg", "kgs"].includes(formData.weightUnit?.toLowerCase())}
         onCheckedChange={onChangeWeightUnit}
       />
       <p>Kg</p>

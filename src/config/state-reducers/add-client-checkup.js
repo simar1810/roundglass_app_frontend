@@ -127,9 +127,9 @@ export function stage1Completed(state, stage) {
   for (const field of fields[stage]) {
     if (!state[field]) return { success: false, field };
   }
-  if (state.weightUnit.toLowerCase() === "kg" && !state.weightInKgs) {
+  if (state.weightUnit?.toLowerCase() === "kg" && !state.weightInKgs) {
     return { success: false, field: "Please mention weight in KGs" };
-  } else if (state.weightUnit.toLowerCase() === "pounds" && !state.weightInPounds) {
+  } else if (state.weightUnit?.toLowerCase() === "pounds" && !state.weightInPounds) {
     return { success: false, field: "Please mention weight in Pounds" };
   }
   if (state.heightUnit.toLowerCase() === "cms") {
@@ -148,7 +148,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
-  if (state.weightUnit.toLowerCase() === "kg") {
+  if (state.weightUnit?.toLowerCase() === "kg") {
     formData.append("weight", state["weightInKgs"]);
   } else {
     formData.append("weight", state["weightInPounds"]);

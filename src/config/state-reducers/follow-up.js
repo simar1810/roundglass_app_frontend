@@ -138,9 +138,9 @@ export function stage1Completed(data) {
   for (const field of stage1fields) {
     if (!data.healthMatrix[field]) return { success: false, field }
   }
-  if (data.healthMatrix.weightUnit.toLowerCase() === "kg" && !data.healthMatrix.weightInKgs) {
+  if (data.healthMatrix.weightUnit?.toLowerCase() === "kg" && !data.healthMatrix.weightInKgs) {
     return { success: false, field: "weight (kg)" }
-  } else if (data.healthMatrix.weightUnit.toLowerCase() === "pounds" && !data.healthMatrix.weightInPounds) {
+  } else if (data.healthMatrix.weightUnit?.toLowerCase() === "pounds" && !data.healthMatrix.weightInPounds) {
     return { success: false, field: "weight (pounds)" }
   };
   if (!data.nextFollowUpDate && data.healthMatrix.followUpType === "custom") return { success: false, field: "nextFollowUpDate" }

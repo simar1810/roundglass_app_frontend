@@ -97,9 +97,9 @@ export function generateWeightStandard({
   weight
 }) {
   try {
-    if (["kg", "kgs"].includes(weightUnit.toLowerCase())) {
+    if (["kg", "kgs"].includes(weightUnit?.toLowerCase())) {
       return Number(weightInKgs) || Number(weight)
-    } else if (["pounds", "pound"].includes(weightUnit.toLowerCase())) {
+    } else if (["pounds", "pound"].includes(weightUnit?.toLowerCase())) {
       return (Number(weightInPounds) * 0.453592).toFixed(2) || Number(weight)
     } else {
       throw new Error("Please provide correct height unit");
