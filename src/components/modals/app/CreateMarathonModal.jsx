@@ -75,6 +75,8 @@ function MarathonContainer() {
     }
   }
 
+  const listTasks = tasks.filter(task => task.title.includes(state.title))
+
   return <div className="p-4 pb-0">
     <FormControl
       label="Title"
@@ -82,7 +84,7 @@ function MarathonContainer() {
       placeholder="Enter title"
       onChange={e => dispatch(changeField("title", e.target.value))}
     />
-    {tasks.map(task => <TaskDetails key={task._id} task={task} />)}
+    {listTasks.map(task => <TaskDetails key={task._id} task={task} />)}
     <div className="bg-[var(--primary-1)] pb-4 sticky bottom-0">
       <Button
         variant="wz"

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { sendData } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CreateMarathonTaskModal from "@/components/modals/tools/CreateMarathonTaskModal";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("app/getMarathons", getMarathons);
@@ -57,9 +58,10 @@ function ListMarathons({ marathons, setSelectedMarathonId }) {
       className="[&_.input]:text-[14px] [&_.input]:bg-[var(--comp-1)]"
       placeholder="Search Here..."
     />
-    <div className="flex items-center justify-between gap-4">
-      <h3 className="my-4">{marathons.length} Marathons available</h3>
+    <div className="flex items-center gap-4">
+      <h3 className="my-4 mr-auto">{marathons.length} Marathons available</h3>
       <CreateMarathonModal />
+      <CreateMarathonTaskModal />
     </div>
     <div className="divide-y-4 divide-[var(--comp-2)]">
       {marathonsToDisplay.length === 0
@@ -130,8 +132,7 @@ function SelectedMarathonDetails({
 
 function DeleteMarathonAction({ marathonId }) {
   async function deleteMarathon(
-    setLoading,
-    closeBtnRef
+    setLoading
   ) {
     try {
       setLoading(true);

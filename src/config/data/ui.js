@@ -120,3 +120,39 @@ export const quickAddClientFormFields = [
 ]
 
 export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+
+export const marathonTaskFields = [
+  {
+    id: 1,
+    label: "Title",
+    name: "title",
+    type: "text",
+    placeholder: "Enter document title",
+  },
+  {
+    id: 2,
+    label: "Description",
+    name: "description",
+    type: "textarea",
+    placeholder: "Enter document description",
+  },
+  {
+    id: 3,
+    label: "Points",
+    name: "points",
+    type: "number",
+    placeholder: "Enter points value",
+  },
+  {
+    id: 4,
+    label: "Video Submission",
+    name: "videoSubmission",
+    type: "checkbox",
+  },
+  {
+    id: 5,
+    label: "Photo Submission",
+    name: "photoSubmission",
+    type: "checkbox",
+  },
+]
