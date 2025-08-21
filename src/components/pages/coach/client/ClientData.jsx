@@ -17,9 +17,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import AssignWorkoutModal from "@/components/modals/AssignModal";
 import { Badge } from "@/components/ui/badge";
 import { trimString } from "@/lib/formatter";
+import AIAgentHistory from "./AIAgentHistory";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
@@ -32,6 +32,7 @@ export default function ClientData({ clientData }) {
       <ClientClubDataComponent clientData={clientData} />
       <MarathonData clientData={clientData} />
       <WorkoutContainer id={clientData._id} />
+      <AIAgentHistory />
     </Tabs>
   </div>
 }
@@ -225,7 +226,7 @@ function MarathonData({ clientData }) {
 function Header() {
   const { organisation } = useAppSelector(state => state.coach.data);
 
-  return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-6 border-b-2 rounded-none">
+  return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-7 border-b-2 rounded-none overflow-x-auto no-scrollbar">
     <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="statistics"
@@ -261,6 +262,12 @@ function Header() {
       value="club"
     >
       Club
+    </TabsTrigger>
+    <TabsTrigger
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      value="ai-agent"
+    >
+      AI Agent History
     </TabsTrigger>
   </TabsList>
 }

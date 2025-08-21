@@ -62,7 +62,7 @@ export default function ClientDetailsCard({ clientData }) {
   }
   const clienthealthMatrix = clientData.healthMatrix.healthMatrix
   const healthMatricesLength = clienthealthMatrix.length
-  const weightLoss = healthMatricesLength <= 1
+    // const weightLoss = healthMatricesLength <= 1
     ? false
     : (generateWeightStandard(clienthealthMatrix?.at(0)) - generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1)))
       .toFixed(2)
@@ -104,10 +104,10 @@ export default function ClientDetailsCard({ clientData }) {
           <p>{field.title}</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{clientData[field.name]}</p>
         </div>)}
-        {weightLoss && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+        {/* {weightLoss && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Weight Lost Till Date</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss * -1} Pounds</p>
-        </div>}
+        </div>} */}
         <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Height</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData.healthMatrix.height} ${clientData.healthMatrix.heightUnit}`}</p>

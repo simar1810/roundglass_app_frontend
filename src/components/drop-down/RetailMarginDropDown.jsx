@@ -1,22 +1,32 @@
 import { PenLine } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function RetailMarginDropDown({
   margins,
   setMargin,
-  setOpen
+  setOpen,
+  brand
 }) {
   const [modalOpened, setModalOpened] = useState(false)
   return <DropdownMenu
     open={modalOpened}
     onOpenChange={() => setModalOpened(false)}
-    className="absolute top-4 right-4"
   >
     <DropdownMenuTrigger onClick={() => setModalOpened(true)}>
-      <PenLine className="w-[20px] h-[20px] bg-[var(--accent-1)] text-white p-[3px] rounded-[4px] absolute top-4 right-4 cursor-pointer" />
+      <div>
+        <Image
+          src={brand.image || "/not-found.png"}
+          alt=""
+          height={540}
+          width={540}
+          className="object-cover shadow-md shadow-[#808080]/80"
+        />
+        <p className="px-1 text-left mt-2 font-bold">{brand.name}</p>
+      </div>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="translate-x-[105%]">
+    <DropdownMenuContent side="right" align="start" sideOffset={10}>
       <DropdownMenuLabel className="font-bold">Select your margin</DropdownMenuLabel>
       {margins.map((margin, index) => <DropdownMenuItem
         key={index}

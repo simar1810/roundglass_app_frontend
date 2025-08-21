@@ -1,6 +1,9 @@
+import ContentError from "@/components/common/ContentError";
+import Loader from "@/components/common/Loader";
 import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,31 +13,36 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { meetingEditFormControls, meetingEditSelectControls } from "@/config/data/forms";
-import { sendData } from "@/lib/api";
-import { format, formatISO, parse } from "date-fns";
-import { Pen } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { selectMeetingEditFields } from "@/config/data/forms";
+import { sendData, uploadImage } from "@/lib/api";
+import { getMeetingClientList } from "@/lib/fetchers/club";
+import { getObjectUrl } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { format, parseISO } from "date-fns";
+import { CircleMinus, CirclePlus, Pen } from "lucide-react";
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function EditMeetingModal({ meeting }) {
   const [loading, setLoading] = useState(false);
-  const [selectClientType, setSelectClientType] = useState(meeting.allowed_client_type);
   const closeBtnRef = useRef(null);
+  const [formData, setFormData] = useState(generatePayload(meeting))
 
   async function editMeeting(e) {
     try {
       e.preventDefault();
       setLoading(true);
-      const data = {
-        baseLink: e.currentTarget.baseLink.value,
-        meetingType: e.currentTarget.meetingType.value,
-        clubType: e.currentTarget.clubType.value,
-        scheduleDate: formatISO(parse(`${e.currentTarget.date.value} ${e.currentTarget.time.value}`, 'yyyy-MM-dd HH:mm', new Date())),
-        time: e.currentTarget.time.value,
-        date: e.currentTarget.date.value,
-        allowed_client_type: selectClientType
+      if (formData.banner) {
+        const thumbnail = await uploadImage(formData.banner);
+        formData.banner = thumbnail.img;
+      }
+      const data = {}
+      for (const field in formData) {
+        if (formData[field]) data[field] = formData[field];
       }
       const response = await sendData(`edit-meetingLink?meetingId=${meeting._id}`, data, "PUT");
       if (!response.success) throw new Error(response.message);
@@ -47,6 +55,7 @@ export default function EditMeetingModal({ meeting }) {
       setLoading(false);
     }
   }
+  const fieldsToBeDisplayed = selectMeetingEditFields(meeting.meetingType);
 
   return <Dialog>
     <DialogTrigger>
@@ -59,38 +68,183 @@ export default function EditMeetingModal({ meeting }) {
         </DialogTitle>
       </DialogHeader>
       <form className="px-4 pb-8" onSubmit={editMeeting}>
-        {meetingEditFormControls.map(field =>
-          <FormControl
+        {fieldsToBeDisplayed.map(field =>
+          <SelectMeetingFormField
             key={field.id}
             className="focus:shadow-none [&_.input]:bg-[var(--comp-1)] [&_.input]:mb-4"
-            label={field.label}
-            placeholder={field.placeholder}
-            type={field.type}
-            name={field.name}
-            defaultValue={field.getvalue(meeting)}
+            field={field}
+            formData={formData}
+            dispatch={setFormData}
           />
         )}
-        {meetingEditSelectControls.map(select => <SelectControl
-          className="[&_.input]:mb-4"
-          key={select.id}
-          options={select.options}
-          label={select.label}
-          defaultValue={meeting[select.name]}
-          name={select.name}
-        />)}
-        <SelectMultiple
-          className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
-          label="Allowed Client Type"
-          options={[
-            { id: 1, value: "client", name: "Client" },
-            { id: 2, value: "coach", name: "Coach" },
-          ]}
-          value={selectClientType}
-          onChange={(newValues) => setSelectClientType(newValues)}
-        />
         <DialogClose ref={closeBtnRef} className="mt-4 mr-2 py-[8px] px-4 rounded-[8px] border-2">Cancel</DialogClose>
         <Button variant="wz" disabled={loading}>Update</Button>
       </form>
     </DialogContent>
   </Dialog>
+}
+
+function SelectMeetingFormField({ field, formData, dispatch }) {
+  const { client_categories } = useAppSelector(state => state.coach.data)
+  if (field.inputtype === 1) return <FormControl
+    key={field.id}
+    className="text-[14px] [&_.label]:font-[400] block mb-4"
+    value={formData[field.name]}
+    onChange={e => dispatch(prev => ({ ...prev, [field.name]: e.target.value }))}
+    label={field.label}
+    placeholder={field.placeholder}
+  />
+  else if (field.inputtype === 2) return <MeetingType
+    key={field.id}
+    field={field}
+  />
+  else if (field.inputtype === 3) return <MeetingDescription
+    key={field.id}
+    field={field}
+    formData={formData}
+    dispatch={dispatch}
+  />
+  else if (field.inputtype === 4) return <MeetingRepeat
+    key={field.id}
+    formData={formData}
+    dispatch={dispatch}
+  />
+  else if (field.inputtype === 5) return <MeetingBanner
+    key={field.id}
+    field={field}
+    formData={formData}
+    dispatch={dispatch}
+  />
+  else if (field.inputtype === 6) return <SelectMultiple
+    key={field.id}
+    className="[&_.option]:px-4 [&_.option]:py-2 mb-4"
+    label={field.label}
+    options={[
+      ...field.options,
+      ...(client_categories.map((category, index) => ({ id: index + 3, name: category.name, value: category.name })))
+    ]}
+    value={formData.allowed_client_type}
+    onChange={(newValues) => dispatch(prev => ({ ...prev, "allowed_client_type": newValues }))}
+  />
+  else if (field.inputtype === 7) return <SelectOneToOneClient
+    key={field.id}
+    field={field}
+  />
+}
+
+
+function generatePayload(meeting) {
+  return {
+    topics: meeting?.topics || "",
+    baseLink: meeting?.baseLink || "",
+    date: meeting?.scheduleDate
+      ? format(parseISO(meeting.scheduleDate), "yyyy-MM-dd")
+      : "",
+    time: meeting?.scheduleDate
+      ? format(parseISO(meeting.scheduleDate), "HH:mm")
+      : "",
+    reOcurred: meeting?.reOcurred || false,
+    description: meeting?.description || "",
+    duration: meeting?.duration || "",
+    eventVolumePointAmount: meeting?.eventVolumePointAmount || "",
+    banner: meeting?.banner || "/",
+    allowed_client_type: meeting?.allowed_client_type || "",
+    one_to_one_client_id: meeting?.one_to_one_client_id || ""
+  };
+}
+
+const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export function MeetingRepeat({
+  formData: { reOcurred = [] },
+  dispatch
+}) {
+  return <div className="mb-4">
+    <div className="mb-2">Repeat</div>
+    <div className="w-[418px] flex items-center gap-2 overflow-x-auto no-scrollbar">
+      {days.map((day, index) => <Badge
+        variant="wz_fill"
+        className={`rounded-full border-0 font-bold cursor-pointer ${!reOcurred.includes(index) && "text-[var(--dark-1)]/25 bg-[var(--comp-1)] opacity-50"}`}
+        key={index}
+        onClick={reOcurred.includes(index)
+          ? () => dispatch(prev => ({ ...prev, reOcurred: reOcurred.filter(item => item !== index) }))
+          : () => dispatch(prev => ({ ...prev, reOcurred: [...reOcurred, index] }))
+        }>
+        <span>{day}</span>
+        {reOcurred.includes(index)
+          ? <CircleMinus className="w-[12px] h-[12px]" />
+          : <CirclePlus className="w-[12px] h-[12px]" />}
+      </Badge>)}
+    </div>
+  </div >
+}
+
+export function MeetingDescription({ field, formData, dispatch }) {
+  return <div className="mb-4">
+    <Label className="mb-2">Meeting Description</Label>
+    <Textarea
+      placeholder={field.placeholder}
+      value={formData[field.name]}
+      onChange={e => dispatch(prev => ({ ...prev, description: e.target.value }))}
+      className="h-[120px]"
+    />
+  </div>
+}
+
+export function SelectOneToOneClient({
+  field: { one_to_one_client_id },
+  dispatch
+}) {
+  const { isLoading, error, data } = useSWR("app/meeting/client-list", getMeetingClientList);
+
+  if (isLoading) return <div className="mb-4 flex justify-center">
+    <Loader />
+  </div>
+
+  if (error || data?.status_code !== 200) return <ContentError
+    className="min-h-auto mb-4"
+    title={error || data?.message}
+  />
+  const clients = data.data;
+  const options = clients.map((client, index) => ({
+    name: client.name,
+    value: client._id,
+    id: index
+  }))
+  return <SelectControl
+    label="Select A Client For One to One"
+    value={one_to_one_client_id}
+    onChange={e => dispatch(prev => ({ ...prev, "one_to_one_client_id": e.target.value }))}
+    options={options}
+    className="block mb-4"
+  />
+}
+
+export function MeetingBanner({
+  dispatch,
+  formData,
+  field,
+}) {
+  const fileRef = useRef();
+  return <div className="mb-4">
+    <label className="text-[14px]" htmlFor="meeting-banner">{field.label}</label>
+    <Image
+      src={formData.banner && formData.banner instanceof File ? getObjectUrl(formData.banner) : "/not-found.png"}
+      height={540}
+      width={540}
+      alt=""
+      className="w-full bg-[var(--comp-1)] mt-2 aspect-video object-contain rounded-md border-1"
+      onClick={() => fileRef.current.click()}
+      onError={e => e.target.src = "/not-found.png"}
+      unoptimized
+    />
+    <input
+      ref={fileRef}
+      id="meeting-banner"
+      type="file"
+      hidden
+      onChange={e => dispatch(prev => ({ ...prev, [field.name]: e.target.files[0] }))}
+      accept="image/*"
+    />
+  </div>
 }

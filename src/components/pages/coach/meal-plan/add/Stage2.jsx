@@ -17,7 +17,7 @@ export default function Stage2() {
   const { dispatch, ...state } = useCurrentStateContext();
   const component = selectWorkoutCreationComponent(state.mode);
   const { cache } = useSWRConfig();
-  console.log(state)
+
   const router = useRouter();
 
   async function saveCustomWorkout() {
@@ -62,7 +62,6 @@ export default function Stage2() {
         dispatch(customWorkoutUpdateField("image", thumbnail.img))
         toast.dismiss(toastId);
       }
-      console.log(state.selectedPlans)
       const plans = {}
       for (const key in state.selectedPlans) {
         const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
