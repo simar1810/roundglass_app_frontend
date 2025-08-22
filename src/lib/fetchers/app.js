@@ -99,8 +99,12 @@ export function getFeedComments(postId) {
   return fetchData(`app/get-comments?postId=${postId}`);
 }
 
-export function getRetail() {
-  return fetchData("app/coach-retail");
+export function getRetail(whitelabel) {
+  let query = ""
+  if ((whitelabel)) {
+    query += `whitelabel=${whitelabel}`
+  }
+  return fetchData(`app/coach-retail?${query}`);
 }
 
 export function getOrderHistory() {

@@ -20,11 +20,13 @@ import { useState } from "react";
 import useSWR from "swr";
 
 export default function Page() {
+  const { isWhitelabel } = useAppSelector(state => state.coach.data)
+
   const {
     isLoading: retailLoading,
     error: retailError,
     data: retailData
-  } = useSWR("app/coach-retail", getRetail);
+  } = useSWR("app/coach-retail", () => getRetail(isWhitelabel ? "thewellnessspot" : false));
   const {
     isLoading: ordersLoading,
     error: ordersError,

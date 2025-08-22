@@ -132,7 +132,7 @@ export default function SessionsListingPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  {session.availability.map((avail) => (
+                  {(session.availability || []).map((avail) => (
                     <Badge key={avail} variant="outline" className="text-xs">
                       {avail}
                     </Badge>

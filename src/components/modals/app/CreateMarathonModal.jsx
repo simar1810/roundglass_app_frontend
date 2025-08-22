@@ -75,7 +75,8 @@ function MarathonContainer() {
     }
   }
 
-  const listTasks = tasks.filter(task => task.title.includes(state.title))
+  const listTasks = tasks
+  // .filter(task => task.title.includes(state.title))
 
   return <div className="p-4 pb-0">
     <FormControl
