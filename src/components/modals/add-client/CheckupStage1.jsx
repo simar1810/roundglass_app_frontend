@@ -254,7 +254,7 @@ function Selectheight({
 function SelectWeightUnit() {
   const { weightInKgs, weightInPounds, weightUnit, dispatch } = useCurrentStateContext();
 
-  if (weightUnit.toLowerCase() === "kg") return <FormControl
+  if (weightUnit?.toLowerCase() === "kg") return <FormControl
     label="Kg"
     placeholder="Enter weight"
     value={weightInKgs}

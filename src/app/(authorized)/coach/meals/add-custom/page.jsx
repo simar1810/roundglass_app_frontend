@@ -38,13 +38,16 @@ function CustomWorkoutContainer() {
         }
         const mealPlan = response.data
         const plans = {};
+        const editPlans = {}
         for (const field in mealPlan.plans) {
           plans[field] = mealPlan.plans[field].meals || []
+          editPlans[field] = mealPlan.plans[field]._id
         }
         dispatch(changeStateDifferentCreationMeal({
           mode,
           creationType,
           selectedPlans: plans,
+          editPlans: editPlans,
           selectedPlan: Object.keys(plans)?.at(0),
           selectedMealType: Object.values(plans)?.at(0)?.at(0).mealType,
           thumbnail: mealPlan.image,

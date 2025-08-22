@@ -104,7 +104,7 @@ function Stage1() {
 function SelectClient({ client }) {
   const { clientId, dispatch } = useCurrentStateContext();
 
-  return <div className="flex items-center gap-2 border-b pb-2">
+  return <label className="flex items-center gap-2 border-b pb-2">
     <Avatar>
       <AvatarImage src={client.profilePhoto} />
       <AvatarFallback>{nameInitials(client?.name || "")}</AvatarFallback>
@@ -118,7 +118,7 @@ function SelectClient({ client }) {
       checked={clientId === client._id}
       onChange={() => dispatch(selectClient(client._id, client.name))}
     />
-  </div>
+  </label>
 }
 
 function generateMarginsPayload__select(margins) {

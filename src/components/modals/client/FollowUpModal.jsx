@@ -298,7 +298,7 @@ function SelectBodyComposition() {
 
 function WeightOfClient() {
   const { dispatch, healthMatrix, ...state } = useCurrentStateContext();
-  if (healthMatrix.weightUnit.toLowerCase() === "kg") return <FormControl
+  if (healthMatrix.weightUnit?.toLowerCase() === "kg") return <FormControl
     type="number"
     className="[&_.label]:font-[400] [&_.input]:text-[14px]"
     placeholder="Enter Weight"
