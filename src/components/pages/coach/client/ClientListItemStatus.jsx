@@ -1,4 +1,4 @@
-import { CalendarRange, EllipsisVertical } from "lucide-react";
+import { EllipsisVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Avatar,
@@ -15,7 +15,6 @@ import Link from "next/link";
 import DeleteClientModal from "@/components/modals/client/DeleteClientModal";
 import { useState } from "react";
 import { nameInitials } from "@/lib/formatter";
-import FollowUpModal from "@/components/modals/client/FollowUpModal";
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import { DialogTrigger } from "@/components/ui/dialog";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
@@ -24,8 +23,8 @@ import { mutate } from "swr";
 import { sendData } from "@/lib/api";
 import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
 import { toast } from "sonner";
-import { copyText } from "@/lib/utils";
 import PendingClientClubDataModal from "@/components/modals/client/PendingClientClubDataModal";
+import ClientUpdateCategories from "./ClientUpdateCategories";
 
 export default function ClientListItemStatus({
   client,
@@ -94,6 +93,19 @@ export default function ClientListItemStatus({
         >
           Club Details
         </DropdownMenuItem>}
+        <DropdownMenuItem
+          onClick={() => setModal(<ClientUpdateCategories
+            clientData={client}
+            onClose={() => setModal()}
+            defaultValue={client.rollno}
+            open={true}
+          >
+            <DialogTrigger />
+          </ClientUpdateCategories>)}
+          className="cursor-pointer"
+        >
+          Client Categories
+        </DropdownMenuItem>
         {Boolean(client.rollno) && <DropdownMenuItem
           onClick={() => setModal(<EditClientRollnoModal
             _id={client._id}

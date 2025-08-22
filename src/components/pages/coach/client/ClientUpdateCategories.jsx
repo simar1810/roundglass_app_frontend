@@ -10,7 +10,12 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function ClientUpdateCategories({ clientData }) {
+export default function ClientUpdateCategories({
+  clientData,
+  open,
+  onClose,
+  children
+}) {
   const { client_categories = [] } = useAppSelector(state => state.coach.data);
 
   const { categories: clientCategories } = clientData;
@@ -42,7 +47,7 @@ export default function ClientUpdateCategories({ clientData }) {
       const response = await sendData("app/categories/client", formData);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`clientDetails/${clientData._id}`);
+      location.reload()
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -64,10 +69,11 @@ export default function ClientUpdateCategories({ clientData }) {
       })
   }
 
-  return <Dialog>
-    <DialogTrigger>
+  return <Dialog defaultOpen={open} onOpenChange={onClose}>
+    {children}
+    {!children && <DialogTrigger>
       <Pen className="w-[16px] h-[16px]" />
-    </DialogTrigger>
+    </DialogTrigger>}
     <DialogContent className="gap-0 p-0">
       <DialogTitle className="p-4 border-b-1">Categories</DialogTitle>
       <div className="p-4">
