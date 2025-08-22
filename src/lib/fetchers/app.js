@@ -270,3 +270,7 @@ export function getClientsForCustomWorkout(workoutId) {
 export async function onboardingQuestionaire() {
   return fetchData("app/onboarding/questionaire")
 }
+
+export function retrieveSessions(person) {
+  return fetchData(`app/workout/sessions?person=${person}`)
+}
