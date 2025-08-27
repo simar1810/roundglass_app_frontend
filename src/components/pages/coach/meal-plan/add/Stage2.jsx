@@ -76,7 +76,7 @@ export default function Stage2() {
           createdMealPlan = await sendData(
             "app/create-custom-plan",
             mealPlanCreationRP(state.selectedPlans[key]),
-            "PUT"
+            "POST"
           )
         }
         if (createdMealPlan.status_code !== 200) {
