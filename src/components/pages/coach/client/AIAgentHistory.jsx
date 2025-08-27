@@ -1,15 +1,19 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, RotateCcw, Activity, Brain, Utensils, Lightbulb } from "lucide-react"
+import { CalendarIcon, RotateCcw, Activity, Brain, Utensils, Lightbulb, X } from "lucide-react"
 import { format } from "date-fns"
 import { TabsContent } from "@/components/ui/tabs"
+import useSWR from "swr"
+import { retrieveAIAgentHistory } from "@/lib/fetchers/app"
+import { useParams } from "next/navigation"
+import ContentError from "@/components/common/ContentError"
+import ContentLoader from "@/components/common/ContentLoader"
+import CalenderModal from "@/components/common/CalenderModal"
 
 const sampleData = {
   _id: "68a4362b50cb8c4371a1c4b5",
@@ -79,29 +83,26 @@ const typeColors = {
 }
 
 export default function AIAgentHistory() {
+  const { id } = useParams()
+
   const [selectedType, setSelectedType] = useState("all")
   const [selectedDate, setSelectedDate] = useState(null)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const { data, isLoading, error } = useSWR(
+    `client/ai-history/${format(selectedDate, "dd-MM-yyyy")}`,
+    () => retrieveAIAgentHistory(id, format(selectedDate, "dd-MM-yyyy"))
+  )
 
-  const availableTypes = [...new Set(sampleData.history.map((item) => item.type))]
+  if (isLoading) return <ContentLoader />
 
-  const filteredHistory = useMemo(() => {
-    let filtered = sampleData.history
+  if (error || !data || [400, 500].includes(data.status_code)) return <ContentError title={error || data?.message} />
 
-    if (selectedType !== "all") {
-      filtered = filtered.filter((item) => item.type === selectedType)
-    }
+  const availableTypes = ['Food', 'Mood', 'Exercise', 'Guidance']
 
-    if (selectedDate) {
-      const selectedDateStr = format(selectedDate, "yyyy-MM-dd")
-      filtered = filtered.filter((item) => {
-        const itemDate = format(new Date(item.date), "yyyy-MM-dd")
-        return itemDate === selectedDateStr
-      })
-    }
-
-    return filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
-  }, [selectedType, selectedDate])
+  let filteredHistory = data.history || []
+  if (selectedType !== "all") {
+    filteredHistory = filteredHistory.filter((item) => item.type === selectedType)
+  }
 
   const handleReset = () => {
     setSelectedType("all")
@@ -119,19 +120,19 @@ export default function AIAgentHistory() {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{sampleData.calories}</div>
+                <div className="text-2xl font-bold text-primary">{data.calories}</div>
                 <div className="text-sm text-muted-foreground">Calories</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{sampleData.protein}g</div>
+                <div className="text-2xl font-bold text-primary">{data.protein}g</div>
                 <div className="text-sm text-muted-foreground">Protein</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{sampleData.carbohydrates}g</div>
+                <div className="text-2xl font-bold text-primary">{data.carbohydrates}g</div>
                 <div className="text-sm text-muted-foreground">Carbs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{sampleData.fats}g</div>
+                <div className="text-2xl font-bold text-primary">{data.fats}g</div>
                 <div className="text-sm text-muted-foreground">Fats</div>
               </div>
             </div>
@@ -143,8 +144,8 @@ export default function AIAgentHistory() {
             <CardTitle className="text-lg">Filter History</CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="">
+            <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-end">
+              <div>
                 <label className="text-sm font-medium mb-2 block">Type</label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-full sm:w-48">
@@ -160,6 +161,13 @@ export default function AIAgentHistory() {
                   </SelectContent>
                 </Select>
               </div>
+              <CalenderModal
+                date={selectedDate}
+                setDate={setSelectedDate}
+                setOpen={setIsCalendarOpen}
+                open={isCalendarOpen}
+                className="ml-auto"
+              />
               <div className="flex-shrink-0 self-end">
                 <Button
                   variant="outline"
@@ -167,8 +175,7 @@ export default function AIAgentHistory() {
                   onClick={handleReset}
                   className="flex items-center gap-2 bg-transparent"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -207,7 +214,7 @@ export default function AIAgentHistory() {
                             {item.type}
                           </Badge>
                           <span className="text-sm text-muted-foreground">
-                            {format(new Date(item.date), "MMM dd, yyyy • h:mm a")}
+                            {item.date}
                           </span>
                         </div>
                         <p className="font-medium truncate">{item.question || "No description available"}</p>

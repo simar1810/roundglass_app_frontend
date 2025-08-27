@@ -278,3 +278,9 @@ export async function onboardingQuestionaire() {
 export function retrieveSessions(person) {
   return fetchData(`app/workout/sessions?person=${person}`)
 }
+
+export function retrieveAIAgentHistory(clientId, date) {
+  let endpoint = `app/ai/analyze?person=coach&client=${clientId}`
+  if (date && date !== "01-01-1970") endpoint += `&date=${date}`
+  return fetchData(endpoint)
+}
