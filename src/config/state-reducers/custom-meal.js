@@ -352,12 +352,12 @@ export function copyAllMealPlans(from, to) {
 
 export function mealPlanCreationRP(state) {
   return {
-    name: null,
-    description: null,
-    joiningDate: null,
-    _id: null,
-    notes: null,
-    image: null,
+    name: undefined,
+    description: undefined,
+    joiningDate: undefined,
+    // _id: undefined,
+    notes: undefined,
+    image: undefined,
     meals: state
   }
 }
