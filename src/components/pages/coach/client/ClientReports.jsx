@@ -1,3 +1,4 @@
+import { UploadReport } from "@/app/(authorized)/coach/reports/page";
 import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
 import { TabsContent } from "@/components/ui/tabs"
@@ -18,21 +19,25 @@ export default function ClientReports() {
     <ContentError title={error?.message || data?.message} className="mt-0" />
   </TabsContent>
 
-  const [report] = data.data || []
+  const [report] = data?.data || []
+  if (!report) return <TabsContent value="client-reports" className="text-center">
+    <p className="mb-4">No report uploaded</p>
+    <UploadReport clientId={id} />
+  </TabsContent>
 
   return <TabsContent
     value="client-reports"
   >
     {report.reports.length === 0 && <div>No reports found</div>}
     <div className="grid grid-cols-2 gap-4">
-      {report.reports.map((report, index) => report.file_type === "image"
+      {report?.reports?.map((report, index) => report.file_type === "image"
         ? <div key={index} className="min-h-96">
           <Image
-            src={report.file_type}
+            src={report.file}
             alt=""
             height={1024}
             width={1024}
-            className="rounded-[10px] max-h-80 h-full"
+            className="rounded-[10px] max-h-80 object-cover h-full"
             onError={e => e.target.src = "/not-found.png"}
           />
           <div className="py-2">

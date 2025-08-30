@@ -31,7 +31,6 @@ export default function Page() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
   const clients = data.data;
-  console.log(clients)
 
   return <div className="content-container content-height-screen">
     <h4>Reports</h4>
@@ -63,7 +62,6 @@ export default function Page() {
 
 function ClientDetails({ client, index }) {
   const reportNames = (client?.reports || []).map(report => report.title)?.join(", ")
-  console.log(reportNames.length)
   return <TableRow className="text-center">
     <TableCell>{index + 1}</TableCell>
     <TableCell className="font-medium flex items-center gap-1">
@@ -92,7 +90,7 @@ function ClientDetails({ client, index }) {
   </TableRow>
 }
 
-function UploadReport({ clientId }) {
+export function UploadReport({ clientId }) {
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
     title: "",
