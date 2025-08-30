@@ -155,7 +155,7 @@ export default function Stage2() {
         <CustomMealMetaData />
         <div className="pl-8">
           {component}
-          <SelectMeals />
+          <SelectMeals key={state.selectedMealType} />
           <Button
             disabled={loading}
             variant="wz"
