@@ -10,6 +10,7 @@ import { useRef } from "react";
 export default function CustomMealMetaData() {
   const { dispatch, ...state } = useCurrentStateContext()
   const fileRef = useRef()
+  console.log(state)
   return <div className="pr-8 flex flex-col gap-y-4">
     <FormControl
       value={state.title}
@@ -20,12 +21,13 @@ export default function CustomMealMetaData() {
     <div>
       <Label className="font-bold mb-2">Thumbnail</Label>
       <Image
-        src={state.file ? getObjectUrl(state.file) : "/not-found.png"}
+        src={state.file ? getObjectUrl(state.file) : state.thumbnail || "/not-found.png"}
         alt=""
         height={400}
         width={400}
         className="max-h-[220px] w-full object-cover rounded-[10px]"
         onClick={() => fileRef.current.click()}
+        onError={e => e.target.src = "/not-found.png"}
       />
       <input
         type="file"
