@@ -1,10 +1,11 @@
 "use server";
 
+import { useExpireUserSession } from "@/components/common/AppNavbar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-export async function fetchData(endpoint) {
+export async function fetchData(endpoint, expireUserSession) {
   try {
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
@@ -13,7 +14,7 @@ export async function fetchData(endpoint) {
       headers: {
         Authorization: `Bearer ${TOKEN}`,
       },
-      cache: "no-store"
+      cache: "no-store",
     });
     const data = await response.json();
     if (
@@ -29,7 +30,12 @@ export async function fetchData(endpoint) {
   }
 }
 
-export async function sendData(endpoint, data, method = "POST") {
+export async function sendData(
+  endpoint,
+  data,
+  method = "POST",
+  expireUserSession
+) {
   try {
     if (typeof method !== "string") {
       throw new Error("HTTP method must be a string");
@@ -46,16 +52,26 @@ export async function sendData(endpoint, data, method = "POST") {
         Authorization: `Bearer ${TOKEN}`,
       },
       body: JSON.stringify(data),
-      cache: "no-store"
+      cache: "no-store",
     });
     const retrievedData = await response.json();
+    if (response.status === 401) {
+      console.error("401 Unauthorized - Logging out user.");
+      if (expireUserSession) await expireUserSession();
+      return null;
+    }
     return retrievedData;
   } catch (error) {
     return error;
   }
 }
 
-export async function sendDataWithFormData(endpoint, formData, method = "POST") {
+export async function sendDataWithFormData(
+  endpoint,
+  formData,
+  method = "POST",
+  expireUserSession
+) {
   try {
     if (typeof method !== "string") {
       throw new Error("HTTP method must be a string");
@@ -74,6 +90,11 @@ export async function sendDataWithFormData(endpoint, formData, method = "POST") 
       cache: "no-store",
     });
     const retrievedData = await response.json();
+    if (response.status === 401) {
+      console.error("401 Unauthorized - Logging out user.");
+      if (expireUserSession) await expireUserSession();
+      return null;
+    }
     return retrievedData;
   } catch (error) {
     return error;
