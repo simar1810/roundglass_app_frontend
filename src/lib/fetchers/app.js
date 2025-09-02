@@ -290,3 +290,7 @@ export function retrieveReports(person = "coach", clientId) {
   if (clientId) query += `&clientId=${clientId}`
   return fetchData(`app/reports/client?${query}`)
 }
+
+export function retrieveCoachClientList() {
+  return fetchData("app/coach-client-list")
+}

@@ -1,6 +1,7 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import Loader from "@/components/common/Loader";
 import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
@@ -9,7 +10,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Textarea } from "@/components/ui/textarea";
 import { sendData } from "@/lib/api";
-import { getCoachNotifications } from "@/lib/fetchers/app";
+import { getCoachNotifications, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { format, parse } from "date-fns";
 import { Bell } from "lucide-react"
 import { useState } from "react";
@@ -38,14 +39,14 @@ export default function Page() {
   }
 
   if (notifications.length === 0) return <div className="">
-    <ScheduleNotification />
+    <ScheduleNotificationWrapper />
     <ContentError title="No Notifications found" />
   </div>
 
   return <div className="content-container">
     <div className="flex items-center justify-between">
       <h4 className="pb-4 mb-4 border-b-1">Notifications</h4>
-      <ScheduleNotification />
+      <ScheduleNotificationWrapper />
     </div>
     <div className="grid grid-cols-2 gap-x-4">
       {notifications.map(notification => <Notification
@@ -95,7 +96,29 @@ function NotificationPagination({
   </Pagination>
 }
 
-function ScheduleNotification() {
+function ScheduleNotificationWrapper() {
+  const { data, isLoading, error } = useSWR("coach-client-list", () => retrieveCoachClientList())
+
+  if (isLoading) return <Loader />
+
+  if (error || data.status_code !== 200) {
+    toast.error(data.message || error || "Something went wrong!")
+    return
+  }
+
+  const clients = [
+    { id: 0, name: "All", value: "all" },
+    ...(data.data || []).map((client, index) => ({
+      id: index + 1,
+      name: client.name,
+      value: client._id
+    }))
+  ]
+
+  return <ScheduleNotification clients={clients} />
+}
+
+function ScheduleNotification({ clients }) {
   const [loading, setLoading] = useState(false);
   const [payload, setPayload] = useState({
     subject: "",
@@ -104,6 +127,7 @@ function ScheduleNotification() {
     time: "", // 24 hrs format
     date: "", // dd-MM-yyyy format
     reocurrence: [], // 0, 1, ..., 6
+    clients: []
   })
 
   async function scheduleNotification() {
@@ -152,6 +176,13 @@ function ScheduleNotification() {
           ]}
           value={payload.notificationType}
           onChange={e => setPayload(prev => ({ ...prev, notificationType: e.target.value }))}
+        />
+        <SelectMultiple
+          label="Select Clients"
+          options={clients}
+          value={payload.clients}
+          onChange={value => setPayload(prev => ({ ...prev, clients: value }))}
+          className="mt-4"
         />
         <FormControl
           label="Time"
@@ -212,6 +243,7 @@ function generatePayload(payload) {
       notificationType: "schedule",
       date: format(parse(payload.date, "yyyy-MM-dd", new Date()), "dd-MM-yyyy"),
       time: `${payload.time}:00`,
+      clients: payload.client
     }
   }
   throw new Error("Type of notification is mandatory.")

@@ -131,6 +131,7 @@ function ClientRetailData({ clientId }) {
 }
 
 function RetailOrderDetailCard({ order }) {
+
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       {order.status === "Completed"
@@ -157,7 +158,8 @@ function RetailOrderDetailCard({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
-        {order.pendingAmount > 0 && <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">{order.pendingAmount}</span></p>}
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount, 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount, 0)}</span></p>
       </div>
       {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
@@ -169,8 +171,7 @@ function RetailOrderDetailCard({ order }) {
   </Card>
 }
 
-function UpdateClientOrderAmount({ order }) {
-  const { id } = useParams();
+export function UpdateClientOrderAmount({ order }) {
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState("");
 

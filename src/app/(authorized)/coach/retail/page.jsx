@@ -5,6 +5,8 @@ import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import FormControl from "@/components/FormControl";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
+import { UpdateClientOrderAmount } from "@/components/pages/coach/client/ClientData";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,7 +17,7 @@ import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { invoicePDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
-import { format, isAfter, isBefore, parse } from "date-fns";
+import { parse } from "date-fns";
 import { Clock, EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -201,10 +203,17 @@ function Order({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
       </div>
-      <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
-        Order Now&nbsp;{">"}
-      </Link>
+      <div>
+        {order.pendingAmount > 0
+          ? <UpdateClientOrderAmount order={order} />
+          : <Badge variant="wz">Paid</Badge>}
+        <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center mt-2" href="/">
+          Order Now&nbsp;{">"}
+        </Link>
+      </div>
     </CardFooter>
   </Card>
 }
