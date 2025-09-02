@@ -157,12 +157,14 @@ function RetailOrderDetailCard({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
-        {order.status === "Pending" && <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">{order.pendingAmount}</span></p>}
+        {order.pendingAmount > 0 && <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">{order.pendingAmount}</span></p>}
       </div>
       {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
       </Link> */}
-      {order.status === "Pending" && <UpdateClientOrderAmount order={order} />}
+      {order.pendingAmount > 0
+        ? <UpdateClientOrderAmount order={order} />
+        : <Badge variant="wz">Paid</Badge>}
     </CardFooter>
   </Card>
 }

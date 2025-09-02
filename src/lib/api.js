@@ -56,7 +56,6 @@ export async function sendData(
     });
     const retrievedData = await response.json();
     if (response.status === 401) {
-      console.error("401 Unauthorized - Logging out user.");
       if (expireUserSession) await expireUserSession();
       return null;
     }
@@ -91,7 +90,6 @@ export async function sendDataWithFormData(
     });
     const retrievedData = await response.json();
     if (response.status === 401) {
-      console.error("401 Unauthorized - Logging out user.");
       if (expireUserSession) await expireUserSession();
       return null;
     }

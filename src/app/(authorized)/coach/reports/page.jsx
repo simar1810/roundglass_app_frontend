@@ -123,7 +123,7 @@ export function UploadReport({ clientId }) {
     <DialogTrigger>
       <Upload
         className="w-[16px] h-[16px] text-[var(--accent-1)]"
-        strokeWidth={2}
+        strokeWidth={2.4}
       />
     </DialogTrigger>
     <DialogContent className="max-h-[75vh] p-0 gap-0 overflow-y-auto">
