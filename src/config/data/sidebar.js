@@ -9,6 +9,7 @@ import {
   Clock12,
   ContactRound,
   Dumbbell,
+  FileChartColumn,
   FileCheck,
   FileText,
   Flame,
@@ -69,6 +70,12 @@ export const sidebar__coachContent = [
       },
       {
         id: 2,
+        icon: <FileChartColumn className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Reports",
+        url: "/coach/reports"
+      },
+      {
+        id: 3,
         icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
         title: "Add Clients with Checkup",
         type: "modal",

@@ -10,7 +10,6 @@ import { useRef } from "react";
 export default function CustomMealMetaData() {
   const { dispatch, ...state } = useCurrentStateContext()
   const fileRef = useRef()
-  console.log(state)
   return <div className="pr-8 flex flex-col gap-y-4">
     <FormControl
       value={state.title}
