@@ -1,15 +1,15 @@
-"use client"
+"use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, ClockFading } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import useSWR from "swr";
-import { useEffect, useState } from "react";
+import useSWR, { mutate } from "swr";
+import { useState } from "react";
 import ClientClubDataComponent from "./ClientClubDataComponent";
 import { useAppSelector } from "@/providers/global/hooks";
 import ClientStatisticsData from "./ClientStatisticsData";
@@ -20,10 +20,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { trimString } from "@/lib/formatter";
 import AIAgentHistory from "./AIAgentHistory";
+import ClientReports from "./ClientReports";
+import { useParams } from "next/navigation";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import FormControl from "@/components/FormControl";
+import { sendData } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function ClientData({ clientData }) {
   const { organisation } = useAppSelector(state => state.coach.data);
-  return <div className="bg-white p-4 rounded-[18px] border-1">
+  return <div className="bg-white h-auto p-4 rounded-[18px] border-1">
     <Tabs defaultValue="statistics">
       <Header />
       <ClientStatisticsData clientData={clientData} />
@@ -33,6 +39,7 @@ export default function ClientData({ clientData }) {
       <MarathonData clientData={clientData} />
       <WorkoutContainer id={clientData._id} />
       <AIAgentHistory />
+      <ClientReports />
     </Tabs>
   </div>
 }
@@ -92,7 +99,8 @@ export function CustomMealDetails({ meal }) {
 }
 
 function ClientRetailData({ clientId }) {
-  const { isLoading, error, data } = useSWR(`app/getClientOrderHistory?clientId=${clientId}`, () => getClientOrderHistory(clientId));
+  const { id } = useParams()
+  const { isLoading, error, data } = useSWR(`app/getClientOrderHistory/${clientId}`, () => getClientOrderHistory(id));
 
   if (isLoading) return <TabsContent value="meal">
     <ContentLoader />
@@ -102,14 +110,20 @@ function ClientRetailData({ clientId }) {
     <ContentError title={error || data.message} />
   </TabsContent>
 
-  const orderHistoryClient = data.data;
+  const orderHistoryClient = data?.data;
+  const completed = data?.data?.Completed || {}
+  const incomplete = data?.data?.Pending || {}
 
-  if (orderHistoryClient.orderHistory.length === 0) return <TabsContent value="retail">
+  if (orderHistoryClient?.orderHistory?.length === 0) return <TabsContent value="retail">
     <ContentError className="mt-0" title="0 retails for this client!" />
   </TabsContent>
 
   return <TabsContent value="retail">
-    {orderHistoryClient.orderHistory.map(order => <RetailOrderDetailCard
+    {(completed?.orders || []).map(order => <RetailOrderDetailCard
+      key={order._id}
+      order={order}
+    />)}
+    {(incomplete?.orders || []).map(order => <RetailOrderDetailCard
       key={order._id}
       order={order}
     />)}
@@ -117,6 +131,7 @@ function ClientRetailData({ clientId }) {
 }
 
 function RetailOrderDetailCard({ order }) {
+
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       {order.status === "Completed"
@@ -143,12 +158,65 @@ function RetailOrderDetailCard({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt}</span></p>
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount, 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount, 0)}</span></p>
       </div>
       {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
       </Link> */}
+      {order.pendingAmount > 0
+        ? <UpdateClientOrderAmount order={order} />
+        : <Badge variant="wz">Paid</Badge>}
     </CardFooter>
   </Card>
+}
+
+export function UpdateClientOrderAmount({ order }) {
+  const [loading, setLoading] = useState(false);
+  const [value, setValue] = useState("");
+
+  async function updateRetailAmount() {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        `app/client/retail-order/${order.clientId}`,
+        { orderId: order._id, amount: value },
+        "PUT"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] font-bold text-white text-[14px]">Pay</DialogTrigger>
+    <DialogContent className="p-0 gap-0">
+      <DialogTitle className="p-4 border-b-1">Order Amount</DialogTitle>
+      <div className="p-4">
+        <p> Pending Amount - ₹{order.pendingAmount}</p>
+        <FormControl
+          label="Add Amount"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          placeholder="Enter Amount"
+          className="block mt-4"
+        />
+        <Button
+          variant="wz"
+          className="block mt-4"
+          disabled={loading}
+          onClick={updateRetailAmount}
+        >
+          Update
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
 }
 
 function RetailCompletedLabel() {
@@ -223,52 +291,32 @@ function MarathonData({ clientData }) {
   </TabsContent>
 }
 
+const tabItems = [
+  { value: "statistics", label: "Statistics" },
+  { value: "meal", label: "Meal" },
+  { value: "workout", label: "Workout" },
+  { value: "retail", label: "Retail", showIf: (organisation) => organisation.toLowerCase() === "herbalife" },
+  { value: "marathon", label: "Marathon" },
+  { value: "club", label: "Club" },
+  { value: "ai-agent", label: "AI History" },
+  { value: "client-reports", label: "Client Reports" },
+];
+
 function Header() {
   const { organisation } = useAppSelector(state => state.coach.data);
-
-  return <TabsList className="w-full bg-transparent p-0 mb-4 grid grid-cols-7 border-b-2 rounded-none overflow-x-auto no-scrollbar">
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="statistics"
-    >
-      Statistics
-    </TabsTrigger>
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="meal"
-    >
-      Meal
-    </TabsTrigger>
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="workout"
-    >
-      Workout
-    </TabsTrigger>
-    {organisation.toLowerCase() === "herbalife" && <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="retail"
-    >
-      Retail
-    </TabsTrigger>}
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="marathon"
-    >
-      Marathon
-    </TabsTrigger>
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="club"
-    >
-      Club
-    </TabsTrigger>
-    <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
-      value="ai-agent"
-    >
-      AI Agent History
-    </TabsTrigger>
+  return <TabsList className="w-full bg-transparent p-0 mb-4 flex items-center border-b-2 rounded-none overflow-x-auto no-scrollbar">
+    {tabItems.map(({ value, label, showIf }) => {
+      if (showIf && !showIf(organisation)) return null;
+      return (
+        <TabsTrigger
+          key={value}
+          className="mb-[-5px] px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+          value={value}
+        >
+          {label}
+        </TabsTrigger>
+      );
+    })}
   </TabsList>
 }
 

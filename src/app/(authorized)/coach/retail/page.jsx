@@ -2,12 +2,17 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
+import FormControl from "@/components/FormControl";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
+import { UpdateClientOrderAmount } from "@/components/pages/coach/client/ClientData";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { invoicePDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -17,6 +22,7 @@ import { Clock, EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function Page() {
@@ -147,6 +153,7 @@ function Orders({ orders }) {
     .sort((a, b) => a.status === "Completed");
 
   return <TabsContent value="order-history">
+    <ExportOrdersoExcel orders={orders} />
     <div className="grid grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
     </div>
@@ -196,10 +203,17 @@ function Order({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
       </div>
-      <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
-        Order Now&nbsp;{">"}
-      </Link>
+      <div>
+        {order.pendingAmount > 0
+          ? <UpdateClientOrderAmount order={order} />
+          : <Badge variant="wz">Paid</Badge>}
+        <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center mt-2" href="/">
+          Order Now&nbsp;{">"}
+        </Link>
+      </div>
     </CardFooter>
   </Card>
 }
@@ -216,4 +230,52 @@ export function RetailPendingLabel({ status }) {
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>
   </div>
+}
+
+function ExportOrdersoExcel({ orders }) {
+  const [dates, setDates] = useState({
+    startDate: "",
+    endDate: ""
+  });
+
+  function exportExcelSheet() {
+    try {
+      const data = excelRetailOrdersData(orders, dates)
+      exportToExcel(data, "Retail Orders", "orders.xlsx")
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button
+        variant="wz"
+        className="block mb-4 ml-auto"
+      >Export</Button>
+    </DialogTrigger>
+    <DialogContent className="p-0">
+      <DialogTitle className="p-4 border-b-1">Export Orders Via Excel</DialogTitle>
+      <div className="p-4 gap-0">
+        <div className="grid grid-cols-2 gap-4">
+          <FormControl
+            type="date"
+            label="Start Date"
+            value={dates.startDate}
+            onChange={e => setDates(prev => ({ ...prev, startDate: e.target.value }))}
+          />
+          <FormControl
+            type="date"
+            label="End Date"
+            value={dates.endDate}
+            onChange={e => setDates(prev => ({ ...prev, endDate: e.target.value }))}
+          />
+        </div>
+        <Button
+          variant="wz"
+          className="block mt-8 mx-auto"
+          onClick={exportExcelSheet}
+        >Export Now</Button>
+      </div>
+    </DialogContent>
+  </Dialog>
 }

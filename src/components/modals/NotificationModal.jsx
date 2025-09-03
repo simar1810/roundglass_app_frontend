@@ -14,7 +14,7 @@ export default function NotificationModal() {
     <DropdownMenuTrigger>
       <Bell fill="#67BC2A" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
     </DropdownMenuTrigger>
-    <DropdownMenuContent className="!max-w-[450px] max-h-[500px] border-0 p-0 overflow-auto border">
+    <DropdownMenuContent className="!max-w-[450px] max-h-[500px] p-0 overflow-auto border">
       <DropDownContainer />
     </DropdownMenuContent>
   </DropdownMenu>
@@ -44,7 +44,7 @@ function DropDownContainer() {
           <h3 className="text-black text-[14px] ml-4">
             Notifications
           </h3>
-          <Link href="/client/app/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
+          <Link href="/coach/notifications" className="text-[14px] text-[var(--accent-1)] underline">See All</Link>
         </div>
         <div className="px-4 py-3 divide-y-1">
           {notifications.map(notification => <Notification

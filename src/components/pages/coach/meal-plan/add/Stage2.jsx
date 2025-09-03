@@ -92,7 +92,7 @@ export default function Stage2() {
 
       const response = await sendData(`app/meal-plan/custom`, {
         ...formData,
-        image: thumbnail?.img,
+        image: thumbnail?.img || state.thumbnail,
         plans: state.selectedPlans,
         id: state.id
       }, "PUT");
@@ -134,7 +134,7 @@ export default function Stage2() {
       const formData = dailyMealRP(state);
       const response = await sendData(`app/meal-plan/custom`, {
         ...formData,
-        image: thumbnail?.img,
+        image: thumbnail?.img || state.thumbnail,
         plans
       });
       toast.dismiss(toastId);
@@ -155,7 +155,7 @@ export default function Stage2() {
         <CustomMealMetaData />
         <div className="pl-8">
           {component}
-          <SelectMeals />
+          <SelectMeals key={`${state.selectedPlan}${state.selectedMealType}`} />
           <Button
             disabled={loading}
             variant="wz"

@@ -81,7 +81,7 @@ export function getClientMealPlanById(_id) {
 }
 
 export function getClientOrderHistory(clientId) {
-  return fetchData(`app/client-order-history?clientId=${clientId}`);
+  return fetchData(`app/client/retail-order/${clientId}`);
 }
 
 export function getAppFeeds(state, person = "coach") {
@@ -289,7 +289,17 @@ export function retrieveSessions(person) {
 }
 
 export function retrieveAIAgentHistory(clientId, date) {
-  let endpoint = `app/dashboard?person=coach&client=${clientId}`;
-  if (date && date !== "01-01-1970") endpoint += `&date=${date}`;
-  return fetchData(endpoint);
+  let endpoint = `app/ai/analyze?person=coach&client=${clientId}`
+  if (date && date !== "01-01-1970") endpoint += `&date=${date}`
+  return fetchData(endpoint)
+}
+
+export function retrieveReports(person = "coach", clientId) {
+  let query = `person=${person}`
+  if (clientId) query += `&clientId=${clientId}`
+  return fetchData(`app/reports/client?${query}`)
+}
+
+export function retrieveCoachClientList() {
+  return fetchData("app/coach-client-list")
 }

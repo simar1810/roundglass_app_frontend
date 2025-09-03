@@ -88,7 +88,7 @@ function CustomMealsListing({ customPlan }) {
   }, [selectedPlan]);
 
   return <div className="p-4 pl-8">
-    <div className="flex gap-4 mb-8 overflow-x-auto no-scrollbar">
+    <div className="flex gap-4 mb-8 overflow-x-auto pb-4">
       {days.map(day => <Button
         key={day}
         variant={day === selectedPlan ? "wz" : "wz_outline"}
@@ -128,6 +128,7 @@ function MealDetails({ meal }) {
     <div className="p-3 text-md">
       <h3>{meal.dish_name}</h3>
       <p className="text-black/60 text-xs mt-1">{meal.description}</p>
+      <p className="text-[14px] text-[#808080]">{meal.meal_time}</p>
     </div>
   </div>
 }
