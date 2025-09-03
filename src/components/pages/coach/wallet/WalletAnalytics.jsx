@@ -375,7 +375,6 @@ export default function WalletAnalytics() {
         `app/analytics/dashboard?period=${period}&coachId=${coachId}`
       );
       setAnalyticsData(response.data);
-      console.log("analytics", response);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
     } finally {
@@ -389,7 +388,6 @@ export default function WalletAnalytics() {
         `app/analytics/fraud-detection?period=${period}&coachId=${coachId}`
       );
       setFraudData(response.data);
-      console.log("fraudData", response);
     } catch (error) {
       console.error("Failed to fetch fraud data:", error);
     }

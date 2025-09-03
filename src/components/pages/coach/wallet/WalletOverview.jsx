@@ -492,7 +492,6 @@ export default function WalletOverview() {
       setWithdrawalsError("");
       try {
         const res = await fetchData("app/withdrawals", {});
-        console.log("withdrawal", res);
         setWithdrawals(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
         setWithdrawalsError("Could not load withdrawal requests.");
@@ -616,7 +615,6 @@ export default function WalletOverview() {
     setWithdrawalsError("");
     try {
       const res = await fetchData("app/withdrawals", {});
-      console.log("withdrawal", res);
       setWithdrawals(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       setWithdrawalsError("Could not load withdrawal requests.");
@@ -631,7 +629,6 @@ export default function WalletOverview() {
 
   async function handleWithdrawSubmit(e) {
     e.preventDefault();
-    console.log("Form submit - preventDefault called");
     setWithdrawLoading(true);
     setWithdrawError("");
     setWithdrawSuccess("");

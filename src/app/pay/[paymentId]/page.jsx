@@ -219,10 +219,6 @@ export default function PayPage({ params }) {
           }`
         );
 
-        // Debug: Log the API response
-        console.log("Voucher API Response:", res);
-        console.log("Voucher Data:", res.data);
-
         // Extract discount details from API response
         const voucherData = res.data;
         const originalAmount =
@@ -233,14 +229,6 @@ export default function PayPage({ params }) {
           originalAmount > 0
             ? Math.round((discount / originalAmount) * 100)
             : 0;
-
-        // Debug: Log calculated values
-        console.log("Calculated Values:", {
-          originalAmount,
-          discount,
-          discountedAmount,
-          discountPercent,
-        });
 
         setDiscountAmount(discount);
         setDiscountPercentage(discountPercent);

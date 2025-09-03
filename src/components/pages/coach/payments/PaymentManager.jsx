@@ -70,12 +70,7 @@ export default function PaymentManager() {
         search: filters.search,
         dateRange: filters.dateRange,
       });
-      console.log("Payment response:", response);
-      console.log(
-        "Payment links data:",
-        response.data?.payments || response.payments
-      );
-
+   
       if (response.success === true) {
         setPaymentLinks(response.data?.payments || response.payments || []);
         setTotalPages(
@@ -109,12 +104,6 @@ export default function PaymentManager() {
 
       if (response.success === true) {
         toast.success("Reminder sent successfully");
-
-        // Show AI insights if available
-        if (response.aiInsights) {
-          console.log("AI Reminder Insights:", response.aiInsights);
-        }
-
         fetchPaymentLinks(); // Refresh the list
       } else {
         throw new Error(response.message || "Failed to send reminder");
@@ -292,7 +281,6 @@ export default function PaymentManager() {
                 </TableHeader>
                 <TableBody>
                   {paymentLinks.map((link) => {
-                    console.log("Payment link object:", link);
                     return (
                       <TableRow key={link._id}>
                         <TableCell>

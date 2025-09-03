@@ -106,7 +106,6 @@ export default function VoucherManager() {
               (stats.inactive?.totalUsage || 0),
             totalDiscount: 0,
           };
-          console.log("Setting stats from vouchers response:", fallbackStats); // Debug log
           setVoucherStats(fallbackStats);
         }
       } else {
@@ -122,13 +121,7 @@ export default function VoucherManager() {
 
   const fetchVoucherStats = async () => {
     try {
-      console.log("Fetching voucher stats..."); // Debug log
       const response = await getVoucherAnalytics();
-
-      console.log("Voucher analytics response:", response); // Debug log
-      console.log("Response success:", response.success); // Debug log
-      console.log("Response data:", response.data); // Debug log
-      console.log("Response status:", response.status); // Debug log
 
       if (response.success === true) {
         // Handle both possible response structures from backend
@@ -137,12 +130,10 @@ export default function VoucherManager() {
         // Check if it's the analytics response structure
         if (response.data?.overallStats) {
           overallStats = response.data.overallStats;
-          console.log("Using analytics structure"); // Debug log
         }
         // Check if it's the vouchers response structure (fallback)
         else if (response.data?.stats) {
           const stats = response.data.stats;
-          console.log("Using vouchers structure"); // Debug log
           overallStats = {
             totalVouchers:
               (stats.active?.count || 0) + (stats.inactive?.count || 0),
@@ -156,7 +147,6 @@ export default function VoucherManager() {
           console.log("No stats structure found in response"); // Debug log
         }
 
-        console.log("Overall stats:", overallStats); // Debug log
 
         const transformedStats = {
           totalVouchers: overallStats.totalVouchers || 0,
@@ -165,7 +155,6 @@ export default function VoucherManager() {
           totalDiscount: overallStats.totalDiscountGiven || 0,
         };
 
-        console.log("Transformed stats:", transformedStats); // Debug log
         setVoucherStats(transformedStats);
       } else {
         console.error("Failed to fetch voucher stats:", response.message);

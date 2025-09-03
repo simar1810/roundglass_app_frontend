@@ -83,9 +83,6 @@ export const useWallet = () => {
 
       setBalance(balanceData.data?.balance || 0);
 
-      // Debug: Log the transactions data structure
-      console.log("Transactions data:", transactionsData);
-      console.log("Transactions data.data:", transactionsData.data);
 
       // Ensure transactions is always an array
       const transactionsArray = Array.isArray(transactionsData.data)
@@ -94,7 +91,6 @@ export const useWallet = () => {
         ? transactionsData.data.transactions
         : [];
 
-      console.log("Final transactions array:", transactionsArray);
       setTransactions(transactionsArray);
     } catch (err) {
       setError(err.message || "Failed to fetch wallet data");

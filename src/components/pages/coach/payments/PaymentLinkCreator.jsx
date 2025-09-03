@@ -105,7 +105,6 @@ export default function PaymentLinkCreator() {
 
       // Call backend to create payment/order and get custom URL
       const response = await sendData("app/payment/custom-url", payload);
-      console.log("🤖 [Frontend] Payment link creation response:", response);
 
       // Only create the order and redirect to payment page
       if (response.success === true && response.data?.customUrl) {
