@@ -294,3 +294,7 @@ export function retrieveReports(person = "coach", clientId) {
 export function retrieveCoachClientList() {
   return fetchData("app/coach-client-list")
 }
+
+export function retrieveClientNudges(id) {
+  return fetchData(`app/notifications-schedule?clientId=${id}`)
+}
