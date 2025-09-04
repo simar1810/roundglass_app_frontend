@@ -167,7 +167,6 @@ function UserOptions({ profilePhoto, name }) {
   const dropDownContentRef = useRef()
 
   useClickOutside(dropDownContentRef, () => {
-    setModal()
     setOpened(false)
   })
 
