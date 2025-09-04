@@ -70,3 +70,11 @@ export function meetingAttendaceExcel(meetingType, data) {
     "Joining Time": attendance?.attendance?.time,
   }))
 }
+
+export function buildUrlWithQueryParams(baseUrl, paramsObject = {}) {
+  const query = Object.entries(paramsObject)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join("&");
+
+  return baseUrl.includes("?") ? `${baseUrl}&${query}` : `${baseUrl}?${query}`;
+}

@@ -1,0 +1,47 @@
+"use client"
+import useSWR from "swr";
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
+import { retrieveClientNudges } from "@/lib/fetchers/app";
+import { NotificationItem } from "@/components/pages/coach/client/ClientNudges";
+import Paginate from "@/components/Paginate";
+import { useState } from "react";
+
+export default function Page() {
+  const [pagination, setPagination] = useState({
+    limit: 10,
+    page: 1,
+    populate: "client"
+  })
+  const { isLoading, error, data } = useSWR(
+    `client/nudges/${pagination.limit}/${pagination.page}`,
+    () => retrieveClientNudges(false, pagination)
+  );
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data?.status_code !== 200) return <ContentError title={error?.message || data?.message} />
+
+  const {
+    results: notifications = [],
+    totalPages,
+    totalResults
+  } = data?.data || {}
+
+  return <div className="content-container content-height-screen">
+    <h4>Notifications</h4>
+    <div className="mt-6 grid grid-cols-2 gap-4">
+      {notifications.map(notification => <NotificationItem
+        key={notification._id}
+        item={notification}
+      />)}
+    </div>
+    <Paginate
+      totalPages={totalPages}
+      totalResults={totalResults}
+      limit={pagination.limit}
+      page={pagination.page}
+      onChange={setPagination}
+    />
+  </div>
+}
