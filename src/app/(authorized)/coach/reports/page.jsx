@@ -23,6 +23,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("clients/reports", () => retrieveReports());
@@ -62,7 +63,11 @@ export default function Page() {
 
 function ClientDetails({ client, index }) {
   const reportNames = (client?.reports || []).map(report => report.title)?.join(", ")
-  return <TableRow className="text-center">
+  const router = useRouter();
+  return <TableRow
+    onClick={() => router.push(`/coach/clients/${client?.client?._id}?tab=client-reports`)}
+    className="text-center cursor-pointer"
+  >
     <TableCell>{index + 1}</TableCell>
     <TableCell className="font-medium flex items-center gap-1">
       <Avatar>

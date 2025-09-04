@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
-import { BarChart2, Bot, CalendarIcon, Clock, ClockFading, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
+import { BarChart2, Bot, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
@@ -21,17 +21,40 @@ import { Badge } from "@/components/ui/badge";
 import { trimString } from "@/lib/formatter";
 import AIAgentHistory from "./AIAgentHistory";
 import ClientReports from "./ClientReports";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import FormControl from "@/components/FormControl";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+
+const tabItems = [
+  { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
+  { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
+  { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
+  { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: (organisation) => organisation.toLowerCase() === "herbalife" },
+  { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
+  { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
+  { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
+]
 
 export default function ClientData({ clientData }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const params = useSearchParams();
+  const selectedTab = tabItems.map(item => item.value).includes(params.get("tab"))
+    ? params.get("tab")
+    : "statistics"
   const { organisation } = useAppSelector(state => state.coach.data);
+
+  function tabChange(value) {
+    const newParams = new URLSearchParams(params.toString());
+    newParams.set("tab", value);
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+  };
   return <div className="bg-white h-auto p-4 rounded-[18px] border-1">
-    <Tabs defaultValue="statistics">
+    <Tabs defaultValue={selectedTab} onValueChange={tabChange}>
       <Header />
       <ClientStatisticsData clientData={clientData} />
       <ClientMealData _id={clientData._id} />
@@ -291,17 +314,6 @@ function MarathonData({ clientData }) {
     </div>
   </TabsContent>
 }
-
-const tabItems = [
-  { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
-  { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
-  { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
-  { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: (organisation) => organisation.toLowerCase() === "herbalife" },
-  { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
-  { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
-  { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
-  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
-]
 
 function Header() {
   const { organisation } = useAppSelector(state => state.coach.data);

@@ -22,6 +22,7 @@ export function personalBrandingReducer(state, action) {
           : { ...state.formData },
         type: action.payload.length >= 1 ? "edit" : "new",
         stage: action.payload.length >= 1 ? 2 : 3,
+        mutate: action.mutate
       }
     case "PERSONAL_BRAND_UPDATED":
       return {
@@ -55,10 +56,11 @@ export function changeFieldvalue(name, value) {
   }
 }
 
-export function selectPersonalBrandToEdit(payload) {
+export function selectPersonalBrandToEdit(payload, mutate) {
   return {
     type: "SELECT_PERSONAL_BRAND_EDIT",
-    payload
+    payload,
+    mutate
   }
 }
 

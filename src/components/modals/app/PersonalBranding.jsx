@@ -14,9 +14,7 @@ import { personalBrandingInitialState } from "@/config/state-data/personal-brand
 import {
   changeFieldvalue,
   generateRequestPayload,
-  personalBrandCreated,
   personalBrandingReducer,
-  personalBrandUpdated,
   selectPersonalBrandToEdit
 } from "@/config/state-reducers/personal-branding";
 import { sendDataWithFormData } from "@/lib/api";
@@ -59,18 +57,18 @@ export default function PersonalBranding({
 function PersonalBrandingContainer({ onClose }) {
   const { stage } = useCurrentStateContext();
   if (stage === 1) return <Stage1 />
-  if (stage === 2) <Stage2 />
+  if (stage === 2) return <Stage2 />
   return <Stage3 />
 }
 
 function Stage1() {
-  const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
+  const { isLoading, error, data, mutate } = useSWR("app/personalBranding", () => getPersonalBranding());
   const { dispatch } = useCurrentStateContext();
   const brands = data?.data;
 
   useEffect(function () {
-    if (!error && data?.status_code === 200) dispatch(selectPersonalBrandToEdit(brands))
-  }, [isLoading])
+    if (!error && data?.status_code === 200) dispatch(selectPersonalBrandToEdit(brands, mutate))
+  }, [data, isLoading])
 
   if (isLoading) return <div className="h-[200px] flex items-center justify-center">
     <Loader />
@@ -95,8 +93,7 @@ function Stage1() {
 }
 
 async function getRequestLink(data, type, id) {
-  if (!Boolean(type)) {
-    // data.append("id", id)
+  if (Boolean(type)) {
     const response = await sendDataWithFormData("app/update", data, "PUT");
     return response;
   } else {
@@ -116,7 +113,6 @@ function Stage2() {
       const data = generateRequestPayload(formData, selectedBrand._id);
       const response = await getRequestLink(data, selectedBrand._id);
       if (response.status_code !== 200) throw new Error(response.message);
-      dispatch(personalBrandUpdated());
       mutate("app/personalBranding");
       toast.success(response.message);
     } catch (error) {
@@ -190,7 +186,6 @@ function Stage3() {
       const response = await getRequestLink(data);
       if (response.status_code !== 200) throw new Error(response.message);
       mutate("app/personalBranding");
-      dispatch(personalBrandCreated(response.data));
       toast.success(response.message);
     } catch (error) {
       toast.error(error.message);
