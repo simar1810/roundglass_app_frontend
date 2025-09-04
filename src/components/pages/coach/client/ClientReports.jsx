@@ -135,12 +135,6 @@ export default function ClientReports() {
 }
 
 function PreviewDialog({ previewReport, setPreviewReport }) {
-  const [scale, setScale] = useState(1);
-
-  const zoomIn = () => setScale((prev) => Math.min(prev + 0.25, 3));
-  const zoomOut = () => setScale((prev) => Math.max(prev - 0.25, 0.5));
-  const resetZoom = () => setScale(1);
-
   return (
     <Dialog open={!!previewReport} onOpenChange={() => setPreviewReport(null)}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
