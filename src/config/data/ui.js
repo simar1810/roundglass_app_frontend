@@ -35,7 +35,7 @@ export const coachDetailsFields = [
   { id: 1, label: "Name", name: "name" },
   { id: 2, label: "Mobile No.", name: "mobileNumber" },
   { id: 3, label: "Email ID", name: "email" },
-  { id: 4, label: "Whitelabel", name: "whitelabel" },
+  // { id: 4, label: "Whitelabel", name: "whitelabel" },
   // { id: 4, label: "No. of Clients", name: "expectedNoOfClients" },
 ]
 

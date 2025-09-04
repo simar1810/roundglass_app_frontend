@@ -1,11 +1,11 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import Loader from "@/components/common/Loader";
 import ScheduleNotificationWrapper from "@/components/modals/client/ScheduleNotification";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { getCoachNotifications, retrieveCoachClientList } from "@/lib/fetchers/app";
+import { getCoachNotifications } from "@/lib/fetchers/app";
 import { Bell } from "lucide-react"
+import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
 
@@ -30,8 +30,14 @@ export default function Page() {
     types.add(notification.notificationType)
   }
 
-  if (notifications.length === 0) return <div className="">
-    <ScheduleNotificationWrapper />
+  if (notifications.length === 0) return <div>
+    <div className="flex justify-end gap-2">
+      <ScheduleNotificationWrapper />
+      <Link
+        href="/coach/notifications/manage-scheduled"
+        className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-[8px] hover:rounded-[10px]"
+      >Manage Notification</Link>
+    </div>
     <ContentError title="No Notifications found" />
   </div>
 
@@ -59,7 +65,6 @@ function Notification({ notification }) {
     <Bell fill="#67BC2A" className="min-w-[52px] h-[52px] bg-[#90C844]/30 text-[var(--accent-1)] p-3 rounded-full" />
     <div>
       <h4>{notification.message}</h4>
-      {/* <p className="mt-[4px] text-[var(--dark-1)]/25 leading-[1.2] text-[13px]">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p> */}
       <div className="mt-2 text-[var(--dark-1)]/25 leading-[1.2] text-[13px] font-semibold flex gap-4">
         <p>{notification.createdDate.slice(0, 10)}</p>
         <p>{notification.createdDate.slice(11)}</p>

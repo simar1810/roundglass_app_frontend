@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card"
 import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
 import { cn } from "@/lib/utils"
-import { format, parse } from "date-fns"
 import { Pen, Trash2 } from "lucide-react"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
@@ -17,12 +16,12 @@ import useSWR, { mutate } from "swr"
 
 export default function ClientNudges() {
   const { id } = useParams()
-  const { isLoading, data, error } = useSWR(`client/nudges/${id}`, () => retrieveClientNudges(id))
+  const { isLoading, data, error } = useSWR(`client/nudges/${id}`, () => retrieveClientNudges(id, { limit: Infinity }))
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const notifications = data.data || []
+  if (error || data.status_code !== 200) return <ContentError title={error.message || data.message} />
+  const notifications = data?.data?.results || []
 
   return <div className="bg-white border-1 p-4 mt-8 rounded-[16px]">
     <div className="mb-4 flex items-center justify-between">
@@ -37,9 +36,7 @@ export default function ClientNudges() {
       {notifications.map(notification => <NotificationItem
         key={notification._id}
         item={notification}
-      >
-
-      </NotificationItem>)}
+      />)}
       {notifications.length === 0 && <Card className="p-6 text-center text-muted-foreground">
         No notifications found.
       </Card>}
@@ -47,10 +44,9 @@ export default function ClientNudges() {
   </div>
 }
 
-function NotificationItem({ item }) {
+export function NotificationItem({ item = {} }) {
   const { id } = useParams()
-  const { _id, message, isRead, notificationType } = item || {}
-
+  const { _id, message, subject, isRead, notificationType, schedule_type } = item;
   return (
     <Card
       className={cn("p-4 md:px-4 md:py-2 mb-2 bg-[var(--comp-2)]", !isRead && "border-primary/20 ring-1 ring-primary/20")}
@@ -75,11 +71,21 @@ function NotificationItem({ item }) {
                 {notificationType}
               </Badge>
             ) : null}
+
+            {schedule_type ? (
+              <Badge variant="wz_fill" className="text-[8px] font-bold capitalize">
+                {schedule_type}
+              </Badge>
+            ) : null}
           </div>
 
           <h3 id={`notif-${_id}-title`} className="mt-2 text-pretty text-base font-medium">
-            {message || "(no message)"}
+            {subject || "(no subject)"}
           </h3>
+
+          <p className="text-sm leading-tight text-[#808080] mt-1">
+            {message}
+          </p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <ScheduleNotificationWrapper selectedClients={[id]} defaultPayload={item}>

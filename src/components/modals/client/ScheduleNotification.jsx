@@ -26,14 +26,11 @@ export default function ScheduleNotificationWrapper({
     return
   }
 
-  const clients = [
-    { id: 0, name: "All", value: "all" },
-    ...(data.data || []).map((client, index) => ({
-      id: index + 1,
-      name: client.name,
-      value: client._id
-    }))
-  ]
+  const clients = (data.data || []).map((client, index) => ({
+    id: index + 1,
+    name: client.name,
+    value: client._id
+  }))
 
   return <ScheduleNotification
     children={children}
@@ -90,7 +87,7 @@ function ScheduleNotification({
       );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      // location.reload()
+      location.reload()
     } catch (error) {
       toast.error(error.message);
       toast.dismiss(toastId);
@@ -132,13 +129,17 @@ function ScheduleNotification({
           value={payload.notificationType}
           onChange={e => setPayload(prev => ({ ...prev, notificationType: e.target.value }))}
         />
-        {(!selectedClients || selectedClients?.length <= 0) && <SelectMultiple
-          label="Select Clients"
-          options={clients}
-          value={payload.clients}
-          onChange={value => setPayload(prev => ({ ...prev, clients: value }))}
-          className="mt-4"
-        />}
+        {(!selectedClients || selectedClients?.length <= 0) && <>
+          <label className="block mt-4 font-bold">Select Clients</label>
+          <SelectMultiple
+            label="Select Clients"
+            options={clients}
+            value={payload.clients}
+            onChange={value => setPayload(prev => ({ ...prev, clients: value }))}
+            className="mt-1"
+            selectAll={true}
+          />
+        </>}
         <FormControl
           label="Time"
           value={payload.time}
@@ -156,6 +157,7 @@ function ScheduleNotification({
         {payload.notificationType === "reocurr" && <>
           <label className="block mt-4 font-bold">Select Days</label>
           <SelectMultiple
+            label="Select Days"
             options={[
               { id: 1, name: "Monday", value: 1 },
               { id: 2, name: "Tuesday", value: 2 },
@@ -167,7 +169,8 @@ function ScheduleNotification({
             ]}
             value={payload.reocurrence}
             onChange={value => setPayload(prev => ({ ...prev, reocurrence: value }))}
-            className="mb-4"
+            className="mb-4 mt-1"
+            selectAll={true}
           />
         </>}
         <Button
