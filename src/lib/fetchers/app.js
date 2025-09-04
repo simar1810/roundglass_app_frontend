@@ -300,7 +300,7 @@ export function retrieveClientNudges(id, options) {
   const endpoint = buildUrlWithQueryParams(
     "app/notifications-schedule",
     Boolean(id)
-      ? { id, ...options }
+      ? { clientId: id, ...options }
       : options
   )
   return fetchData(endpoint)
