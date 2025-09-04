@@ -25,7 +25,10 @@ export default function ClientNudges() {
 
   return <div className="bg-white border-1 p-4 mt-8 rounded-[16px]">
     <div className="mb-4 flex items-center justify-between">
-      <h4>Client Nudges</h4>
+      <div>
+        <h4>Client Nudges</h4>
+        <p className="text-sm text-[#808080]">{notifications.length} total</p>
+      </div>
       <ScheduleNotificationWrapper selectedClients={[id]}>
         <Button variant="wz">
           Add
@@ -99,14 +102,14 @@ export function NotificationItem({ item = {} }) {
 }
 
 function DeleteClientNotification({ id }) {
-  const { id: clientId } = useParams()
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
       setLoading(true);
       const response = await sendData("app/notifications-schedule", { actionType: "DELETE", id }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`client/nudges/${clientId}`)
+      closeBtnRef.current.click();
+      location.reload();
     } catch (error) {
       toast.error(error.message);
     } finally {
