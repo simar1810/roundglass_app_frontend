@@ -98,7 +98,7 @@ function CustomMealsListing({ customPlan }) {
       </Button>)}
     </div>
     <Separator />
-    <div className="flex gap-4 mt-8 overflow-x-auto no-scrollbar">
+    <div className="flex gap-4 mt-8 overflow-x-auto pb-4">
       {selectedMealTypes.map((mealType, index) => <Button
         key={index}
         variant={mealType.mealType === selectedMealType ? "wz" : "wz_outline"}
