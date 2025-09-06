@@ -51,6 +51,7 @@ export default function VoucherManager() {
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [vouchers, setVouchers] = useState([]); // Ensure it's always an array
+  console.log("Vouchers state:", vouchers); // Debug log
   const [voucherStats, setVoucherStats] = useState({
     totalVouchers: 0,
     activeVouchers: 0,
@@ -675,8 +676,8 @@ export default function VoucherManager() {
                         <div>
                           <div className="font-medium">
                             {voucher.discountType === "percentage"
-                              ? `${voucher.discount}%`
-                              : formatAmount(voucher.discount)}
+                              ? `${voucher.value}%`
+                              : (`${voucher.value}%`)}
                           </div>
                           {voucher.minimumAmount && (
                             <div className="text-sm text-muted-foreground">

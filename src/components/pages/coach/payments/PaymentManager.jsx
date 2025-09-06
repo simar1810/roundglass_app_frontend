@@ -290,11 +290,7 @@ export default function PaymentManager() {
                                 link.clientName ||
                                 getClientName(link.clientId || link.client)}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {link.client?.email ||
-                                link.clientEmail ||
-                                "No email"}
-                            </div>
+                           
                           </div>
                         </TableCell>
                         <TableCell>

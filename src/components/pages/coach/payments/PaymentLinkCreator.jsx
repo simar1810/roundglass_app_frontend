@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,16 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { fetchData, sendData } from "@/lib/api";
 import { createPaymentLink, getVouchers } from "@/lib/paymentService";
-import { Calendar, Copy, Send, Sparkles, Link as LinkIcon } from "lucide-react";
+import {
+  Calendar,
+  Copy,
+  Send,
+  Sparkles,
+  Link as LinkIcon,
+  Search,
+  X,
+  Check,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function PaymentLinkCreator() {
@@ -26,8 +35,14 @@ export default function PaymentLinkCreator() {
   const [loading, setLoading] = useState(false);
   const [paymentCreated, setPaymentCreated] = useState(false);
   const [clients, setClients] = useState([]);
+  const [clientSearch, setClientSearch] = useState("");
+  const [debouncedClientSearch, setDebouncedClientSearch] = useState("");
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [selectedClientIndex, setSelectedClientIndex] = useState(-1);
   const [programs, setPrograms] = useState([]);
   const [vouchers, setVouchers] = useState([]);
+  const clientSearchRef = useRef(null);
+  const clientDropdownRef = useRef(null);
   const [formData, setFormData] = useState({
     clientId: "",
     programId: "",
@@ -46,6 +61,15 @@ export default function PaymentLinkCreator() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // Debounce client search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedClientSearch(clientSearch);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [clientSearch]);
 
   const fetchInitialData = async () => {
     try {
@@ -161,6 +185,10 @@ export default function PaymentLinkCreator() {
       useAINote: false,
       language: "english",
     });
+    setClientSearch("");
+    setDebouncedClientSearch("");
+    setShowClientDropdown(false);
+    setSelectedClientIndex(-1);
     setPaymentCreated(false);
     setPaymentId("");
   };
@@ -217,6 +245,99 @@ export default function PaymentLinkCreator() {
   const selectedProgram = programs.find((p) => p._id === formData.programId);
   const selectedVoucher = vouchers.find((v) => v.code === formData.voucherCode);
 
+  // Filter clients by search with enhanced matching (using debounced search)
+  const filteredClients = debouncedClientSearch.trim()
+    ? clients.filter(
+        (client) =>
+          client.name
+            ?.toLowerCase()
+            .includes(debouncedClientSearch.toLowerCase()) ||
+          client.mobileNumber
+            ?.toLowerCase()
+            .includes(debouncedClientSearch.toLowerCase()) ||
+          client.email
+            ?.toLowerCase()
+            .includes(debouncedClientSearch.toLowerCase())
+      )
+    : clients;
+
+  // Handle client search input
+  const handleClientSearch = (value) => {
+    setClientSearch(value);
+    setShowClientDropdown(true);
+    setSelectedClientIndex(-1);
+
+    // If search is cleared, clear selected client
+    if (!value.trim()) {
+      setFormData((prev) => ({ ...prev, clientId: "" }));
+    }
+  };
+
+  // Handle client selection
+  const handleClientSelect = (client) => {
+    setFormData((prev) => ({ ...prev, clientId: client._id }));
+    setClientSearch(client.name);
+    setShowClientDropdown(false);
+    setSelectedClientIndex(-1);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showClientDropdown) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedClientIndex((prev) =>
+          prev < filteredClients.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedClientIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedClientIndex >= 0 && filteredClients[selectedClientIndex]) {
+          handleClientSelect(filteredClients[selectedClientIndex]);
+        }
+        break;
+      case "Escape":
+        setShowClientDropdown(false);
+        setSelectedClientIndex(-1);
+        break;
+    }
+  };
+
+  // Clear client selection
+  const clearClientSelection = () => {
+    setFormData((prev) => ({ ...prev, clientId: "" }));
+    setClientSearch("");
+    setDebouncedClientSearch("");
+    setShowClientDropdown(false);
+    setSelectedClientIndex(-1);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        clientSearchRef.current &&
+        !clientSearchRef.current.contains(event.target) &&
+        clientDropdownRef.current &&
+        !clientDropdownRef.current.contains(event.target)
+      ) {
+        setShowClientDropdown(false);
+        setSelectedClientIndex(-1);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -235,26 +356,106 @@ export default function PaymentLinkCreator() {
             <CardTitle>Payment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Client Selection */}
+            {/* Enhanced Client Search & Selection */}
             <div className="space-y-2">
               <Label htmlFor="client">Client *</Label>
-              <Select
-                value={formData.clientId}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, clientId: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client._id} value={client._id}>
-                      {client.name}{client.mobileNumber ? ` (${client.mobileNumber})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative" ref={clientSearchRef}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="client-search"
+                    type="text"
+                    placeholder="Search clients by name, phone, or email..."
+                    value={clientSearch}
+                    onChange={(e) => handleClientSearch(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setShowClientDropdown(true)}
+                    className="pl-10 pr-10"
+                    autoComplete="off"
+                  />
+                  {clientSearch && (
+                    <button
+                      onClick={clearClientSelection}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Results Dropdown */}
+                {showClientDropdown && (
+                  <div
+                    ref={clientDropdownRef}
+                    className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    {filteredClients.length === 0 ? (
+                      <div className="px-4 py-3 text-muted-foreground text-sm">
+                        {clientSearch.trim()
+                          ? "No clients found"
+                          : "Start typing to search clients..."}
+                      </div>
+                    ) : (
+                      filteredClients.map((client, index) => (
+                        <div
+                          key={client._id}
+                          onClick={() => handleClientSelect(client)}
+                          className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
+                            index === selectedClientIndex
+                              ? "bg-blue-50 border-blue-200"
+                              : ""
+                          } ${
+                            formData.clientId === client._id
+                              ? "bg-green-50"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">
+                                  {client.name}
+                                </span>
+                                {formData.clientId === client._id && (
+                                  <Check className="w-4 h-4 text-green-600" />
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                {client.mobileNumber && (
+                                  <span className="mr-3">
+                                    📱 {client.mobileNumber}
+                                  </span>
+                                )}
+                                {client.email && <span>✉️ {client.email}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Client Display */}
+              {selectedClient && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">
+                      Selected: {selectedClient.name}
+                    </span>
+                  </div>
+                  <div className="text-xs text-green-600 mt-1">
+                    {selectedClient.mobileNumber &&
+                      `Phone: ${selectedClient.mobileNumber}`}
+                    {selectedClient.mobileNumber &&
+                      selectedClient.email &&
+                      " • "}
+                    {selectedClient.email && `Email: ${selectedClient.email}`}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Program Selection */}
@@ -328,29 +529,6 @@ export default function PaymentLinkCreator() {
               />
             </div>
 
-            {/* Voucher Code */}
-            <div className="space-y-2">
-              <Label htmlFor="voucher">Voucher Code (Optional)</Label>
-              <Select
-                value={formData.voucherCode}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, voucherCode: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a voucher" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vouchers
-                    .filter((v) => v.status === "active")
-                    .map((voucher) => (
-                      <SelectItem key={voucher.code} value={voucher.code}>
-                        {voucher.code} - {voucher.discount}% off
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <Separator />
 
