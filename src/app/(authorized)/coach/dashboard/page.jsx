@@ -36,6 +36,7 @@ function Container() {
     <DashboardClientList
       topPerformers={coachHomeData.topPerformers}
       clientFollowUps={coachHomeData.clientFollowUps}
+      missingFollowups={coachHomeData.missingFollowups}
     />
   </>
 }

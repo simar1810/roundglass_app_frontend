@@ -48,8 +48,16 @@ import { generateWeightStandard } from "@/lib/client/statistics";
 import ClientUpdateCategories from "./ClientUpdateCategories";
 import { notesColors } from "@/config/data/other-tools";
 import { Badge } from "@/components/ui/badge";
+import ClientNudges from "./ClientNudges";
 
 export default function ClientDetailsCard({ clientData }) {
+  return <div>
+    <ClientDetails clientData={clientData} />
+    <ClientNudges />
+  </div>
+}
+
+function ClientDetails({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
   async function sendAnalysis() {
     try {

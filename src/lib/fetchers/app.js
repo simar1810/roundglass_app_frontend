@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { fetchData } from "../api";
+import { buildUrlWithQueryParams } from "../formatter";
 
 async function logoutUser(response, router, cache) {
   if (
@@ -302,4 +303,14 @@ export function retrieveReports(person = "coach", clientId) {
 
 export function retrieveCoachClientList() {
   return fetchData("app/coach-client-list")
+}
+
+export function retrieveClientNudges(id, options) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/notifications-schedule",
+    Boolean(id)
+      ? { clientId: id, ...options }
+      : options
+  )
+  return fetchData(endpoint)
 }
