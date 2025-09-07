@@ -5,8 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { nameInitials } from "@/lib/formatter"
 import { useState } from "react"
 import FormControl from "@/components/FormControl"
-import { EllipsisVertical } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { sendData } from "@/lib/api"
@@ -136,7 +134,7 @@ function CoachesList() {
     <div className="divide-y-1">
       {coaches.map((coach, index) => <Link
         key={index}
-        href={`/coach/downline/${coach._id}`}
+        href={`/coach/downline/coach/${coach._id}`}
         className="w-full flex items-center justify-between p-2 hover:bg-white [var(--comp-2)]"
       >
         <div className="flex items-center gap-3">
@@ -160,9 +158,6 @@ function CoachesList() {
 }
 
 function StartDownline() {
-  const coach = useAppSelector(state => state.coach.data)
-
-  const [loading, setLoading] = useState(false)
   async function startDownline(setLoading, closeBtnRef) {
     try {
       setLoading(true);

@@ -321,3 +321,11 @@ export function retrieveDownlineCoachInformation(query) {
   )
   return fetchData(endpoint)
 }
+
+export function retrieveDownlineClientInformation(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/downline/client",
+    query
+  )
+  return fetchData(endpoint)
+}

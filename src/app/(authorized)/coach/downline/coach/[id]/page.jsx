@@ -10,10 +10,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials, tabChange } from "@/lib/formatter";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Paginate from "@/components/Paginate";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Pen } from "lucide-react";
+import FormControl from "@/components/FormControl";
+import { Button } from "@/components/ui/button";
+import { sendData } from "@/lib/api";
+import { toast } from "sonner";
 
 const tabItems = [
   {
@@ -49,7 +55,10 @@ export default function Page() {
   const router = useRouter();
 
   const { id: coachId } = useParams()
-  const { isLoading, error, data } = useSWR("app/downline/coaches", () => retrieveDownlineCoachInformation({ coachId }));
+  const { isLoading, error, data } = useSWR(
+    `app/downline/${coachId}`,
+    () => retrieveDownlineCoachInformation({ coachId })
+  );
 
   if (isLoading) return <ContentLoader />
 
@@ -111,6 +120,11 @@ function TabsProfile({ profile }) {
               {profile.mobileNumber}
             </p>
           </div>
+          <UpdateDetails
+            actionType="UPDATE_COACH"
+            title="Coach Details"
+            user={profile}
+          />
         </div>
 
         {profile.downline?.lineage?.length > 0 && (
@@ -154,6 +168,8 @@ function TabsClients({ clients = [] }) {
   const [search, setSearch] = useState("")
   const [pagination, setPagination] = useState({ page: 1, limit: 10 })
 
+  const router = useRouter();
+
   const filteredClients = useMemo(() => {
     return clients.filter(
       (c) =>
@@ -192,15 +208,28 @@ function TabsClients({ clients = [] }) {
                 <TableHead>Client ID</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile</TableHead>
+                <TableHead>City</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedClients.map((client) => (
-                <TableRow key={client._id}>
+                <TableRow
+                  key={client._id}
+                  onClick={() => router.push(`/coach/downline/client/${client._id}`)}
+                  className="cursor-pointer"
+                >
                   <TableCell className="font-medium">{client.name}</TableCell>
                   <TableCell>{client.clientId}</TableCell>
                   <TableCell>{client.email || "-"}</TableCell>
                   <TableCell>{client.mobileNumber || "-"}</TableCell>
+                  <TableCell>{client.city || "-"}</TableCell>
+                  <TableCell onClick={e => e.stopPropagation()}>
+                    <UpdateDetails
+                      actionType="UPDATE_CLIENT"
+                      title="Client Details"
+                      user={client}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
               {paginatedClients.length === 0 && (
@@ -226,7 +255,8 @@ function TabsClients({ clients = [] }) {
   )
 }
 
-const getPendingAmount = (sellingPrice, paidAmount) => (Number(sellingPrice) || 0) - (Number(paidAmount) || 0)
+const getPendingAmount = (sellingPrice, paidAmount) =>
+  (Number(sellingPrice) || 0) - (Number(paidAmount) || 0);
 
 function TabsRetail({ retailOrders = [] }) {
   return (
@@ -362,4 +392,80 @@ function TabsPlans({ plans = [] }) {
       </div>
     </TabsContent>
   )
+}
+
+export function UpdateDetails({
+  actionType,
+  title,
+  user
+}) {
+  const [loading, setLoading] = useState(false)
+  const [payload, setPayload] = useState({
+    actionType,
+    _id: user._id,
+    name: user.name || "",
+    email: user.email || "",
+    mobileNumber: user.mobileNumber || "",
+    city: user.city || "",
+  })
+
+  const closeBtnRef = useRef();
+
+  async function saveCoachDetails() {
+    try {
+      setLoading(true);
+      const response = await sendData("app/downline/coach", payload, "PATCH");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger className=" self-start">
+      <Pen className="w-[14px] h-[14px] text-[var(--accent-1)]" />
+    </DialogTrigger>
+    <DialogContent className="max-w-[100px] w-full gap-0 p-0">
+      <DialogTitle className="p-4 border-b-1">{title}</DialogTitle>
+      <div className="p-4">
+        <FormControl
+          value={payload.name}
+          onChange={e => setPayload(prev => ({ ...prev, name: e.target.value }))}
+          label="Name"
+          className="block mb-4"
+        />
+        <FormControl
+          value={payload.email}
+          onChange={e => setPayload(prev => ({ ...prev, email: e.target.value }))}
+          label="Email"
+          type="email"
+          className="block mb-4"
+        />
+        <FormControl
+          value={payload.mobileNumber}
+          onChange={e => setPayload(prev => ({ ...prev, mobileNumber: e.target.value }))}
+          label="Mobile Number"
+          type="number"
+          className="block mb-4"
+        />
+        <FormControl
+          value={payload.city}
+          onChange={e => setPayload(prev => ({ ...prev, city: e.target.value }))}
+          label="City"
+          className="block mb-4"
+        />
+        <Button
+          variant="wz"
+          className="w-xs mx-auto block"
+          onClick={saveCoachDetails}
+          disabled={loading}
+        >Save</Button>
+      </div>
+      <DialogClose ref={closeBtnRef} />
+    </DialogContent>
+  </Dialog>
 }
