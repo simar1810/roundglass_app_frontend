@@ -1,0 +1,365 @@
+"use client";
+import useSWR from "swr";
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { nameInitials, tabChange } from "@/lib/formatter";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { useMemo, useState } from "react";
+import Paginate from "@/components/Paginate";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+
+const tabItems = [
+  {
+    id: 1,
+    title: "Profile",
+    value: "profile"
+  },
+  {
+    id: 2,
+    title: "Clients",
+    value: "clients"
+  },
+  {
+    id: 3,
+    title: "Retail",
+    value: "retail"
+  },
+  {
+    id: 4,
+    title: "Plans",
+    value: "plans"
+  }
+]
+
+export default function Page() {
+  const pathname = usePathname()
+
+  const params = useSearchParams();
+  const selectedTab = tabItems.map(item => item.value).includes(params.get("tab"))
+    ? params.get("tab")
+    : "profile"
+
+  const router = useRouter();
+
+  const { id: coachId } = useParams()
+  const { isLoading, error, data } = useSWR("app/downline/coaches", () => retrieveDownlineCoachInformation({ coachId }));
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
+
+  const {
+    profile = {},
+    plans = [],
+    retailRequests = [],
+    retailOrders = [],
+    clients = []
+  } = data?.data || {};
+
+  return <div className="content-container content-height-screen">
+    <Tabs defaultValue={selectedTab}
+      onValueChange={value => tabChange(value, router, params, pathname)}
+    >
+      <TabsHeader />
+      <TabsProfile profile={profile} />
+      <TabsClients clients={clients} />
+      <TabsRetail retailOrders={retailOrders} />
+      <TabsPlans plans={plans} />
+    </Tabs>
+  </div>
+}
+
+function TabsHeader() {
+  return <TabsList className="bg-transparent flex items-center gap-4 mb-4">
+    {tabItems.map(tab => <TabsTrigger
+      key={tab.id}
+      value={tab.value}
+      className="text-[16px] text-[var(--accent-1)] data-[state=active]:bg-[var(--accent-1)] 
+             data-[state=active]:text-[var(--comp-1)] border-1 rounded-[6px] border-[var(--accent-1)]
+             bg-[var(--comp-2)] px-4 py-4 data-[state=active]:font-semibold"
+    >
+      {tab.title}
+    </TabsTrigger>)}
+  </TabsList>
+}
+
+function TabsProfile({ profile }) {
+  return <TabsContent
+    value="profile"
+    className="bg-[var(--comp-1)] border rounded-xl"
+  >
+    <Card className="shadow-none">
+      <CardContent className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Avatar className="w-16 h-16 border-1">
+            <AvatarImage src={profile.profilePhoto} alt={profile.name} />
+            <AvatarFallback>
+              {nameInitials(profile.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-lg font-semibold">{profile.name}</h2>
+            <p className="text-sm text-muted-foreground">{profile.email}</p>
+            <p className="text-sm text-muted-foreground">
+              {profile.mobileNumber}
+            </p>
+          </div>
+        </div>
+
+        {profile.downline?.lineage?.length > 0 && (
+          <div>
+            <h3 className="text-md font-medium mb-3">Downline Coaches</h3>
+            <div className="flex flex-col gap-3">
+              {profile.downline.lineage.map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center gap-3 rounded-lg p-2 hover:bg-muted/50 transition"
+                >
+                  <Avatar className="w-10 h-10">
+                    {member.profilePhoto ? (
+                      <AvatarImage
+                        src={member.profilePhoto}
+                        alt={member.name}
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        {member.name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{member.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {member.email} • {member.mobileNumber}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </TabsContent>
+}
+
+function TabsClients({ clients = [] }) {
+  const [search, setSearch] = useState("")
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 })
+
+  const filteredClients = useMemo(() => {
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.clientId?.toLowerCase().includes(search.toLowerCase()) ||
+        c.mobileNumber?.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [clients, search])
+
+  const { page, limit } = pagination
+  const totalPages = Math.ceil(filteredClients.length / limit)
+  const start = (page - 1) * limit
+  const paginatedClients = filteredClients.slice(start, start + limit)
+
+  return (
+    <TabsContent
+      value="clients"
+      className="bg-[var(--comp-1)] p-4 border rounded-xl"
+    >
+      <div className="flex flex-col gap-4">
+        <Input
+          placeholder="Search clients by name, ID or mobile..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPagination((prev) => ({ ...prev, page: 1 }))
+          }}
+          className="max-w-sm"
+        />
+
+        <div className="bg-white rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Client ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Mobile</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedClients.map((client) => (
+                <TableRow key={client._id}>
+                  <TableCell className="font-medium">{client.name}</TableCell>
+                  <TableCell>{client.clientId}</TableCell>
+                  <TableCell>{client.email || "-"}</TableCell>
+                  <TableCell>{client.mobileNumber || "-"}</TableCell>
+                </TableRow>
+              ))}
+              {paginatedClients.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                    No clients found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <Paginate
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          totalResults={filteredClients.length}
+          onChange={({ page, limit }) => setPagination({ page, limit })}
+        />
+      </div>
+    </TabsContent>
+  )
+}
+
+const getPendingAmount = (sellingPrice, paidAmount) => (Number(sellingPrice) || 0) - (Number(paidAmount) || 0)
+
+function TabsRetail({ retailOrders = [] }) {
+  return (
+    <TabsContent
+      value="retail"
+      className="bg-[var(--comp-1)] p-4 border rounded-xl"
+    >
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Retail Orders</h2>
+
+        <div className="bg-white rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Selling Price</TableHead>
+                <TableHead>Paid</TableHead>
+                <TableHead>Pending</TableHead>
+                <TableHead>Profit</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {retailOrders.map((order) => (
+                <TableRow key={order._id}>
+                  <TableCell className="font-medium">
+                    {order.invoiceNumber}
+                  </TableCell>
+                  <TableCell>{order.orderId}</TableCell>
+                  <TableCell>
+                    {order.clientId?.name} <br />
+                    <span className="text-xs text-muted-foreground">
+                      {order.clientId?.mobileNumber}
+                    </span>
+                  </TableCell>
+                  <TableCell>₹{order.sellingPrice}</TableCell>
+                  <TableCell>₹{order.paidAmount}</TableCell><TableCell
+                    className={
+                      getPendingAmount(order.sellingPrice - order.paidAmount) > 0
+                        ? "text-red-600 font-medium"
+                        : "text-green-600"
+                    }
+                  >
+                    ₹{getPendingAmount(order.sellingPrice - order.paidAmount)}
+                  </TableCell>
+                  <TableCell className="font-medium text-green-600">
+                    ₹{order.profit}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        order.status === "Completed"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{order.createdAt}</TableCell>
+                </TableRow>
+              ))}
+              {retailOrders.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="text-center text-sm text-muted-foreground"
+                  >
+                    No retail orders found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </TabsContent>
+  )
+}
+
+function TabsPlans({ plans = [] }) {
+  return (
+    <TabsContent
+      value="plans"
+      className="bg-[var(--comp-1)] p-4 border rounded-xl"
+    >
+      <div className="flex flex-col gap-6">
+        <h2 className="text-lg font-semibold">Plans</h2>
+
+        {plans.length === 0 ? (
+          <div className="text-center text-sm text-muted-foreground">
+            No plans available
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {plans.map((plan) => (
+              <Card key={plan._id} className="shadow-none hover:shadow-md transition">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-medium">
+                      {plan.name}
+                    </CardTitle>
+                    <Badge variant="outline">{plan.tag}</Badge>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="flex flex-col gap-3">
+                  {plan.image ? (
+                    <div className="relative w-full h-32 rounded-md overflow-hidden">
+                      <Image
+                        src={plan.image}
+                        alt={plan.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full min-h-32 bg-muted flex items-center justify-center rounded-md text-xs text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description || "No description available"}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </TabsContent>
+  )
+}

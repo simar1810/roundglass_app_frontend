@@ -78,3 +78,9 @@ export function buildUrlWithQueryParams(baseUrl, paramsObject = {}) {
 
   return baseUrl.includes("?") ? `${baseUrl}&${query}` : `${baseUrl}?${query}`;
 }
+
+export function tabChange(value, router, params, pathname) {
+  const newParams = new URLSearchParams(params.toString());
+  newParams.set("tab", value);
+  router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+};

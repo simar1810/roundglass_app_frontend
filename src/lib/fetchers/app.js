@@ -305,3 +305,19 @@ export function retrieveClientNudges(id, options) {
   )
   return fetchData(endpoint)
 }
+
+export function retrieveDownlineRequests() {
+  return fetchData("app/downline/requests")
+}
+
+export function retrieveDownlineCoaches() {
+  return fetchData("app/downline")
+}
+
+export function retrieveDownlineCoachInformation(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/downline/coach",
+    query
+  )
+  return fetchData(endpoint)
+}
