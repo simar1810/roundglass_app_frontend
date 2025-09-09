@@ -233,12 +233,12 @@ export const sidebar__coachContent = [
         title: "Rewards",
         url: "/coach/payments/rewards",
       },
-      {
-        id: 8,
-        icon: <Settings className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Settings",
-        url: "/coach/wallet/settings",
-      },
+      // {
+      //   id: 8,
+      //   icon: <Settings className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Settings",
+      //   url: "/coach/wallet/settings",
+      // },
     ],
   },
 
