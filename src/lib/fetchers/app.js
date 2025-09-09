@@ -4,13 +4,13 @@ import { buildUrlWithQueryParams } from "../formatter";
 
 async function logoutUser(response, router, cache) {
   if (
-    response?.status_code === 411,
-    response?.message?.toLowerCase() === "something went wrong"
+    (response?.status_code === 411,
+    response?.message?.toLowerCase() === "something went wrong")
   ) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await fetch("/api/logout", { method: "DELETE" });
     for (const [field] of cache.entries()) {
-      cache.delete(field)
+      cache.delete(field);
     }
     router.push("/login");
     return;
@@ -22,27 +22,27 @@ export function getCoachProfile(_id) {
 }
 
 export async function getCoachHome(router, cache) {
-  const response = await fetchData('app/coachHomeTrial');
-  await logoutUser(response, router, cache)
-  return response
+  const response = await fetchData("app/coachHomeTrial");
+  await logoutUser(response, router, cache);
+  return response;
 }
 
 export function coachMatricesData() {
-  return fetchData('app/activity/get?person=coach');
+  return fetchData("app/activity/get?person=coach");
 }
 
 export async function dashboardStatistics(router, cache) {
-  const response = await fetchData('app/coach-statistics');
+  const response = await fetchData("app/coach-statistics");
   logoutUser(response, router, cache);
   return response;
 }
 
 export function getCoachNotifications() {
-  return fetchData('app/notification?person=coach');
+  return fetchData("app/notification?person=coach");
 }
 
 export function getCoachSocialLinks() {
-  return fetchData('app/sm');
+  return fetchData("app/sm");
 }
 
 export function getMeals(searchQuery) {
@@ -62,7 +62,7 @@ export function getOrganisation() {
 }
 
 export function getAppClients(query) {
-  let queries = ""
+  let queries = "";
   if (query?.page) queries += "page=" + query.page + "&";
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
@@ -92,7 +92,7 @@ export function getAppFeeds(state, person = "coach") {
 
 export function getAppPersonalFeeds(state, limit) {
   let query = `page=${state.page}`;
-  if (limit) query += `&limit=${limit}`
+  if (limit) query += `&limit=${limit}`;
   return fetchData("app/my-posts?person=coach&" + query);
 }
 
@@ -101,9 +101,9 @@ export function getFeedComments(postId) {
 }
 
 export function getRetail(whitelabel) {
-  let query = ""
-  if ((whitelabel)) {
-    query += `whitelabel=${whitelabel}`
+  let query = "";
+  if (whitelabel) {
+    query += `whitelabel=${whitelabel}`;
   }
   return fetchData(`app/coach-retail?${query}`);
 }
@@ -137,11 +137,11 @@ export function getClientForMeals(planId) {
 }
 
 export function getCustomMealPlanDetails(planId) {
-  return fetchData(`app/meal-plan/client/${planId}`)
+  return fetchData(`app/meal-plan/client/${planId}`);
 }
 
 export function getClientsForCustomMeals(planId) {
-  return fetchData(`app/meal-plan/custom/assign?id=${planId}`)
+  return fetchData(`app/meal-plan/custom/assign?id=${planId}`);
 }
 
 export function getProductByBrand(brandId) {
@@ -157,23 +157,28 @@ export function getMarathons() {
 }
 
 export async function getMarathonLeaderBoard(marathonId, router, cache) {
-  let query = "person=coach"
+  let query = "person=coach";
   if (Boolean(marathonId)) query += `&marathonId=${marathonId}`;
   const response = await fetchData(`app/marathon/coach/points?${query}`);
   await logoutUser(response, router, cache);
   return response;
 }
 
-export function getMarathonClientTask(clientId, date = format(new Date(), "dd-MM-yyyy")) {
-  return fetchData(`app/marathon/coach/viewProgress?clientId=${clientId}&date=${date}`);
+export function getMarathonClientTask(
+  clientId,
+  date = format(new Date(), "dd-MM-yyyy")
+) {
+  return fetchData(
+    `app/marathon/coach/viewProgress?clientId=${clientId}&date=${date}`
+  );
 }
 
 export function getMealPlanById(id) {
-  return fetchData(`app/get-plan-by-id?id=${id}`)
+  return fetchData(`app/get-plan-by-id?id=${id}`);
 }
 
 export function getSyncCoachesList() {
-  return fetchData("app/sync-coach/super")
+  return fetchData("app/sync-coach/super");
 }
 
 export function getSyncedCoachesClientList(coachId) {
@@ -185,11 +190,15 @@ export function getMarathonTaskOptions() {
 }
 
 export function getClientsForMarathon(marathonId) {
-  return fetchData(`app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`);
+  return fetchData(
+    `app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`
+  );
 }
 
 export function getClientsForWorkout(workoutId) {
-  return fetchData(`app/workout/coach/getClientForWorkouts?workoutCollectionId=${workoutId}`);
+  return fetchData(
+    `app/workout/coach/getClientForWorkouts?workoutCollectionId=${workoutId}`
+  );
 }
 
 export function getAllWorkoutItems() {
@@ -197,7 +206,7 @@ export function getAllWorkoutItems() {
 }
 
 export function getWorkoutDetails(workoutId, person = "coach") {
-  let endpoint = `app/workout/client/getWorkout?person=${person}`
+  let endpoint = `app/workout/client/getWorkout?person=${person}`;
   if (workoutId) endpoint += `&id=${workoutId}`;
   return fetchData(endpoint);
 }
@@ -211,7 +220,7 @@ export function getChatBotData() {
 }
 
 export function getClientPrograms() {
-  return fetchData("app/programs?person=client&limit=100")
+  return fetchData("app/programs?person=client&limit=100");
 }
 
 export function getClientWorkouts(id) {
@@ -223,7 +232,7 @@ export function getClientWorkouts(id) {
  */
 
 export function getClientHome(id) {
-  return fetchData(`app/clientHome/${id}/wellnessz`)
+  return fetchData(`app/clientHome/${id}/wellnessz`);
 }
 
 export function getClientProfile() {
@@ -235,15 +244,15 @@ export function getClientMatrices(person, id) {
 }
 
 export function getWorkoutForClient(id) {
-  return fetchData(`app/workout/workout-plan/client/${id}`)
+  return fetchData(`app/workout/workout-plan/client/${id}`);
 }
 
 export function getClientNextMarathonClient(date) {
-  return fetchData(`app/marathon/client/viewTask?date=${date}`)
+  return fetchData(`app/marathon/client/viewTask?date=${date}`);
 }
 
 export function clientOrderHistory(clientId) {
-  return fetchData(`app/client-order-history?clientId=${clientId}`)
+  return fetchData(`app/client-order-history?clientId=${clientId}`);
 }
 
 export function getBrands() {
@@ -256,28 +265,28 @@ export function getWzSessions(person) {
 
 export function getCustomMealPlans(person, planId) {
   if (planId) {
-    return fetchData(`app/meal-plan/custom/${planId}?person=${person}`)
+    return fetchData(`app/meal-plan/custom/${planId}?person=${person}`);
   } else {
-    return fetchData(`app/meal-plan/custom?person=${person}`)
+    return fetchData(`app/meal-plan/custom?person=${person}`);
   }
 }
 
 export function getCustomWorkoutPlans(person = "coach", workoutId) {
   let endpoint = `app/workout/workout-plan/custom?person=${person}`;
-  if (workoutId) endpoint += `&workoutId=${workoutId}`
-  return fetchData(endpoint)
+  if (workoutId) endpoint += `&workoutId=${workoutId}`;
+  return fetchData(endpoint);
 }
 
 export function getClientsForCustomWorkout(workoutId) {
-  return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`)
+  return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`);
 }
 
 export async function onboardingQuestionaire() {
-  return fetchData("app/onboarding/questionaire")
+  return fetchData("app/onboarding/questionaire");
 }
 
 export function retrieveSessions(person) {
-  return fetchData(`app/workout/sessions?person=${person}`)
+  return fetchData(`app/workout/sessions?person=${person}`);
 }
 
 export function retrieveAIAgentHistory(clientId, date) {
