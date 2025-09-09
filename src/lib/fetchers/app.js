@@ -329,3 +329,8 @@ export function retrieveDownlineClientInformation(query) {
   )
   return fetchData(endpoint)
 }
+
+export async function retrieveQuestionaire(query) {
+  const endpoint = buildUrlWithQueryParams("app/onboarding/questionaire", query)
+  return fetchData(endpoint);
+}

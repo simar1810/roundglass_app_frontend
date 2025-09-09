@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import ContentLoader from "@/components/common/ContentLoader";
 import { toast } from "sonner";
 import { fetchData } from "@/lib/api";
+import OnBoardingQuestionaire from "./OnBoardingQuestionaire";
 
 export default function AddClientWithCheckup({ children, type, data, setModal }) {
   const [dataGenerated, setDataGenerated] = useState(false);
@@ -87,6 +88,8 @@ function selectComponent(stage) {
     case 3:
       return CheckupStage3;
     case 4:
+      return OnBoardingQuestionaire
+    case 5:
       return ClientCreatedNotify;
     default:
       return () => <></>
