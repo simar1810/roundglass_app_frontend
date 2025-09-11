@@ -84,3 +84,14 @@ export function tabChange(value, router, params, pathname) {
   newParams.set("tab", value);
   router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 };
+
+export function getMembershipType(membership) {
+  switch (membership.membershipType) {
+    case 1:
+      return { type: "Monthly", end: format(membership.endDate, "dd/MM/yyyy") }
+    case 2:
+      return { type: "Servings", end: membership.pendingServings }
+    default:
+      return { type: "Unknown", end: "Unknown" };
+  }
+}

@@ -5,7 +5,7 @@ import { buildUrlWithQueryParams } from "../formatter";
 async function logoutUser(response, router, cache) {
   if (
     (response?.status_code === 411,
-    response?.message?.toLowerCase() === "something went wrong")
+      response?.message?.toLowerCase() === "something went wrong")
   ) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await fetch("/api/logout", { method: "DELETE" });
@@ -334,6 +334,22 @@ export function retrieveDownlineCoachInformation(query) {
 export function retrieveDownlineClientInformation(query) {
   const endpoint = buildUrlWithQueryParams(
     "app/downline/client",
+    query
+  )
+  return fetchData(endpoint)
+}
+
+export function getPhysicalAttendance(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/attendance",
+    query
+  )
+  return fetchData(endpoint)
+}
+
+export function getPhysicalMemberships(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/memberships",
     query
   )
   return fetchData(endpoint)

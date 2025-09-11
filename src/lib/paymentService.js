@@ -41,7 +41,6 @@ export async function createPaymentLink(paymentData) {
 
     return data;
   } catch (error) {
-    console.error("Payment creation error:", error);
     return {
       success: false,
       message: error.message || "Failed to create payment link",
@@ -124,7 +123,6 @@ export async function sendPaymentReminder(paymentId, tone = "friendly") {
 
     return data;
   } catch (error) {
-    console.error("Send reminder error:", error);
     return {
       success: false,
       message: error.message || "Failed to send reminder",

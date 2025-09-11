@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CalendarRange,
   CircleDollarSign,
+  ClipboardCheck,
   ClipboardPlus,
   Clock,
   Clock12,
@@ -21,10 +22,12 @@ import {
   Headset,
   Home,
   Hourglass,
+  BadgeCheck,
   LayoutDashboard,
   Link,
   ListTodo,
   Logs,
+  MapPin,
   MessageCircle,
   Newspaper,
   PersonStanding,
@@ -42,6 +45,7 @@ import {
   UserPlus,
   Users,
   Video,
+  QrCode,
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
@@ -455,13 +459,32 @@ export const sidebar__coachContent = [
       // },
     ],
   },
-  // {
-  //   id: 12,
-  //   title: "Programs",
-  //   icon: <CalendarRange className="min-w-[20px] min-h-[20px]" />,
-  //   url: "/coach/tools",
-  //   items: []
-  // }
+  {
+    id: 13,
+    title: "Physical Club",
+    icon: <MapPin className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/physical-club",
+    items: [
+      {
+        id: 1,
+        icon: <BadgeCheck className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Memberships",
+        url: "/coach/physical-club/memberships",
+      },
+      {
+        id: 2,
+        icon: <ClipboardCheck className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Attendance",
+        url: "/coach/physical-club/attendance",
+      },
+      {
+        id: 3,
+        icon: <QrCode className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Generate QR",
+        url: "/coach/physical-club/qr-generate",
+      }
+    ]
+  },
 ];
 
 export const sidebar__coachFooter = [

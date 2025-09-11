@@ -8,7 +8,7 @@ import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMar
 import { BarChart2, Bot, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { useState } from "react";
 import ClientClubDataComponent from "./ClientClubDataComponent";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -36,6 +36,7 @@ const tabItems = [
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club" },
 ]
 
 export default function ClientData({ clientData }) {
@@ -323,7 +324,7 @@ function Header() {
       return (
         <TabsTrigger
           key={value}
-          className="min-w-[100px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+          className="min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
              data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
              data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
           value={value}
