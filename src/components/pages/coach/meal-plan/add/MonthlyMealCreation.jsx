@@ -14,7 +14,7 @@ export default function MonthlyMealCreation() {
       <h3 className="mt-4">Days</h3>
       <CopyMealPlanModal to={selectedPlan} />
     </div>
-    <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
+    <div className="mt-4 flex gap-2 overflow-x-auto pb-4">
       {days.map((day, index) => <Button
         key={index}
         variant={selectedPlan === day ? "wz" : "wz_outline"}

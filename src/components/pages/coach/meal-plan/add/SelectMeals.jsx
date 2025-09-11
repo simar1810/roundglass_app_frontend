@@ -20,7 +20,7 @@ export default function SelectMeals() {
   const selectedMealTypeRecipee = selectedPlans[selectedPlan]?.find(mealType => mealType.mealType === selectedMealType)?.meals || []
 
   return <div>
-    <div className="pt-4 flex gap-4 overflow-x-auto no-scrollbar">
+    <div className="pt-4 flex gap-4 overflow-x-auto pb-4">
       {mealTypes?.map((type, index) => <div key={index} className="relative">
         <Button
           variant={type === selectedMealType ? "wz" : "outline"}
