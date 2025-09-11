@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { format, setHours, setMinutes } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Clock } from "lucide-react"
 import { toast } from "sonner"
+import { PopoverClose } from "@radix-ui/react-popover"
 
 export default function TimePicker({ selectedTime, setSelectedTime }) {
   const [hour, setHour] = useState("")
   const [minute, setMinute] = useState("")
   const [period, setPeriod] = useState("AM")
+
+  const closeRef = useRef();
 
   const handleSetTime = () => {
     if (!hour || !minute) return
@@ -27,6 +30,7 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
     date = setMinutes(date, m)
 
     setSelectedTime(format(date, "hh:mm a"))
+    closeRef.current.click();
   }
 
   return (
@@ -85,6 +89,7 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
         <Button className="w-full" onClick={handleSetTime}>
           Set Time
         </Button>
+        <PopoverClose ref={closeRef} />
       </PopoverContent>
     </Popover>
   )

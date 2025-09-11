@@ -132,6 +132,8 @@ function generateMarginsPayload__select(margins) {
 }
 
 function Stage2() {
+  const [query, setQuery] = useState("")
+
   const { selectedBrandId, margins, coachMargin, dispatch, productModule } = useCurrentStateContext();
   const { isLoading, error, data } = useSWR(`getProductByBrand/${selectedBrandId}`, () => getProductByBrand(selectedBrandId));
 
@@ -140,9 +142,21 @@ function Stage2() {
   </div>
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const products = data.data
+
+  const products = (data.data || [])
+    .filter(item => new RegExp(query, "i").test(item.productName))
 
   return <div>
+    <div className="px-4 mt-4">
+      <FormControl
+        type="text"
+        name="search"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search By Product Name"
+        className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
+      />
+    </div>
     <div className="mt-2 px-4 flex items-center justify-between">
       <h3>Select Margin</h3>
       <SelectControl

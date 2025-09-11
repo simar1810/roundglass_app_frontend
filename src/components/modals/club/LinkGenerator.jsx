@@ -39,6 +39,7 @@ import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
 import SelectMultiple from "@/components/SelectMultiple";
 import TimePicker from "@/components/common/TimePicker";
+import { _throwError } from "@/lib/formatter";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);

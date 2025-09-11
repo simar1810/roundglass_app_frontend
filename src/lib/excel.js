@@ -13,6 +13,7 @@ export function excelRetailOrdersData(orders, dates) {
     .map(order => ({
       "Client Name": order?.clientId?.name || "",
       "Phone Number": order?.clientId?.mobileNumber || "",
+      "Date": order.createdAt,
       "Coach Margin": order?.coachMargin || 0,
       "Cost Price": order?.costPrice || 0,
       "Customer Margin": order?.customerMargin || 0,
