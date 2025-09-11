@@ -6,6 +6,7 @@ import { linkGeneratorInitialState } from "../state-data/link-generator";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
 import { useAppSelector } from "@/providers/global/hooks";
+import { _throwError } from "@/lib/formatter";
 
 export function linkGeneratorReducer(state, action) {
   switch (action.type) {
@@ -88,6 +89,9 @@ export function init(withZoom) {
 }
 
 export function generateRequestPayload(state) {
+  if (state.meetingType === "one_to_one" && !state.one_to_one_client_id) {
+    _throwError("Please select a client");
+  }
   const formControls = selectFields(state.meetingType)
 
   const payload = new FormData;

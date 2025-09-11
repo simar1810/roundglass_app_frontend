@@ -102,3 +102,13 @@ export function setDateWithNewTime(date, timeString) {
 
   return new Date(updatedDate).toISOString()
 }
+
+export function buildClickableUrl(urlString) {
+  if (!urlString || urlString.trim() === "") {
+    return ""
+  }
+  if (!/^https?:\/\//i.test(urlString)) {
+    urlString = "https://" + urlString
+  }
+  return urlString
+}

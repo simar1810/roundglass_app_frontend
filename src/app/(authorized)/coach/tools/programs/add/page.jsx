@@ -12,6 +12,7 @@ import { mutate } from "swr";
 import imageCompression from "browser-image-compression";
 import { useRouter } from "next/navigation";
 import SelectMultiple from "@/components/SelectMultiple";
+import { buildClickableUrl } from "@/lib/formatter";
 
 export default function Page() {
   const { _id: coachId, client_categories, whitelabel = "wellnessz" } = useAppSelector(state => state.coach.data);
@@ -32,10 +33,11 @@ export default function Page() {
     try {
       setLoading(true);
       const data = new FormData();
-      for (const field of ["name", "link", "isActive", "coachId", "whitelabel"]) {
+      for (const field of ["name", "isActive", "coachId", "whitelabel"]) {
         if (!Boolean(formData[field])) throw new Error(`${field} is required!`);
         data.append(field, formData[field]);
       }
+      data.append("link", buildClickableUrl(formData.link));
       data.append("file", await imageCompression(formData.file, { maxSizeMB: 0.25 }))
       data.append("person", "client")
       data.append("availability", JSON.stringify(formData.availability))
