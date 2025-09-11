@@ -5,7 +5,10 @@ import {
   differenceInHours,
   differenceInDays,
   parseISO,
-  parse
+  parse,
+  setHours,
+  setMinutes,
+  setSeconds
 } from 'date-fns';
 
 export function ISO__getTime(timestamp) {
@@ -84,3 +87,18 @@ export function tabChange(value, router, params, pathname) {
   newParams.set("tab", value);
   router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 };
+
+export function _throwError(message = "checking payload") {
+  throw new Error(message)
+}
+
+export function setDateWithNewTime(date, timeString) {
+  const parsedTime = parse(timeString, "hh:mm a", new Date())
+
+  let updatedDate = new Date(date)
+  updatedDate = setHours(updatedDate, parsedTime.getHours())
+  updatedDate = setMinutes(updatedDate, parsedTime.getMinutes())
+  updatedDate = setSeconds(updatedDate, 0)
+
+  return new Date(updatedDate).toISOString()
+}

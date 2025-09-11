@@ -95,10 +95,10 @@ export const linkGeneratorFields = [
     ]
   },
   { id: 3, label: "Date", type: "date", inputtype: 1, name: "date" },
-  { id: 4, label: "Time", type: "time", inputtype: 1, name: "time" },
+  { id: 4, label: "Time", type: "time", inputtype: 8, name: "time" },
   { id: 5, label: "Repeat", inputtype: 4, name: "reOcurred" },
   { id: 6, label: "Meeting Description", inputtype: 3, placeholder: "Enter Description", name: "description" },
-  { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
+  { id: 7, label: "Meeting Duration (minutes)", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
   { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" },
   {

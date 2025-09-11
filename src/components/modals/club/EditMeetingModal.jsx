@@ -1,5 +1,6 @@
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
+import TimePicker from "@/components/common/TimePicker";
 import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
@@ -18,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectMeetingEditFields } from "@/config/data/forms";
 import { sendData, uploadImage } from "@/lib/api";
 import { getMeetingClientList } from "@/lib/fetchers/club";
+import { _throwError, setDateWithNewTime } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format, parseISO } from "date-fns";
@@ -44,6 +46,7 @@ export default function EditMeetingModal({ meeting }) {
       for (const field in formData) {
         if (formData[field]) data[field] = formData[field];
       }
+      data.scheduleDate = setDateWithNewTime(new Date(formData.date), formData.time)
       const response = await sendData(`edit-meetingLink?meetingId=${meeting._id}`, data, "PUT");
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
@@ -130,6 +133,13 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
     key={field.id}
     field={field}
   />
+  else if (field.inputtype === 8) return <div>
+    <label className="text-[14px]">{field.label}</label>
+    <TimePicker
+      selectedTime={formData.time}
+      setSelectedTime={value => dispatch(prev => ({ ...prev, "time": value }))}
+    />
+  </div>
 }
 
 
@@ -229,7 +239,7 @@ export function MeetingBanner({
   return <div className="mb-4">
     <label className="text-[14px]" htmlFor="meeting-banner">{field.label}</label>
     <Image
-      src={formData.banner && formData.banner instanceof File ? getObjectUrl(formData.banner) : "/not-found.png"}
+      src={formData.banner && formData.banner instanceof File ? getObjectUrl(formData.banner) : formData.banner || "/not-found.png"}
       height={540}
       width={540}
       alt=""
