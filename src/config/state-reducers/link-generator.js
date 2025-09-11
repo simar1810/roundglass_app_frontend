@@ -99,7 +99,7 @@ export function generateRequestPayload(state) {
     payload.append("reOcurred", JSON.stringify(state["reOcurred"]));
   }
   if (state.date && state.time) {
-    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()));
+    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd hh:mm a', new Date()));
     payload.append("scheduleDate", scheduleDate);
   } else {
     payload.append("scheduleDate", new Date().toISOString());
