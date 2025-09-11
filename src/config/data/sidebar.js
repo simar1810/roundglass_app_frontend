@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CalendarRange,
   CircleDollarSign,
+  CirclePlus,
   ClipboardPlus,
   Clock,
   Clock12,
@@ -20,7 +21,9 @@ import {
   Home,
   Hourglass,
   LayoutDashboard,
+  Library,
   Link,
+  List,
   ListTodo,
   Logs,
   MessageCircle,
@@ -395,13 +398,32 @@ export const sidebar__coachContent = [
       // },
     ]
   },
-  // {
-  //   id: 12,
-  //   title: "Programs",
-  //   icon: <CalendarRange className="min-w-[20px] min-h-[20px]" />,
-  //   url: "/coach/tools",
-  //   items: []
-  // }
+  {
+    id: 12,
+    title: "Courses",
+    icon: <Library className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/courses",
+    items: [
+      {
+        id: 1,
+        title: "Dashboard",
+        icon: <LayoutDashboard />,
+        url: "/coach/courses/dashboard",
+      },
+      {
+        id: 2,
+        title: "Courses",
+        icon: <List />,
+        url: "/coach/courses/list",
+      },
+      {
+        id: 3,
+        title: "Create New",
+        icon: <CirclePlus />,
+        url: "/coach/courses/create",
+      },
+    ]
+  }
 ]
 
 export const sidebar__coachFooter = [
