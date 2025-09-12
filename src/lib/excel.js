@@ -21,7 +21,8 @@ export function excelRetailOrdersData(orders, dates) {
       "Selling Price": order?.sellingPrice || 0,
       "Status": order?.status || 0,
       "Paid Amount": order?.paidAmount || 0,
-      "Pending Amount": Number(order?.costPrice || 0) - Number(order?.paidAmount || 0),
+      "Pending Amount": Number(order?.sellingPrice || 0) - Math.max(Number(order?.paidAmount || 0), 0),
+      "Profit": Math.max(Number(order?.paidAmount || 0) - (Number(order?.costPrice || 0)), 0)
     }))
 
   return exporting;
