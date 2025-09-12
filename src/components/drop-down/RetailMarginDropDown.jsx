@@ -7,24 +7,28 @@ export default function RetailMarginDropDown({
   margins,
   setMargin,
   setOpen,
-  brand
+  brand,
+  children
 }) {
   const [modalOpened, setModalOpened] = useState(false)
   return <DropdownMenu
     open={modalOpened}
     onOpenChange={() => setModalOpened(false)}
   >
-    <DropdownMenuTrigger onClick={() => setModalOpened(true)}>
-      <div>
-        <Image
-          src={brand.image || "/not-found.png"}
-          alt=""
-          height={540}
-          width={540}
-          className="object-cover shadow-md shadow-[#808080]/80"
-        />
-        <p className="px-1 text-left mt-2 font-bold">{brand.name}</p>
-      </div>
+    <DropdownMenuTrigger asChild onClick={() => setModalOpened(true)}>
+      <span>
+        {children}
+        {!children && <div>
+          <Image
+            src={brand.image || "/not-found.png"}
+            alt=""
+            height={540}
+            width={540}
+            className="object-cover shadow-md shadow-[#808080]/80"
+          />
+          <p className="px-1 text-left mt-2 font-bold">{brand.name}</p>
+        </div>}
+      </span>
     </DropdownMenuTrigger>
     <DropdownMenuContent side="right" align="start" sideOffset={10}>
       <DropdownMenuLabel className="font-bold">Select your margin</DropdownMenuLabel>

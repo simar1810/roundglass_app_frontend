@@ -8,16 +8,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
-import { nameInitials } from "@/lib/formatter";
+import { buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
-export default function AddRetailModal({ open, payload, setOpen }) {
-  return <Dialog open={open} onOpenChange={() => setOpen(false)}>
+export default function AddRetailModal({
+  open,
+  payload,
+  setOpen
+}) {
+  return <Dialog
+    open={open}
+    onOpenChange={() => setOpen(false)}
+  >
     <DialogContent className="max-w-[650px] max-h-[70vh] w-full gap-0 p-0 overflow-y-auto">
       <CurrentStateProvider
         state={init(payload)}
@@ -64,9 +71,8 @@ function selectComponent(stage) {
 
 function Stage1() {
   const { isLoading, error, data } = useSWR("app/clients?isActive=true", () => getAppClients({ isActive: true }));
-  const { clientId, dispatch } = useCurrentStateContext();
+  const { clientId, dispatch, clientName } = useCurrentStateContext();
   const [query, setQuery] = useState("");
-
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
@@ -83,6 +89,11 @@ function Stage1() {
       placeholder="Search Client here"
       className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
     />
+    {clientName && <p className="mt-4 text-xs">
+      <span className="text-[#808080]">Selected Client</span>
+      &nbsp;<>-</>&nbsp;
+      <span className="font-bold">{clientName}</span>
+    </p>}
     <div className="mt-8 grid grid-cols-2 gap-6">
       {clients.map(client => <SelectClient
         key={client._id}
@@ -135,7 +146,10 @@ function Stage2() {
   const [query, setQuery] = useState("")
 
   const { selectedBrandId, margins, coachMargin, dispatch, productModule } = useCurrentStateContext();
-  const { isLoading, error, data } = useSWR(`getProductByBrand/${selectedBrandId}`, () => getProductByBrand(selectedBrandId));
+  const { isLoading, error, data } = useSWR(
+    `getProductByBrand/${selectedBrandId}`,
+    () => getProductByBrand(selectedBrandId)
+  );
 
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
@@ -230,11 +244,21 @@ function Stage3() {
         coachMargin,
         customerMargin
       })
-      const response = await sendData("app/addClientOrder", payload);
+      const promises = [sendData("app/addClientOrder", payload)]
 
-      if (response.status_code !== 200) throw new Error(response.message || response.error);
-      toast.success(response.message);
-      dispatch(orderCreated(response.data))
+      if (state.status === "Pending") {
+        const endpoint = buildUrlWithQueryParams(
+          "app/accept-order",
+          { id: state.orderId, status: "Pending" }
+        )
+        promises.push(sendData(endpoint, {}, "PUT"))
+      }
+      const response = await Promise.all(promises);
+      for (const item of response) {
+        if (item.status_code === 200) toast.message(item.message || "Successfull");
+      }
+      dispatch(orderCreated(response[0].data))
+      mutate("app/coach-retail")
     } catch (error) {
       toast.error(error.message);
     } finally {

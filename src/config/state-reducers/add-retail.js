@@ -140,7 +140,12 @@ export function init(payload) {
     brand: {
       margins: payload.margins,
       _id: payload.selectedBrandId
-    }
+    },
+    clientId: payload.clientId._id || "",
+    productModule: payload.productModule,
+    status: payload.status,
+    clientName: payload?.clientId?.name || "",
+    orderId: payload.orderId || ""
   }
 }
 
