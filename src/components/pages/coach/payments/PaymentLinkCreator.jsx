@@ -160,7 +160,6 @@ export default function PaymentLinkCreator() {
         throw new Error(response.message || "Failed to create payment link");
       }
     } catch (error) {
-      console.error("🤖 [Frontend] Payment creation error:", error);
       toast.error(error.message || "Failed to create payment link");
     } finally {
       setLoading(false);
@@ -248,17 +247,17 @@ export default function PaymentLinkCreator() {
   // Filter clients by search with enhanced matching (using debounced search)
   const filteredClients = debouncedClientSearch.trim()
     ? clients.filter(
-        (client) =>
-          client.name
-            ?.toLowerCase()
-            .includes(debouncedClientSearch.toLowerCase()) ||
-          client.mobileNumber
-            ?.toLowerCase()
-            .includes(debouncedClientSearch.toLowerCase()) ||
-          client.email
-            ?.toLowerCase()
-            .includes(debouncedClientSearch.toLowerCase())
-      )
+      (client) =>
+        client.name
+          ?.toLowerCase()
+          .includes(debouncedClientSearch.toLowerCase()) ||
+        client.mobileNumber
+          ?.toLowerCase()
+          .includes(debouncedClientSearch.toLowerCase()) ||
+        client.email
+          ?.toLowerCase()
+          .includes(debouncedClientSearch.toLowerCase())
+    )
     : clients;
 
   // Handle client search input
@@ -400,15 +399,13 @@ export default function PaymentLinkCreator() {
                         <div
                           key={client._id}
                           onClick={() => handleClientSelect(client)}
-                          className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                            index === selectedClientIndex
+                          className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${index === selectedClientIndex
                               ? "bg-blue-50 border-blue-200"
                               : ""
-                          } ${
-                            formData.clientId === client._id
+                            } ${formData.clientId === client._id
                               ? "bg-green-50"
                               : ""
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">

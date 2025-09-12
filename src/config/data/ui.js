@@ -4,13 +4,13 @@ import { FaSquareInstagram } from "react-icons/fa6";
 
 export const dashboardCards = {
   app: [
-    { id: 1, title: "Active Clients", name: "members", icon: "/svgs/person.svg" },
-    { id: 2, title: "Total Clients", name: "clients", icon: "/svgs/users-icon.svg" },
-    { id: 3, title: "Meals Plans", name: "meals", icon: "/svgs/cutlery.svg" },
-    { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg" },
+    { id: 1, title: "Active Clients", name: "members", icon: "/svgs/person.svg", link: "/coach/clients" },
+    { id: 2, title: "Total Clients", name: "clients", icon: "/svgs/users-icon.svg", link: "/coach/clients" },
+    { id: 3, title: "Meals Plans", name: "meals", icon: "/svgs/cutlery.svg", link: "/coach/meals/list-custom" },
+    { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg", link: "/coach/retail" },
   ],
   club: [
-    { id: 1, title: "Meetings", name: "meetings", icon: "/svgs/checklist.svg" }
+    { id: 1, title: "Meetings", name: "meetings", icon: "/svgs/checklist.svg", link: "/coach/club/meetings" }
   ]
 };
 

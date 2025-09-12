@@ -112,3 +112,12 @@ export function buildClickableUrl(urlString) {
   }
   return urlString
 }
+
+export function formatMessage(text) {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
+  return text.replace(urlRegex, (url) => {
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:blue; text-decoration:underline;">${url}</a>`;
+  });
+}

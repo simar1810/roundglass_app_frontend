@@ -163,7 +163,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   }
   formData.append("coachId", coachId);
   formData.append("existingClientID", existingClientID);
-  formData.append("age", differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date())))
+  formData.append("age", state.age)
   return formData;
 }
 
