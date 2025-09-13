@@ -19,8 +19,16 @@ export default function SelectMeals() {
   const mealTypes = selectedPlans[selectedPlan]?.map(meal => meal.mealType)
   const selectedMealTypeRecipee = selectedPlans[selectedPlan]?.find(mealType => mealType.mealType === selectedMealType)?.meals || []
 
+  const errorMessage = !mealTypes ?
+    "Please select a date"
+    : mealTypes?.length === 0 && "Please select a Type!"
+
   return <div>
-    <div className="pt-4 flex gap-4 overflow-x-auto no-scrollbar">
+    <div className="pt-4 flex gap-4 overflow-x-auto pb-4">
+      {(!mealTypes || mealTypes?.length === 0) && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
+      >
+        {errorMessage}
+      </div>}
       {mealTypes?.map((type, index) => <div key={index} className="relative">
         <Button
           variant={type === selectedMealType ? "wz" : "outline"}

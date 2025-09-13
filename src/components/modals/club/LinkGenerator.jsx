@@ -38,6 +38,8 @@ import Loader from "@/components/common/Loader";
 import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
 import SelectMultiple from "@/components/SelectMultiple";
+import TimePicker from "@/components/common/TimePicker";
+import { _throwError } from "@/lib/formatter";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -363,4 +365,11 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
     key={field.id}
     field={field}
   />
+  else if (field.inputtype === 8) return <>
+    <label className="text-[14px]">{field.label}</label>
+    <TimePicker
+      selectedTime={formData.time}
+      setSelectedTime={value => dispatch(changeFieldvalue(field.name, value))}
+    />
+  </>
 }

@@ -3,22 +3,27 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import FormControl from "@/components/FormControl";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
 import { UpdateClientOrderAmount } from "@/components/pages/coach/client/ClientData";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { sendData } from "@/lib/api";
 import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
+import { buildUrlWithQueryParams } from "@/lib/formatter";
 import { invoicePDFData } from "@/lib/pdf";
+import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock, EllipsisVertical } from "lucide-react";
+import { Clock, EllipsisVertical, Eye, EyeClosed } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -63,13 +68,25 @@ export default function Page() {
 }
 
 function RetailStatisticsCards({ totalSales, totalOrders }) {
+  const [hide, setHide] = useState(false);
   return <div className="grid grid-cols-3 gap-4">
     <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
       <CardHeader className="text-white p-0 mb-0">
-        <CardTitle>Total Sales</CardTitle>
+        <CardTitle className="">
+          <span className="w-full">Total Sales</span>
+          {hide
+            ? <EyeClosed
+              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+              onClick={() => setHide(false)}
+            />
+            : <Eye
+              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+              onClick={() => setHide(true)}
+            />}
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="text-white !text-[28px]">₹ {totalSales}</h4>
+        <h4 className={cn("text-white !text-[28px]", hide && "text-transparent")}>₹ {totalSales}</h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
@@ -119,7 +136,10 @@ function Brands({ brands }) {
   </TabsContent>
 }
 
-function Brand({ brand }) {
+function Brand({
+  brand,
+  children
+}) {
   const [margin, setMargin] = useState();
   const coachId = useAppSelector(state => state.coach.data._id);
   const [retailModal, setRetailModal] = useState(false)
@@ -129,13 +149,18 @@ function Brand({ brand }) {
       setMargin={setMargin}
       setOpen={setRetailModal}
       brand={brand}
+      children={children}
     />
     <AddRetailModal
       payload={{
         coachId,
         margin,
         selectedBrandId: brand._id,
-        margins: brand.margins
+        margins: brand.margins,
+        clientId: brand.clientId || "",
+        productModule: brand.productModule || [],
+        orderId: brand.orderId || "",
+        status: brand.status || "Completed",
       }}
       open={retailModal}
       setOpen={setRetailModal}
@@ -165,9 +190,9 @@ function Order({ order }) {
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
-        {order.status === "Completed"
-          ? <RetailCompletedLabel status={order.status} />
-          : <RetailPendingLabel status={order.status} />}
+        {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
+        {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
+        {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="text-black w-[16px]">
             <EllipsisVertical className="cursor-pointer" />
@@ -206,15 +231,13 @@ function Order({ order }) {
         <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
         <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
       </div>
-      <div>
-        {order.pendingAmount > 0
-          ? <UpdateClientOrderAmount order={order} />
-          : <Badge variant="wz">Paid</Badge>}
-        <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center mt-2" href="/">
-          Order Now&nbsp;{">"}
-        </Link>
-      </div>
+      {order.pendingAmount > 0
+        ? <UpdateClientOrderAmount order={order} />
+        : <Badge variant="wz">Paid</Badge>}
     </CardFooter>
+    <div>
+      {order.status === "Pending" && <AcceptRejectOrder order={order} />}
+    </div>
   </Card>
 }
 
@@ -228,6 +251,13 @@ export function RetailCompletedLabel({ status }) {
 export function RetailPendingLabel({ status }) {
   return <div className="text-[#FF964A] text-[14px] font-bold flex items-center gap-1">
     <Clock className="bg-[#FF964A] text-white w-[28px] h-[28px] p-1 rounded-full" />
+    <p>{status}</p>
+  </div>
+}
+
+export function RetailCancelledLabel({ status }) {
+  return <div className="text-red-600 text-[14px] font-bold flex items-center gap-1">
+    <Clock className="bg-red-600 text-white w-[28px] h-[28px] p-1 rounded-full" />
     <p>{status}</p>
   </div>
 }
@@ -278,4 +308,68 @@ function ExportOrdersoExcel({ orders }) {
       </div>
     </DialogContent>
   </Dialog>
+}
+
+function AcceptRejectOrder({ order = {} }) {
+  return <div className="mt-4 flex items-center gap-2">
+    <AcceptRetailsOrder order={order} />
+    <RejectOrderAction
+      status="cancel"
+      id={order.orderId}
+    />
+  </div>
+}
+
+function RejectOrderAction({
+  status,
+  id
+}) {
+  async function handleOrderStatus(setLoading) {
+    try {
+      setLoading(true);
+      const endpoint = buildUrlWithQueryParams(
+        "app/accept-order",
+        { id, status }
+      )
+      const response = await sendData(endpoint, {}, "PUT");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure of this. This action cannot be undone."
+    action={(setLoading, btnRef) => handleOrderStatus(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      <Button
+        className="text-[12px] font-bold"
+        size="sm"
+        variant="destructive"
+      >Reject</Button>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function AcceptRetailsOrder({ order }) {
+  return <div>
+    <Brand
+      brand={{
+        ...order.brand,
+        clientId: order.clientId,
+        productModule: order.productModule,
+        status: order.status,
+        orderId: order.orderId,
+        status: "Pending"
+      }}
+    >
+      <Button
+        size="sm"
+        variant="wz">Accept</Button>
+    </Brand>
+  </div >
 }

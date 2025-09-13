@@ -1,3 +1,5 @@
+import { buildClickableUrl } from "@/lib/formatter";
+
 export function programReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FIELD_VALUE":
@@ -33,9 +35,10 @@ export function changeProgramFieldValue(name, value) {
 
 export function generateProgramRP(state) {
   const formData = new FormData();
-  for (const field of ["file", "name", "link", "order"]) {
+  for (const field of ["file", "name", "order"]) {
     if (state[field] || state[field] === 0) formData.append(field, state[field])
   }
+  formData.append("link", buildClickableUrl(state.link))
   formData.append("availability", JSON.stringify(state.availability || "[]"))
   formData.append("programId", state.id);
   return formData;

@@ -62,7 +62,6 @@ export default function Page() {
     retail = []
   } = data?.data || {};
 
-  console.log(retail)
   return <div className="content-container content-height-screen">
     <Tabs defaultValue={selectedTab}
       onValueChange={value => tabChange(value, router, params, pathname)}

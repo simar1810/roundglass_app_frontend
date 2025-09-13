@@ -112,6 +112,8 @@ function SelectedMarathonDetails({
       </CreateMarathonModal>
       <DeleteMarathonAction marathonId={marathon._id} />
     </div>
+    <AssignMarathonModal marathonId={marathon._id} />
+    <div className="mt-4" />
     {marathon.tasks.map(task => <div className="mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px]" key={task._id}>
       <div>
         <h3>{task.title}</h3>
