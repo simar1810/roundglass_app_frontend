@@ -93,7 +93,9 @@ export function getMembershipType(membership) {
     case 1:
       return { type: "Monthly", end: format(membership.endDate, "dd/MM/yyyy") }
     case 2:
-      return { type: "Servings", end: membership.pendingServings }
+      return {
+        type: "Servings", end: membership.servings
+      }
     default:
       return { type: "Unknown", end: "Unknown" };
   }
