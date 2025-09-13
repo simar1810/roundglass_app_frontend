@@ -112,9 +112,7 @@ export default function RewardsDashboard() {
       if (response.status_code === 200) {
         setClients(response.data || []);
       }
-    } catch (error) {
-      console.error("Failed to fetch clients:", error);
-    }
+    } catch (error) { }
   };
 
   const createReward = async () => {
@@ -392,8 +390,8 @@ export default function RewardsDashboard() {
                     {loading
                       ? "Saving..."
                       : editingReward
-                      ? "Update Reward"
-                      : "Add Reward"}
+                        ? "Update Reward"
+                        : "Add Reward"}
                   </Button>
                   <Button
                     variant="outline"

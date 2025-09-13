@@ -70,7 +70,7 @@ export default function PaymentManager() {
         search: filters.search,
         dateRange: filters.dateRange,
       });
-   
+
       if (response.success === true) {
         setPaymentLinks(response.data?.payments || response.payments || []);
         setTotalPages(
@@ -90,9 +90,7 @@ export default function PaymentManager() {
       if (response.status_code === 200) {
         setClients(response.data || []);
       }
-    } catch (error) {
-      console.error("Failed to fetch clients:", error);
-    }
+    } catch (error) { }
   };
 
   const sendReminder = async (paymentLinkId) => {
@@ -290,7 +288,7 @@ export default function PaymentManager() {
                                 link.clientName ||
                                 getClientName(link.clientId || link.client)}
                             </div>
-                           
+
                           </div>
                         </TableCell>
                         <TableCell>

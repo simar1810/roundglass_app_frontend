@@ -225,6 +225,31 @@ export function customMealReducer(state, action) {
           [action.payload.to]: state.selectedPlans[action.payload.from]
         }
       }
+
+    case "DELETE_MONTHLY_DATE":
+      delete state.selectedPlans[action.payload]
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+        }
+      }
+    case "CHANGE_MONTHLY_DATE":
+      const {
+        selectedPlans: {
+          [action.payload.prev]: previous,
+          ...selectedPlans
+        },
+        ...rest
+      } = state;
+      return {
+        ...rest,
+        selectedPlans: {
+          ...selectedPlans,
+          [action.payload.new]: previous
+        },
+        selectedPlan: action.payload.new,
+      };
     default:
       return state;
   }
@@ -386,5 +411,19 @@ export function monthlyMealRP(state) {
     description: state.description,
     mode: state.mode,
     plans: payload
+  }
+}
+
+export function changeMonthlyDate(payload) {
+  return {
+    type: "CHANGE_MONTHLY_DATE",
+    payload
+  }
+}
+
+export function deleteMonthlyDate(payload) {
+  return {
+    type: "DELETE_MONTHLY_DATE",
+    payload
   }
 }

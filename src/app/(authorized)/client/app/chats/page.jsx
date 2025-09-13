@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getRelativeTime, nameInitials } from "@/lib/formatter";
+import { formatMessage, getRelativeTime, nameInitials } from "@/lib/formatter";
 import useClientChatSocketContext, { ClientChatStateProvider } from "@/providers/ClientChatStateProvider";
 import { useAppSelector } from "@/providers/global/hooks";
 import { CheckCheck, SendHorizontal } from "lucide-react";
@@ -112,7 +112,9 @@ function CurrentUserMessage({ message }) {
         className="max-w-[80ch] bg-[var(--accent-1)] text-white relative px-4 py-2 rounded-[20px] rounded-br-0"
         style={{ borderBottomRightRadius: 0 }}
       >
-        {message?.message}
+        <div
+          dangerouslySetInnerHTML={{ __html: formatMessage(message?.message) }}
+        />
         {message.seen && <CheckCheck className="w-3 h-3 text-[#0045CC] absolute bottom-[2px] right-[2px]" />}
       </div>
       <p className="text-[var(--dark-1)]/25 mt-1 text-right">{getRelativeTime(message.createdAt)}</p>
@@ -138,7 +140,9 @@ function CompanionUserMessage({ message }) {
         className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0"
         style={{ borderBottomLeftRadius: 0 }}
       >
-        {message?.message}
+        <div
+          dangerouslySetInnerHTML={{ __html: formatMessage(message?.message) }}
+        />
       </div>
       <p className="text-[var(--dark-1)]/25 mt-1">{getRelativeTime(message.createdAt)}</p>
     </div>

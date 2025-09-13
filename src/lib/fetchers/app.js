@@ -1,11 +1,12 @@
 import { format } from "date-fns";
 import { fetchData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
+import { toast } from "sonner";
 
 async function logoutUser(response, router, cache) {
   if (
     (response?.status_code === 411,
-    response?.message?.toLowerCase() === "something went wrong")
+      response?.message?.toLowerCase() === "something went wrong")
   ) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await fetch("/api/logout", { method: "DELETE" });
@@ -121,6 +122,10 @@ export function getReminders(person = "coach") {
 }
 
 export function getRecipesCalorieCounter(query) {
+  if (query.length <= 3) {
+    toast.error("At least enter 3 characters.")
+    return;
+  }
   return fetchData(`app/recipees?query=${query}`);
 }
 

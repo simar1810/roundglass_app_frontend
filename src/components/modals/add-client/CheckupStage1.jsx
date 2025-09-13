@@ -125,15 +125,20 @@ export default function CheckupStage1() {
         </div>
         <SelectWeightUnit />
       </div>
-      <div className="mr-[-10px]">
-        <FormControl
-          label="Visceral Fat (optional)"
-          type="text"
-          placeholder="Enter Visceral Fat"
-          value={state.visceral_fat}
-          onChange={e => dispatch(changeFieldvalue("visceral_fat", e.target.value))}
-        />
-      </div>
+      <FormControl
+        label="Visceral Fat (optional)"
+        type="text"
+        placeholder="Enter Visceral Fat"
+        value={state.visceral_fat}
+        onChange={e => dispatch(changeFieldvalue("visceral_fat", e.target.value))}
+      />
+      <FormControl
+        label="Age"
+        type="number"
+        placeholder="Enter Age"
+        value={state.age}
+        onChange={e => dispatch(changeFieldvalue("age", e.target.value))}
+      />
       <div className="col-span-2">
         <span className="label font-[600] block mb-2">
           Body Composition
