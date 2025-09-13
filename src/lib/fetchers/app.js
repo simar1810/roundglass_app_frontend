@@ -287,7 +287,7 @@ export function getClientsForCustomWorkout(workoutId) {
 }
 
 export async function onboardingQuestionaire() {
-  return fetchData("app/onboarding/questionaire");
+  return fetchData("app/onboarding/questionaire?person=coach");
 }
 
 export function retrieveSessions(person) {
