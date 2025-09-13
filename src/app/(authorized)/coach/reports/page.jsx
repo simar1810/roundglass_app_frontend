@@ -24,17 +24,29 @@ import { toast } from "sonner";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
 export default function Page() {
+  const [query, setQuery] = useState("");
   const { isLoading, error, data } = useSWR("clients/reports", () => retrieveReports());
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const clients = data.data;
+  const allClients = data.data || [];
+
+  const clients = allClients.filter(client => new RegExp(query, "i").test(client?.client?.name))
 
   return <div className="content-container content-height-screen">
-    <h4>Reports</h4>
+    <div className="flex items-center justify-between">
+      <h4 className="grow">Reports</h4>
+      <Input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        className="w-auto min-w-sm bg-[var(--comp-1)]"
+        placeholder="Search client name.."
+      />
+    </div>
     {clients.length === 0 && <>No reports uploaded</>}
     <Table className="mt-10 border-1">
       <TableHeader>
