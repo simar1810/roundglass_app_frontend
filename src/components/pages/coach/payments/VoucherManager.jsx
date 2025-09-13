@@ -51,7 +51,7 @@ export default function VoucherManager() {
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [vouchers, setVouchers] = useState([]); // Ensure it's always an array
-  console.log("Vouchers state:", vouchers); // Debug log
+
   const [voucherStats, setVoucherStats] = useState({
     totalVouchers: 0,
     activeVouchers: 0,
@@ -144,9 +144,7 @@ export default function VoucherManager() {
               (stats.inactive?.totalUsage || 0),
             totalDiscountGiven: 0, // This might need to be calculated differently
           };
-        } else {
-          console.log("No stats structure found in response"); // Debug log
-        }
+        } else { }
 
 
         const transformedStats = {
@@ -158,11 +156,8 @@ export default function VoucherManager() {
 
         setVoucherStats(transformedStats);
       } else {
-        console.error("Failed to fetch voucher stats:", response.message);
-        console.error("Response:", response); // Debug log
       }
     } catch (error) {
-      console.error("Failed to fetch voucher stats:", error);
       setVoucherStats({
         totalVouchers: 0,
         activeVouchers: 0,
@@ -554,8 +549,8 @@ export default function VoucherManager() {
                     {loading
                       ? "Saving..."
                       : editingVoucher
-                      ? "Update Voucher"
-                      : "Create Voucher"}
+                        ? "Update Voucher"
+                        : "Create Voucher"}
                   </Button>
                   <Button
                     variant="outline"

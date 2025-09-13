@@ -8,14 +8,20 @@ import { Avatar, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import Link from "next/link";
 import { useAppSelector } from "@/providers/global/hooks";
+import { useRouter } from "next/navigation";
 
 export default function DashboardInfoCard({
   icon = "/svgs/users-icon.svg",
   title,
   quantity,
-  isSubscribed
+  isSubscribed,
+  link
 }) {
-  return <div className="relative overflow-clip border-1 rounded-[10px]">
+  const router = useRouter(link)
+  return <div
+    onClick={() => router.push(link)}
+    className="relative overflow-clip border-1 rounded-[10px] cursor-pointer"
+  >
     <Card className="px-0 py-4 shadow-none gap-2 rounded-[10px] border-0">
       <CardHeader className="flex flex-row items-center justify-between">
         <Avatar className="w-[40px] h-[40px] rounded-none">

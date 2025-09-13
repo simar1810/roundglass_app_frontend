@@ -55,6 +55,11 @@ export function addClientCheckupReducer(state, action) {
         nextFollowupType: "8-day",
         nextFollowup: format(addDays(new Date(), 8), 'yyyy-MM-dd')
       }
+    case "CLIENT_ONBOARDING_COMPLETED":
+      return {
+        ...state,
+        stage: 5
+      }
     default:
       return state;
   }
@@ -163,7 +168,7 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   }
   formData.append("coachId", coachId);
   formData.append("existingClientID", existingClientID);
-  formData.append("age", differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date())))
+  formData.append("age", state.age)
   return formData;
 }
 
@@ -176,4 +181,10 @@ export function init(type, data) {
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;
   return payload;
+}
+
+export function clientOnboardingCompleted() {
+  return {
+    type: "CLIENT_ONBOARDING_COMPLETED"
+  }
 }

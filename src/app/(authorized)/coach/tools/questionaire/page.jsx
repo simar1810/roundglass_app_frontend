@@ -35,23 +35,27 @@ export default function Page() {
         Edit
       </Link>
     </div>
-    <div className="mt-10 grid grid-cols-2 gap-4">
-      {sections.map(section => <Collapsible key={section._id}>
-        <CollapsibleTrigger className="w-full text-left font-bold bg-[var(--comp-1)] px-4 py-2 border-1">
-          {section.name}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="bg-[var(--comp-1)] p-4 rounded-b-[4px] border-1">
-          <h5>Questions - ({section.questions.length})</h5>
-          <div className="mt-4">
-            {section.questions.map((question, index) => <QuestionDetails
-              key={index}
-              index={index}
-              question={question}
-            />)}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>)}
-    </div>
+    <OnboardingQuestionContainer sections={sections} />
+  </div>
+}
+
+export function OnboardingQuestionContainer({ sections }) {
+  return <div className="mt-10 grid grid-cols-2 gap-4">
+    {sections.map(section => <Collapsible key={section._id}>
+      <CollapsibleTrigger className="w-full text-left font-bold bg-[var(--comp-1)] px-4 py-2 border-1">
+        {section.name}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="bg-[var(--comp-1)] p-4 rounded-b-[4px] border-1">
+        <h5>Questions - ({section.questions.length})</h5>
+        <div className="mt-4">
+          {section.questions.map((question, index) => <QuestionDetails
+            key={index}
+            index={index}
+            question={question}
+          />)}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>)}
   </div>
 }
 

@@ -155,7 +155,6 @@ export default function CommunicationCenter() {
 
         // Show AI insights if available
         if (response.aiInsights) {
-          console.log("AI Communication Insights:", response.aiInsights);
         }
 
         // Reset form

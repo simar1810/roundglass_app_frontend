@@ -35,12 +35,22 @@ export default function SelectMealCollection({ children, index }) {
 function RecipeesContainer({ index }) {
   const [query, setQuery] = useState("rajma");
   const debouncedSearchQuery = useDebounce(query, 1000);
-  const { isLoading, error, data } = useSWR(`recipees/${debouncedSearchQuery}`, () => getRecipesCalorieCounter(debouncedSearchQuery));
+  const { isLoading, error, data } = useSWR(
+    `recipees/${debouncedSearchQuery}`,
+    () => getRecipesCalorieCounter(debouncedSearchQuery)
+  );
   const [selected, setSelected] = useState();
   const closeRef = useRef();
   const { dispatch } = useCurrentStateContext();
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
+  if (error || data?.status_code !== 200) return <div className="p-4">
+    <Input
+      placeholder="Enter Meal Plan"
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+    />
+    <ContentError title={error || data?.message || "No recipes found!"} />
+  </div>
   const recipees = data.data;
   return <div className="p-4">
     <div className="flex items-center gap-4 pb-2">
@@ -52,7 +62,7 @@ function RecipeesContainer({ index }) {
       {isLoading && <Loader />}
     </div>
     <div className="mb-4 flex items-center justify-between gap-4">
-      <strong>{recipees.length} Results found</strong>
+      {/* <strong>{recipees.length} Results found</strong> */}
       <p className="ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
       <RecipeModal type="new" />
     </div>

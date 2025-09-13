@@ -4,13 +4,13 @@ import { FaSquareInstagram } from "react-icons/fa6";
 
 export const dashboardCards = {
   app: [
-    { id: 1, title: "Active Clients", name: "members", icon: "/svgs/person.svg" },
-    { id: 2, title: "Total Clients", name: "clients", icon: "/svgs/users-icon.svg" },
-    { id: 3, title: "Meals Plans", name: "meals", icon: "/svgs/cutlery.svg" },
-    { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg" },
+    { id: 1, title: "Active Clients", name: "members", icon: "/svgs/person.svg", link: "/coach/clients" },
+    { id: 2, title: "Total Clients", name: "clients", icon: "/svgs/users-icon.svg", link: "/coach/clients" },
+    { id: 3, title: "Meals Plans", name: "meals", icon: "/svgs/cutlery.svg", link: "/coach/meals/list-custom" },
+    { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg", link: "/coach/retail" },
   ],
   club: [
-    { id: 1, title: "Meetings", name: "meetings", icon: "/svgs/checklist.svg" }
+    { id: 1, title: "Meetings", name: "meetings", icon: "/svgs/checklist.svg", link: "/coach/club/meetings" }
   ]
 };
 
@@ -95,10 +95,10 @@ export const linkGeneratorFields = [
     ]
   },
   { id: 3, label: "Date", type: "date", inputtype: 1, name: "date" },
-  { id: 4, label: "Time", type: "time", inputtype: 1, name: "time" },
+  { id: 4, label: "Time", type: "time", inputtype: 8, name: "time" },
   { id: 5, label: "Repeat", inputtype: 4, name: "reOcurred" },
   { id: 6, label: "Meeting Description", inputtype: 3, placeholder: "Enter Description", name: "description" },
-  { id: 7, label: "Meeting Duration", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
+  { id: 7, label: "Meeting Duration (minutes)", type: "number", inputtype: 1, placeholder: "Meeting Duration", name: "duration" },
   { id: 8, label: "Enter required Volume Points", type: "number", inputtype: 1, placeholder: "Enter Volume Points", name: "eventVolumePointAmount" },
   { id: 9, label: "Select Meeting Banner", type: "file", inputtype: 5, name: "banner" },
   {

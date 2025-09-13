@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
-import { BarChart2, Bot, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import FormControl from "@/components/FormControl";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
+import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -37,6 +38,7 @@ const tabItems = [
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club" },
+  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Case File" },
 ]
 
 export default function ClientData({ clientData }) {
@@ -65,6 +67,7 @@ export default function ClientData({ clientData }) {
       <WorkoutContainer id={clientData._id} />
       <AIAgentHistory />
       <ClientReports />
+      <CaseFile sections={clientData.onboarding_questionaire || []} />
     </Tabs>
   </div>
 }
@@ -418,4 +421,10 @@ export function WorkoutDetails({ workout }) {
       <p className="text-sm leading-tight">{trimString(routineWorkout.instructions, 80)}</p>
     </div>
   </Link>
+}
+
+function CaseFile({ sections }) {
+  return <TabsContent value="case-file">
+    <DisplayClientQuestionaire data={sections} />
+  </TabsContent>
 }

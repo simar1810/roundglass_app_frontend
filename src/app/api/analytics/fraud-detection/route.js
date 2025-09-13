@@ -21,7 +21,6 @@ export async function GET(request) {
 
     return NextResponse.json(response.data);
   } catch (error) {
-    console.error("Fraud detection error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

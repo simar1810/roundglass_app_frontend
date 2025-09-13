@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { fetchData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
+import { toast } from "sonner";
 
 async function logoutUser(response, router, cache) {
   if (
@@ -121,6 +122,10 @@ export function getReminders(person = "coach") {
 }
 
 export function getRecipesCalorieCounter(query) {
+  if (query.length <= 3) {
+    toast.error("At least enter 3 characters.")
+    return;
+  }
   return fetchData(`app/recipees?query=${query}`);
 }
 
@@ -282,7 +287,7 @@ export function getClientsForCustomWorkout(workoutId) {
 }
 
 export async function onboardingQuestionaire() {
-  return fetchData("app/onboarding/questionaire");
+  return fetchData("app/onboarding/questionaire?person=coach");
 }
 
 export function retrieveSessions(person) {
@@ -353,4 +358,9 @@ export function getPhysicalMemberships(query) {
     query
   )
   return fetchData(endpoint)
+}
+
+export async function retrieveQuestionaire(query) {
+  const endpoint = buildUrlWithQueryParams("app/onboarding/questionaire", query)
+  return fetchData(endpoint);
 }

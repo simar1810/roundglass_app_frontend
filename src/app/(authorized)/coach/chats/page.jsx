@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { selectChatUser } from "@/config/state-reducers/chat-scoket";
 import useDebounce from "@/hooks/useDebounce";
 import useKeyPress from "@/hooks/useKeyPress";
-import { getRelativeTime, nameInitials } from "@/lib/formatter";
+import { formatMessage, getRelativeTime, nameInitials } from "@/lib/formatter";
+import { cn, copyText } from "@/lib/utils";
 import useChatSocketContext, { ChatSocketProvider } from "@/providers/ChatStateProvider";
 import { useAppSelector } from "@/providers/global/hooks";
-import { CheckCheck, EllipsisVertical, Paperclip, SendHorizontal } from "lucide-react";
+import { CheckCheck, Clipboard, ClipboardCheck, Copy, EllipsisVertical, Paperclip, SendHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   return <div className="content-container bg-white p-4 pt-0 rounded-md border-1">
@@ -175,19 +177,29 @@ function CurrentChatMessageBox() {
 }
 
 function CurrentUserMessage({ message }) {
+  const [showOptions, setShowOptions] = useState(false)
   const coach = useAppSelector(state => state.coach.data)
   if (!message || !message?.message) return;
-  return <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
-    <div>
+  return <div
+    className="mb-4 flex flex-wrap items-start justify-end gap-4"
+    onMouseOver={() => setShowOptions(true)}
+    onMouseOut={() => setShowOptions(false)}
+  >
+    <div className="relative">
       <div
         className="max-w-[80ch] bg-[var(--accent-1)] text-white relative px-4 py-2 rounded-[20px] rounded-br-0"
         style={{ borderBottomRightRadius: 0 }}
       >
-        {message?.message}
+        <div
+          dangerouslySetInnerHTML={{ __html: formatMessage(message?.message) }}
+        />
         {message.seen && <CheckCheck className="w-3 h-3 text-[#0045CC] absolute bottom-[2px] right-[2px]" />}
       </div>
       <p className="text-[var(--dark-1)]/25 mt-1 text-right">{getRelativeTime(message.createdAt)}</p>
-
+      {showOptions && <Options
+        user="current"
+        message={message?.message}
+      />}
     </div>
     <Avatar className="rounded-[4px] mt-1">
       <AvatarImage src={coach.profilePhoto || "/"} />
@@ -197,16 +209,45 @@ function CurrentUserMessage({ message }) {
 }
 
 function CompanionUserMessage({ message }) {
+  const [showOptions, setShowOptions] = useState(false)
   const { currentChat } = useChatSocketContext();
   if (!message || !message?.message) return;
-  return <div className="mb-4 flex flex-wrap items-start justify-start gap-4">
+  return <div
+    onMouseOver={() => setShowOptions(true)}
+    onMouseOut={() => setShowOptions(false)}
+    className="mb-4 flex flex-wrap items-start justify-start gap-4 relative">
     <Avatar className="rounded-[4px] mt-1">
       <AvatarImage src={currentChat.profilePhoto || "/"} />
       <AvatarFallback className="rounded-[4px]">{nameInitials(currentChat.name)}</AvatarFallback>
     </Avatar>
-    <div>
-      <div className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0" style={{ borderBottomLeftRadius: 0 }}>{message?.message}</div>
+    <div className="relative">
+      <div
+        className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0"
+        style={{ borderBottomLeftRadius: 0 }}
+      >
+        <div
+          dangerouslySetInnerHTML={{ __html: formatMessage(message?.message) }}
+        />
+      </div>
       <p className="text-[var(--dark-1)]/25 mt-1">{getRelativeTime(message.createdAt)}</p>
+      {showOptions && <Options message={message?.message} />}
     </div>
   </div>
+}
+
+export function Options({
+  user = "companion",
+  message
+}) {
+  return <button className={cn(
+    "absolute top-0 translate-y-1 p-1 bg-[var(--comp-1)] border-1 hover:rounded-[4px] hover:scale-[1.1]",
+    user === "companion" ? "left-full translate-x-2" : "right-full -translate-x-2"
+  )}>
+    <ClipboardCheck
+      onClick={() => {
+        copyText(message)
+        toast.success("Copied!")
+      }}
+      className="h-[14px] w-[14px] " />
+  </button>
 }

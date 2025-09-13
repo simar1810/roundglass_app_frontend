@@ -75,9 +75,7 @@ export default function WalletSettings() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (error) {
-      console.error("Failed to save settings:", error);
-    } finally {
+    } catch (error) { } finally {
       setLoading(false);
     }
   };
