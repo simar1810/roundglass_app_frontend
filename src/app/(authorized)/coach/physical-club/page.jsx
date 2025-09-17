@@ -5,6 +5,7 @@ import { ClientwiseHistory } from "@/components/pages/coach/physical-club/Client
 import ClubHistoryPage from "@/components/pages/coach/physical-club/ClubHistory";
 import DailyAttendancePage from "@/components/pages/coach/physical-club/DailyAttendance";
 import ManualAttendance from "@/components/pages/coach/physical-club/ManualAttendance";
+import QRCodeModal from "@/components/pages/coach/physical-club/QRCodeModal";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +65,7 @@ export default function Page() {
   return <div className="content-container content-height-screen">
     <div className="mb-8 flex items-center justify-between">
       <h4>Attendance Management System</h4>
-      <Button>Attendance QR Code</Button>
+      <QRCodeModal />
     </div>
 
     <Tabs defaultValue="manual-attendance">

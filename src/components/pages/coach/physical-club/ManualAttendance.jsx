@@ -15,6 +15,7 @@ import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { Check, CheckCircle, X } from "lucide-react";
+import { CustomCalendar } from "@/components/common/CustomCalender";
 
 export default function ManualAttendance({
   data,
@@ -129,9 +130,12 @@ export function AttendanceCalendar({
   setRange
 }) {
   return (
-    <div className="w-full border-1 bg-[var(--comp-1)] p-4 rounded-[10px]">
-      <div className=" text-lg font-semibold mb-2">Attendance Calendar</div>
-      <Card className="p-4 max-w-sm w-full mx-auto border-1 shadow-none">
+    <div className="w-full">
+      <CustomCalendar
+        badgeData={{}}
+        onRangeSelect={setRange}
+      />
+      {/* <Card className="p-4 max-w-sm w-full mx-auto border-1 shadow-none">
         <Calendar
           mode="range"
           selected={range}
@@ -148,7 +152,7 @@ export function AttendanceCalendar({
             </span>
           </div>
         )}
-      </Card>
+      </Card> */}
     </div>
   );
 }
