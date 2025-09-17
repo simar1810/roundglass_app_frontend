@@ -134,3 +134,16 @@ export function formatMessage(text) {
     return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:blue; text-decoration:underline;">${url}</a>`;
   });
 }
+
+export function getDaysInMonth(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, i) => {
+    const dayNum = i + 1;
+    const dateObj = new Date(year, month, dayNum);
+    return {
+      date: dayNum,
+      day: format(dateObj, "EEE")
+    };
+  });
+}

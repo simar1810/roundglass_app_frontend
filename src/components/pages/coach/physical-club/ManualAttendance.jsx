@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,14 +9,24 @@ import { manualAttendance } from "@/lib/physical-attendance";
 import { endOfMonth, startOfMonth } from "date-fns";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { sendData } from "@/lib/api";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import { Check, CheckCircle, X } from "lucide-react";
 
-export default function ManualAttendance({ data }) {
+export default function ManualAttendance({
+  data,
+  query
+}) {
   const [range, setRange] = useState({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date())
   })
   const clients = manualAttendance(data, range)
-  console.log(clients)
+    .filter(client => new RegExp(query, "i").test(client?.name))
+
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} />
     <div className="flex-1">
@@ -38,33 +48,80 @@ export function AttendanceClients({ clients }) {
           <div key={i} className="flex justify-between items-center border-b pb-2">
             <div className="flex items-center gap-3">
               <Avatar>
+                <AvatarImage src={client.profilePhoto} />
                 <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
               </Avatar>
               <span>{client.name}</span>
             </div>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className={cn("hover:text-[var(--accent-1)]", client.status === true
-                  ? "bg-[var(--accent-1)] text-white"
-                  : "text-[var(--accent-1)] border-[var(--accent-1)]")}
-              >
-                Present
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className={cn("hover:text-[var(--accent-1)]", "text-[var(--accent-1)] border-[var(--accent-1)]")}
-              >
-                Absent
-              </Button>
+              <ChangeClientAttendanceStatus status="present">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn("rounded-full font-bold hover:text-[var(--accent-1)]", client.status === "present"
+                    ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)] hover:border-[var(--accent-1)] text-white hover:text-white"
+                    : "text-[var(--accent-1)] border-[var(--accent-1)] hover:border-[var(--accent-1)]")}
+                >
+                  <CheckCircle className={cn(client.status === "present"
+                    ? "text-white"
+                    : "text-[var(--accent-1)]"
+                  )} />
+                  Present
+                </Button>
+              </ChangeClientAttendanceStatus>
+              <ChangeClientAttendanceStatus status="absent">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn("rounded-full font-bold hover:text-[var(--accent-1)]", client.status === "absent"
+                    ? "bg-[var(--accent-2)] hover:bg-[var(--accent-2)] text-white hover:text-white"
+                    : "text-[var(--accent-2)] hover:text-[var(--accent-2)] border-[var(--accent-2)]")}
+                >
+                  <X className={cn(client.status === "absent"
+                    ? "bg-white text-[var(--accent-2)] rounded-full p-[2px]"
+                    : "bg-[var(--accent-2)] text-white rounded-full p-[2px]"
+                  )} />
+                  Absent
+                </Button>
+              </ChangeClientAttendanceStatus>
             </div>
           </div>
         ))}
+        {clients.length === 0 && <div className="bg-white border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
+          No Matches Found!
+        </div>}
       </div>
     </div>
   );
+}
+
+export function ChangeClientAttendanceStatus({
+  children,
+  status
+}) {
+  async function changeClientAttendanceStatus(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/", { status });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/physical-club/attendance");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description={`Are you sure of changing the attendance? You are changing the status to ${status}!`}
+    action={(setLoading, btnRef) => changeClientAttendanceStatus(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      {children}
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }
 
 export function AttendanceCalendar({

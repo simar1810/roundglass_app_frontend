@@ -2,25 +2,11 @@
 
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { dummyRequests } from "./ShakeRequestsTable"
 import { TabsContent } from "@/components/ui/tabs"
 import { nameInitials } from "@/lib/formatter"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
-function SearchBar() {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <Input placeholder="Search Client" className="w-64" />
-      <div className="flex items-center gap-2">
-        <div className="border rounded-md px-3 py-2 text-sm text-gray-600">
-          Date Range: 15 Aug 2025 - 15 Sept 2025
-        </div>
-        <Button variant="outline">Export CSV</Button>
-      </div>
-    </div>
-  )
-}
+import { clubHistory } from "@/lib/physical-attendance"
+import { useState } from "react"
 
 function TableHeader() {
   return (
@@ -37,9 +23,12 @@ function TableHeader() {
   )
 }
 
-function TableRow({ client }) {
+function TableRow({
+  client,
+  index
+}) {
   const getStatusClass = (status) =>
-    status === "Active"
+    status
       ? "bg-green-100 text-green-700"
       : "bg-red-100 text-red-600"
 
@@ -66,7 +55,7 @@ function TableRow({ client }) {
 
   return (
     <tr className="text-sm">
-      <td className="px-4 py-2">{client.id}</td>
+      <td className="px-4 py-2">{index}</td>
       <td className="px-4 py-2 flex items-center gap-2">
         <Avatar>
           <AvatarImage src={client.profilePhoto} />
@@ -75,40 +64,53 @@ function TableRow({ client }) {
         {client.clientName}
       </td>
       <td className="px-4 py-2">
-        <span className={`px-2 py-1 rounded-full text-xs capitalize ${getStatusClass(client.status)}`}>
-          {client.status}
+        <span className={`px-2 py-1 rounded-full text-xs capitalize ${getStatusClass(client.clientStatus)}`}>
+          {client.status
+            ? <>Active</>
+            : <>In Active</>}
         </span>
       </td>
       <td className="px-4 py-2">{client.present || 4} Days</td>
       <td className="px-4 py-2">{client.absent || 1} Days</td>
       <td className="px-4 py-2 flex items-center gap-2">
-        <span className={`font-medium ${getPercentageClass(client.percentage)}`}>
-          {client.percentage}%
+        <span className={`font-medium ${getPercentageClass(client.showupPercentage)}`}>
+          {client.showupPercentage}%
         </span>
-        <span className={`px-2 py-1 rounded-full text-xs ${getBadgeClass(client.label)}`}>
-          {client.label || <>Very Low</>}
+        <span className={`px-2 py-1 rounded-full text-xs ${getBadgeClass(client.showupLabel)}`}>
+          {client.showupLabel || <>Very Low</>}
         </span>
       </td>
     </tr>
   )
 }
 
-export default function ClubHistoryPage() {
-  const clients = dummyRequests || []
+export default function ClubHistoryPage({
+  query,
+  data
+}) {
+  const clients = clubHistory(data || [])
+    .filter(client => new RegExp(query, "i").test(client?.clientName))
   return (
     <TabsContent value="club-history">
-      <Card className="p-4 border-1 bg-[var(--comp-1)]">
-        <SearchBar />
-        <div className="overflow-x-auto">
+      <Card className="p-0 shadow-none border-1 rounded-[10px] bg-[var(--comp-1)]">
+        <div className="p-4 overflow-x-auto">
           <table className="min-w-full border-collapse">
             <TableHeader />
             <tbody>
               {clients.map((client, idx) => (
-                <TableRow key={idx} client={client} />
+                <TableRow
+                  key={idx}
+                  client={client}
+                  index={idx + 1}
+                />
               ))}
             </tbody>
           </table>
         </div>
+
+        {clients.length === 0 && <div className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
+          No Matches Found!
+        </div>}
       </Card>
     </TabsContent>
   )

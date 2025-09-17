@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
+import { shakeRequests } from "@/lib/physical-attendance";
+import { format } from "date-fns";
+import { ChangeClientAttendanceStatus } from "./ManualAttendance";
 
 export const dummyRequests = [
   {
@@ -45,86 +48,69 @@ export const dummyRequests = [
   },
 ];
 
-export default function ShakeRequestsTable() {
-  const [requests, setRequests] = useState(dummyRequests);
+export default function ShakeRequestsTable({
+  query,
+  data = []
+}) {
 
-  const handleApprove = (id) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "approved" } : req
-      )
-    );
-  };
-
-  const handleReject = (id) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "rejected" } : req
-      )
-    );
-  };
+  const filteredRequests = shakeRequests(data)
+    .filter(client => new RegExp(query, "i").test(client?.name))
 
   return (
-    <TabsContent value="shake-requests" className="space-y-4">
-      {/* Search + Export */}
-      <div className="flex justify-between items-center">
-        <Input placeholder="Search Client" className="w-[250px]" />
-        <Button variant="outline">Export CSV</Button>
-      </div>
-
-      {/* Table */}
-      <Table className="bg-[var(--comp-1)] border-1">
+    <TabsContent value="shake-requests" className="bg-[var(--comp-1)] border-1 space-y-4">
+      <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Client ID</TableHead>
+            <TableHead>Sr No.</TableHead>
             <TableHead>Client Name</TableHead>
             <TableHead>Request Date</TableHead>
             <TableHead>Time</TableHead>
-            <TableHead>Request Type</TableHead>
+            {/* <TableHead>Request Type</TableHead> */}
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.map((req) => (
-            <TableRow key={req.id}>
-              <TableCell>{req.clientId}</TableCell>
-              <TableCell>{req.clientName}</TableCell>
-              <TableCell>{req.requestDate}</TableCell>
-              <TableCell>{req.time}</TableCell>
-              <TableCell>{req.requestType}</TableCell>
+          {filteredRequests.map((req, index) => (
+            <TableRow key={index + 1}>
+              <TableCell>{index + 1}</TableCell>
+              <TableCell>{req.name}</TableCell>
+              <TableCell>{format(req.markedAt, "dd-MM-yyyy")}</TableCell>
+              <TableCell>{format(req.markedAt, "HH:MM a")}</TableCell>
               <TableCell className="flex justify-end gap-2">
-                {req.status === "pending" && (
+                {req.status === "requested" && (
                   <>
-                    <Button
-                      variant="outline"
-                      className="text-green-600 border-green-600"
-                      onClick={() => handleApprove(req.id)}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600 border-red-600"
-                      onClick={() => handleReject(req.id)}
-                    >
-                      ✕
-                    </Button>
+                    <ChangeClientAttendanceStatus status="present">
+                      <Button
+                        variant="outline"
+                        className="text-green-600 border-green-600"
+                      >
+                        Approve
+                      </Button>
+                    </ChangeClientAttendanceStatus>
+                    <ChangeClientAttendanceStatus status="absent">
+                      <Button
+                        variant="outline"
+                        className="text-red-600 border-red-600"
+                      >
+                        ✕
+                      </Button>
+                    </ChangeClientAttendanceStatus>
                   </>
                 )}
-                {req.status === "approved" && (
+                {req.status === "present" && (
                   <Badge
                     variant="outline"
                     className="bg-green-100 text-green-700"
                   >
-                    ● Approved
+                    ● Present
                   </Badge>
                 )}
-                {req.status === "rejected" && (
+                {req.status === "absent" && (
                   <Badge
                     variant="outline"
                     className="bg-red-100 text-red-700"
                   >
-                    ● Rejected
+                    ● Absent
                   </Badge>
                 )}
               </TableCell>
@@ -132,6 +118,10 @@ export default function ShakeRequestsTable() {
           ))}
         </TableBody>
       </Table>
+
+      {filteredRequests.length === 0 && <div className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
+        No Matches Found!
+      </div>}
     </TabsContent>
   );
 }

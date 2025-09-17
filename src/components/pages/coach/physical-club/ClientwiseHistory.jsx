@@ -5,28 +5,19 @@ import { Card } from "@/components/ui/card"
 import { dummyRequests } from "./ShakeRequestsTable"
 import Paginate from "@/components/Paginate"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { nameInitials } from "@/lib/formatter"
+import { getDaysInMonth, nameInitials } from "@/lib/formatter"
+import { cn } from "@/lib/utils"
+import { clientWiseHistory, statusClases } from "@/lib/physical-attendance"
+import { getMonth, getYear } from "date-fns"
+import { useState } from "react"
 
-function SearchBar() {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <Input placeholder="Search Client" className="w-64" />
-      <div className="flex items-center gap-2">
-        <div className="border rounded-md px-3 py-2 text-sm text-gray-600">
-          Date Range: 15 Aug 2025 - 15 Sept 2025
-        </div>
-        <Button variant="outline">Export CSV</Button>
-      </div>
-    </div>
-  )
-}
 
 function TableHeader({ days }) {
   return (
     <thead>
       <tr className="text-sm text-gray-500">
-        <th className="px-4 py-2 text-left">Client ID</th>
-        <th className="px-4 py-2 text-left">Client Name</th>
+        <th className="px-4 py-2 text-left whitespace-nowrap">Sr No.</th>
+        <th className="px-4 py-2 text-left">Name</th>
         {days.map((day) => (
           <th key={day.date} className="px-2 py-1">
             <div>{day.date}</div>
@@ -38,26 +29,26 @@ function TableHeader({ days }) {
   )
 }
 
-function TableRow({ client, days }) {
+function TableRow({
+  index,
+  client
+}) {
   return (
     <tr className="text-sm">
-      <td className="px-4 py-2">{client.id}</td>
+      <td className="px-4 py-2">{index}</td>
       <td className="whitespace-nowrap px-4 py-2 flex items-center gap-2">
         <Avatar>
-          <AvatarImage src={client.profilePhoto} />
-          <AvatarFallback>{nameInitials(client.clientName)}</AvatarFallback>
+          <AvatarImage src={client.clientProfile} />
+          <AvatarFallback>{nameInitials(client?.clientName)}</AvatarFallback>
         </Avatar>
         {client.clientName}
       </td>
-      {days.map((day, i) => (
+      {client.monthlyAttendance.map((day, i) => (
         <td key={i} className="px-2 py-1">
           <div
-            className={`w-6 h-6 flex items-center justify-center rounded-md ${day.status === "P"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-600"
-              }`}
+            className={cn("w-6 h-6 flex items-center justify-center rounded-md", statusClases(day.status))}
           >
-            {day.status}
+            {nameInitials(day.status) || <>NA</>}
           </div>
         </td>
       ))}
@@ -65,43 +56,38 @@ function TableRow({ client, days }) {
   )
 }
 
-export function ClientwiseHistory() {
-  const days = Array.from({ length: 24 }, (_, i) => ({
-    date: i + 1,
-    day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i % 7],
-    status: i % 7 === 5 || i % 7 === 6 ? "A" : "P",
-  }))
+export function ClientwiseHistory({
+  query,
+  data
+}) {
+  const now = new Date();
+  const days = getDaysInMonth(getMonth(now), getYear(now))
 
-  const clients = dummyRequests || [];
 
-  const totalPages = Math.ceil(clients.length / 8)
-  const totalResults = clients.length
+  const result = (clientWiseHistory(data) || [])
+    .filter(client => new RegExp(query, "i").test(client?.clientName))
 
   return (
     <TabsContent value="clientwise-history">
-      <Card className="p-4">
-        <SearchBar />
-        <div className="bg-[var(--comp-1)] border-1 rounded-[10px] overflow-x-auto">
+      <Card className="p-0 shadow-none border-1 rounded-[10px] bg-[var(--comp-1)]">
+        <div className="p-4 overflow-x-auto">
           <table className="min-w-full border-collapse">
             <TableHeader days={days} />
             <tbody>
-              {clients.map((client, idx) => (
-                <TableRow key={idx} client={client} days={days} />
+              {result.map((client, idx) => (
+                <TableRow
+                  key={idx}
+                  index={idx + 1}
+                  client={client}
+                  days={days}
+                />
               ))}
             </tbody>
           </table>
         </div>
-        <div className="mt-4">
-          <Paginate
-            page={1}
-            limit={8}
-            totalPages={totalPages}
-            totalResults={totalResults}
-            onChange={({ page, limit }) => {
-              console.log("Changed:", page, limit)
-            }}
-          />
-        </div>
+        {result.length === 0 && <div className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
+          No Matches Found!
+        </div>}
       </Card>
     </TabsContent>
   )

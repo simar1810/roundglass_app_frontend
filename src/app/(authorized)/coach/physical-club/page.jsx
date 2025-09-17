@@ -7,9 +7,11 @@ import DailyAttendancePage from "@/components/pages/coach/physical-club/DailyAtt
 import ManualAttendance from "@/components/pages/coach/physical-club/ManualAttendance";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
-import { ClipboardCheck, Bell, Users, Building2, CalendarDays } from "lucide-react";
+import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink } from "lucide-react";
+import { useState } from "react";
 import useSWR from "swr";
 
 const tabItems = [
@@ -42,11 +44,14 @@ const tabItems = [
 ];
 
 export default function Page() {
+  const [query, setQuery] = useState("");
+
   const { isLoading, error, data } = useSWR(
     "app/physical-club/attendance",
     () => getPhysicalAttendance({
       person: "coach",
-      populate: "client:name|mobileNumber|rollno|profilePhoto,membership:membershipType|pendingServings|endDate"
+      populate: "client:name|mobileNumber|rollno|profilePhoto|isPhysicalClubActive,membership:membershipType|pendingServings|endDate",
+      limit: 1000000
     })
   );
 
@@ -55,7 +60,7 @@ export default function Page() {
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
   const attendance = data?.data?.results || []
-  console.log(attendance)
+
   return <div className="content-container content-height-screen">
     <div className="mb-8 flex items-center justify-between">
       <h4>Attendance Management System</h4>
@@ -64,17 +69,18 @@ export default function Page() {
 
     <Tabs defaultValue="manual-attendance">
       <Header />
-      <ManualAttendance data={attendance} />
-      <ShakeRequestsTable />
-      <ClientwiseHistory />
-      <DailyAttendancePage />
-      <ClubHistoryPage />
+      <ToolsBar query={query} setQuery={setQuery} />
+      <ManualAttendance query={query} data={attendance} />
+      <ShakeRequestsTable query={query} data={attendance} />
+      <ClientwiseHistory query={query} data={attendance} />
+      <ClubHistoryPage query={query} data={attendance} />
+      <DailyAttendancePage query={query} data={attendance} />
     </Tabs>
   </div>
 }
 
 function Header() {
-  return <TabsList className="w-full h-auto bg-transparent p-0 mb-10 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
+  return <TabsList className="w-full h-auto bg-transparent p-0 mb-4 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
     {tabItems.map(({ icon, value, label, showIf }) =>
       <TabsTrigger
         key={value}
@@ -88,4 +94,22 @@ function Header() {
       </TabsTrigger>
     )}
   </TabsList>
+}
+
+function ToolsBar({
+  query,
+  setQuery
+}) {
+  return <div className="flex items-center justify-between mb-4">
+    <Input
+      placeholder="Search Client"
+      className="w-64"
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+    />
+    <Button variant="wz">
+      Export
+      <ExternalLink />
+    </Button>
+  </div>
 }
