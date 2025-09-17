@@ -94,6 +94,12 @@ export const sidebar__coachContent = [
     ],
   },
   {
+    id: 3.5,
+    title: "Users",
+    icon: <Users className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/users",
+  },
+  {
     id: 4,
     title: "Meals & Recipes",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,

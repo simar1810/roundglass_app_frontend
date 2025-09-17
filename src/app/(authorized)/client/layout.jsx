@@ -1,35 +1,33 @@
-"use server";
-import AppClientNavbar from "@/components/client/AppClientNavbar";
-import AppClientSidebar from "@/components/client/AppClientSidebar";
-import ClientGuardian from "@/components/client/ClientGuardian";
-import FAQChatbot from "@/components/common/FAQChatbot";
-import Loader from "@/components/common/Loader";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { cookies } from "next/headers";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default async function Layout({ children }) {
-  const cookiesList = await cookies()
+export default function ClientLayout({ children }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  const token = cookiesList.get("token")?.value;
-  const _id = cookiesList.get("_id")?.value
+  useEffect(() => {
+    const user = localStorage.getItem("userData");
+    const userType = localStorage.getItem("userType");
+    
+    if (!user || userType !== "user") {
+      router.push("/login");
+      return;
+    }
+    
+    setIsLoading(false);
+  }, [router]);
 
-  if (!token) return <div className="h-screen flex items-center justify-center">
-    <Loader />
-  </div>
-
-  return <ClientGuardian
-    _id={_id}
-    token={token}
-  >
-    <FAQChatbot />
-    <SidebarProvider className="!bg-white">
-      <AppClientSidebar />
-      <div className="max-w-[calc(100vw-205px)] grow no-scrollbar">
-        <AppClientNavbar />
-        <div className="bg-[var(--comp-2)] p-4">
-          {children}
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent-1)] mx-auto mb-4"></div>
+          <p>Loading...</p>
         </div>
       </div>
-    </SidebarProvider>
-  </ClientGuardian>
+    );
+  }
+
+  return <>{children}</>;
 }
