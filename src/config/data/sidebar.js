@@ -464,26 +464,26 @@ export const sidebar__coachContent = [
     title: "Physical Club",
     icon: <MapPin className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/physical-club",
-    items: [
-      {
-        id: 1,
-        icon: <BadgeCheck className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Memberships",
-        url: "/coach/physical-club/memberships",
-      },
-      {
-        id: 2,
-        icon: <ClipboardCheck className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Attendance",
-        url: "/coach/physical-club/attendance",
-      },
-      {
-        id: 3,
-        icon: <QrCode className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Generate QR",
-        url: "/coach/physical-club/qr-generate",
-      }
-    ]
+    // items: [
+    //   {
+    //     id: 1,
+    //     icon: <BadgeCheck className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Memberships",
+    //     url: "/coach/physical-club/memberships",
+    //   },
+    //   {
+    //     id: 2,
+    //     icon: <ClipboardCheck className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Attendance",
+    //     url: "/coach/physical-club/attendance",
+    //   },
+    //   {
+    //     id: 3,
+    //     icon: <QrCode className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Generate QR",
+    //     url: "/coach/physical-club/qr-generate",
+    //   }
+    // ]
   },
 ];
 

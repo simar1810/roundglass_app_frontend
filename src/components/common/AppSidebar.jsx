@@ -43,7 +43,6 @@ import { SearchBar } from "./AppNavbar";
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
   const { features } = useAppSelector((state) => state.coach.data);
-  console.log(features)
 
   let sidebarItems = sidebar__coachContent;
   if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13)

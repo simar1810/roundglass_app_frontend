@@ -226,9 +226,7 @@ function AddMembershipDialog({ clientId }) {
     try {
       setLoading(true);
       const { valid } = validateMembershipData(payload)
-      console.log(valid)
       const response = await sendData(`addVolumePoints`, formData);
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientVolumePoints/${_id}`);

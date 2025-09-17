@@ -317,10 +317,7 @@ function UpdateBankDetails({ bank }) {
         />}
         <FormControl
           value={payload.accountName}
-          onChange={e => {
-            console.log(e.target.value)
-            setPayload(prev => ({ ...prev, accountName: e.target.value }))
-          }}
+          onChange={e => setPayload(prev => ({ ...prev, accountName: e.target.value }))}
           label="Account Name"
           className="block mb-2"
         />
