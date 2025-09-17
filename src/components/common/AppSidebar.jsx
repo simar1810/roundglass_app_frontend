@@ -42,12 +42,13 @@ import { SearchBar } from "./AppNavbar";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
-  const { features } = useAppSelector((state) => state.coach.data);
+  const { organisation, features } = useAppSelector((state) => state.coach.data);
 
   let sidebarItems = sidebar__coachContent;
   if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13)
   // Wallet is now available for all organizations
-  // if (organisation !== "Herbalife") sidebarItems = sidebar__coachContent.filter(item => item.id !== 6);
+  if (organisation !== "Herbalife") sidebarItems = sidebarItems.filter(item => item.id !== 7);
+  if (!features.includes(4)) sidebarItems = sidebarItems.filter(item => item.id !== 6);
 
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
