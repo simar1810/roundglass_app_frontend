@@ -1,16 +1,10 @@
 import { TabsContent } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { dummyRequests } from "./ShakeRequestsTable"
-import Paginate from "@/components/Paginate"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDaysInMonth, nameInitials } from "@/lib/formatter"
 import { cn } from "@/lib/utils"
 import { clientWiseHistory, statusClases } from "@/lib/physical-attendance"
 import { getMonth, getYear } from "date-fns"
-import { useState } from "react"
-
 
 function TableHeader({ days }) {
   return (
@@ -62,7 +56,6 @@ export function ClientwiseHistory({
 }) {
   const now = new Date();
   const days = getDaysInMonth(getMonth(now), getYear(now))
-
 
   const result = (clientWiseHistory(data) || [])
     .filter(client => new RegExp(query, "i").test(client?.clientName))

@@ -198,11 +198,10 @@ export function CustomCalendar({
             <span className={cn("text-sm font-medium", todayClass ? "text-green-600" : "text-gray-900")}>{day}</span>
             {todayClass && <span className="text-xs text-green-600 font-medium">Today</span>}
           </div>
-
           {badges.length > 0 && (
             <div className="flex gap-1 mt-auto">
               {badges.map((badge, index) => (
-                <span key={index} className={cn("text-white text-xs px-1.5 py-0.5 rounded font-medium", badge.color)}>
+                <span key={index} className={cn("text-white text-[8px] px-1 py-0.5 rounded font-medium", badge.color)}>
                   {badge.value}
                 </span>
               ))}

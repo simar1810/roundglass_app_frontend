@@ -12,7 +12,7 @@ function TableHeader() {
   return (
     <thead>
       <tr className="text-sm text-gray-500">
-        <th className="px-4 py-2 text-left">Client ID</th>
+        <th className="px-4 py-2 text-left">Sr No.</th>
         <th className="px-4 py-2 text-left">Client Name</th>
         <th className="px-4 py-2 text-left">Client Status</th>
         <th className="px-4 py-2 text-left">Present Days</th>

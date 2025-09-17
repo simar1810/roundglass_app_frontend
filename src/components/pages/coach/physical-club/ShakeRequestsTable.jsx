@@ -1,9 +1,5 @@
-// components/manual-attendance/ShakeRequestsTable.tsx
 "use client";
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,43 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { shakeRequests } from "@/lib/physical-attendance";
 import { format } from "date-fns";
-import { ChangeClientAttendanceStatus } from "./ManualAttendance";
-
-export const dummyRequests = [
-  {
-    id: 1,
-    clientId: "1234",
-    clientName: "John Doe",
-    requestDate: "01 Sept, 2025",
-    time: "07:17 AM",
-    requestType: "Shake",
-    status: "pending",
-  },
-  {
-    id: 2,
-    clientId: "1235",
-    clientName: "John Doe",
-    requestDate: "01 Sept, 2025",
-    time: "07:17 AM",
-    requestType: "Shake",
-    status: "approved",
-  },
-  {
-    id: 3,
-    clientId: "1236",
-    clientName: "John Doe",
-    requestDate: "01 Sept, 2025",
-    time: "07:17 AM",
-    requestType: "Shake",
-    status: "rejected",
-  },
-];
+import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
 
 export default function ShakeRequestsTable({
   query,
   data = []
 }) {
-
   const filteredRequests = shakeRequests(data)
     .filter(client => new RegExp(query, "i").test(client?.name))
 
@@ -65,7 +30,6 @@ export default function ShakeRequestsTable({
             <TableHead>Client Name</TableHead>
             <TableHead>Request Date</TableHead>
             <TableHead>Time</TableHead>
-            {/* <TableHead>Request Type</TableHead> */}
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -79,7 +43,11 @@ export default function ShakeRequestsTable({
               <TableCell className="flex justify-end gap-2">
                 {req.status === "requested" && (
                   <>
-                    <ChangeClientAttendanceStatus status="present">
+                    <ChangeClientAttendanceStatus
+                      date={req.markedAt}
+                      clientId={req.clientId}
+                      status="present"
+                    >
                       <Button
                         variant="outline"
                         className="text-green-600 border-green-600"
@@ -87,7 +55,11 @@ export default function ShakeRequestsTable({
                         Approve
                       </Button>
                     </ChangeClientAttendanceStatus>
-                    <ChangeClientAttendanceStatus status="absent">
+                    <ChangeClientAttendanceStatus
+                      date={req.markedAt}
+                      clientId={req.clientId}
+                      status="absent"
+                    >
                       <Button
                         variant="outline"
                         className="text-red-600 border-red-600"

@@ -1,4 +1,8 @@
-import { endOfDay, endOfMonth, format, isAfter, isBefore, isSameDay, startOfDay, startOfMonth } from "date-fns";
+import {
+  endOfDay, format, isAfter, isBefore,
+  isSameDay, startOfDay
+} from "date-fns";
+import { _throwError } from "./formatter";
 
 export function manualAttendance(data, range) {
   const startOfTheDay = startOfDay(range?.from, new Date());
@@ -10,6 +14,7 @@ export function manualAttendance(data, range) {
       isBefore(att.markedAt, endOfTheDay)
     )
     return filteredAttendance.map(att => ({
+      clientId: client.client._id,
       name: client?.client.name,
       profilePhoto: client?.client.profilePhoto,
       ...att
@@ -21,6 +26,7 @@ export function shakeRequests(data) {
   return data.flatMap(client => {
     return client.attendance.map(attendance => ({
       ...attendance,
+      clientId: client.client._id,
       name: client.client.name,
     }))
   })
@@ -105,13 +111,12 @@ export function clubHistory(clients) {
   });
 }
 
-
 export function generateAttendanceRows(data) {
   const today = new Date()
 
   return data.map((record, index) => {
     const todayAttendance = record.attendance.find(a =>
-      isSameDay(new Date(a.date), today)
+      isSameDay(new Date(a.markedAt), today)
     )
 
     return {
@@ -132,5 +137,140 @@ export function statusClases(status) {
       return "bg-green-100 text-green-700"
     default:
       return "text-white bg-[#909090]";
+  }
+}
+
+export function dateWiseAttendanceSplit(data) {
+  const badgeData = {}
+
+  data.forEach(item => {
+    const dateKey = format(new Date(item.date), "yyyy-MM-dd")
+
+    if (!badgeData[dateKey]) {
+      badgeData[dateKey] = { present: 0, absent: 0, requested: 0 }
+    }
+
+    switch (item.status) {
+      case "present":
+        badgeData[dateKey].present += 1
+        break
+      case "absent":
+        badgeData[dateKey].absent += 1
+        break
+      case "requested":
+        badgeData[dateKey].requested += 1
+        break
+      default:
+        break
+    }
+  })
+
+  const formattedData = {}
+  Object.keys(badgeData).forEach(dateKey => {
+    const badges = []
+
+    if (badgeData[dateKey].present > 0) {
+      badges.push({ value: String(badgeData[dateKey].present), color: "bg-green-500" })
+    }
+    if (badgeData[dateKey].absent > 0) {
+      badges.push({ value: String(badgeData[dateKey].absent), color: "bg-red-500" })
+    }
+    if (badgeData[dateKey].requested > 0) {
+      badges.push({ value: String(badgeData[dateKey].requested), color: "bg-yellow-500" })
+    }
+
+    formattedData[dateKey] = badges
+  })
+
+  return formattedData
+}
+
+export function getPresentAbsent(data) {
+  let present = 0
+  let absent = 0
+  let requested = 0
+
+  data.forEach(record => {
+    record.attendance.forEach(att => {
+      if (att.status === "present") present++
+      else if (att.status === "absent") absent++
+      else if (att.status === "requested") requested++
+    })
+  })
+
+  return { present, absent, requested }
+}
+
+function manualAttendanceExcelData(data) {
+  const attendance = manualAttendance(data)
+  const exportData = ["Sr No.", "Client Name", "Request Date", "Time", "Status"]
+  for (const index of attendance) {
+  }
+  return exportData
+}
+
+function shakeRequestExcelData(data) {
+  const requests = shakeRequests(data)
+  return requests.map((record, index) => ({
+    "Sr No.": index,
+    "Client Name": record.name,
+    "Request Date": format(record.markedAt, "dd-MM-yyyy"),
+    "Time": format(record.markedAt, "HH:MM a"),
+    "Status": record.status
+  }))
+}
+
+function clientWiseExcelData(data) {
+  const records = clientWiseHistory(data);
+  return records.map((record, index) => {
+    const item = {}
+    item[" Sr No."] = index + 1
+    item[" Name"] = record.clientName
+    for (const info of record.monthlyAttendance) {
+      item[info["date"]] = info["status"] || "requested"
+    }
+    return item
+  })
+}
+
+function clubHistoryExcelData(data) {
+  const records = clubHistory(data);
+  return records.map((record, index) => ({
+    "Sr No.": index,
+    "Name": record.clientName,
+    "Client Status": record.clientStatus ? "Active" : "In Active",
+    "Present Days": record.presentDays,
+    "Absent Days": record.absentDays,
+    "Showup Percentage": `${record.showupPercentage || 0}%`
+  }))
+}
+
+function generateAttendanceRowsExcelData(data) {
+  const records = generateAttendanceRows(data);
+  return records.map((record, index) => ({
+    "Sr No.": index + 1,
+    "Name": record.clientName,
+    "Date": record.date,
+    "Status": record.status || "requested"
+  }))
+}
+
+export function physicalAttendanceExcelDownload(
+  tab,
+  data
+) {
+  switch (tab) {
+    case "manual-attendance":
+      return manualAttendanceExcelData(data)
+    case "shake-requests":
+      return shakeRequestExcelData(data)
+    case "clientwise-history":
+      return clientWiseExcelData(data)
+    case "club-history":
+      return clubHistoryExcelData(data)
+    case "daily-attendance":
+      return generateAttendanceRowsExcelData(data)
+    default:
+      break;
   }
 }

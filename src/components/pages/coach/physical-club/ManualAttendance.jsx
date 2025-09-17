@@ -3,19 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
-import { manualAttendance } from "@/lib/physical-attendance";
+import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendance } from "@/lib/physical-attendance";
 import { endOfMonth, startOfMonth } from "date-fns";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { sendData } from "@/lib/api";
-import { toast } from "sonner";
-import { mutate } from "swr";
-import { Check, CheckCircle, X } from "lucide-react";
+import { CheckCircle, X } from "lucide-react";
 import { CustomCalendar } from "@/components/common/CustomCalender";
+import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
 
 export default function ManualAttendance({
   data,
@@ -31,8 +26,8 @@ export default function ManualAttendance({
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} />
     <div className="flex-1">
-      <AttendanceCalendar range={range} setRange={setRange} />
-      <AttendanceSummary clients={clients} />
+      <AttendanceCalendar data={clients} setRange={setRange} />
+      <AttendanceSummary data={data} clients={clients} />
     </div>
   </TabsContent>
   );
@@ -42,7 +37,7 @@ export function AttendanceClients({ clients }) {
   return (
     <div className="flex-1 space-y-2 bg-[var(--comp-1)] border-1 p-2 rounded-[8px]">
       <div className="mb-4 text-lg font-semibold">
-        All Clients <span className="text-gray-500 text-sm">({clients.length})</span>
+        Total Records <span className="text-gray-500 text-sm">({clients.length})</span>
       </div>
       <div className="space-y-3">
         {clients.map((client, i) => (
@@ -55,7 +50,11 @@ export function AttendanceClients({ clients }) {
               <span>{client.name}</span>
             </div>
             <div className="flex gap-2">
-              <ChangeClientAttendanceStatus status="present">
+              <ChangeClientAttendanceStatus
+                clientId={client.clientId}
+                date={client.markedAt}
+                status="present"
+              >
                 <Button
                   size="sm"
                   variant="outline"
@@ -70,7 +69,11 @@ export function AttendanceClients({ clients }) {
                   Present
                 </Button>
               </ChangeClientAttendanceStatus>
-              <ChangeClientAttendanceStatus status="absent">
+              <ChangeClientAttendanceStatus
+                date={client.markedAt}
+                clientId={client.clientId}
+                status="absent"
+              >
                 <Button
                   size="sm"
                   variant="outline"
@@ -96,83 +99,50 @@ export function AttendanceClients({ clients }) {
   );
 }
 
-export function ChangeClientAttendanceStatus({
-  children,
-  status
-}) {
-  async function changeClientAttendanceStatus(setLoading, closeBtnRef) {
-    try {
-      setLoading(true);
-      const response = await sendData("app/", { status });
-      if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
-      mutate("app/physical-club/attendance");
-      closeBtnRef.current.click();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return <DualOptionActionModal
-    description={`Are you sure of changing the attendance? You are changing the status to ${status}!`}
-    action={(setLoading, btnRef) => changeClientAttendanceStatus(setLoading, btnRef)}
-  >
-    <AlertDialogTrigger asChild>
-      {children}
-    </AlertDialogTrigger>
-  </DualOptionActionModal>
-}
-
 export function AttendanceCalendar({
-  range,
+  data = [],
   setRange
 }) {
+  const badgeData = dateWiseAttendanceSplit(data)
   return (
     <div className="w-full">
       <CustomCalendar
-        badgeData={{}}
+        badgeData={badgeData}
         onRangeSelect={setRange}
       />
-      {/* <Card className="p-4 max-w-sm w-full mx-auto border-1 shadow-none">
-        <Calendar
-          mode="range"
-          selected={range}
-          onSelect={setRange}
-          numberOfMonths={1}
-          fixedWeeks
-          className="w-full"
-        />
-        {range?.from && range?.to && (
-          <div className="mt-0 text-sm text-gray-600">
-            Selected:{" "}
-            <span className="font-medium">
-              {range.from.toDateString()} - {range.to.toDateString()}
-            </span>
-          </div>
-        )}
-      </Card> */}
     </div>
   );
 }
 
-export function AttendanceSummary() {
+export function AttendanceSummary({
+  data = []
+}) {
+  const { absent, present, requested } = getPresentAbsent(data)
   return (
-    <Card className="mt-4 p-4">
-      <div className="text-sm text-gray-500">Attendance Summary</div>
-      <div className="text-sm text-gray-600 mb-2">16 September, 2025</div>
-      <div className="flex justify-between text-sm">
-        <span>Total Clients:</span>
-        <span className="font-semibold">50</span>
+    <Card className="mt-4 p-4 gap-0 bg-[var(--comp-1)] shadow-none">
+      <div className="pb-2 mb-4 border-b-2 border-[var(--accent-1)] flex items-center justify-between">
+        <h2>Attendance Summary</h2>
+        {/* <div className="text-sm text-gray-600 mb-2">16 September, 2025</div> */}
       </div>
-      <div className="flex justify-between text-sm text-green-600">
-        <span>Present Clients:</span>
-        <span className="font-semibold">35</span>
-      </div>
-      <div className="flex justify-between text-sm text-red-600">
-        <span>Absent Clients:</span>
-        <span className="font-semibold">15</span>
+      <div className="grid grid-cols-2 divide-x-2">
+        <div className="flex justify-between text-sm pr-4">
+          <span>Total Clients:</span>
+          <span className="font-semibold">{data.length}</span>
+        </div>
+        <div className="pl-4">
+          <div className="flex justify-between text-sm text-green-600">
+            <span>Present Clients:</span>
+            <span className="font-semibold">{present}</span>
+          </div>
+          <div className="flex justify-between text-sm text-red-600">
+            <span>Absent Clients:</span>
+            <span className="font-semibold">{absent}</span>
+          </div>
+          <div className="flex justify-between text-sm text-[#808080]">
+            <span>Requested Clients:</span>
+            <span className="font-semibold">{requested}</span>
+          </div>
+        </div>
       </div>
     </Card>
   );

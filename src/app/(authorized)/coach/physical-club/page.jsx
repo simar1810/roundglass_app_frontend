@@ -10,9 +10,12 @@ import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequ
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
+import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 const tabItems = [
@@ -46,6 +49,7 @@ const tabItems = [
 
 export default function Page() {
   const [query, setQuery] = useState("");
+  const [tab, setTab] = useState("manual-attendance");
 
   const { isLoading, error, data } = useSWR(
     "app/physical-club/attendance",
@@ -68,9 +72,12 @@ export default function Page() {
       <QRCodeModal />
     </div>
 
-    <Tabs defaultValue="manual-attendance">
+    <Tabs value={tab} onValueChange={setTab}>
       <Header />
-      <ToolsBar query={query} setQuery={setQuery} />
+      <ToolsBar
+        data={attendance} tab={tab}
+        query={query} setQuery={setQuery}
+      />
       <ManualAttendance query={query} data={attendance} />
       <ShakeRequestsTable query={query} data={attendance} />
       <ClientwiseHistory query={query} data={attendance} />
@@ -98,9 +105,19 @@ function Header() {
 }
 
 function ToolsBar({
+  data,
+  tab,
   query,
   setQuery
 }) {
+  async function downloadExcelSheet() {
+    try {
+      const excelData = physicalAttendanceExcelDownload(tab, data)
+      exportToExcel(excelData)
+    } catch (error) {
+      toast.error(error.message || "Something went wrong!");
+    }
+  }
   return <div className="flex items-center justify-between mb-4">
     <Input
       placeholder="Search Client"
@@ -108,7 +125,10 @@ function ToolsBar({
       value={query}
       onChange={e => setQuery(e.target.value)}
     />
-    <Button variant="wz">
+    <Button
+      onClick={downloadExcelSheet}
+      variant="wz"
+    >
       Export
       <ExternalLink />
     </Button>

@@ -1,28 +1,11 @@
 "use client"
-
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { dummyRequests } from "./ShakeRequestsTable"
 import { TabsContent } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { nameInitials } from "@/lib/formatter"
 import { generateAttendanceRows, statusClases } from "@/lib/physical-attendance"
 import { cn } from "@/lib/utils"
 
-function SearchBar() {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <Input placeholder="Search Client" className="w-64" />
-      <div className="flex items-center gap-2">
-        <div className="border rounded-md px-3 py-2 text-sm text-gray-600">
-          Date: 15 Sept 25
-        </div>
-        <Button variant="outline">Export CSV</Button>
-      </div>
-    </div>
-  )
-}
 
 function TableHeader() {
   return (
@@ -70,7 +53,7 @@ export default function DailyAttendancePage({
 
   return (
     <TabsContent value="daily-attendance" className="border-1 shadow-none rounded-[10px]">
-      <Card className="p-4 bg-[var(--comp-1)] border-0 rounded-[10px]">
+      <Card className="bg-[var(--comp-1)] border-0 rounded-[10px]">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse">
             <TableHeader />
@@ -85,6 +68,9 @@ export default function DailyAttendancePage({
             </tbody>
           </table>
         </div>
+        {clients.length === 0 && <div className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
+          No Matches Found!
+        </div>}
       </Card>
     </TabsContent>
   )
