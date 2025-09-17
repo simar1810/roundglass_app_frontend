@@ -42,11 +42,12 @@ import { SearchBar } from "./AppNavbar";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
-  const { organisation } = useAppSelector((state) => state.coach.data);
+  const { organisation, features } = useAppSelector((state) => state.coach.data);
 
   let sidebarItems = sidebar__coachContent;
   // Wallet is now available for all organizations
-  // if (organisation !== "Herbalife") sidebarItems = sidebar__coachContent.filter(item => item.id !== 6);
+  if (organisation !== "Herbalife") sidebarItems = sidebarItems.filter(item => item.id !== 7);
+  if (!features.includes(4)) sidebarItems = sidebarItems.filter(item => item.id !== 6);
 
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
@@ -119,11 +120,10 @@ function NestedDropdownItem({ item, Modal, setModal }) {
     if (item.type === "modal") {
       return (
         <DropdownMenuItem
-          className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)] ${
-            isActive
-              ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
-              : ""
-          }`}
+          className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 cursor-pointer hover:!text-[var(--primary-1)] hover:[&_.icon]:!text-[var(--primary-1)] hover:!bg-[var(--dark-4)] ${isActive
+            ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
+            : ""
+            }`}
           onClick={() => setModal(<item.Component setModal={setModal} />)}
         >
           {item.icon}
@@ -135,11 +135,10 @@ function NestedDropdownItem({ item, Modal, setModal }) {
     return (
       <DropdownMenuItem
         asChild
-        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${
-          isActive
-            ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
-            : "hover:!bg-[var(--dark-3)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
-        }`}
+        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
+          : "hover:!bg-[var(--dark-3)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
+          }`}
       >
         <Link href={item.url}>
           {item.icon}
@@ -153,11 +152,10 @@ function NestedDropdownItem({ item, Modal, setModal }) {
   return (
     <DropdownMenuSub>
       <DropdownMenuSubTrigger
-        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${
-          isActive
-            ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
-            : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
-        }`}
+        className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]"
+          : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)] hover:[&_.icon]:!text-[var(--comp-1)]"
+          }`}
       >
         {item.icon}
         <span>{item.title}</span>
@@ -196,11 +194,10 @@ function MainMenuItemWithDropdown({ item, Modal, setModal }) {
           className="p-0 focus:border-none focus:outline-none focus:ring-0 data-[state=open]:ring-0 data-[state=open]:outline-none data-[state=open]:border-transparent"
         >
           <SidebarMenuButton
-            className={`w-full !text-[var(--comp-4)] text-[14px] font-[500] px-2 py-[8px] ${
-              isActive
-                ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
-                : "hover:text-white hover:!bg-[var(--dark-1)]"
-            }`}
+            className={`w-full !text-[var(--comp-4)] text-[14px] font-[500] px-2 py-[8px] ${isActive
+              ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
+              : "hover:text-white hover:!bg-[var(--dark-1)]"
+              }`}
           >
             {item.icon}
             <span>{item?.title}</span>
@@ -240,11 +237,10 @@ function SimpleMenuItem({ item, Modal, setModal }) {
       <SidebarMenuItem className="py-[8px]">
         <SidebarMenuButton
           onClick={() => setModal(<item.Component setModal={setModal} />)}
-          className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${
-            isActive
-              ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
-              : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
-          }`}
+          className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${isActive
+            ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
+            : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
+            }`}
         >
           {item.icon}
           <span>{item.title}</span>
@@ -257,11 +253,10 @@ function SimpleMenuItem({ item, Modal, setModal }) {
     <SidebarMenuItem className="py-[8px]">
       <SidebarMenuButton
         asChild
-        className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${
-          isActive
-            ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
-            : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
-        }`}
+        className={`w-full text-[14px] font-[500] px-2 py-[8px] gap-2 ${isActive
+          ? "bg-[var(--accent-1)] !text-[var(--dark-1)]"
+          : "!text-[var(--comp-4)] hover:text-white hover:!bg-[var(--dark-1)]"
+          }`}
       >
         <Link href={item.url}>
           {item.icon}
