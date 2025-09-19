@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { fetchData } from "../api";
+import { fetchData, sendData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
 import { toast } from "sonner";
 
@@ -352,4 +352,71 @@ export async function retrieveQuestionaire(query) {
 export async function retrieveBankDetails(query) {
   const endpoint = buildUrlWithQueryParams("app/bank", query);
   return fetchData(endpoint)
+}
+
+// Users management functions
+export function getUsers() {
+  return fetchData("app/users?person=coach");
+}
+
+
+export function createUser(userData) {
+  return sendData("app/users", userData, "POST");
+}
+
+export function updateUser(userData) {
+  return sendData("app/users", userData, "PUT");
+}
+
+export function deleteUser(userId) {
+  return sendData("app/users", { id: userId }, "DELETE");
+}
+
+// User login function
+export async function loginUser(userData) {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/users/actions?person=user`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+      cache: "no-store",
+    });
+
+    const responseData = await response.json();
+
+    if (responseData.status_code === 200) {
+      const authHeaderResponse = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
+          _id: responseData.data.createdBy._id
+        })
+      });
+      
+      const authHeaderData = await authHeaderResponse.json();
+      
+      if (authHeaderData.status_code !== 200) {
+        throw new Error(authHeaderData.message || "Failed to set authentication token");
+      }
+
+      return {
+        success: true,
+        data: responseData.data,
+        message: "Login successful"
+      };
+    } else {
+      throw new Error(responseData.message || "Login failed");
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Login failed. Please try again."
+    };
+  }
 }
