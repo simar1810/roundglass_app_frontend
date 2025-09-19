@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
+import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
+import { endOfMonth, startOfMonth } from "date-fns";
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -48,6 +50,10 @@ const tabItems = [
 ];
 
 export default function Page() {
+  const [range, setRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  })
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("manual-attendance");
 
@@ -78,11 +84,26 @@ export default function Page() {
         data={attendance} tab={tab}
         query={query} setQuery={setQuery}
       />
-      <ManualAttendance query={query} data={attendance} />
-      <ShakeRequestsTable query={query} data={attendance} />
-      <ClientwiseHistory query={query} data={attendance} />
-      <ClubHistoryPage query={query} data={attendance} />
-      <DailyAttendancePage query={query} data={attendance} />
+      <ManualAttendance
+        range={range} setRange={setRange}
+        query={query} data={attendance}
+      />
+      <ShakeRequestsTable
+        range={range} setRange={setRange}
+        query={query} data={attendance}
+      />
+      <ClientwiseHistory
+        range={range} setRange={setRange}
+        query={query} data={attendance}
+      />
+      <ClubHistoryPage
+        range={range} setRange={setRange}
+        query={query} data={attendance}
+      />
+      <DailyAttendancePage
+        range={range} setRange={setRange}
+        query={query} data={attendance}
+      />
     </Tabs>
   </div>
 }

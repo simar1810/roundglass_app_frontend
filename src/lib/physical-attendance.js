@@ -203,16 +203,14 @@ export function getPresentAbsent(data) {
 
 function manualAttendanceExcelData(data) {
   const attendance = manualAttendance(data)
-  const exportData = ["Sr No.", "Client Name", "Request Date", "Time", "Status"]
-  for (const index of attendance) {
-  }
-  return exportData
+  for (const index of attendance) { }
+  return {}
 }
 
 function shakeRequestExcelData(data) {
   const requests = shakeRequests(data)
   return requests.map((record, index) => ({
-    "Sr No.": index,
+    "Sr No.": index + 1,
     "Client Name": record.name,
     "Request Date": format(record.markedAt, "dd-MM-yyyy"),
     "Time": format(record.markedAt, "HH:MM a"),
@@ -223,11 +221,12 @@ function shakeRequestExcelData(data) {
 function clientWiseExcelData(data) {
   const records = clientWiseHistory(data);
   return records.map((record, index) => {
-    const item = {}
-    item[" Sr No."] = index + 1
-    item[" Name"] = record.clientName
+    const item = {
+      "Sr No.": index + 1,
+      "Name": record.clientName,
+    };
     for (const info of record.monthlyAttendance) {
-      item[info["date"]] = info["status"] || "requested"
+      item[String(" " + info["date"])] = info["status"] || "requested"
     }
     return item
   })

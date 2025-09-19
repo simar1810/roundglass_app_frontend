@@ -1,6 +1,7 @@
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { sendData } from "@/lib/api";
+import { _throwError } from "@/lib/formatter";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -10,6 +11,7 @@ export default function ChangeClientAttendanceStatus({
   status,
   clientId
 }) {
+
   async function changeClientAttendanceStatus(setLoading, closeBtnRef) {
     try {
       setLoading(true);

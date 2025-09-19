@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
 import { getPhysicalAttendance, getPhysicalMemberships } from "@/lib/fetchers/app"
-import { getMembershipType } from "@/lib/formatter"
-import useSWR from "swr"
+import { _throwError, getMembershipType } from "@/lib/formatter"
+import useSWR, { mutate } from "swr"
 import { format } from "date-fns"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -15,10 +15,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogFooter
+  DialogTrigger
 } from "@/components/ui/dialog"
 import { useState } from "react"
+import { toast } from "sonner"
+import { sendData } from "@/lib/api"
+import { X } from "lucide-react"
 
 export default function PhysicalClub() {
   return <TabsContent
@@ -33,7 +35,7 @@ export default function PhysicalClub() {
 function MembershipData() {
   const { id: clientId } = useParams()
   const { isLoading, error, data } = useSWR(
-    "app/physical-club/memberships",
+    `app/physical-club/memberships/${clientId}`,
     () =>
       getPhysicalMemberships({
         person: "coach",
@@ -52,7 +54,16 @@ function MembershipData() {
 
   if (!membership) {
     return (
-      <p className="text-sm text-muted-foreground">No membership found</p>
+      <>
+        <h2>Memberships</h2>
+        <div className="h-[200px] flex flex-col gap-4 items-center justify-center border-1 bg-[var(--comp-1)] rounded-[10px]">
+          <AddMembershipDialog
+            overdues={membership.overdue}
+            clientId={clientId}
+          />
+          <p className="text-sm text-muted-foreground">No membership found</p>
+        </div>
+      </>
     )
   }
 
@@ -91,7 +102,10 @@ function PhysicalClubAttendance() {
   const attendanceClient = data.data?.results?.[0]
 
   if (!attendanceClient) {
-    return (<p className="text-sm text-muted-foreground">No Attendance found</p>)
+    return <>
+      <h2>Physical Attendance</h2>
+      <p className="text-sm text-muted-foreground">No Attendance found</p>
+    </>
   }
 
   const attendanceRecords = attendanceClient?.attendance || []
@@ -125,6 +139,7 @@ function PhysicalClubAttendance() {
 }
 
 function ClientDetails({ membership }) {
+  const { id: clientId } = useParams()
   const now = new Date()
   const client = membership.client || {}
   const isExpired =
@@ -143,8 +158,12 @@ function ClientDetails({ membership }) {
             ? <Badge variant="wz_fill">Active</Badge>
             : <Badge variant="destructive">In Active</Badge>}
         </div>
+        <div className="text-sm">Overdue - {membership.overdue}</div>
       </div>
-      <AddMembershipDialog />
+      <AddMembershipDialog
+        overdues={membership.overdue}
+        clientId={clientId}
+      />
     </div>
   )
 }
@@ -192,7 +211,7 @@ export function validateMembershipData(payload) {
 
   if (membershipType === 1) {
     if (!startDate || !endDate) {
-      return { valid: false, message: "startDate and endDate are required for Monthly membership." }
+      return { valid: false, message: "Start Date and End Date are required for Monthly membership." }
     }
   } else if (membershipType === 2) {
     if (servings == null || servings <= 0) {
@@ -206,31 +225,35 @@ export function validateMembershipData(payload) {
 }
 
 
-function AddMembershipDialog({ clientId }) {
+function AddMembershipDialog({
+  clientId,
+  overdues
+}) {
+  const [clearOverdues, setClearOverdues] = useState(false);
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
     clientId,
     startDate: "",
     endDate: "",
     membershipType: 1,
-    paymentMode: "Online",
+    paymentMode: "online",
     servings: 0,
-    amount: 0
+    amount: 0,
+    overdue: 0
   })
 
   const handleChange = (field, value) => {
     setPayload(prev => ({ ...prev, [field]: value }))
   }
-
-  async function createMembership(setLoading, closeBtnRef) {
+  async function createMembership() {
     try {
       setLoading(true);
-      const { valid } = validateMembershipData(payload)
-      const response = await sendData(`addVolumePoints`, formData);
+      const { valid, message } = validateMembershipData(payload)
+      if (!valid) _throwError(message)
+      const response = await sendData("app/physical-club/memberships", payload, "POST");
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`getClientVolumePoints/${_id}`);
-      closeBtnRef.current.click();
+      mutate(`app/physical-club/memberships/${clientId}`,);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -243,7 +266,7 @@ function AddMembershipDialog({ clientId }) {
       <DialogTrigger asChild>
         <Button size="sm" variant="wz">Add</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[75vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Membership</DialogTitle>
         </DialogHeader>
@@ -310,6 +333,40 @@ function AddMembershipDialog({ clientId }) {
               />
             </div>
           )}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2>Do You want to clear overdues?</h2>
+              <p className="text-sm font-bold text-[#808080]">{overdues} overdue!</p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setClearOverdues(true)}
+              variant="wz"
+            >
+              Yes
+            </Button>
+          </div>
+          {clearOverdues && <div className="flex flex-col">
+            <div className="mb-2 flex items-center justify-between">
+              <label>How Many Overdues You want to clear</label>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setClearOverdues(false)
+                  handleChange("overdue", 0)
+                }}
+                variant="destructive"
+              >
+                <X />
+              </Button>
+            </div>
+            <input
+              type="number"
+              value={payload.overdue}
+              onChange={e => handleChange("overdue", Number(e.target.value))}
+              className="border rounded px-2 py-1"
+            />
+          </div>}
         </div>
         <Button
           variant="wz"

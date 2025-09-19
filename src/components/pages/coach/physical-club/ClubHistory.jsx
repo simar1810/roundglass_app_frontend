@@ -1,12 +1,10 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { TabsContent } from "@/components/ui/tabs"
 import { nameInitials } from "@/lib/formatter"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { clubHistory } from "@/lib/physical-attendance"
-import { useState } from "react"
 
 function TableHeader() {
   return (
@@ -70,8 +68,8 @@ function TableRow({
             : <>In Active</>}
         </span>
       </td>
-      <td className="px-4 py-2">{client.present || 4} Days</td>
-      <td className="px-4 py-2">{client.absent || 1} Days</td>
+      <td className="px-4 py-2">{client.presentDays || 4} Days</td>
+      <td className="px-4 py-2">{client.absentDays || 1} Days</td>
       <td className="px-4 py-2 flex items-center gap-2">
         <span className={`font-medium ${getPercentageClass(client.showupPercentage)}`}>
           {client.showupPercentage}%

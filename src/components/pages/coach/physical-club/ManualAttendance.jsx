@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
-import { useState } from "react";
 import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendance } from "@/lib/physical-attendance";
-import { endOfMonth, startOfMonth } from "date-fns";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { CheckCircle, X } from "lucide-react";
@@ -14,12 +12,10 @@ import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
 
 export default function ManualAttendance({
   data,
-  query
+  query,
+  range,
+  setRange
 }) {
-  const [range, setRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
-  })
   const clients = manualAttendance(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
 
