@@ -153,7 +153,7 @@ function ClientDetails({ membership }) {
         <div className="mt-1 flex items-center gap-2">
           {membership.membershipType === 2
             ? <div className="text-sm">Pending Servings - {membership.pendingServings}</div>
-            : <div className="text-sm">End Date - {format(membership.endDate, "dd-MM-yyyy")}</div>}
+            : <div className="text-sm">End Date - {membership.endDate && format(membership.endDate, "dd-MM-yyyy")}</div>}
           {client.isPhysicalClubActive && !isExpired
             ? <Badge variant="wz_fill">Active</Badge>
             : <Badge variant="destructive">In Active</Badge>}
@@ -203,7 +203,7 @@ function SubscriptionHistoryTable({ history }) {
 }
 
 export function validateMembershipData(payload) {
-  const { clientId, membershipType, startDate, endDate, servings } = payload;
+  const { clientId, membershipType, startDate, endDate, servings, amount } = payload;
 
   if (!clientId) {
     return { valid: false, message: "clientId is required and must be a valid ObjectId." }
@@ -212,6 +212,9 @@ export function validateMembershipData(payload) {
   if (membershipType === 1) {
     if (!startDate || !endDate) {
       return { valid: false, message: "Start Date and End Date are required for Monthly membership." }
+    }
+    if (amount < 0) {
+      return { valid: false, message: "Amount cannot be negative." }
     }
   } else if (membershipType === 2) {
     if (servings == null || servings <= 0) {
@@ -317,7 +320,7 @@ function AddMembershipDialog({
               <input
                 type="number"
                 value={payload.amount}
-                onChange={e => handleChange("amount", Number(e.target.value))}
+                onChange={e => handleChange("amount", e.target.value)}
                 className="border rounded px-2 py-1"
               />
             </div>
