@@ -58,7 +58,7 @@ function MembershipData() {
         <h2>Memberships</h2>
         <div className="h-[200px] flex flex-col gap-4 items-center justify-center border-1 bg-[var(--comp-1)] rounded-[10px]">
           <AddMembershipDialog
-            overdues={membership.overdue}
+            overdues={membership?.overdue}
             clientId={clientId}
           />
           <p className="text-sm text-muted-foreground">No membership found</p>
@@ -158,10 +158,10 @@ function ClientDetails({ membership }) {
             ? <Badge variant="wz_fill">Active</Badge>
             : <Badge variant="destructive">In Active</Badge>}
         </div>
-        <div className="text-sm">Overdue - {membership.overdue}</div>
+        <div className="text-sm">Overdue - {membership?.overdue || 0}</div>
       </div>
       <AddMembershipDialog
-        overdues={membership.overdue}
+        overdues={membership?.overdue}
         clientId={clientId}
       />
     </div>
