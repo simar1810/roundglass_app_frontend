@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { isToday } from "date-fns"
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const MONTHS = [
@@ -101,10 +102,6 @@ export function CustomCalendar({
 
   const formatDateKey = (date) => {
     return date.toISOString().split("T")[0]
-  }
-
-  const isToday = (date) => {
-    return date.toDateString() === today.toDateString()
   }
 
   const isSameDay = (date1, date2) => {
