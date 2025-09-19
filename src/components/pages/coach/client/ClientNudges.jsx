@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
 import { format, parse, getDay, isAfter, isToday, isTomorrow, isYesterday, subDays } from "date-fns"
 import { useState } from "react"
+import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache"
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -93,7 +94,7 @@ function RecentSection({ nudges }) {
       </div>
       <div className="space-y-2">
         {nudges.map(notification => (
-          <NotificationItem key={notification._id} item={notification} />
+          <NotificationItem key={notification._id || notification.id} item={notification} />
         ))}
       </div>
     </div>
@@ -104,11 +105,28 @@ export default function ClientNudges() {
   const { id } = useParams()
   const { isLoading, data, error } = useSWR(`client/nudges/${id}`, () => retrieveClientNudges(id, { limit: Infinity }))
   const [selectedDays, setSelectedDays] = useState([])
+  
+  const { getCachedNotificationsForClientByContext } = useNotificationSchedulerCache()
+  const cachedNotifications = getCachedNotificationsForClientByContext(id, 'client_nudges')
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error.message || data.message} />
-  const notifications = data?.data?.results || []
+  
+  const apiNotifications = data?.data?.results || []
+  const allNotifications = [...cachedNotifications, ...apiNotifications]
+  
+  const notifications = allNotifications
+    .filter((notification, index, self) => 
+      index === self.findIndex(n => 
+        n.subject === notification.subject && n.message === notification.message
+      )
+    )
+    .sort((a, b) => {
+      const timeA = a.createdAt || a.createdDate || 0
+      const timeB = b.createdAt || b.createdDate || 0
+      return timeB - timeA
+    })
   const groupedNudges = groupNudgesByDay(notifications)
   const recentNudges = getRecentNudges(notifications)
 
@@ -244,7 +262,7 @@ function DaySection({ dayName, nudges }) {
       </div>
       <div className="space-y-2">
         {nudges.map(notification => (
-          <NotificationItem key={notification._id} item={notification} />
+          <NotificationItem key={notification._id || notification.id} item={notification} />
         ))}
       </div>
     </div>
@@ -253,11 +271,12 @@ function DaySection({ dayName, nudges }) {
 
 export function NotificationItem({ item = {} }) {
   const { id } = useParams()
-  const { _id, message, subject, isRead, notificationType, schedule_type, time, date } = item;
+  const { _id, message, subject, isRead, notificationType, schedule_type, time, date, createdAt } = item;
+  
+  const isCached = createdAt && !_id;
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
     try {
-      // Handle both HH:mm and HH:mm:ss formats
       const time = timeStr.includes(':') ? timeStr.substring(0, 5) : timeStr;
       return time;
     } catch {
@@ -334,11 +353,16 @@ export function NotificationItem({ item = {} }) {
 }
 
 function DeleteClientNotification({ id }) {
+  const { removeNotificationFromCache } = useNotificationSchedulerCache()
+  
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
       setLoading(true);
       const response = await sendData("app/notifications-schedule", { actionType: "DELETE", id }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
+      
+      removeNotificationFromCache(id);
+      
       toast.success(response.message);
       closeBtnRef.current.click();
       location.reload();

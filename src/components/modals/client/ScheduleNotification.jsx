@@ -14,8 +14,9 @@ import useSWR from "swr";
 import { retrieveCoachClientList, retrieveClientNudges } from "@/lib/fetchers/app";
 import Loader from "@/components/common/Loader";
 import TimePicker from "@/components/common/TimePicker";
-import { CircleMinus, CirclePlus } from "lucide-react";
+import { CircleMinus, CirclePlus, Clock, Calendar } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
 
 export default function ScheduleNotificationWrapper({
   children,
@@ -94,29 +95,52 @@ function ScheduleNotification({
   const [showHistory, setShowHistory] = useState(false);
   const subjectRef = useRef(null);
   const dropdownRef = useRef(null);
+  
+  const { 
+    addNotificationToCache, 
+    getCachedNotificationsByContext, 
+    getCachedNotificationsForClientByContext 
+  } = useNotificationSchedulerCache();
 
   const [payload, setPayload] = useState({
     subject: defaultPayload.subject || "",
     message: defaultPayload.message || "",
-    notificationType: defaultPayload.schedule_type || "schedule", // reocurr, schedule
-    time: defaultPayload.time || "", // 24 hrs format
-    date: formatDate(defaultPayload.date), // dd-MM-yyyy format
-    reocurrence: defaultPayload.reocurrence || [], // 0, 1, ..., 6
+    notificationType: defaultPayload.schedule_type || "schedule",
+    time: defaultPayload.time || "",
+    date: formatDate(defaultPayload.date),
+    reocurrence: defaultPayload.reocurrence || [],
     clients: selectedClients || defaultPayload.clients || [],
     actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
     id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined
   })
 
-  // Fetch historical nudges for the first selected client
   const clientId = selectedClients?.[0];
-  const { data: historyData } = useSWR(
+  const isClientNudgesContext = !!clientId;
+  const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
+  
+  const cachedHistory = clientId 
+    ? getCachedNotificationsForClientByContext(clientId, context)
+    : getCachedNotificationsByContext(context);
+  const { data: apiHistoryData } = useSWR(
     clientId ? `client/nudges/history/${clientId}` : null,
     () => retrieveClientNudges(clientId, { limit: 50 })
   );
   
-  const historyNudges = historyData?.data?.results || [];
+  const apiHistoryNudges = apiHistoryData?.data?.results || [];
+  const allHistoryNudges = [...cachedHistory, ...apiHistoryNudges];
+  
+  const uniqueHistoryNudges = allHistoryNudges
+    .filter((nudge, index, self) => 
+      index === self.findIndex(n => 
+        n.subject === nudge.subject && n.message === nudge.message
+      )
+    )
+    .sort((a, b) => {
+      const timeA = a.createdAt || a.createdDate || 0;
+      const timeB = b.createdAt || b.createdDate || 0;
+      return timeB - timeA;
+    });
 
-  // Click outside handler
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
@@ -128,16 +152,16 @@ function ScheduleNotification({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Auto-fill function
   const handleHistorySelect = (nudge) => {
     setPayload(prev => ({
       ...prev,
       subject: nudge.subject || "",
       message: nudge.message || "",
-      notificationType: nudge.schedule_type || "schedule",
+      notificationType: nudge.schedule_type || nudge.notificationType || "schedule",
       time: nudge.time ? nudge.time.substring(0, 5) : "",
       date: nudge.date ? formatDate(nudge.date) : "",
-      reocurrence: nudge.reocurrence || []
+      reocurrence: nudge.reocurrence || [],
+      clients: nudge.clients || []
     }));
     setShowHistory(false);
   };
@@ -153,6 +177,25 @@ function ScheduleNotification({
         defaultPayload._id ? "PUT" : "POST"
       );
       if (response.status_code !== 200) throw new Error(response.message);
+      
+      if (!defaultPayload._id) {
+        const clientNames = payload.clients.map(clientId => {
+          const client = clients.find(c => c.value === clientId);
+          return client ? client.name : `Client ${clientId}`;
+        });
+
+        addNotificationToCache({
+          subject: payload.subject,
+          message: payload.message,
+          notificationType: payload.notificationType,
+          time: payload.time,
+          date: payload.date,
+          reocurrence: payload.reocurrence,
+          clients: payload.clients,
+          clientNames: clientNames
+        }, context);
+      }
+      
       toast.success(response.message);
       location.reload()
     } catch (error) {
@@ -179,8 +222,8 @@ function ScheduleNotification({
         <div className="relative mb-4">
           <Label className="text-[14px] mb-2 block">
             Subject
-            {historyNudges.length > 0 && (
-              <span className="text-xs text-gray-500 ml-2">({historyNudges.length} history available)</span>
+            {uniqueHistoryNudges.length > 0 && (
+              <span className="text-xs text-gray-500 ml-2">({uniqueHistoryNudges.length} history available)</span>
             )}
           </Label>
           <input
@@ -189,22 +232,78 @@ function ScheduleNotification({
             placeholder="Subject"
             value={payload.subject}
             onChange={e => setPayload(prev => ({ ...prev, subject: e.target.value }))}
-            onFocus={() => historyNudges.length > 0 && setShowHistory(true)}
+            onFocus={() => uniqueHistoryNudges.length > 0 && setShowHistory(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--comp-1)]"
           />
-          {showHistory && historyNudges.length > 0 && (
+          {showHistory && uniqueHistoryNudges.length > 0 && (
             <div 
               ref={dropdownRef}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+              className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto"
             >
-              {historyNudges.map((nudge, index) => (
+              <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  Notification History
+                </div>
+                <div className="text-xs text-gray-500">
+                  {uniqueHistoryNudges.length} {uniqueHistoryNudges.length === 1 ? 'item' : 'items'} available
+                </div>
+              </div>
+              {uniqueHistoryNudges.map((nudge, index) => (
                 <div
                   key={index}
                   onClick={() => handleHistorySelect(nudge)}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 last:rounded-b-lg transition-colors duration-150"
                 >
-                  <div className="font-medium text-sm">{nudge.subject}</div>
-                  <div className="text-xs text-gray-500 truncate">{nudge.message}</div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="font-semibold text-sm text-gray-900 flex-1 truncate">
+                      {nudge.subject}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {nudge.schedule_type && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {nudge.schedule_type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 mb-2" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}>
+                    {nudge.message}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {nudge.time && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Clock className="w-3 h-3" />
+                          <span>{nudge.time.substring(0, 5)}</span>
+                        </div>
+                      )}
+                      {nudge.date && nudge.schedule_type === "schedule" && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{nudge.date}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {(nudge.clientNames && nudge.clientNames.length > 0) && (
+                      <div className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-full">
+                        {nudge.clientNames.length} client{nudge.clientNames.length > 1 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {nudge.clientNames && nudge.clientNames.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      <span className="font-medium">Clients:</span> {nudge.clientNames.join(', ')}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
