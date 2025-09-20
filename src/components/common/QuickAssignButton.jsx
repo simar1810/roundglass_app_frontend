@@ -51,7 +51,7 @@ export default function QuickAssignButton({
   const fetchAvailableClients = async (search = "") => {
     try {
       setLoadingClients(true);
-      const response = await getAvailableClients(1, 20, search);
+      const response = await getAvailableClients(1, 1000, search);
       if (response.status_code === 200) {
         setAvailableClients(response.data.clients || []);
       }
