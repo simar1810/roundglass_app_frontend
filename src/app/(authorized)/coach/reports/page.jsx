@@ -83,8 +83,8 @@ function ClientDetails({ client, index }) {
     <TableCell>{index + 1}</TableCell>
     <TableCell className="font-medium flex items-center gap-1">
       <Avatar>
-        <AvatarImage src={client?.client.profilePhoto} />
-        <AvatarFallback>{nameInitials(client?.client.name)}</AvatarFallback>
+        <AvatarImage src={client?.client?.profilePhoto} />
+        <AvatarFallback>{nameInitials(client?.client?.name)}</AvatarFallback>
       </Avatar>
       {client?.client?.name || <>-</>}
     </TableCell>

@@ -88,6 +88,19 @@ export function tabChange(value, router, params, pathname) {
   router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 };
 
+export function getMembershipType(membership) {
+  switch (membership.membershipType) {
+    case 1:
+      return { type: "Monthly", end: format(membership.endDate, "dd/MM/yyyy") }
+    case 2:
+      return {
+        type: "Servings", end: membership.servings
+      }
+    default:
+      return { type: "Unknown", end: "Unknown" };
+  }
+}
+
 export function _throwError(message = "checking payload") {
   throw new Error(message)
 }
@@ -119,5 +132,18 @@ export function formatMessage(text) {
   return text.replace(urlRegex, (url) => {
     const href = url.startsWith("http") ? url : `https://${url}`;
     return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:blue; text-decoration:underline;">${url}</a>`;
+  });
+}
+
+export function getDaysInMonth(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, i) => {
+    const dayNum = i + 1;
+    const dateObj = new Date(year, month, dayNum);
+    return {
+      date: dayNum,
+      day: format(dateObj, "EEE")
+    };
   });
 }

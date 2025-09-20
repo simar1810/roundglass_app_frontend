@@ -27,7 +27,7 @@ import FormControl from "@/components/FormControl";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
-// import PhysicalClub from "./PhysicalClub";
+import PhysicalClub from "./PhysicalClub";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -69,7 +69,7 @@ export default function ClientData({ clientData }) {
       <AIAgentHistory />
       <ClientReports />
       <CaseFile sections={clientData.onboarding_questionaire || []} />
-      {/* <PhysicalClub /> */}
+      <PhysicalClub />
     </Tabs>
   </div>
 }

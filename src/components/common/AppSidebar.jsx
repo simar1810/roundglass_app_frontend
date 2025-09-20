@@ -46,6 +46,7 @@ export default function AppSidebar() {
   const { organisation, features } = useAppSelector((state) => state.coach.data);
 
   let sidebarItems = sidebar__coachContent;
+  if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13)
   // Wallet is now available for all organizations
   if (organisation !== "Herbalife") sidebarItems = sidebarItems.filter(item => item.id !== 7);
   if (!features.includes(4)) sidebarItems = sidebarItems.filter(item => item.id !== 6);
@@ -70,6 +71,7 @@ export default function AppSidebar() {
     
     return false;
   });
+  if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13);
 
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">

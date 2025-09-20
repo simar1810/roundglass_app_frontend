@@ -345,6 +345,22 @@ export function retrieveDownlineClientInformation(query) {
   return fetchData(endpoint)
 }
 
+export function getPhysicalAttendance(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/attendance",
+    query
+  )
+  return fetchData(endpoint)
+}
+
+export function getPhysicalMemberships(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/memberships",
+    query
+  )
+  return fetchData(endpoint)
+}
+
 export async function retrieveQuestionaire(query) {
   const endpoint = buildUrlWithQueryParams("app/onboarding/questionaire", query)
   return fetchData(endpoint);

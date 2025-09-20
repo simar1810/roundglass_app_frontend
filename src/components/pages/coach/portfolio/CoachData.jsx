@@ -16,7 +16,7 @@ import { sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Link as LucideLink, Award, Users, X, Landmark, Banknote, Pen, Pencil } from "lucide-react";
+import { Link as LucideLink, Award, Users, X, Landmark, Banknote, Pen, Pencil, Dot } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -235,7 +235,11 @@ function BankDetails() {
       <CardContent className="grid gap-3 text-sm">
         <div className="mb-4">
           <CardTitle className="text-lg leading-tight">{bank.accountName}</CardTitle>
-          <p className="text-sm text-muted-foreground">{bank.bankName}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">{bank.bankName}</p>
+            <Dot />
+            <p className="text-sm text-muted-foreground">{bank.accountNumber}</p>
+          </div>
         </div>
         <div className="flex justify-between">
           <span className="font-medium">Bank Branch:</span>
@@ -257,10 +261,11 @@ function BankDetails() {
 function UpdateBankDetails({ bank }) {
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
-    accountName: bank.accountName,
-    bankName: bank.bankName,
-    bankBranch: bank.bankBranch,
-    ifscCode: bank.ifscCode,
+    accountNumber: bank.accountNumber || "",
+    accountName: bank.accountName || "",
+    bankName: bank.bankName || "",
+    bankBranch: bank.bankBranch || "",
+    ifscCode: bank.ifscCode || "",
     file: ""
   })
 
@@ -316,11 +321,15 @@ function UpdateBankDetails({ bank }) {
           onClick={() => setPayload(prev => ({ ...prev, file: "" }))}
         />}
         <FormControl
+          value={payload.accountNumber}
+          onChange={e => setPayload(prev => ({ ...prev, accountNumber: e.target.value }))}
+          placeholder="Account Number"
+          label="Account Number"
+          className="block mb-2"
+        />
+        <FormControl
           value={payload.accountName}
-          onChange={e => {
-            console.log(e.target.value)
-            setPayload(prev => ({ ...prev, accountName: e.target.value }))
-          }}
+          onChange={e => setPayload(prev => ({ ...prev, accountName: e.target.value }))}
           label="Account Name"
           className="block mb-2"
         />
