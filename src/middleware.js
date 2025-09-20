@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 export default function middleware(request) {
   const token = request.cookies.get('token')?.value;
+  const userType = request.cookies.get('userType')?.value;
   const pathname = request.nextUrl.pathname;
 
   if (pathname === "/login" && token) {
@@ -16,6 +17,11 @@ export default function middleware(request) {
   }
   if (pathname.startsWith("/client/app") && !token) {
     return NextResponse.redirect(new URL("/client/login", request.url));
+  }
+
+  // Block access to Users page for regular users
+  if (pathname === "/coach/users" && userType === "user") {
+    return NextResponse.redirect(new URL("/coach/dashboard", request.url));
   }
 
   return NextResponse.next();

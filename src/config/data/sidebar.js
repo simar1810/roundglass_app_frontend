@@ -52,18 +52,21 @@ export const sidebar__coachContent = [
     title: "Home",
     icon: <Home className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/dashboard",
+    permission: null, // Always visible
   },
   {
     id: 2,
     title: "Portfolio",
     icon: <User className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/portfolio",
+    permission: null, // Always visible
   },
   {
     id: 3,
     title: "Clients",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
+    permission: null, // Always visible
     items: [
       {
         id: 1,
@@ -98,12 +101,14 @@ export const sidebar__coachContent = [
     title: "Users",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/users",
+    permission: "coach", // Only coaches can see this
   },
   {
     id: 4,
     title: "Meals & Recipes",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/meals",
+    permission: 1, // Permission 1 = Meal Plan
     items: [
       {
         id: 1,
@@ -190,12 +195,14 @@ export const sidebar__coachContent = [
     title: "Feed",
     icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/feed",
+    permission: 2, // Permission 2 = Feed
   },
   {
     id: 6,
     title: "Wallet",
     icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/wallet",
+    permission: 3, // Permission 3 = Wallet
     items: [
       {
         id: 1,
@@ -253,18 +260,21 @@ export const sidebar__coachContent = [
     title: "Retail",
     icon: <Store className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/retail",
+    permission: 4, // Permission 4 = Retail
   },
   {
     id: 8,
     title: "Chats",
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats",
+    permission: 5, // Permission 5 = Chats
   },
   {
     id: 9,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/workouts",
+    permission: 6, // Permission 6 = Workout
     items: [
       {
         id: 1,
@@ -366,12 +376,14 @@ export const sidebar__coachContent = [
     title: "Marathon",
     icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/marathons",
+    permission: 7, // Permission 7 = Marathon
   },
   {
     id: 11,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/club",
+    permission: 8, // Permission 8 = Club
     items: [
       {
         id: 1,

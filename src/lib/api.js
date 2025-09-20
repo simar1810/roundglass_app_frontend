@@ -123,3 +123,10 @@ export async function streamResponse(endpoint, data) {
     return error;
   }
 }
+
+export async function sendUserInsight(userId, payload) {
+  try {
+    if (!userId) return
+    await sendData(`app/users/actions?person=coach`, { userId, payload }, "PUT")
+  } catch (error) { }
+}

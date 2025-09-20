@@ -1,4 +1,5 @@
 import { fetchData } from "../api";
+import { withClientFilter } from "../middleware/clientFilter";
 
 export function getMeetings(date, meetingType) {
   let query = "?"
@@ -48,10 +49,10 @@ export function getClientAttendance(id) {
   return fetchData(`getClientAttendance/${id}`);
 }
 
-export function getMeetingPersonList(person, query) {
+export const getMeetingPersonList = withClientFilter((person, query) => {
   return fetchData(`app/meeting/person-list?person=${person}&query=${query}`);
-}
+});
 
-export function getMeetingClientList() {
+export const getMeetingClientList = withClientFilter(() => {
   return fetchData("app/meeting/client-list");
-}
+});

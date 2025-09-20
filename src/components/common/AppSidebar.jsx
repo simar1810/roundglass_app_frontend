@@ -39,6 +39,7 @@ import PendingClientClubDataModal from "../modals/client/PendingClientClubDataMo
 import { DialogTrigger } from "../ui/dialog";
 import { useSWRConfig } from "swr";
 import { SearchBar } from "./AppNavbar";
+import { isCoach, getUserType, getUserPermissions } from "@/lib/permissions";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
@@ -48,6 +49,27 @@ export default function AppSidebar() {
   // Wallet is now available for all organizations
   if (organisation !== "Herbalife") sidebarItems = sidebarItems.filter(item => item.id !== 7);
   if (!features.includes(4)) sidebarItems = sidebarItems.filter(item => item.id !== 6);
+  
+  // Filter sidebar items based on user permissions
+  sidebarItems = sidebarItems.filter(item => {
+    // If no permission specified, always show
+    if (!item.permission) return true;
+    
+    // If permission is "coach", only show for coaches
+    if (item.permission === "coach") return isCoach();
+    
+    // If permission is a number, check if user has that permission
+    if (typeof item.permission === "number") {
+      const userType = getUserType();
+      if (userType === "coach") return true; // Coaches see everything
+      if (userType === "user") {
+        const userPermissions = getUserPermissions();
+        return userPermissions.includes(item.permission);
+      }
+    }
+    
+    return false;
+  });
 
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">

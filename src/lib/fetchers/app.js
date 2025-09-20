@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { fetchData, sendData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
 import { toast } from "sonner";
+import { withClientFilter } from "../middleware/clientFilter";
 
 async function logoutUser(response, router, cache) {
   if (
@@ -22,21 +23,21 @@ export function getCoachProfile(_id) {
   return fetchData(`app/coachProfile?id=${_id}&portal=web`);
 }
 
-export async function getCoachHome(router, cache) {
+export const getCoachHome = withClientFilter(async (router, cache) => {
   const response = await fetchData("app/coachHomeTrial");
   await logoutUser(response, router, cache);
   return response;
-}
+});
 
 export function coachMatricesData() {
   return fetchData("app/activity/get?person=coach");
 }
 
-export async function dashboardStatistics(router, cache) {
+export const dashboardStatistics = withClientFilter(async (router, cache) => {
   const response = await fetchData("app/coach-statistics");
   logoutUser(response, router, cache);
   return response;
-}
+});
 
 export function getCoachNotifications() {
   return fetchData("app/notification?person=coach");
@@ -62,13 +63,13 @@ export function getOrganisation() {
   return fetchData("app/getOrganisation");
 }
 
-export function getAppClients(query) {
+export const getAppClients = withClientFilter((query) => {
   let queries = "";
   if (query?.page) queries += "page=" + query.page + "&";
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
   return fetchData(`app/allClient?${queries}`);
-}
+});
 
 export function getAppClientPortfolioDetails(_id) {
   return fetchData(`app/clientProfile?id=` + _id);
@@ -117,9 +118,9 @@ export function getNotes(person = "coach") {
   return fetchData(`app/notes?person=${person}`);
 }
 
-export function getReminders(person = "coach") {
+export const getReminders = withClientFilter((person = "coach") => {
   return fetchData(`app/getAllReminder?person=${person}`);
-}
+});
 
 export function getRecipesCalorieCounter(query) {
   if (query.length <= 3) {
@@ -129,25 +130,25 @@ export function getRecipesCalorieCounter(query) {
   return fetchData(`app/recipees?query=${query}`);
 }
 
-export function getAllChatClients() {
+export const getAllChatClients = withClientFilter(() => {
   return fetchData("app/getAllChatClients");
-}
+});
 
 export function getPersonalBranding() {
   return fetchData("app/list?person=coach");
 }
 
-export function getClientForMeals(planId) {
+export const getClientForMeals = withClientFilter((planId) => {
   return fetchData(`app/getClientForMeals?planId=${planId}`);
-}
+});
 
 export function getCustomMealPlanDetails(planId) {
   return fetchData(`app/meal-plan/client/${planId}`);
 }
 
-export function getClientsForCustomMeals(planId) {
+export const getClientsForCustomMeals = withClientFilter((planId) => {
   return fetchData(`app/meal-plan/custom/assign?id=${planId}`);
-}
+});
 
 export function getProductByBrand(brandId) {
   return fetchData(`app/getProductByBrand/${brandId}`);
@@ -194,17 +195,17 @@ export function getMarathonTaskOptions() {
   return fetchData("app/marathon/coach/task-options");
 }
 
-export function getClientsForMarathon(marathonId) {
+export const getClientsForMarathon = withClientFilter((marathonId) => {
   return fetchData(
     `app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`
   );
-}
+});
 
-export function getClientsForWorkout(workoutId) {
+export const getClientsForWorkout = withClientFilter((workoutId) => {
   return fetchData(
     `app/workout/coach/getClientForWorkouts?workoutCollectionId=${workoutId}`
   );
-}
+});
 
 export function getAllWorkoutItems() {
   return fetchData("app/workout/coach/getAllWorkoutsItems");
@@ -282,17 +283,17 @@ export function getCustomWorkoutPlans(person = "coach", workoutId) {
   return fetchData(endpoint);
 }
 
-export function getClientsForCustomWorkout(workoutId) {
+export const getClientsForCustomWorkout = withClientFilter((workoutId) => {
   return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`);
-}
+});
 
 export async function onboardingQuestionaire() {
   return fetchData("app/onboarding/questionaire?person=coach");
 }
 
-export function retrieveSessions(person) {
+export const retrieveSessions = withClientFilter((person) => {
   return fetchData(`app/workout/sessions?person=${person}`);
-}
+});
 
 export function retrieveAIAgentHistory(clientId, date) {
   let endpoint = `app/ai/analyze?person=coach&client=${clientId}`
@@ -306,11 +307,11 @@ export function retrieveReports(person = "coach", clientId) {
   return fetchData(`app/reports/client?${query}`)
 }
 
-export function retrieveCoachClientList() {
+export const retrieveCoachClientList = withClientFilter(() => {
   return fetchData("app/coach-client-list")
-}
+});
 
-export function retrieveClientNudges(id, options) {
+export const retrieveClientNudges = withClientFilter((id, options) => {
   const endpoint = buildUrlWithQueryParams(
     "app/notifications-schedule",
     Boolean(id)
@@ -318,7 +319,7 @@ export function retrieveClientNudges(id, options) {
       : options
   )
   return fetchData(endpoint)
-}
+});
 
 export function retrieveDownlineRequests() {
   return fetchData("app/downline/requests")
@@ -360,8 +361,33 @@ export function getUsers() {
 }
 
 
-export function createUser(userData) {
-  return sendData("app/users", userData, "POST");
+export async function createUser(userData) {
+  try {
+    const { permissions, ...userDataWithoutPermissions } = userData;
+    
+    const createResponse = await sendData("app/users", userData, "POST");
+    
+    if (createResponse.status_code === 200 && permissions && permissions.length > 0) {
+      try {
+        const userId = createResponse.data?._id;
+        
+        if (userId) {
+          const permissionsData = { 
+            id: userId, 
+            permissions: permissions 
+          };
+          
+          await sendData("app/users/permissions", permissionsData, "PUT");
+        }
+      } catch (permissionsError) {
+        // Don't fail the entire request if permissions update fails
+      }
+    }
+    
+    return createResponse;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export function updateUser(userData) {
@@ -371,6 +397,28 @@ export function updateUser(userData) {
 export function deleteUser(userId) {
   return sendData("app/users", { id: userId }, "DELETE");
 }
+
+// Client assignment functions
+export function addClientToUser(userId, clientId) {
+  return sendData("app/users/clients/add", { userId, clientId }, "POST");
+}
+
+export function removeClientFromUser(userId, clientId) {
+  return sendData("app/users/clients/remove", { userId, clientId }, "POST");
+}
+
+export function assignClientsToUser(userId, clientIds) {
+  return sendData("app/users/clients/assign", { userId, clientIds }, "PUT");
+}
+
+export function getUserClients(userId, page = 1, limit = 10) {
+  return fetchData(`app/users/assignments/${userId}/clients?page=${page}&limit=${limit}`);
+}
+
+export const getAvailableClients = withClientFilter((page = 1, limit = 10, search = "") => {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+  return fetchData(`app/users/clients/available?page=${page}&limit=${limit}${searchParam}`);
+});
 
 // User login function
 export async function loginUser(userData) {
@@ -395,7 +443,9 @@ export async function loginUser(userData) {
         },
         body: JSON.stringify({ 
           refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
-          _id: responseData.data.createdBy._id
+          _id: responseData.data.createdBy._id,
+          userType: "user",
+          userData: responseData.data
         })
       });
       

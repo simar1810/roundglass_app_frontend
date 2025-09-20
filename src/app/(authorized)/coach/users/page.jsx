@@ -7,26 +7,38 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Trash2, Search, UserPlus, Eye } from "lucide-react";
+import { Edit, Trash2, Search, UserPlus, Eye, Settings, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import AddUserModal from "@/components/modals/user/AddUserModal";
 import EditUserModal from "@/components/modals/user/EditUserModal";
+import UserPermissionsModal from "@/components/modals/user/UserPermissionsModal";
+import UserClientAssignmentModal from "@/components/modals/user/UserClientAssignmentModal";
 import { getUsers } from "@/lib/fetchers/app";
+import { isCoach } from "@/lib/permissions";
+import { useRouter } from "next/navigation";
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showClientAssignmentModal, setShowClientAssignmentModal] = useState(false);
 
   useEffect(() => {
+    // Redirect if user is not a coach
+    if (!isCoach()) {
+      router.push("/coach/dashboard");
+      return;
+    }
     fetchUsers();
-  }, []);
+  }, [router]);
 
   const fetchUsers = async () => {
     try {
@@ -119,8 +131,31 @@ export default function UsersPage() {
                       size="sm"
                       onClick={() => {
                         setSelectedUser(user);
+                        setShowClientAssignmentModal(true);
+                      }}
+                      title="Manage Clients"
+                    >
+                      <Users className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowPermissionsModal(true);
+                      }}
+                      title="Manage Permissions"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUser(user);
                         setShowEditModal(true);
                       }}
+                      title="Edit User"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -129,6 +164,7 @@ export default function UsersPage() {
                       size="sm"
                       onClick={() => handleDeleteUser(user._id)}
                       className="text-red-600 hover:text-red-700"
+                      title="Delete User"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -145,6 +181,12 @@ export default function UsersPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Profile:</span>
                       <Badge variant="secondary">Has Photo</Badge>
+                    </div>
+                  )}
+                  {user.permissions && user.permissions.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Permissions:</span>
+                      <Badge variant="outline">{user.permissions.length} assigned</Badge>
                     </div>
                   )}
                 </div>
@@ -175,6 +217,38 @@ export default function UsersPage() {
           user={selectedUser}
           onSuccess={() => {
             setShowEditModal(false);
+            setSelectedUser(null);
+            fetchUsers();
+          }}
+        />
+      )}
+
+      {showPermissionsModal && selectedUser && (
+        <UserPermissionsModal
+          open={showPermissionsModal}
+          onClose={() => {
+            setShowPermissionsModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onSuccess={() => {
+            setShowPermissionsModal(false);
+            setSelectedUser(null);
+            fetchUsers();
+          }}
+        />
+      )}
+
+      {showClientAssignmentModal && selectedUser && (
+        <UserClientAssignmentModal
+          open={showClientAssignmentModal}
+          onClose={() => {
+            setShowClientAssignmentModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onSuccess={() => {
+            setShowClientAssignmentModal(false);
             setSelectedUser(null);
             fetchUsers();
           }}
