@@ -301,11 +301,11 @@ export function retrieveAIAgentHistory(clientId, date) {
   return fetchData(endpoint)
 }
 
-export function retrieveReports(person = "coach", clientId) {
+export const retrieveReports = withClientFilter(function(person = "coach", clientId) {
   let query = `person=${person}`
   if (clientId) query += `&clientId=${clientId}`
   return fetchData(`app/reports/client?${query}`)
-}
+})
 
 export const retrieveCoachClientList = withClientFilter(() => {
   return fetchData("app/coach-client-list")
@@ -431,7 +431,7 @@ export function getUserClients(userId, page = 1, limit = 10) {
   return fetchData(`app/users/assignments/${userId}/clients?page=${page}&limit=${limit}`);
 }
 
-export const getAvailableClients = withClientFilter((page = 1, limit = 10, search = "") => {
+export const getAvailableClients = withClientFilter((page = 1, limit = 1000, search = "") => {
   const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
   return fetchData(`app/users/clients/available?page=${page}&limit=${limit}${searchParam}`);
 });

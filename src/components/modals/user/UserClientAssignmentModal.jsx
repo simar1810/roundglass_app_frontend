@@ -70,7 +70,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   const fetchAvailableClients = async (page = 1, search = "") => {
     try {
       setLoadingClients(true);
-      const response = await getAvailableClients(page, 20, search);
+      const response = await getAvailableClients(page, 1000, search);
       if (response.status_code === 200) {
         setAvailableClients(response.data.clients || []);
         setTotalPages(response.data.totalPages || 1);

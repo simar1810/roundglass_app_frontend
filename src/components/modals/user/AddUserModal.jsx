@@ -334,7 +334,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo (Optional)</h3>
+            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo</h3>
             
             <div className="flex items-center space-x-4">
               {preview ? (
