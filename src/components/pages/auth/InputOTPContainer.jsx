@@ -44,7 +44,11 @@ export default function InputOTPContainer() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: user.webRefreshTokenList?.pop(), _id: user._id })
+        body: JSON.stringify({ 
+          refreshToken: user.webRefreshTokenList?.pop(), 
+          _id: user._id,
+          userType: "coach"
+        })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);

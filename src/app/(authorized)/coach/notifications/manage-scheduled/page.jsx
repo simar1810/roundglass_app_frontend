@@ -7,6 +7,7 @@ import { NotificationItem } from "@/components/pages/coach/client/ClientNudges";
 import Paginate from "@/components/Paginate";
 import { useState } from "react";
 import ScheduleNotificationWrapper from "@/components/modals/client/ScheduleNotification";
+import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
 
 export default function Page() {
   const [pagination, setPagination] = useState({

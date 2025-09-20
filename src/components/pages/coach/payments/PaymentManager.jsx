@@ -27,6 +27,7 @@ import {
   sendPaymentReminder,
   regeneratePaymentLink,
 } from "@/lib/paymentService";
+import { getAppClients } from "@/lib/fetchers/app";
 import {
   Search,
   Filter,
@@ -86,7 +87,7 @@ export default function PaymentManager() {
 
   const fetchClients = async () => {
     try {
-      const response = await fetchData("app/allClient?limit=100");
+      const response = await getAppClients({ limit: 100 });
       if (response.status_code === 200) {
         setClients(response.data || []);
       }

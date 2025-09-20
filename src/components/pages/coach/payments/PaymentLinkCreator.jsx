@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { fetchData, sendData } from "@/lib/api";
 import { createPaymentLink, getVouchers } from "@/lib/paymentService";
+import { getAppClients } from "@/lib/fetchers/app";
 import {
   Calendar,
   Copy,
@@ -73,8 +74,8 @@ export default function PaymentLinkCreator() {
 
   const fetchInitialData = async () => {
     try {
-      // Fetch clients
-      const clientsResponse = await fetchData("app/allClient?limit=100");
+      // Fetch clients with middleware filtering
+      const clientsResponse = await getAppClients({ limit: 100 });
       if (clientsResponse.status_code === 200) {
         setClients(clientsResponse.data || []);
       }

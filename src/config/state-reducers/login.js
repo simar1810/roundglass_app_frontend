@@ -15,6 +15,16 @@ export default function reducer(state, action) {
       return newState;
     case "UPDATE_OTP":
       return { ...state, otp: action.payload }
+    case "UPDATE_LOGIN_TYPE":
+      return { ...state, loginType: action.payload }
+    case "UPDATE_USER_LOGIN":
+      return {
+        ...state,
+        userLogin: {
+          ...state.userLogin,
+          [action.payload.field]: action.payload.value
+        }
+      }
     case "COACH_FIRST_TIME":
       return {
         ...state,
@@ -63,5 +73,19 @@ export function changeCurrentStage(payload) {
   return {
     type: "CHANGE_CURRENT_STAGE",
     payload
+  }
+}
+
+export function updateLoginType(payload) {
+  return {
+    type: "UPDATE_LOGIN_TYPE",
+    payload
+  }
+}
+
+export function updateUserLogin(field, value) {
+  return {
+    type: "UPDATE_USER_LOGIN",
+    payload: { field, value }
   }
 }
