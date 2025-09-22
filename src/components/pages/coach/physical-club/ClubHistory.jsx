@@ -50,7 +50,7 @@ function TableRow({
         return "bg-purple-500"
     }
   }
-
+  console.log(client)
   return (
     <tr className="text-sm">
       <td className="px-4 py-2">{index}</td>
@@ -68,8 +68,8 @@ function TableRow({
             : <>In Active</>}
         </span>
       </td>
-      <td className="px-4 py-2">{client.presentDays || 4} Days</td>
-      <td className="px-4 py-2">{client.absentDays || 1} Days</td>
+      <td className="px-4 py-2">{client.presentDays || 0} Days</td>
+      <td className="px-4 py-2">{client.absentDays || 0} Days</td>
       <td className="px-4 py-2 flex items-center gap-2">
         <span className={`font-medium ${getPercentageClass(client.showupPercentage)}`}>
           {client.showupPercentage}%

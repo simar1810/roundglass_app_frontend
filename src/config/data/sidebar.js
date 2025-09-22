@@ -503,6 +503,12 @@ export const sidebar__coachContent = [
     //   }
     // ]
   },
+  {
+    id: 14,
+    icon: <Clock12 />,
+    title: "Downline",
+    url: "/coach/downline"
+  }
 ];
 
 export const sidebar__coachFooter = [

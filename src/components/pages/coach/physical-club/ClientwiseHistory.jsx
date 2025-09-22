@@ -42,7 +42,7 @@ function TableRow({
           <div
             className={cn("w-6 h-6 flex items-center justify-center rounded-md", statusClases(day.status))}
           >
-            {nameInitials(day.status) || <>NA</>}
+            {nameInitials(day.status) || <>-</>}
           </div>
         </td>
       ))}
