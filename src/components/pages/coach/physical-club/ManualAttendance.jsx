@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
-import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendance, manualAttendanceWithRange } from "@/lib/physical-attendance";
+import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendanceWithRange } from "@/lib/physical-attendance";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { CheckCircle, X } from "lucide-react";
 import { CustomCalendar } from "@/components/common/CustomCalender";
 import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
+import { format } from "date-fns";
+import Link from "next/link";
 
 export default function ManualAttendance({
   data,
@@ -43,7 +45,8 @@ export function AttendanceClients({ clients }) {
                 <AvatarImage src={client.profilePhoto} />
                 <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
               </Avatar>
-              <span>{client.name}</span>
+              <Link href={`/coach/clients/${client.clientId}?tab=physical-club`}>{client.name}</Link>
+              <span className="text-[12px] mt-1">{format(client.date, "dd-MM-yyyy")}</span>
             </div>
             <div className="flex gap-2">
               <ChangeClientAttendanceStatus

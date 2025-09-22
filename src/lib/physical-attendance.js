@@ -5,6 +5,7 @@ import {
   isSameDay, startOfDay
 } from "date-fns";
 import { _throwError, getDaysInMonth } from "./formatter";
+import { nowIST } from "./utils";
 
 export function manualAttendance(data, range) {
   const startOfTheDay = startOfDay(range?.from, new Date());
@@ -33,7 +34,7 @@ export function manualAttendanceWithRange(data, range) {
     .map(client => {
       const attendanceMap = {};
       (client?.attendance || []).forEach(att => {
-        const marked = new Date(att.date);
+        const marked = nowIST(att.date);
         if (marked >= start && marked <= end) {
           const dayIndex = Math.floor((marked - start) / (1000 * 60 * 60 * 24));
           attendanceMap[dayIndex] = att;
@@ -41,7 +42,7 @@ export function manualAttendanceWithRange(data, range) {
       });
 
       const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
-        const currentDate = addDays(start, i);
+        const currentDate = addDays(start, i + 1);
         const entry = attendanceMap[i];
         return entry
           ? {
@@ -79,7 +80,7 @@ export function shakeRequests(data) {
         name: client?.client?.name,
       }))
     })
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 export function clientWiseHistory(data, year = 2025, month = 8) {
@@ -121,8 +122,7 @@ export function clientWiseHistory(data, year = 2025, month = 8) {
 
 export function clubHistory(clients) {
   return clients.map((record, index) => {
-    const { client, attendance } = record;
-
+    const { client, attendance, membership } = record;
     const presentDays = attendance
       .filter(a => a.status === "present")
       .length;
@@ -156,7 +156,10 @@ export function clubHistory(clients) {
       presentDays,
       absentDays,
       showupPercentage: Number(showupPercentage),
-      showupLabel
+      showupLabel,
+      pendingServings: membership?.pendingServings || 0,
+      membershipType: membership?.membershipType || "Monthly",
+      endDate: membership?.endDate || new Date(),
     };
   });
 }
@@ -194,7 +197,7 @@ export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
 
   data.forEach(item => {
-    const dateKey = format(new Date(item.date), "yyyy-MM-dd")
+    const dateKey = format(nowIST(item.date), "yyyy-MM-dd")
 
     if (!badgeData[dateKey]) {
       badgeData[dateKey] = { present: 0, absent: 0, requested: 0 }

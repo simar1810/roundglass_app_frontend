@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, nowIST } from "@/lib/utils"
 import { isToday, set } from "date-fns"
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -113,7 +113,6 @@ export function CustomCalendar({
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      // const date = new Date(year, month, day)
       const date = set(new Date(), { year, month, date: day });
       const dateKey = formatDateKey(date)
       const badges = badgeData[dateKey] || []
@@ -158,20 +157,6 @@ export function CustomCalendar({
         </div>,
       )
     }
-
-    const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7
-    const remainingCells = totalCells - (firstDayOfWeek + daysInMonth)
-
-    for (let i = 0; i < remainingCells; i++) {
-      const nextMonthDay = i + 1
-      days.push(
-        <div key={`next-${i}`} className="h-20 border border-gray-200 p-1">
-          <span className="text-sm text-gray-400">{nextMonthDay}</span>
-          {nextMonthDay <= 4 && <div className="text-xs text-gray-400 mt-1">June</div>}
-        </div>,
-      )
-    }
-
     return days
   }
 
