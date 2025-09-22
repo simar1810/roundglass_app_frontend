@@ -20,7 +20,10 @@ import {
 import { useState } from "react"
 import { toast } from "sonner"
 import { sendData } from "@/lib/api"
-import { X } from "lucide-react"
+import { Trash2, X } from "lucide-react"
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
+import { useAppSelector } from "@/providers/global/hooks"
 
 export default function PhysicalClub() {
   return <TabsContent
@@ -140,23 +143,25 @@ function PhysicalClubAttendance() {
 
 function ClientDetails({ membership }) {
   const { id: clientId } = useParams()
-  const now = new Date()
   const client = membership.client || {}
   const isExpired =
-    (membership.endDate && new Date(membership.endDate) < now) ||
+    (membership.endDate) ||
     (membership.membershipType === 2 && membership.pendingServings <= 0)
+  const { end, type } = getMembershipType(membership)
 
   return (
     <div className="flex flex-row items-center justify-between">
       <div>
         <h2>Memberships</h2>
         <div className="mt-1 flex items-center gap-2">
-          {membership.membershipType === 2
+          {type === "Servings"
             ? <div className="text-sm">Pending Servings - {membership.pendingServings}</div>
-            : <div className="text-sm">End Date - {membership.endDate && format(membership.endDate, "dd-MM-yyyy")}</div>}
-          {client.isPhysicalClubActive && !isExpired
-            ? <Badge variant="wz_fill">Active</Badge>
-            : <Badge variant="destructive">In Active</Badge>}
+            : <div className="text-sm">End Date - {end}</div>}
+          <div>
+            {client.isPhysicalClubActive && !isExpired
+              ? <Badge variant="wz_fill">Active</Badge>
+              : <Badge variant="destructive">In Active</Badge>}
+          </div>
         </div>
         <div className="text-sm">Overdue - {membership?.overdue || 0}</div>
       </div>
@@ -181,7 +186,10 @@ function SubscriptionHistoryTable({ history }) {
             <TableHead>Amount</TableHead>
             <TableHead>Mode</TableHead>
             <TableHead>Membership Type</TableHead>
-            <TableHead>Ends / Pending</TableHead>
+            <TableHead>Pending</TableHead>
+            <TableHead>Start Date</TableHead>
+            <TableHead>End Date</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -192,7 +200,18 @@ function SubscriptionHistoryTable({ history }) {
                 <TableCell>₹{item.amount}</TableCell>
                 <TableCell>{item.paymentMode}</TableCell>
                 <TableCell>{type}</TableCell>
-                <TableCell>{end}</TableCell>
+                {type === "Servings"
+                  ? <TableCell className="text-center">{end}</TableCell>
+                  : <TableCell className="text-center">-</TableCell>}
+                {type === "Monthly"
+                  ? <TableCell className="text-center">{format(item.startDate, "dd/MM/yyyy")}</TableCell>
+                  : <TableCell className="text-center">-</TableCell>}
+                {type === "Monthly"
+                  ? <TableCell className="text-center">{format(item.endDate, "dd/MM/yyyy")}</TableCell>
+                  : <TableCell className="text-center">-</TableCell>}
+                <TableCell>
+                  <DeleteSubscription membershipId={item._id} />
+                </TableCell>
               </TableRow>
             )
           })}
@@ -202,26 +221,65 @@ function SubscriptionHistoryTable({ history }) {
   )
 }
 
+function DeleteSubscription({ membershipId }) {
+  const { id: clientId } = useParams()
+
+  async function deleteSubscription(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/physical-club/memberships/",
+        { membershipId, clientId },
+        "DELETE"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/physical-club/memberships/${clientId}`);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure to delete this subscription?"
+    action={(setLoading, closeBtnRef) => deleteSubscription(setLoading, closeBtnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="w-[16px] h-[16px] text-[var(--accent-2)] cursor-pointer" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
 export function validateMembershipData(payload) {
-  const { clientId, membershipType, startDate, endDate, servings, amount } = payload;
+  const { clientId, membershipType, startDate, endDate, servings, amount, paymentMode } = payload;
 
   if (!clientId) {
     return { valid: false, message: "clientId is required and must be a valid ObjectId." }
+  }
+
+  if (!membershipType || ![1, 2].includes(membershipType)) {
+    return { valid: false, message: "Invalid membershipType. Must be either 1 (Monthly) or 2 (Servings)." }
+  }
+
+  if (!paymentMode || !["Online", "Offline"].includes(paymentMode)) {
+    return { valid: false, message: "Invalid payment mode. Must be either Online or Offline." }
+  }
+
+  if (amount < 0) {
+    return { valid: false, message: "Amount cannot be negative." }
   }
 
   if (membershipType === 1) {
     if (!startDate || !endDate) {
       return { valid: false, message: "Start Date and End Date are required for Monthly membership." }
     }
-    if (amount < 0) {
-      return { valid: false, message: "Amount cannot be negative." }
-    }
   } else if (membershipType === 2) {
-    if (servings == null || servings <= 0) {
-      return { valid: false, message: "servings is required and must be greater than 0 for Servings membership." }
+    // Servings are optional for type 2, but if provided must be positive
+    if (servings && servings <= 0) {
+      return { valid: false, message: "If servings are provided, they must be greater than 0." }
     }
-  } else {
-    return { valid: false, message: "Invalid membershipType." }
   }
 
   return { valid: true }
@@ -236,12 +294,12 @@ function AddMembershipDialog({
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
     clientId,
+    membershipType: 1,
+    paymentMode: "Online",
+    amount: 0,
     startDate: "",
     endDate: "",
-    membershipType: 1,
-    paymentMode: "online",
     servings: 0,
-    amount: 0,
     overdue: 0
   })
 
@@ -275,24 +333,6 @@ function AddMembershipDialog({
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <div className="flex flex-col">
-            <label>Start Date</label>
-            <input
-              type="date"
-              value={payload.startDate}
-              onChange={e => handleChange("startDate", e.target.value)}
-              className="border rounded px-2 py-1"
-            />
-          </div>
-          <div className="flex flex-col">
-            <label>End Date</label>
-            <input
-              type="date"
-              value={payload.endDate}
-              onChange={e => handleChange("endDate", e.target.value)}
-              className="border rounded px-2 py-1"
-            />
-          </div>
-          <div className="flex flex-col">
             <label>Membership Type</label>
             <select
               value={payload.membershipType}
@@ -314,25 +354,48 @@ function AddMembershipDialog({
               <option value="Offline">Offline</option>
             </select>
           </div>
+          <div className="flex flex-col">
+            <label>Amount</label>
+            <input
+              type="number"
+              value={payload.amount}
+              onChange={e => handleChange("amount", Number(e.target.value))}
+              className="border rounded px-2 py-1"
+            />
+          </div>
           {payload.membershipType === 1 && (
-            <div className="flex flex-col">
-              <label>Amount</label>
-              <input
-                type="number"
-                value={payload.amount}
-                onChange={e => handleChange("amount", e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-            </div>
+            <>
+              <div className="flex flex-col">
+                <label>Start Date</label>
+                <input
+                  type="date"
+                  value={payload.startDate}
+                  onChange={e => handleChange("startDate", e.target.value)}
+                  className="border rounded px-2 py-1"
+                  required
+                />
+              </div>
+              <div className="flex flex-col">
+                <label>End Date</label>
+                <input
+                  type="date"
+                  value={payload.endDate}
+                  onChange={e => handleChange("endDate", e.target.value)}
+                  className="border rounded px-2 py-1"
+                  required
+                />
+              </div>
+            </>
           )}
           {payload.membershipType === 2 && (
             <div className="flex flex-col">
-              <label>Servings</label>
+              <label>Servings (Optional)</label>
               <input
                 type="number"
                 value={payload.servings}
                 onChange={e => handleChange("servings", Number(e.target.value))}
                 className="border rounded px-2 py-1"
+                placeholder="Enter number of servings"
               />
             </div>
           )}
