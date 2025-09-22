@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { isToday } from "date-fns"
+import { isToday, set } from "date-fns"
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const MONTHS = [
@@ -23,61 +23,12 @@ const MONTHS = [
   "December",
 ]
 
-// Sample data for badges - you can replace this with your own data
-const sampleBadgeData = {
-  "2025-09-02": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-03": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-04": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-05": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-06": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-09": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-10": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-11": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-12": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-13": [
-    { value: "20", color: "bg-green-500" },
-    { value: "2", color: "bg-red-500" },
-  ],
-  "2025-09-16": [
-    { value: "35", color: "bg-green-500" },
-    { value: "15", color: "bg-red-500" },
-  ],
-}
-
 export function CustomCalendar({
-  badgeData = sampleBadgeData,
+  badgeData = {},
   className,
   onRangeSelect
 }) {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 8, 16))
-  const today = new Date(2025, 8, 16)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -162,7 +113,8 @@ export function CustomCalendar({
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day)
+      // const date = new Date(year, month, day)
+      const date = set(new Date(), { year, month, date: day });
       const dateKey = formatDateKey(date)
       const badges = badgeData[dateKey] || []
       const todayClass = isToday(date)
@@ -176,7 +128,7 @@ export function CustomCalendar({
       const isRangeEnd =
         (selectedRange.from && selectedRange.to && isDateRangeEnd(date, selectedRange.from, selectedRange.to)) ||
         (isDragging && dragStart && dragEnd && isDateRangeEnd(date, dragStart, dragEnd))
-
+      if (badgeData[dateKey]) console.log(day, badgeData[dateKey], dateKey, badges)
       days.push(
         <div
           key={day}

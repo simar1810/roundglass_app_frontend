@@ -48,7 +48,7 @@ export function AttendanceClients({ clients }) {
             <div className="flex gap-2">
               <ChangeClientAttendanceStatus
                 clientId={client.clientId}
-                date={client.markedAt}
+                date={client.date}
                 status="present"
               >
                 <Button

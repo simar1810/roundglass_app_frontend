@@ -6,10 +6,9 @@ export default function useUserInsight(payload = {}) {
 
   async function createInsight(data = {}) {
     if (!userId) {
-      console.warn('User ID not available for insight creation');
       return;
     }
-    
+
     await sendUserInsight(userId, {
       ...payload,
       ...data
