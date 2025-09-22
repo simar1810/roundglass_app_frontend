@@ -50,7 +50,7 @@ function TableRow({
         return "bg-purple-500"
     }
   }
-  console.log(client)
+
   return (
     <tr className="text-sm">
       <td className="px-4 py-2">{index}</td>
