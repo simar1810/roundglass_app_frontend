@@ -38,8 +38,8 @@ export default function ShakeRequestsTable({
             <TableRow key={index + 1}>
               <TableCell>{index + 1}</TableCell>
               <TableCell>{req.name}</TableCell>
-              <TableCell>{format(req.markedAt, "dd-MM-yyyy")}</TableCell>
-              <TableCell>{format(req.markedAt, "HH:MM a")}</TableCell>
+              <TableCell>{format(req.date, "dd-MM-yyyy")}</TableCell>
+              <TableCell>{format(req.date, "HH:MM a")}</TableCell>
               <TableCell className="flex justify-end gap-2">
                 {req.status === "requested" && (
                   <>

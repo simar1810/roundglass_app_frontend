@@ -128,7 +128,6 @@ export function CustomCalendar({
       const isRangeEnd =
         (selectedRange.from && selectedRange.to && isDateRangeEnd(date, selectedRange.from, selectedRange.to)) ||
         (isDragging && dragStart && dragEnd && isDateRangeEnd(date, dragStart, dragEnd))
-      if (badgeData[dateKey]) console.log(day, badgeData[dateKey], dateKey, badges)
       days.push(
         <div
           key={day}

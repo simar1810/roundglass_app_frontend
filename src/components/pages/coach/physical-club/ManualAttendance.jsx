@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
-import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendance } from "@/lib/physical-attendance";
+import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendance, manualAttendanceWithRange } from "@/lib/physical-attendance";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { CheckCircle, X } from "lucide-react";
@@ -16,7 +16,7 @@ export default function ManualAttendance({
   range,
   setRange
 }) {
-  const clients = manualAttendance(data, range)
+  const clients = manualAttendanceWithRange(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
 
   return (<TabsContent value="manual-attendance" className="flex gap-6">

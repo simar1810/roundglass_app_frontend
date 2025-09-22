@@ -1,35 +1,85 @@
 import {
+  addDays,
+  differenceInCalendarDays,
   endOfDay, format, isAfter, isBefore,
   isSameDay, startOfDay
 } from "date-fns";
-import { _throwError } from "./formatter";
+import { _throwError, getDaysInMonth } from "./formatter";
 
 export function manualAttendance(data, range) {
   const startOfTheDay = startOfDay(range?.from, new Date());
   const endOfTheDay = endOfDay(range?.to, new Date());
 
   return data.flatMap(client => {
-    const filteredAttendance = client.attendance.filter(att =>
+    const filteredAttendance = (client?.attendance || []).filter(att =>
       isAfter(att.markedAt, startOfTheDay) &&
       isBefore(att.markedAt, endOfTheDay)
     )
     return filteredAttendance.map(att => ({
-      clientId: client.client._id,
-      name: client?.client.name,
-      profilePhoto: client?.client.profilePhoto,
+      clientId: client?.client?._id,
+      name: client?.client?.name,
+      profilePhoto: client?.client?.profilePhoto,
       ...att
     }))
   })
 }
 
+export function manualAttendanceWithRange(data, range) {
+  const start = startOfDay(range?.from || new Date());
+  const end = endOfDay(range?.to || new Date());
+  const totalDays = Math.abs(differenceInCalendarDays(range.from, range.to)) + 1;
+
+  return data
+    .map(client => {
+      const attendanceMap = {};
+      (client?.attendance || []).forEach(att => {
+        const marked = new Date(att.date);
+        if (marked >= start && marked <= end) {
+          const dayIndex = Math.floor((marked - start) / (1000 * 60 * 60 * 24));
+          attendanceMap[dayIndex] = att;
+        }
+      });
+
+      const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
+        const currentDate = addDays(start, i);
+        const entry = attendanceMap[i];
+        return entry
+          ? {
+            date: currentDate.toISOString(),
+            status: entry.status,
+            markedAt: entry.markedAtl,
+            name: client?.client?.name,
+            profilePhoto: client?.client?.profilePhoto,
+            clientId: client?.client?._id
+          }
+          : {
+            date: currentDate.toISOString(),
+            status: undefined,
+            name: client?.client?.name,
+            profilePhoto: client?.client?.profilePhoto,
+            clientId: client?.client?._id
+          };
+      });
+
+      return {
+        clientName: client?.client?.name,
+        clientProfile: client?.client?.profilePhoto,
+        dailyAttendance
+      };
+    })
+    .flatMap(client => client?.dailyAttendance);
+}
+
 export function shakeRequests(data) {
-  return data.flatMap(client => {
-    return client.attendance.map(attendance => ({
-      ...attendance,
-      clientId: client.client._id,
-      name: client.client.name,
-    }))
-  })
+  return data
+    .flatMap(client => {
+      return (client?.attendance || []).map(attendance => ({
+        ...attendance,
+        clientId: client?.client?._id,
+        name: client?.client?.name,
+      }))
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 export function clientWiseHistory(data, year = 2025, month = 8) {
@@ -61,8 +111,8 @@ export function clientWiseHistory(data, year = 2025, month = 8) {
     });
 
     return {
-      clientName: record.client.name,
-      clientProfile: record.client.profilePhoto,
+      clientName: record?.client?.name,
+      clientProfile: record?.client?.profilePhoto,
       monthlyAttendance
     };
   });
@@ -100,9 +150,9 @@ export function clubHistory(clients) {
 
     return {
       clientId: index + 1,
-      clientName: client.name,
-      clientProfile: client.profilePhoto,
-      clientStatus: client.isPhysicalClubActive,
+      clientName: client?.name,
+      clientProfile: client?.profilePhoto,
+      clientStatus: client?.isPhysicalClubActive,
       presentDays,
       absentDays,
       showupPercentage: Number(showupPercentage),
@@ -121,10 +171,10 @@ export function generateAttendanceRows(data) {
 
     return {
       clientId: index + 1,
-      clientName: record.client.name,
+      clientName: record?.client?.name,
       date: format(today, "dd MMM, yyyy"),
       status: todayAttendance ? todayAttendance.status : undefined,
-      profilePhoto: record.client.profilePhoto
+      profilePhoto: record?.client?.profilePhoto
     }
   })
 }
