@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { TabsContent } from "@/components/ui/tabs"
-import { nameInitials } from "@/lib/formatter"
+import { getMembershipType, nameInitials } from "@/lib/formatter"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { clubHistory } from "@/lib/physical-attendance"
 
@@ -15,6 +15,7 @@ function TableHeader() {
         <th className="px-4 py-2 text-left">Client Status</th>
         <th className="px-4 py-2 text-left">Present Days</th>
         <th className="px-4 py-2 text-left">Absent Days</th>
+        <th className="px-4 py-2 text-left">Pending Servings</th>
         <th className="px-4 py-2 text-left">Showup Percentage</th>
       </tr>
     </thead>
@@ -50,6 +51,11 @@ function TableRow({
         return "bg-purple-500"
     }
   }
+  const { end } = getMembershipType({
+    membershipType: client.membershipType,
+    endDate: client.endDate,
+    servings: client.pendingServings,
+  } || {})
 
   return (
     <tr className="text-sm">
@@ -70,6 +76,7 @@ function TableRow({
       </td>
       <td className="px-4 py-2">{client.presentDays || 0} Days</td>
       <td className="px-4 py-2">{client.absentDays || 0} Days</td>
+      <td className="text-center">{end}</td>
       <td className="px-4 py-2 flex items-center gap-2">
         <span className={`font-medium ${getPercentageClass(client.showupPercentage)}`}>
           {client.showupPercentage}%

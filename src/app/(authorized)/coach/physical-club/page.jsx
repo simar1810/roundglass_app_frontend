@@ -14,7 +14,7 @@ import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
-import { endOfMonth, startOfMonth } from "date-fns";
+import { endOfDay, startOfDay } from "date-fns";
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -51,8 +51,8 @@ const tabItems = [
 
 export default function Page() {
   const [range, setRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
   })
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("manual-attendance");
