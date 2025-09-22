@@ -68,7 +68,7 @@ export default function Page() {
 }
 
 function RetailStatisticsCards({ totalSales, totalOrders }) {
-  const [hide, setHide] = useState(false);
+  const [hide, setHide] = useState(true);
   return <div className="grid grid-cols-3 gap-4">
     <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
       <CardHeader className="text-white p-0 mb-0">
