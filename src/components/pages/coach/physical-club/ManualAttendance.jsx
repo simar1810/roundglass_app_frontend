@@ -66,7 +66,7 @@ export function AttendanceClients({ clients }) {
                 </Button>
               </ChangeClientAttendanceStatus>
               <ChangeClientAttendanceStatus
-                date={client.markedAt}
+                date={client.date}
                 clientId={client.clientId}
                 status="absent"
               >
