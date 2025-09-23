@@ -57,6 +57,12 @@ export function addRetailReducer(state, action) {
         ...state,
         stage: 4
       }
+    case "PREVIOUS_STAGE":
+      if (![2, 3].includes(state.stage)) return state
+      return {
+        ...state,
+        stage: state.stage - 1
+      }
     default:
       return state;
   }
@@ -127,6 +133,12 @@ export function orderCreated(payload) {
 export function orderRequested() {
   return {
     type: "ORDER_REQUESTED"
+  }
+}
+
+export function previousStage() {
+  return {
+    type: "PREVIOUS_STAGE"
   }
 }
 
