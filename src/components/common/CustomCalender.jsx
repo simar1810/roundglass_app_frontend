@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn, nowIST } from "@/lib/utils"
-import { isToday, set } from "date-fns"
+import { addMonths, format, isSameDay, isToday, isWithinInterval, max, min, set, startOfMonth, subMonths } from "date-fns"
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const MONTHS = [
@@ -44,38 +44,33 @@ export function CustomCalendar({
   const [dragEnd, setDragEnd] = useState(null)
 
   const previousMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1))
+    setCurrentDate(subMonths(startOfMonth(new Date(year, month, 1)), 1))
   }
 
   const nextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1))
+    setCurrentDate(addMonths(startOfMonth(new Date(year, month, 1)), 1))
   }
 
   const formatDateKey = (date) => {
-    return date.toISOString().split("T")[0]
-  }
-
-  const isSameDay = (date1, date2) => {
-    return date1.toDateString() === date2.toDateString()
+    return format(date, "yyyy-MM-dd")
   }
 
   const isDateInRange = (date, start, end) => {
     if (!start || !end) return false
-    const startDate = start <= end ? start : end
-    const endDate = start <= end ? end : start
-    return date >= startDate && date <= endDate
+    return isWithinInterval(date, {
+      start: min([start, end]),
+      end: max([start, end])
+    })
   }
 
   const isDateRangeStart = (date, start, end) => {
     if (!start || !end) return false
-    const startDate = start <= end ? start : end
-    return isSameDay(date, startDate)
+    return isSameDay(date, min([start, end]))
   }
 
   const isDateRangeEnd = (date, start, end) => {
     if (!start || !end) return false
-    const endDate = start <= end ? end : start
-    return isSameDay(date, endDate)
+    return isSameDay(date, max([start, end]))
   }
 
   const handleMouseDown = (date) => {

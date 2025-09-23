@@ -4,8 +4,6 @@ import {
   endOfDay, format, isAfter, isBefore,
   isSameDay, startOfDay
 } from "date-fns";
-import { _throwError, getDaysInMonth } from "./formatter";
-import { nowIST } from "./utils";
 
 export function manualAttendance(data, range) {
   const startOfTheDay = startOfDay(range?.from, new Date());
@@ -33,8 +31,9 @@ export function manualAttendanceWithRange(data, range) {
   return data
     .map(client => {
       const attendanceMap = {};
+      console.log(client.attendance);
       (client?.attendance || []).forEach(att => {
-        const marked = nowIST(att.date);
+        const marked = new Date(att.date);
         if (marked >= start && marked <= end) {
           const dayIndex = Math.floor((marked - start) / (1000 * 60 * 60 * 24));
           attendanceMap[dayIndex] = att;
@@ -42,7 +41,7 @@ export function manualAttendanceWithRange(data, range) {
       });
 
       const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
-        const currentDate = addDays(start, i + 1);
+        const currentDate = addDays(start, i);
         const entry = attendanceMap[i];
         return entry
           ? {
@@ -197,7 +196,7 @@ export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
 
   data.forEach(item => {
-    const dateKey = format(nowIST(item.date), "yyyy-MM-dd")
+    const dateKey = format(item.date, "yyyy-MM-dd")
 
     if (!badgeData[dateKey]) {
       badgeData[dateKey] = { present: 0, absent: 0, requested: 0 }

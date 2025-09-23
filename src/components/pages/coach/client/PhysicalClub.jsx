@@ -112,6 +112,11 @@ function PhysicalClubAttendance() {
   }
 
   const attendanceRecords = attendanceClient?.attendance || []
+  const statusVariant = {
+    "present": "wz_fill",
+    "absent": "destructive",
+    "requested": "default"
+  }
   return (
     <div
       className="bg-[var(--comp-1)] p-4 border-1 rounded-[8px]"
@@ -121,6 +126,7 @@ function PhysicalClubAttendance() {
         <Table className="bg-white">
           <TableHeader>
             <TableRow>
+              <TableHead>Sr No.</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Marked At</TableHead>
               <TableHead>Status</TableHead>
@@ -129,9 +135,15 @@ function PhysicalClubAttendance() {
           <TableBody>
             {attendanceRecords.map((record, i) => (
               <TableRow key={i}>
+                <TableCell>{i + 1}</TableCell>
                 <TableCell>{format(new Date(record.date), "dd-MM-yyyy")}</TableCell>
                 <TableCell>{format(new Date(record.markedAt), "dd-MM-yyyy hh:mm a")}</TableCell>
-                <TableCell><Badge variant="wz_fill">Present</Badge></TableCell>
+                <TableCell>
+                  <Badge
+                    className="capitalize font-semibold text-[10px]"
+                    variant={statusVariant[record.status]}
+                  >{record.status}</Badge>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -143,11 +155,8 @@ function PhysicalClubAttendance() {
 
 function ClientDetails({ membership }) {
   const { id: clientId } = useParams()
-  const client = membership.client || {}
-  const isExpired =
-    (membership.endDate) ||
-    (membership.membershipType === 2 && membership.pendingServings <= 0)
   const { end, type } = getMembershipType(membership)
+  const active = membership.client.isPhysicalClubActive
 
   return (
     <div className="flex flex-row items-center justify-between">
@@ -157,13 +166,13 @@ function ClientDetails({ membership }) {
           {type === "Servings"
             ? <div className="text-sm">Pending Servings - {membership.pendingServings}</div>
             : <div className="text-sm">End Date - {end}</div>}
-          <div>
-            {client.isPhysicalClubActive && !isExpired
-              ? <Badge variant="wz_fill">Active</Badge>
-              : <Badge variant="destructive">In Active</Badge>}
-          </div>
         </div>
         <div className="text-sm">Overdue - {membership?.overdue || 0}</div>
+        <div>
+          {active
+            ? <Badge variant="wz_fill">Active</Badge>
+            : <Badge variant="destructive">In Active</Badge>}
+        </div>
       </div>
       <AddMembershipDialog
         overdues={membership?.overdue}
