@@ -1,6 +1,7 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AssignMealModal from "@/components/modals/Assignmealmodal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ function CustomMealMetaData({ customPlan }) {
         <DeleteCustomMealPlan id={customPlan._id} />
       </>}
     </div>
+    <AssignMealModal planId={customPlan._id} type="custom" />
     <Image
       alt=""
       src={customPlan.image || "/not-found.png"}

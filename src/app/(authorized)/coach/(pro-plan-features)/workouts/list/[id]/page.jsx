@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AssignWorkoutModal from "@/components/modals/AssignModal";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
@@ -45,6 +46,7 @@ function WorkoutDetails({ workoutDetails }) {
         </DialogTrigger>
       </CreateWorkoutModal>
     </div>
+    <AssignWorkoutModal type="normal" workoutId={workoutDetails._id} />
     <Image
       src={workoutDetails.thumbnail.replaceAll(" ", "")}
       alt=""
@@ -111,7 +113,7 @@ function WorkoutVideos({ workouts }) {
   </div>
 }
 
-function VideoPlayer({
+export function VideoPlayer({
   src,
   prev,
   next,
@@ -131,9 +133,7 @@ function VideoPlayer({
       try {
         videoRef.current.load();
         videoRef.current.play().catch()
-      } catch (error) {
-
-      }
+      } catch (error) { }
     }
   }, [src]);
 
@@ -150,18 +150,18 @@ function VideoPlayer({
         Your browser does not support the video tag.
       </video>
       <div className="mt-4 flex gap-4">
-        <Button onClick={prev} variant="wz" className="grow">
+        {prev && <Button onClick={prev} variant="wz" className="grow">
           <SkipBack />
           Previous
-        </Button>
-        <Button onClick={togglePause} variant="wz" className="grow">
+        </Button>}
+        {togglePause && <Button onClick={togglePause} variant="wz" className="grow">
           <Pause />
           Pause / Play
-        </Button>
-        <Button onClick={() => next(true)} variant="wz" className="grow">
+        </Button>}
+        {next && <Button onClick={() => next(true)} variant="wz" className="grow">
           <SkipForward />
           Next
-        </Button>
+        </Button>}
       </div>
     </div>
   );

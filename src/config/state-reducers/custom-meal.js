@@ -169,7 +169,7 @@ export function customMealReducer(state, action) {
           [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealType => mealType.mealType === state.selectedMealType
             ? {
               ...mealType,
-              meals: [...mealType.meals, {
+              meals: [...(mealType.meals || []), {
                 ...action.payload.recipe,
                 dish_name: action.payload.recipe.dish_name || action.payload.recipe.name,
                 fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
