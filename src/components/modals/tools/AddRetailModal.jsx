@@ -5,12 +5,12 @@ import SelectControl from "@/components/Select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
+import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, previousStage, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
 import { buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -44,11 +44,17 @@ const stageTitles = {
 }
 
 function AddRetailContainer() {
-  const { stage } = useCurrentStateContext();
+  const { stage, dispatch } = useCurrentStateContext();
   const Component = selectComponent(stage);
   return <div>
     <DialogHeader className="p-4 border-b-1">
-      <DialogTitle>{stageTitles[stage]}</DialogTitle>
+      <DialogTitle className="flex items-center gap-2">
+        {[2, 3].includes(stage) && <ArrowLeft
+          className="cursor-pointer"
+          onClick={() => dispatch(previousStage())}
+        />}
+        <p>{stageTitles[stage]}</p>
+      </DialogTitle>
     </DialogHeader>
     <Component />
   </div>

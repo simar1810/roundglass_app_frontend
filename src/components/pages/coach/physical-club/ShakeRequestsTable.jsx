@@ -28,8 +28,9 @@ export default function ShakeRequestsTable({
           <TableRow>
             <TableHead>Sr No.</TableHead>
             <TableHead>Client Name</TableHead>
-            <TableHead>Request Date</TableHead>
-            <TableHead>Time</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Marked Date</TableHead>
+            <TableHead>Marked Time</TableHead>
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -39,7 +40,8 @@ export default function ShakeRequestsTable({
               <TableCell>{index + 1}</TableCell>
               <TableCell>{req.name}</TableCell>
               <TableCell>{format(req.date, "dd-MM-yyyy")}</TableCell>
-              <TableCell>{format(req.date, "HH:MM a")}</TableCell>
+              <TableCell>{format(req.markedAt, "dd-MM-yyyy")}</TableCell>
+              <TableCell>{format(req.markedAt, "h:mm a")}</TableCell>
               <TableCell className="flex justify-end gap-2">
                 {req.status === "requested" && (
                   <>
