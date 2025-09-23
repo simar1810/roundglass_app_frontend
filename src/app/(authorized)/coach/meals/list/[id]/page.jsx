@@ -11,6 +11,7 @@ import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 import useSWR from "swr";
 import { useAppSelector } from "@/providers/global/hooks";
+import AssignMealModal from "@/components/modals/Assignmealmodal";
 
 export default function Page() {
   const { id } = useParams()
@@ -25,7 +26,10 @@ export default function Page() {
   const selectedMeals = planData.meals[selectedIndex]?.meals || [];
 
   return <div className="content-container">
-    <h4 className="mb-8">{planData.name}</h4>
+    <div className="flex items-center gap-4 mb-8">
+      <h4>{planData.name}</h4>
+      <AssignMealModal type="normal" planId={planData._id} />
+    </div>
     <div className="flex items-center gap-4 pb-4">
       <MealTypesList
         setSelectedIndex={setSelectedIndex}

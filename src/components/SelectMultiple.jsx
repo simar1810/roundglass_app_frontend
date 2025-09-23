@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ChevronDown, X } from 'lucide-react';
+import useClickOutside from '@/hooks/useClickOutside';
+import { cn } from '@/lib/utils';
+
+const alignClasses = {
+  top: "bottom-[120%]",
+  bottom: "bottom-[100%]"
+}
 
 export default function SelectMultiple({
   label,
@@ -7,9 +14,14 @@ export default function SelectMultiple({
   value,
   onChange,
   className = '',
-  selectAll = false
+  selectAll = false,
+  align = "top"
 }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const dropdownRef = useRef();
+
+  useClickOutside(dropdownRef, () => setIsOpen(false))
 
   function toggleOption(selectedValue) {
     const newValue = value.includes(selectedValue)
@@ -27,7 +39,7 @@ export default function SelectMultiple({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div ref={dropdownRef} className={`relative ${className}`}>
       <div className="flex items-center justify-between">
         {/* <span className="label font-[600] block mb-1">{label || <>Select</>}</span> */}
       </div>
@@ -41,11 +53,24 @@ export default function SelectMultiple({
             : value.length ? value.slice(0, 4).join(', ') : 'Select options'}
         </span>
         <span className="text-sm text-nowrap">{value.length} selected</span>
-        <ChevronDown className="w-4 h-4 text-gray-500" />
+        {/* <ChevronDown className="w-4 h-4 text-gray-500" /> */}
+        {isOpen ? <X
+          className="hover:text-[var(--accent-2)] w-[20px] h-[20px] ml-2 opacity-50 hover:opacity-100 hover:scale-[1.1]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(false);
+          }}
+          strokeWidth={3}
+        /> : <div className='w-[30px] h-[20px]' />}
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 h-40 mt-1 w-full bg-white border border-[#D6D6D6] rounded-[8px] shadow-lg max-h-60 overflow-y-auto">
+        <div
+          className={cn(
+            "absolute z-10 h-40 mt-1 w-full bg-white border border-[#D6D6D6] rounded-[8px] shadow-lg max-h-60 overflow-y-auto",
+            alignClasses[align]
+          )}
+        >
           {selectAll && <label
             className="flex items-center px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
           >

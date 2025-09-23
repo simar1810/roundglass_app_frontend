@@ -51,7 +51,7 @@ export default function LinkGenerator({ withZoom, children }) {
       state={init(withZoom)}
       reducer={linkGeneratorReducer}
     >
-      <DialogContent className="!max-w-[450px] max-h-[70vh] text-center px-0 border-0 overflow-auto gap-0">
+      <DialogContent className="!max-w-[450px] max-h-[70vh] text-center p-0 border-0 overflow-auto gap-0">
         <MeetingGeneratorContainer withZoom={withZoom} />
       </DialogContent>
     </CurrentStateProvider>
@@ -96,10 +96,10 @@ function MeetingLink() {
   const { baseLink, view, wellnessZLink, copyToClipboard, dispatch } = useCurrentStateContext();
 
   return <>
-    <DialogHeader className="mb-4 pb-4 border-b-1">
-      <DialogTitle className="px-4">Meeting Link</DialogTitle>
+    <DialogHeader className="mb-4 border-b-1">
+      <DialogTitle className="p-4">Meeting Link</DialogTitle>
     </DialogHeader>
-    <div className="text-left px-4">
+    <div className="text-left p-4">
       <p className="text-[14px] leading-[1.6] text-left">Say goodbye to loong, complicated links and Say hello to custom WellnessZ integerated meeting links </p>
       <FormControl
         label="Meeting Link"
@@ -187,8 +187,8 @@ function MeetingForm({ withZoom }) {
   }
 
   return <>
-    <DialogHeader className="mb-4 pb-4 border-b-1">
-      <DialogTitle className="px-4">Meeting Details</DialogTitle>
+    <DialogHeader className="mb-4 border-b-1">
+      <DialogTitle className="p-4">Meeting Details</DialogTitle>
     </DialogHeader>
     <div className="text-left px-4">
       {fieldsToBeDisplayed.map(field => <SelectMeetingFormField
@@ -197,19 +197,19 @@ function MeetingForm({ withZoom }) {
         formData={state}
         dispatch={dispatch}
       />)}
-      <div className="flex gap-4">
-        <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
-        <Button
-          onClick={createMeeting}
-          variant="wz"
-          className="grow block mx-auto"
-          disabled={loading}
-        >
-          Create Meeting
-        </Button>
-      </div>
       <DialogClose ref={closeBtnRef} />
-    </div >
+    </div>
+    <div className="flex gap-4 p-4 sticky bottom-0 bg-white border-t-1">
+      <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
+      <Button
+        onClick={createMeeting}
+        variant="wz"
+        className="grow block mx-auto"
+        disabled={loading}
+      >
+        Create Meeting
+      </Button>
+    </div>
   </>
 }
 

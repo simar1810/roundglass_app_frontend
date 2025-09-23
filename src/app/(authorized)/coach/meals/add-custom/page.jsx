@@ -49,7 +49,7 @@ function CustomWorkoutContainer() {
           selectedPlans: plans,
           editPlans: editPlans,
           selectedPlan: Object.keys(plans)?.at(0),
-          selectedMealType: Object.values(plans)?.at(0)?.at(0).mealType,
+          selectedMealType: Object.values(plans)?.at(0)?.at(0)?.mealType,
           thumbnail: mealPlan.image,
           title: mealPlan.title,
           description: mealPlan.description,
