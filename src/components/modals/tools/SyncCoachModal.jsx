@@ -7,7 +7,11 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function SyncCoachModal({ coachId, defaultValue }) {
+export default function SyncCoachModal({
+  children,
+  coachId,
+  defaultValue
+}) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     status: defaultValue,
@@ -32,9 +36,10 @@ export default function SyncCoachModal({ coachId, defaultValue }) {
   }
 
   return <Dialog>
-    <DialogTrigger>
+    {children}
+    {!children && <DialogTrigger>
       <Badge variant="wz" className="hover:bg-[var(--accent-1)] hover:text-[var(--primary-1)]">Change Status</Badge>
-    </DialogTrigger>
+    </DialogTrigger>}
     <DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
       <DialogHeader className="py-4 px-6 border-b">
         <DialogTitle className="text-lg font-semibold">
