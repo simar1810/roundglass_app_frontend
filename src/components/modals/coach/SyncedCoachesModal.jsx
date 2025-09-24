@@ -31,7 +31,7 @@ export default function SyncedCoachesModal({ coachId }) {
   </Dialog>
 }
 
-function ClientsContainer({ coachId }) {
+export function ClientsContainer({ coachId }) {
   const { isLoading, error, data } = useSWR(`sync-coach/super/client${coachId}`, () => getSyncedCoachesClientList(coachId));
   if (isLoading) return <ContentLoader />
 
@@ -45,7 +45,11 @@ function ClientsContainer({ coachId }) {
   </div>
 }
 
-function SyncedCoachClientDetails({ client }) {
+export function SyncedCoachClientDetails({
+  children,
+  onUpdate,
+  client
+}) {
   const [formData, setFormData] = useState({ ...client, client_doc_id: client._id });
   const [loading, setLoading] = useState(false);
 
@@ -63,8 +67,11 @@ function SyncedCoachClientDetails({ client }) {
       const response = await sendData(`app/sync-coach/super/client`, data, "PUT");
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`sync-coach/super/client${client.coachId}`);
-      // closeBtnRef.current.click();
+      if (onUpdate) {
+        onUpdate()
+      } else {
+        mutate(`sync-coach/super/client${client.coachId}`);
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -73,7 +80,8 @@ function SyncedCoachClientDetails({ client }) {
   }
 
   return <Dialog>
-    <DialogTrigger>
+    {children}
+    {!children && <DialogTrigger>
       <div className="bg-[var(--comp-2)] border-1 rounded-[4px] mb-1 px-4 py-2 flex items-center gap-4">
         <Avatar className="w-[36px] h-[36px] !rounded-[8px]">
           <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
@@ -81,10 +89,10 @@ function SyncedCoachClientDetails({ client }) {
         </Avatar>
         <p className="text-[14px] font-semibold">{client.name}</p>
       </div>
-    </DialogTrigger>
+    </DialogTrigger>}
     <DialogContent className="!max-w-[850px] max-h-[70vh] overflow-y-auto w-full">
       <DialogHeader className="flex-row items-center gap-4">
-        <Avatar className="w-[64px] h-[64px] !rounded-[8px] !rounded-full border-1">
+        <Avatar className="w-[64px] h-[64px] !rounded-[8px] border-1">
           <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
           <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
         </Avatar>

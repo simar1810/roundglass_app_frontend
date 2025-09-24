@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { nameInitials } from "@/lib/formatter"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import FormControl from "@/components/FormControl"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -11,10 +11,12 @@ import { sendData } from "@/lib/api"
 import { toast } from "sonner"
 import { useAppSelector } from "@/providers/global/hooks"
 import ContentError from "@/components/common/ContentError"
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import { retrieveDownlineCoaches, retrieveDownlineRequests } from "@/lib/fetchers/app"
 import Link from "next/link"
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 
 export default function Page() {
   const { downline = {}, features } = useAppSelector(state => state.coach.data);
@@ -132,24 +134,27 @@ function CoachesList() {
   return <div className="bg-[var(--comp-1)] px-4 py-8 rounded-[8px] space-y-2 border-1">
     <h4 className="mb-4">Coaches under You {coaches.length}</h4>
     <div className="divide-y-1">
-      {coaches.map((coach, index) => <Link
+      {coaches.map((coach, index) => <div
         key={index}
-        href={`/coach/downline/coach/${coach._id}`}
         className="w-full flex items-center justify-between p-2 hover:bg-white [var(--comp-2)]"
       >
-        <div className="flex items-center gap-3">
-          <Avatar className="rounded-[8px] w-12 h-12 border-1">
-            <AvatarImage src={coach.profilePhoto} alt="Symond Write" />
-            <AvatarFallback className="rounded-[8px]">{nameInitials(coach.name)}</AvatarFallback>
-          </Avatar>
-          <span className="font-medium text-base">{coach.name}</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* <Badge className="bg-green-500 hover:bg-green-600">Active</Badge> */}
-          {/* <EllipsisVertical className="w-5 h-5 text-gray-500 cursor-pointer" /> */}
-        </div>
-      </Link>)}
+        <Link
+          href={`/coach/downline/coach/${coach._id}`}
+        >
+          <div className="flex items-center gap-3">
+            <Avatar className="rounded-[8px] w-12 h-12 border-1">
+              <AvatarImage src={coach.profilePhoto} alt="Symond Write" />
+              <AvatarFallback className="rounded-[8px]">{nameInitials(coach.name)}</AvatarFallback>
+            </Avatar>
+            <span className="font-medium text-base">{coach.name}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* <Badge className="bg-green-500 hover:bg-green-600">Active</Badge> */}
+            {/* <EllipsisVertical className="w-5 h-5 text-gray-500 cursor-pointer" /> */}
+          </div>
+        </Link>
+        <SyncCoachComponent coach={coach} />
+      </div>)}
     </div>
     {coaches.length === 0 && <div className="h-[150px] flex items-center justify-center">
       No coach under you!
@@ -209,4 +214,69 @@ function ActionOnRequest({
       {children}
     </AlertDialogTrigger>
   </DualOptionActionModal>
+}
+const syncStatus = { 1: "Requested", 2: "Synced", 3: "Unsync" }
+const syncBadgeVariant = { 1: "primary", 2: "wz_fill", 3: "destructive" }
+
+function SyncCoachComponent({ coach }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
+  if (!["Club Leader"].includes(clubType)) return <></>
+  return <div className="flex items-center gap-2">
+    {coach.super_coach && <Badge
+      variant={syncBadgeVariant[coach.super_coach?.status]}
+    >
+      {syncStatus[coach.super_coach?.status]}
+    </Badge>}
+    <SyncCoachModal coachId={coach._id} />
+  </div>
+  return <p className="text-xs font-bold">Already Synced</p>
+}
+
+function SyncCoachModal({ coachId }) {
+  const [loading, setLoading] = useState(false);
+
+  const closeBtnRef = useRef();
+
+  async function changeSyncStatus(status) {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/sync-coach/super`, { status, coachId });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button size="sm" variant="wz">Sync</Button>
+    </DialogTrigger>
+    <DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
+      <DialogHeader className="py-4 px-6 border-b">
+        <DialogTitle className="text-lg font-semibold">
+          Update The Club Sync Status
+        </DialogTitle>
+      </DialogHeader>
+      <div className="p-4">
+        <Button
+          onClick={() => changeSyncStatus(2)}
+          disabled={loading}
+          variant="wz"
+          className="mt-0 mr-4"
+        >Sync</Button>
+        <Button
+          onClick={() => changeSyncStatus(3)}
+          disabled={loading}
+          variant="destructive"
+          className="mt-0"
+        >Unsync</Button>
+        <DialogClose ref={closeBtnRef} />
+      </div>
+    </DialogContent>
+  </Dialog>
 }
