@@ -7,19 +7,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Upload, 
-  X, 
-  User, 
-  Soup, 
-  Newspaper, 
-  CircleDollarSign, 
-  Dumbbell, 
-  Store, 
-  Footprints, 
-  LayoutDashboard, 
-  Bot, 
-  FileText, 
+import {
+  Upload,
+  X,
+  User,
+  Soup,
+  Newspaper,
+  CircleDollarSign,
+  Dumbbell,
+  Store,
+  Footprints,
+  LayoutDashboard,
+  Bot,
+  FileText,
   FolderOpen,
   MessageCircle
 } from "lucide-react";
@@ -105,36 +105,36 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.userId || !formData.password) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    if (!selectedFile) {
-      toast.error("Image is required");
-      return;
-    }
+    // if (!selectedFile) {
+    //   toast.error("Image is required");
+    //   return;
+    // }
 
     try {
       setLoading(true);
-      
+
       const submitData = new FormData();
       submitData.append("name", formData.name);
       submitData.append("userId", formData.userId);
       submitData.append("password", formData.password);
       submitData.append("permissions", JSON.stringify(selectedPermissions));
-      submitData.append("file", selectedFile);
+      if (selectedFile) submitData.append("file", selectedFile);
 
       const response = await sendDataWithFormData("app/users", submitData, "POST");
-      
+
       if (response.status_code === 200) {
         if (selectedPermissions.length > 0) {
           try {
             if (response.data && response.data._id) {
-              const permissionsData = { 
-                id: response.data._id, 
-                permissions: selectedPermissions 
+              const permissionsData = {
+                id: response.data._id,
+                permissions: selectedPermissions
               };
               await sendData("app/users/permissions", permissionsData, "PUT");
             }
@@ -142,7 +142,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
             // Don't fail the entire request if permissions update fails
           }
         }
-        
+
         toast.success("User created successfully!");
         onSuccess();
         resetForm();
@@ -180,11 +180,11 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
           <DialogTitle className="text-xl font-semibold text-gray-900">Add New User</DialogTitle>
           <p className="text-sm text-gray-600 mt-1">Create a new user account with specific permissions</p>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Basic Information</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name *</Label>
@@ -237,7 +237,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="w-full">
               <div className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg mb-4">
                 {Object.keys(PERMISSION_CATEGORIES).map((category) => (
@@ -245,46 +245,43 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                     key={category}
                     type="button"
                     onClick={() => handleTabChange(category)}
-                    className={`text-xs font-medium py-2 px-3 rounded-md transition-all duration-200 ${
-                      activeTab === category
-                        ? 'bg-white shadow-sm text-gray-900'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`text-xs font-medium py-2 px-3 rounded-md transition-all duration-200 ${activeTab === category
+                      ? 'bg-white shadow-sm text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     {category}
                   </button>
                 ))}
               </div>
-              
+
               <div className="mt-4">
                 {Object.entries(PERMISSION_CATEGORIES).map(([category, permissionIds]) => (
-                  <div 
-                    key={category} 
+                  <div
+                    key={category}
                     className={`grid grid-cols-1 gap-3 ${activeTab === category ? 'block' : 'hidden'}`}
                   >
                     {permissionIds.map((permissionId) => {
                       const permission = AVAILABLE_PERMISSIONS.find(p => p.id === permissionId);
                       const IconComponent = permission.icon;
                       const isSelected = selectedPermissions.includes(permission.id);
-                      
+
                       return (
-                        <div 
-                          key={permission.id} 
-                          className={`relative flex items-center space-x-4 p-4 rounded-lg border-2 transition-all duration-200 ${
-                            isSelected 
-                              ? 'border-blue-200 bg-blue-50 shadow-sm' 
-                              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                          }`}
+                        <div
+                          key={permission.id}
+                          className={`relative flex items-center space-x-4 p-4 rounded-lg border-2 transition-all duration-200 ${isSelected
+                            ? 'border-blue-200 bg-blue-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                            }`}
                         >
-                          <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                            isSelected ? 'bg-blue-100' : 'bg-gray-100'
-                          }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${isSelected ? 'bg-blue-100' : 'bg-gray-100'
+                            }`}>
                             <IconComponent className={`w-5 h-5 ${permission.color}`} />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2">
-                              <Label 
+                              <Label
                                 htmlFor={`permission-${permission.id}`}
                                 className="text-sm font-semibold text-gray-900 cursor-pointer"
                               >
@@ -298,7 +295,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                               {permission.description}
                             </p>
                           </div>
-                          
+
                           <Checkbox
                             id={`permission-${permission.id}`}
                             checked={isSelected}
@@ -312,7 +309,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                 ))}
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <span>Select the features this user can access. Leave empty for no access.</span>
@@ -320,8 +317,8 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo *</h3>
-            
+            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo</h3>
+
             <div className="flex items-center space-x-4">
               {preview ? (
                 <div className="relative group">
@@ -345,7 +342,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                   <User className="h-8 w-8 text-gray-400" />
                 </div>
               )}
-              
+
               <div className="flex-1">
                 <input
                   type="file"
@@ -365,24 +362,24 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                   {preview ? 'Change Photo' : 'Upload Photo'}
                 </Button>
                 <p className="text-xs text-gray-500 mt-1">
-                  JPG, PNG up to 2MB (Required)
+                  JPG, PNG up to 2MB
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={handleClose}
               className="h-10 px-6"
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading}
               className="h-10 px-6 bg-blue-600 hover:bg-blue-700"
             >
