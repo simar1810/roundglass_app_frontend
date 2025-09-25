@@ -383,7 +383,7 @@ export function mealPlanCreationRP(state) {
     // _id: undefined,
     notes: undefined,
     image: undefined,
-    meals: state
+    meals: state.map(item => ({ mealType: item.mealType, meals: item.meals }))
   }
 }
 
