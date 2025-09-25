@@ -111,57 +111,43 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
       return;
     }
 
+    if (!selectedFile) {
+      toast.error("Image is required");
+      return;
+    }
+
     try {
       setLoading(true);
       
-      const userData = {
-        name: formData.name,
-        userId: formData.userId,
-        password: formData.password,
-        permissions: selectedPermissions
-      };
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("userId", formData.userId);
+      submitData.append("password", formData.password);
+      submitData.append("permissions", JSON.stringify(selectedPermissions));
+      submitData.append("file", selectedFile);
 
-      if (selectedFile) {
-        const submitData = new FormData();
-        submitData.append("name", formData.name);
-        submitData.append("userId", formData.userId);
-        submitData.append("password", formData.password);
-        submitData.append("permissions", JSON.stringify(selectedPermissions));
-        submitData.append("file", selectedFile);
-
-        const response = await sendDataWithFormData("app/users", submitData, "POST");
-        
-        if (response.status_code === 200) {
-          if (selectedPermissions.length > 0) {
-            try {
-              if (response.data && response.data._id) {
-                const permissionsData = { 
-                  id: response.data._id, 
-                  permissions: selectedPermissions 
-                };
-                await sendData("app/users/permissions", permissionsData, "PUT");
-              }
-            } catch (permissionsError) {
-              // Don't fail the entire request if permissions update fails
+      const response = await sendDataWithFormData("app/users", submitData, "POST");
+      
+      if (response.status_code === 200) {
+        if (selectedPermissions.length > 0) {
+          try {
+            if (response.data && response.data._id) {
+              const permissionsData = { 
+                id: response.data._id, 
+                permissions: selectedPermissions 
+              };
+              await sendData("app/users/permissions", permissionsData, "PUT");
             }
+          } catch (permissionsError) {
+            // Don't fail the entire request if permissions update fails
           }
-          
-          toast.success("User created successfully!");
-          onSuccess();
-          resetForm();
-        } else {
-          throw new Error(response.message || "Failed to create user");
         }
-      } else {
-        const response = await createUser(userData);
         
-        if (response.status_code === 200) {
-          toast.success("User created successfully!");
-          onSuccess();
-          resetForm();
-        } else {
-          throw new Error(response.message || "Failed to create user");
-        }
+        toast.success("User created successfully!");
+        onSuccess();
+        resetForm();
+      } else {
+        throw new Error(response.message || "Failed to create user");
       }
     } catch (error) {
       toast.error(error.message || "Failed to create user");
@@ -334,7 +320,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo</h3>
+            <h3 className="text-sm font-medium text-gray-900 border-b pb-2">Profile Photo *</h3>
             
             <div className="flex items-center space-x-4">
               {preview ? (
@@ -379,7 +365,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                   {preview ? 'Change Photo' : 'Upload Photo'}
                 </Button>
                 <p className="text-xs text-gray-500 mt-1">
-                  JPG, PNG up to 2MB
+                  JPG, PNG up to 2MB (Required)
                 </p>
               </div>
             </div>
