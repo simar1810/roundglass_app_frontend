@@ -31,12 +31,6 @@ const TreeVisualizer = ({ initialNode }) => {
 		if (!nodeId || expandedNodes.has(nodeId)) return;
 
 		try {
-			const token = Cookies.get("token");
-			if (!token) {
-				toast.error("Authentication token not found.");
-				return;
-			}
-
 			const response = await fetch(`/api/downline/${nodeId}`);
 			if (!response.ok) {
 				const errorData = await response.json();
@@ -53,9 +47,14 @@ const TreeVisualizer = ({ initialNode }) => {
 						const tooltipElement = document.createElement("div");
 						tooltipElement.innerHTML = `
                             <div style="padding: 5px; color: #333;">
-                                <p style="margin: 0;"><b>Name:</b> ${node.label}</p>
-                                <p style="margin: 0;"><b>Category:</b> ${node.categoryName}</p>
-                                <p style="margin: 0;"><b>ID:</b> ${node.coachId}</p>
+                                <p style="margin: 0;"><b>Name:</b> ${node.label
+							}</p>
+                                <p style="margin: 0;"><b>ID:</b> ${node.coachId
+							}</p>
+                                <p style="margin: 0;"><b>Email:</b> ${node.email
+							}</p>
+                                <p style="margin: 0;"><b>Clients:</b> ${node.totalClients || 0
+							}</p>
                             </div>
                         `;
 						return {
@@ -79,7 +78,6 @@ const TreeVisualizer = ({ initialNode }) => {
 				setExpandedNodes((prev) => new Set(prev).add(nodeId));
 			}
 		} catch (error) {
-			console.error("Failed to fetch downline:", error);
 			toast.error(error.message);
 		}
 	};
@@ -116,11 +114,10 @@ const TreeVisualizer = ({ initialNode }) => {
 		network?.on("click", (params) => {
 			if (params.nodes.length > 0) expandNode(params.nodes[0]);
 		});
-
 		if (initialNode && nodes.length === 0) {
 			const initialTooltipElement = document.createElement("div");
 			initialTooltipElement.innerHTML = initialNode.title;
-			const nodeToAdd = {
+			nodes.add({
 				...initialNode,
 				title: initialTooltipElement,
 				color: {
