@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { CheckCircle, X } from "lucide-react";
 import { CustomCalendar } from "@/components/common/CustomCalender";
 import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
-import { format } from "date-fns";
+import { endOfMonth, format, startOfMonth } from "date-fns";
 import Link from "next/link";
 
 export default function ManualAttendance({
@@ -24,7 +24,11 @@ export default function ManualAttendance({
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} />
     <div className="flex-1">
-      <AttendanceCalendar data={clients} setRange={setRange} />
+      <AttendanceCalendar
+        range={range}
+        data={data}
+        setRange={setRange}
+      />
       <AttendanceSummary data={data} clients={clients} />
     </div>
   </TabsContent>
@@ -100,12 +104,15 @@ export function AttendanceClients({ clients }) {
 
 export function AttendanceCalendar({
   data = [],
-  setRange
+  range,
+  setRange,
 }) {
-  const badgeData = dateWiseAttendanceSplit(data)
+  const clients = manualAttendanceWithRange(data, { from: startOfMonth(range.from), to: endOfMonth(range.from) })
+  const badgeData = dateWiseAttendanceSplit(clients)
   return (
     <div className="w-full">
       <CustomCalendar
+        range={range}
         badgeData={badgeData}
         onRangeSelect={setRange}
       />
@@ -116,6 +123,7 @@ export function AttendanceCalendar({
 export function AttendanceSummary({
   data = []
 }) {
+  return <></>
   const { absent, present, requested } = getPresentAbsent(data)
   return (
     <Card className="mt-4 p-4 gap-0 bg-[var(--comp-1)] shadow-none">
