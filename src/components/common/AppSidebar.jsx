@@ -43,14 +43,14 @@ import { isCoach, getUserType, getUserPermissions } from "@/lib/permissions";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
-  const { organisation, features } = useAppSelector((state) => state.coach.data);
+  const { organisation, features, clubType } = useAppSelector((state) => state.coach.data);
 
   let sidebarItems = sidebar__coachContent;
   if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13)
   // Wallet is now available for all organizations
   if (organisation !== "Herbalife") sidebarItems = sidebarItems.filter(item => item.id !== 7);
   if (!features.includes(4)) sidebarItems = sidebarItems.filter(item => item.id !== 6);
-  if (!features.includes(5)) sidebarItems = sidebarItems.filter(item => item.id !== 14);
+  if (!features.includes(5) && clubType !== "Club Leader") sidebarItems = sidebarItems.filter(item => item.id !== 14);
 
   // Filter sidebar items based on user permissions
   sidebarItems = sidebarItems.filter(item => {

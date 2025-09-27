@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
 import { useRouter } from "next/navigation";
-import { format24hr_12hr } from "@/lib/formatter";
+import { _throwError, format24hr_12hr } from "@/lib/formatter";
 
 export default function Stage2() {
   const [loading, setLoading] = useState(false);
@@ -23,19 +23,22 @@ export default function Stage2() {
   async function saveCustomWorkout() {
     try {
       for (const field of ["title", "description"]) {
-        if (!Boolean(state[field])) throw new Error(`${field} - for the meal plan is required!`);
+        if (!Boolean(state[field])) _throwError(`${field} - for the meal plan is required!`);
       }
 
       for (const day in state.selectedPlans) {
-        if (state.selectedPlans[day]?.length === 0) throw new Error(`There are no plans assigned for the day - ${day}!`)
+        if (state.selectedPlans[day]?.length === 0) _throwError(`There are no plans assigned for the day - ${day}!`)
         for (const mealType of state.selectedPlans[day]) {
-          if (mealType.meals.length === 0) throw new Error(`On ${day}, for ${mealType.mealType} at least one meal should be assigned!`);
+          if (
+            !mealType.meals ||
+            mealType.meals?.length === 0
+          ) _throwError(`On ${day}, for ${mealType.mealType || "First Meal Type"} at least one meal should be assigned!`);
           for (const meal of mealType.meals) {
             delete meal.isNew
             for (const field of ["time", "dish_name"]) {
-              if (!meal[field]) throw new Error(`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`)
+              if (!meal[field]) _throwError(`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`)
             }
-            if (!meal._id && !meal.mealId) throw new Error(`Please select a dish from the options`);
+            if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
             meal.meal_time = format24hr_12hr(meal.time)
           }          
         }
@@ -81,9 +84,9 @@ export default function Stage2() {
         }
         if (createdMealPlan.status_code !== 200) {
           toast.dismiss(toastId)
-          throw new Error(createdMealPlan.message)
+          _throwError(createdMealPlan.message)
         }
-        plans[key] = createdMealPlan?.data?.planId
+        plans[key] = createdMealPlan?.data?.planId || createdMealPlan?.data?._id;
         toast.dismiss(toastId);
       }
 
@@ -94,10 +97,11 @@ export default function Stage2() {
         ...formData,
         image: thumbnail?.img || state.thumbnail,
         plans: state.selectedPlans,
-        id: state.id
+        id: state.id,
+        planIds: plans
       }, "PUT");
       toast.dismiss(toastId);
-      if (response.status_code !== 200) throw new Error(response.message);
+      if (response.status_code !== 200) _throwError(response.message);
       toast.success(response.message);
       router.push(`/coach/meals/list-custom?mode=${state.mode}`)
     } catch (error) {
@@ -116,7 +120,7 @@ export default function Stage2() {
         const createdMealPlan = await sendData("app/create-custom-plan", mealPlanCreationRP(state.selectedPlans[key]))
         if (createdMealPlan.status_code !== 200) {
           toast.dismiss(toastId)
-          throw new Error(createdMealPlan.message)
+          _throwError(createdMealPlan.message)
         }
         plans[key] = createdMealPlan?.data?.planId
         toast.dismiss(toastId);
@@ -138,7 +142,7 @@ export default function Stage2() {
         plans
       });
       toast.dismiss(toastId);
-      if (response.status_code !== 200) throw new Error(response.message);
+      if (response.status_code !== 200) _throwError(response.message);
       cache.delete("custom-meal-plans");
       toast.success(response.message);
       router.push(`/coach/meals/list-custom?mode=${state.mode}`);

@@ -15,11 +15,12 @@ import Paginate from "@/components/Paginate";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pen } from "lucide-react";
+import { Eye, Pen } from "lucide-react";
 import FormControl from "@/components/FormControl";
 import { Button } from "@/components/ui/button";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
+import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
 
 const tabItems = [
   {
@@ -32,16 +33,16 @@ const tabItems = [
     title: "Clients",
     value: "clients"
   },
-  {
-    id: 3,
-    title: "Retail",
-    value: "retail"
-  },
-  {
-    id: 4,
-    title: "Plans",
-    value: "plans"
-  }
+  // {
+  //   id: 3,
+  //   title: "Retail",
+  //   value: "retail"
+  // },
+  // {
+  //   id: 4,
+  //   title: "Plans",
+  //   value: "plans"
+  // }
 ]
 
 export default function Page() {
@@ -197,7 +198,7 @@ function TabsClients({ clients = [] }) {
             setSearch(e.target.value)
             setPagination((prev) => ({ ...prev, page: 1 }))
           }}
-          className="max-w-sm"
+          className="max-w-sm bg-white"
         />
 
         <div className="bg-white rounded-md border">
@@ -224,11 +225,19 @@ function TabsClients({ clients = [] }) {
                   <TableCell>{client.mobileNumber || "-"}</TableCell>
                   <TableCell>{client.city || "-"}</TableCell>
                   <TableCell onClick={e => e.stopPropagation()}>
-                    <UpdateDetails
+                    {/* <UpdateDetails
                       actionType="UPDATE_CLIENT"
                       title="Client Details"
                       user={client}
-                    />
+                    /> */}
+                    <SyncedCoachClientDetails
+                      client={client}
+                      onUpdate={() => location.reload()}
+                    >
+                      <DialogTrigger>
+                        <Eye className="hover:text-[var(--accent-1)] opacity-50 hover:opacity-100" />
+                      </DialogTrigger>
+                    </SyncedCoachClientDetails>
                   </TableCell>
                 </TableRow>
               ))}

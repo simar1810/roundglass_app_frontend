@@ -31,7 +31,6 @@ export function manualAttendanceWithRange(data, range) {
   return data
     .map(client => {
       const attendanceMap = {};
-      console.log(client.attendance);
       (client?.attendance || []).forEach(att => {
         const marked = new Date(att.date);
         if (marked >= start && marked <= end) {
