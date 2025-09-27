@@ -11,14 +11,19 @@ const TreeVisualizer = ({ initialNode }) => {
 	const nodes = useRef(new DataSet()).current;
 	const edges = useRef(new DataSet()).current;
 	const [expandedNodes, setExpandedNodes] = useState(new Set());
-
+	console.log(initialNode);
 	const expandNode = async (nodeId) => {
 		if (!nodeId || expandedNodes.has(nodeId)) {
 			return;
 		}
-
 		try {
-			const response = await fetch(`/api/downline/${nodeId}`);
+			const response = await fetch(`http://localhost:8080/api/app/downline/visualizer/${nodeId}`, {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				}
+			});
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.message || "Failed to fetch downline data");
@@ -44,7 +49,7 @@ const TreeVisualizer = ({ initialNode }) => {
                             </div>
                         `;
 						function calcInit(node) {
-							if (node.label.split(" ").length == 1) {
+							if (node.label.split(" ").length === 1) {
 								return node.label.split(" ")[0][0];
 							} else {
 								return (
@@ -77,12 +82,11 @@ const TreeVisualizer = ({ initialNode }) => {
 	};
 
 	useEffect(() => {
-		const data = { nodes, edges };
-
+		const data = {nodes, edges};
 		const options = {
 			layout: {
 				hierarchical: {
-					direction: "DU",
+					direction: "UD",
 					sortMethod: "directed",
 					levelSeparation: 100,
 					nodeSpacing: 150,
@@ -90,19 +94,19 @@ const TreeVisualizer = ({ initialNode }) => {
 			},
 
 			physics: {
-				enabled: false,
+				enabled: true,
 			},
 			nodes: {
 				shape: "circle",
 				size: 25,
-				font: { size: 16, color: "#e0e0e0", face: "Arial" },
-				borderWidth: 2,
-				color: {
-					border: "#00aeff",
-					background: "#3c3c3c",
-					highlight: { border: "#ffffff", background: "#555555" },
-					hover: { border: "#ffffff", background: "#444444" },
-				},
+				font: { size: 14, color: "#ffffff", face: "Arial" },
+  				widthConstraint: { minimum: 80, maximum: 120 },
+  				color: {
+    				border: "#67BC2A",
+    				background: "#1e293b",
+    				highlight: { border: "#ffffff", background: "#334155" },
+    				hover: { border: "#ffffff", background: "#475569" },
+  				},
 			},
 			edges: {
 				width: 2,
