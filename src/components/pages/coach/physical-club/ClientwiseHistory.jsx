@@ -55,7 +55,7 @@ export function ClientwiseHistory({
   data
 }) {
   const now = new Date();
-  const days = getDaysInMonth(getMonth(now), getYear(now))
+  const days = getDaysInMonth(getYear(now), getMonth(now))
 
   const result = (clientWiseHistory(data) || [])
     .filter(client => new RegExp(query, "i").test(client?.clientName))
