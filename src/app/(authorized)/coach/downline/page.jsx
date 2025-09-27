@@ -1,33 +1,69 @@
-"use client"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { nameInitials } from "@/lib/formatter"
-import { useRef, useState } from "react"
-import FormControl from "@/components/FormControl"
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { sendData } from "@/lib/api"
-import { toast } from "sonner"
-import { useAppSelector } from "@/providers/global/hooks"
-import ContentError from "@/components/common/ContentError"
-import useSWR, { mutate } from "swr";
+"use client";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { nameInitials } from "@/lib/formatter";
+import { useState } from "react";
+import FormControl from "@/components/FormControl";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { sendData, fetchData } from "@/lib/api";
+import { toast } from "sonner";
+import { useAppSelector } from "@/providers/global/hooks";
+import ContentError from "@/components/common/ContentError";
+import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
-import { retrieveDownlineCoaches, retrieveDownlineRequests } from "@/lib/fetchers/app"
-import Link from "next/link"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
+import {
+	retrieveDownlineCoaches,
+	retrieveDownlineRequests,
+} from "@/lib/fetchers/app";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
+import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
+
+const categoriesFetcher = () =>
+	fetchData("app/coach-categories").then((res) => {
+		if (res.status_code !== 200) throw new Error(res.message);
+		return res.data;
+	});
 
 export default function Page() {
 	const { data: coachData } = useAppSelector((state) => state.coach);
 	const { downline = {}, features } = coachData;
 
-	// Check for downline feature
-	if (!features?.includes(3)) {
+	const {
+		data: categories,
+		error: categoriesError,
+		isLoading: categoriesLoading,
+		mutate: mutateCategories,
+	} = useSWR("coach-categories", categoriesFetcher);
+
+	const handleDeleteCategory = async (setLoading, closeBtnRef, categoryId) => {
+		setLoading(true);
+		try {
+			const response = await sendData(
+				`app/coach-categories/${categoryId}`,
+				{},
+				"DELETE"
+			);
+			if (response.status_code !== 200) throw new Error(response.message);
+			toast.success("Category deleted successfully.");
+			mutateCategories();
+			closeBtnRef.current.click();
+		} catch (err) {
+			toast.error(err.message || "Failed to delete category.");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	if (!features?.includes(5)) {
 		return <ContentError title="This feature isn't enabled for you" />;
 	}
 
-	// Handle case where downline is not yet started
 	if (!["requested", "in-downline"].includes(downline?.status)) {
 		return (
 			<div className="content-height-screen content-container flex items-center justify-center">
@@ -36,34 +72,32 @@ export default function Page() {
 		);
 	}
 
-	// Prepare the initial node data for the visualizer
 	const initialNodeData = {
 		id: coachData._id,
-		label:
-			coachData.name.split(" ")[0][0] + " " + coachData.name.split(" ")[1][0],
-		color: { background: "#f0a30a", border: "#e69138" },
-		font: { color: "white" },
+		label: nameInitials(coachData.name),
+		categoryName: coachData.coachCategory?.name || "Uncategorized",
 		title: `
-        <div style="padding: 5px; color: #333;">
-            <p style="margin: 0;"><b>Name:</b> ${coachData.name}</p>
-            <p style="margin: 0;"><b>ID:</b> ${coachData.coachId}</p>
-            <p style="margin: 0;"><b>Email:</b> ${coachData.email}</p>
-            <p style="margin: 0;"><b>Clients:</b> ${
-							coachData.totalClients || 0
-						}</p>
-        </div>
-    `,
+            <div style="padding: 5px; color: #333;">
+                <p style="margin: 0;"><b>Name:</b> ${coachData.name}</p>
+                <p style="margin: 0;"><b>Category:</b> ${
+									coachData.coachCategory?.name || "Uncategorized"
+								}</p>
+                <p style="margin: 0;"><b>ID:</b> ${coachData.coachId}</p>
+            </div>
+        `,
 	};
 
 	return (
 		<div className="content-container content-height-screen">
 			{downline.status === "requested" && <Invitations />}
-
 			{downline.status === "in-downline" && (
 				<Tabs defaultValue="list" className="w-full">
-					<TabsList className="grid w-full grid-cols-2 max-w-sm mx-auto mb-4">
+					<TabsList className="grid w-full max-w-md mx-auto mb-4 grid-cols-3">
 						<TabsTrigger value="list">List View</TabsTrigger>
 						<TabsTrigger value="visualizer">Visualizer</TabsTrigger>
+						<TabsTrigger value="manageCategories">
+							Manage Categories
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="list">
@@ -74,14 +108,112 @@ export default function Page() {
 					</TabsContent>
 
 					<TabsContent value="visualizer">
-						<Card>
+						<Card className="bg-gray-800 border-gray-700">
 							<CardContent className="p-4">
-								<h4 className="text-xl mb-4 text-center font-semibold">
+								<h4 className="text-xl mb-4 text-center font-semibold text-white">
 									Downline Visualizer
 								</h4>
 								<TreeVisualizer initialNode={initialNodeData} />
 							</CardContent>
 						</Card>
+					</TabsContent>
+
+					<TabsContent value="manageCategories">
+						{categoriesLoading && <ContentLoader />}
+						{categoriesError && (
+							<ContentError title={categoriesError.message} />
+						)}
+						{categories && (
+							<div className="space-y-6">
+								<div className="flex items-center justify-between">
+									<h2 className="text-3xl font-bold">Manage Your Categories</h2>
+									<ManageCategoryModal onSave={mutateCategories}>
+										<Button>
+											<PlusCircle className="mr-2 h-4 w-4" /> Create New
+											Category
+										</Button>
+									</ManageCategoryModal>
+								</div>
+								<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+									{categories.map((category) => (
+										<Card
+											key={category._id}
+											className="flex flex-col bg-white dark:bg-slate-800"
+										>
+											<CardHeader>
+												<CardTitle className="flex items-center justify-between">
+													{category.name}
+													<div className="flex items-center space-x-2">
+														<ManageCategoryModal
+															category={category}
+															onSave={mutateCategories}
+														>
+															<Button variant="ghost" size="icon">
+																<Edit className="h-4 w-4" />
+															</Button>
+														</ManageCategoryModal>
+														<DualOptionActionModal
+															title="Delete Category"
+															description={`Are you sure you want to delete the "${category.name}" category?`}
+															action={(setLoading, btnRef) =>
+																handleDeleteCategory(
+																	setLoading,
+																	btnRef,
+																	category._id
+																)
+															}
+														>
+															<AlertDialogTrigger asChild>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="text-red-500 hover:text-red-600"
+																>
+																	<Trash2 className="h-4 w-4" />
+																</Button>
+															</AlertDialogTrigger>
+														</DualOptionActionModal>
+													</div>
+												</CardTitle>
+											</CardHeader>
+											<CardContent className="flex-grow space-y-4">
+												<p className="text-sm text-gray-500 dark:text-gray-400">
+													{category.description}
+												</p>
+												<div>
+													<h4 className="font-semibold text-base">
+														Permissions:
+													</h4>
+													<ul className="list-disc pl-5 text-sm space-y-1 mt-2">
+														<li>
+															Club Access:{" "}
+															<b>{category.permissions.clubAccess}</b>
+														</li>
+														<li>
+															Category Creation:{" "}
+															<b>
+																{category.permissions.categoryCreationAccess}
+															</b>
+														</li>
+														<li>
+															Downline Management:{" "}
+															<b>
+																{category.permissions.downlineManagementAccess}
+															</b>
+														</li>
+													</ul>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+								{categories.length === 0 && (
+									<p className="text-center py-8 text-gray-500">
+										You haven't created any categories yet.
+									</p>
+								)}
+							</div>
+						)}
 					</TabsContent>
 				</Tabs>
 			)}
@@ -89,7 +221,7 @@ export default function Page() {
 	);
 }
 
-// All your original functions remain below
+// --- The functions below remain unchanged ---
 
 function Invitations() {
 	const { isLoading, error, data } = useSWR("app/downline", () =>
