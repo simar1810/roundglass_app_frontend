@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import { CustomCalendar } from "@/components/common/CustomCalender";
 import { ClientwiseHistory } from "@/components/pages/coach/physical-club/ClientwiseHistory";
 import ClubHistoryPage from "@/components/pages/coach/physical-club/ClubHistory";
 import DailyAttendancePage from "@/components/pages/coach/physical-club/DailyAttendance";
@@ -9,13 +10,14 @@ import QRCodeModal from "@/components/pages/coach/physical-club/QRCodeModal";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
 import { endOfDay, startOfDay } from "date-fns";
-import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink } from "lucide-react";
+import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink, CalendarRange } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -83,6 +85,7 @@ export default function Page() {
       <ToolsBar
         data={attendance} tab={tab}
         query={query} setQuery={setQuery}
+        range={range} setRange={setRange}
       />
       <ManualAttendance
         range={range} setRange={setRange}
@@ -129,7 +132,9 @@ function ToolsBar({
   data,
   tab,
   query,
-  setQuery
+  setQuery,
+  range,
+  setRange
 }) {
   async function downloadExcelSheet() {
     try {
@@ -139,13 +144,17 @@ function ToolsBar({
       toast.error(error.message || "Something went wrong!");
     }
   }
-  return <div className="flex items-center justify-between mb-4">
+  return <div className="flex items-center justify-between gap-4 mb-4">
     <Input
       placeholder="Search Client"
-      className="w-64"
+      className="w-64 mr-auto"
       value={query}
       onChange={e => setQuery(e.target.value)}
     />
+    {["shake-requests", "club-history"].includes(tab) && <SelectDateRange
+      range={range}
+      setRange={setRange}
+    />}
     <Button
       onClick={downloadExcelSheet}
       variant="wz"
@@ -154,4 +163,24 @@ function ToolsBar({
       <ExternalLink />
     </Button>
   </div>
+}
+
+function SelectDateRange({
+  range,
+  setRange
+}) {
+  return <Sheet>
+    <SheetTrigger>
+      <CalendarRange />
+    </SheetTrigger>
+    <SheetContent align="start" className="!max-w-[600px] !w-[600px]">
+      <SheetTitle className="text-[28px] p-4 border-b-1">Date Range</SheetTitle>
+      <div className="p-4">
+        <CustomCalendar
+          range={range}
+          onRangeSelect={setRange}
+        />
+      </div>
+    </SheetContent>
+  </Sheet>
 }

@@ -91,9 +91,10 @@ function TableRow({
 
 export default function ClubHistoryPage({
   query,
+  range,
   data
 }) {
-  const clients = clubHistory(data || [])
+  const clients = clubHistory(data || [], range)
     .filter(client => new RegExp(query, "i").test(client?.clientName))
   return (
     <TabsContent value="club-history">
