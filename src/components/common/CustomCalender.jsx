@@ -26,6 +26,7 @@ const MONTHS = [
 export function CustomCalendar({
   badgeData = {},
   className,
+  range,
   onRangeSelect
 }) {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 8, 16))
@@ -38,7 +39,7 @@ export function CustomCalendar({
   const firstDayOfWeek = firstDayOfMonth.getDay()
   const daysInMonth = lastDayOfMonth.getDate()
 
-  const [selectedRange, setSelectedRange] = useState({ from: null, to: null })
+  const [selectedRange, setSelectedRange] = useState({ from: range.from || null, to: range.to || null })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState(null)
   const [dragEnd, setDragEnd] = useState(null)

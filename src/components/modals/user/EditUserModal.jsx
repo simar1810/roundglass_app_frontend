@@ -55,7 +55,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.userId) {
       toast.error("Please fill in all required fields");
       return;
@@ -63,22 +63,22 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
 
     try {
       setLoading(true);
-      
+
       const submitData = new FormData();
       submitData.append("id", user._id);
       submitData.append("name", formData.name);
       submitData.append("userId", formData.userId);
-      
+
       if (formData.password) {
         submitData.append("password", formData.password);
       }
-      
+
       if (selectedFile) {
         submitData.append("file", selectedFile);
       }
 
-      const response = await sendDataWithFormData("app/users", submitData, "PUT");
-      
+      const response = await sendDataWithFormData("app/users?person=coach", submitData, "PUT");
+
       if (response.status_code === 200) {
         toast.success("User updated successfully!");
         onSuccess();
@@ -114,7 +114,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
@@ -202,8 +202,8 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading}
               className="bg-[var(--accent-1)] hover:bg-[var(--accent-1)]/90"
             >

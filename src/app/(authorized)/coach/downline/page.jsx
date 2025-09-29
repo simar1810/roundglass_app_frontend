@@ -405,30 +405,95 @@ function StartDownline() {
 	);
 }
 
-function ActionOnRequest({ children, actionType, coachId }) {
-	async function actionOnRequest(setLoading) {
-		try {
-			setLoading(true);
-			const response = await sendData(
-				"app/downline/requests",
-				{ actionType, coachId },
-				"PATCH"
-			);
-			if (response.status_code !== 200) throw new Error(response.message);
-			toast.success(response.message);
-			location.reload();
-		} catch (error) {
-			toast.error(error.message);
-		} finally {
-			setLoading(false);
-		}
-	}
+function ActionOnRequest({
+  children,
+  actionType,
+  coachId
+}) {
+  async function actionOnRequest(setLoading) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/downline/requests", { actionType, coachId }, "PATCH");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-	return (
-		<DualOptionActionModal
-			action={(setLoading, btnRef) => actionOnRequest(setLoading, btnRef)}
-		>
-			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-		</DualOptionActionModal>
-	);
+  return <DualOptionActionModal
+    action={(setLoading, btnRef) => actionOnRequest(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      {children}
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+const syncStatus = { 1: "Requested", 2: "Synced", 3: "Unsync" }
+const syncBadgeVariant = { 1: "primary", 2: "wz_fill", 3: "destructive" }
+
+function SyncCoachComponent({ coach }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
+  if (!["Club Leader"].includes(clubType)) return <></>
+  return <div className="flex items-center gap-2">
+    {coach.super_coach && <Badge
+      variant={syncBadgeVariant[coach.super_coach?.status]}
+    >
+      {syncStatus[coach.super_coach?.status]}
+    </Badge>}
+    <SyncCoachModal coachId={coach._id} />
+  </div>
+  return <p className="text-xs font-bold">Already Synced</p>
+}
+
+function SyncCoachModal({ coachId }) {
+  const [loading, setLoading] = useState(false);
+
+  const closeBtnRef = useRef();
+
+  async function changeSyncStatus(status) {
+    try {
+      setLoading(true);
+      const response = await sendData(`app/sync-coach/super`, { status, coachId });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button size="sm" variant="wz">Sync</Button>
+    </DialogTrigger>
+    <DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
+      <DialogHeader className="py-4 px-6 border-b">
+        <DialogTitle className="text-lg font-semibold">
+          Update The Club Sync Status
+        </DialogTitle>
+      </DialogHeader>
+      <div className="p-4">
+        <Button
+          onClick={() => changeSyncStatus(2)}
+          disabled={loading}
+          variant="wz"
+          className="mt-0 mr-4"
+        >Sync</Button>
+        <Button
+          onClick={() => changeSyncStatus(3)}
+          disabled={loading}
+          variant="destructive"
+          className="mt-0"
+        >Unsync</Button>
+        <DialogClose ref={closeBtnRef} />
+      </div>
+    </DialogContent>
+  </Dialog>
 }

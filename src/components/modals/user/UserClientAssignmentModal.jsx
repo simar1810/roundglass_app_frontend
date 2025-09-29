@@ -8,18 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Search, 
-  Users, 
-  UserPlus, 
-  UserMinus, 
+import {
+  Search,
+  Users,
+  UserPlus,
+  UserMinus,
   X,
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  getAvailableClients, 
-  getUserClients, 
+import {
+  getAvailableClients,
+  getUserClients,
   assignClientsToUser,
   addClientToUser,
   removeClientFromUser
@@ -104,7 +104,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
       setLoading(true);
       const clientIds = selectedClients.map(client => client._id);
       const response = await assignClientsToUser(user._id, clientIds);
-      
+
       if (response.status_code === 200) {
         toast.success(`Successfully assigned ${selectedClients.length} client(s) to ${user.name}`);
         setSelectedClients([]);
@@ -125,7 +125,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
     try {
       setLoading(true);
       const response = await removeClientFromUser(user._id, client._id);
-      
+
       if (response.status_code === 200) {
         toast.success(`Removed ${client.name} from ${user.name}`);
         fetchUserClients();
@@ -150,7 +150,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+      <DialogContent className="!max-w-[800px] w-full h-[90vh] flex flex-col">
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Manage Clients for {user?.name}
@@ -188,31 +188,30 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                     {availableClients.map((client) => {
                       const isAssigned = userClients.some(uc => uc._id === client._id);
                       const isSelected = selectedClients.some(sc => sc._id === client._id);
-                      
+
                       return (
-                        <div
+                        <label
                           key={client._id}
-                          className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
-                            isAssigned 
-                              ? 'bg-gray-50 border-gray-200 opacity-60' 
-                              : isSelected 
-                                ? 'bg-blue-50 border-blue-200' 
-                                : 'bg-white border-gray-200 hover:border-gray-300'
-                          }`}
+                          className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer ${isAssigned
+                            ? 'bg-gray-50 border-gray-200 opacity-60'
+                            : isSelected
+                              ? 'bg-blue-50 border-blue-200'
+                              : 'bg-white border-gray-200 hover:border-gray-300'
+                            }`}
                         >
                           <Checkbox
                             checked={isSelected}
                             disabled={isAssigned}
                             onCheckedChange={() => handleClientSelect(client)}
                           />
-                          
+
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={client.profilePhoto} />
                             <AvatarFallback>
                               {client.name?.charAt(0)?.toUpperCase() || 'C'}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {client.name}
@@ -221,16 +220,16 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                               {client.email || client.mobileNumber || client.clientId}
                             </p>
                           </div>
-                          
+
                           {isAssigned && (
                             <Badge variant="secondary" className="text-xs">
                               Assigned
                             </Badge>
                           )}
-                        </div>
+                        </label>
                       );
                     })}
-                    
+
                     {availableClients.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -267,7 +266,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                           {client.name?.charAt(0)?.toUpperCase() || 'C'}
                         </AvatarFallback>
                       </Avatar>
-                      
+
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {client.name}
@@ -276,7 +275,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                           {client.email || client.mobileNumber || client.clientId}
                         </p>
                       </div>
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -288,7 +287,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                       </Button>
                     </div>
                   ))}
-                  
+
                   {userClients.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -307,16 +306,16 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
               <span>{selectedClients.length} client(s) selected for assignment</span>
             )}
           </div>
-          
+
           <div className="flex space-x-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleClose}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleAssignClients}
               disabled={loading || selectedClients.length === 0}
               className="bg-blue-600 hover:bg-blue-700"

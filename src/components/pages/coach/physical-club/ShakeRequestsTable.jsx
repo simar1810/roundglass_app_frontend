@@ -11,16 +11,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
 import { shakeRequests } from "@/lib/physical-attendance";
-import { format } from "date-fns";
+import { endOfDay, format, isAfter, isBefore, startOfDay } from "date-fns";
 import ChangeClientAttendanceStatus from "./ChangeClientAttendanceStatus";
 
 export default function ShakeRequestsTable({
+  range: { from, to },
   query,
   data = []
 }) {
   const filteredRequests = shakeRequests(data)
     .filter(client => new RegExp(query, "i").test(client?.name))
-
+    .filter(item =>
+      isBefore(item.date, endOfDay(to)) &&
+      isAfter(item.date, startOfDay(from))
+    )
   return (
     <TabsContent value="shake-requests" className="bg-[var(--comp-1)] border-1 space-y-4">
       <Table>

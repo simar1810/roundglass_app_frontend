@@ -31,7 +31,6 @@ export function manualAttendanceWithRange(data, range) {
   return data
     .map(client => {
       const attendanceMap = {};
-      console.log(client.attendance);
       (client?.attendance || []).forEach(att => {
         const marked = new Date(att.date);
         if (marked >= start && marked <= end) {
@@ -119,17 +118,23 @@ export function clientWiseHistory(data, year = 2025, month = 8) {
 }
 
 
-export function clubHistory(clients) {
+export function clubHistory(clients, { from, to } = {}) {
   return clients.map((record, index) => {
     const { client, attendance, membership } = record;
-    const presentDays = attendance
+
+    const filteredAttendance = attendance.filter(item =>
+      isBefore(item.date, endOfDay(to)) &&
+      isAfter(item.date, startOfDay(from))
+    )
+
+    const presentDays = filteredAttendance
       .filter(a => a.status === "present")
       .length;
-    const absentDays = attendance
+    const absentDays = filteredAttendance
       .filter(a => a.status === "absent")
       .length;
 
-    const totalConsidered = presentDays + absentDays;
+    const totalConsidered = Math.abs(differenceInCalendarDays(from, to)) + 1;
     const showupPercentage =
       totalConsidered > 0
         ? ((presentDays / totalConsidered) * 100).toFixed(1)
