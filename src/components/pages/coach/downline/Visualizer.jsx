@@ -124,7 +124,7 @@ const TreeVisualizer = ({ initialNode }) => {
 					...initialNode.color,
 					border: colorFromString(initialNode.categoryName),
 				},
-			};
+			});
 			nodes.add(nodeToAdd);
 		}
 
