@@ -216,7 +216,7 @@ function ScheduleNotification({
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] max-h-[65vh] border-0 p-0 overflow-auto">
       <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] ml-5">
-        {defaultPayload._id ? "Update Notification" : "Schedule Notification"}
+        {defaultPayload._id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
       <div className="px-4 pb-8">
         <div className="relative mb-4">
