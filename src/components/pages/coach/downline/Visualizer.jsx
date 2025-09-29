@@ -140,7 +140,12 @@ const TreeVisualizer = ({ initialNode }) => {
 			nodes.add({
 				...initialNode,
 				title: initialTooltipElement,
+				color: {
+					...initialNode.color,
+					border: colorFromString(initialNode.categoryName),
+				},
 			});
+			// nodes.add(nodeToAdd);
 		}
 
 		return () => {

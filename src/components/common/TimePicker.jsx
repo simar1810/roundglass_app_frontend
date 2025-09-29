@@ -18,7 +18,7 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
   const closeRef = useRef();
 
   const handleSetTime = () => {
-    if (!hour || !minute) return
+    if (isNaN(hour) || isNaN(minute)) return
     let h = parseInt(hour, 10)
     const m = parseInt(minute, 10)
 
