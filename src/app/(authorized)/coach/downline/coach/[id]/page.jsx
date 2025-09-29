@@ -169,8 +169,6 @@ function TabsClients({ clients = [] }) {
   const [search, setSearch] = useState("")
   const [pagination, setPagination] = useState({ page: 1, limit: 10 })
 
-  const router = useRouter();
-
   const filteredClients = useMemo(() => {
     return clients.filter(
       (c) =>
@@ -214,11 +212,7 @@ function TabsClients({ clients = [] }) {
             </TableHeader>
             <TableBody>
               {paginatedClients.map((client) => (
-                <TableRow
-                  key={client._id}
-                  onClick={() => router.push(`/coach/downline/client/${client._id}`)}
-                  className="cursor-pointer"
-                >
+                <TableRow key={client._id}>
                   <TableCell className="font-medium">{client.name}</TableCell>
                   <TableCell>{client.clientId}</TableCell>
                   <TableCell>{client.email || "-"}</TableCell>
