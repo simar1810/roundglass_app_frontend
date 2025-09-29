@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +23,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const categoriesFetcher = () =>
 	fetchData("app/coach-categories").then((res) => {
@@ -79,9 +81,8 @@ export default function Page() {
 		title: `
             <div style="padding: 5px; color: #333;">
                 <p style="margin: 0;"><b>Name:</b> ${coachData.name}</p>
-                <p style="margin: 0;"><b>Category:</b> ${
-									coachData.coachCategory?.name || "Uncategorized"
-								}</p>
+                <p style="margin: 0;"><b>Category:</b> ${coachData.coachCategory?.name || "Uncategorized"
+			}</p>
                 <p style="margin: 0;"><b>ID:</b> ${coachData.coachId}</p>
             </div>
         `,
@@ -350,11 +351,13 @@ function CoachesList() {
 		<div className="bg-[var(--comp-1)] px-4 py-8 rounded-[8px] space-y-2 border-1">
 			<h4 className="mb-4">Coaches under You {coaches.length}</h4>
 			<div className="divide-y-1">
-				{coaches.map((coach, index) => (
+				{coaches.map((coach, index) => (<div
+					key={index}
+					className="flex items-center justify-between hover:bg-white pr-4"
+				>
 					<Link
-						key={index}
 						href={`/coach/downline/coach/${coach._id}`}
-						className="w-full flex items-center justify-between p-2 hover:bg-white [var(--comp-2)]"
+						className="w-full flex items-center justify-between p-2"
 					>
 						<div className="flex items-center gap-3">
 							<Avatar className="rounded-[8px] w-12 h-12 border-1">
@@ -363,10 +366,11 @@ function CoachesList() {
 									{nameInitials(coach.name)}
 								</AvatarFallback>
 							</Avatar>
-							<span className="font-medium text-base">{coach.name}</span>
+							<div className="font-medium text-base grow">{coach.name}</div>
 						</div>
 					</Link>
-				))}
+					<SyncCoachComponent coach={coach} />
+				</div>))}
 			</div>
 			{coaches.length === 0 && (
 				<div className="h-[150px] flex items-center justify-center">
@@ -406,94 +410,93 @@ function StartDownline() {
 }
 
 function ActionOnRequest({
-  children,
-  actionType,
-  coachId
+	children,
+	actionType,
+	coachId
 }) {
-  async function actionOnRequest(setLoading) {
-    try {
-      setLoading(true);
-      const response = await sendData("app/downline/requests", { actionType, coachId }, "PATCH");
-      if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
-      location.reload()
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+	async function actionOnRequest(setLoading) {
+		try {
+			setLoading(true);
+			const response = await sendData("app/downline/requests", { actionType, coachId }, "PATCH");
+			if (response.status_code !== 200) throw new Error(response.message);
+			toast.success(response.message);
+			location.reload()
+		} catch (error) {
+			toast.error(error.message);
+		} finally {
+			setLoading(false);
+		}
+	}
 
-  return <DualOptionActionModal
-    action={(setLoading, btnRef) => actionOnRequest(setLoading, btnRef)}
-  >
-    <AlertDialogTrigger asChild>
-      {children}
-    </AlertDialogTrigger>
-  </DualOptionActionModal>
+	return <DualOptionActionModal
+		action={(setLoading, btnRef) => actionOnRequest(setLoading, btnRef)}
+	>
+		<AlertDialogTrigger asChild>
+			{children}
+		</AlertDialogTrigger>
+	</DualOptionActionModal>
 }
 const syncStatus = { 1: "Requested", 2: "Synced", 3: "Unsync" }
 const syncBadgeVariant = { 1: "primary", 2: "wz_fill", 3: "destructive" }
 
 function SyncCoachComponent({ coach }) {
-  const { clubType } = useAppSelector(state => state.coach.data)
-  if (!["Club Leader"].includes(clubType)) return <></>
-  return <div className="flex items-center gap-2">
-    {coach.super_coach && <Badge
-      variant={syncBadgeVariant[coach.super_coach?.status]}
-    >
-      {syncStatus[coach.super_coach?.status]}
-    </Badge>}
-    <SyncCoachModal coachId={coach._id} />
-  </div>
-  return <p className="text-xs font-bold">Already Synced</p>
+	const { clubType } = useAppSelector(state => state.coach.data)
+	if (!["Club Leader", "System Leader"].includes(clubType)) return <></>
+	return <div className="ml-auto flex items-center gap-2">
+		{coach.super_coach && <Badge
+			variant={syncBadgeVariant[coach.super_coach?.status]}
+		>
+			{syncStatus[coach.super_coach?.status]}
+		</Badge>}
+		<SyncCoachModal coachId={coach._id} />
+	</div>
 }
 
 function SyncCoachModal({ coachId }) {
-  const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-  const closeBtnRef = useRef();
+	const closeBtnRef = useRef();
 
-  async function changeSyncStatus(status) {
-    try {
-      setLoading(true);
-      const response = await sendData(`app/sync-coach/super`, { status, coachId });
-      if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
-      location.reload()
-      closeBtnRef.current.click();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+	async function changeSyncStatus(status) {
+		try {
+			setLoading(true);
+			const response = await sendData(`app/sync-coach/super`, { status, coachId });
+			if (response.status_code !== 200) throw new Error(response.message);
+			toast.success(response.message);
+			location.reload()
+			closeBtnRef.current.click();
+		} catch (error) {
+			toast.error(error.message);
+		} finally {
+			setLoading(false);
+		}
+	}
 
-  return <Dialog>
-    <DialogTrigger asChild>
-      <Button size="sm" variant="wz">Sync</Button>
-    </DialogTrigger>
-    <DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
-      <DialogHeader className="py-4 px-6 border-b">
-        <DialogTitle className="text-lg font-semibold">
-          Update The Club Sync Status
-        </DialogTitle>
-      </DialogHeader>
-      <div className="p-4">
-        <Button
-          onClick={() => changeSyncStatus(2)}
-          disabled={loading}
-          variant="wz"
-          className="mt-0 mr-4"
-        >Sync</Button>
-        <Button
-          onClick={() => changeSyncStatus(3)}
-          disabled={loading}
-          variant="destructive"
-          className="mt-0"
-        >Unsync</Button>
-        <DialogClose ref={closeBtnRef} />
-      </div>
-    </DialogContent>
-  </Dialog>
+	return <Dialog>
+		<DialogTrigger asChild>
+			<Button size="sm" variant="wz">Sync</Button>
+		</DialogTrigger>
+		<DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
+			<DialogHeader className="py-4 px-6 border-b">
+				<DialogTitle className="text-lg font-semibold">
+					Update The Club Sync Status
+				</DialogTitle>
+			</DialogHeader>
+			<div className="p-4">
+				<Button
+					onClick={() => changeSyncStatus(2)}
+					disabled={loading}
+					variant="wz"
+					className="mt-0 mr-4"
+				>Sync</Button>
+				<Button
+					onClick={() => changeSyncStatus(3)}
+					disabled={loading}
+					variant="destructive"
+					className="mt-0"
+				>Unsync</Button>
+				<DialogClose ref={closeBtnRef} />
+			</div>
+		</DialogContent>
+	</Dialog>
 }
