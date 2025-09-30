@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
+import { useAppSelector } from "@/providers/global/hooks";
 
 const tabItems = [
   {
@@ -166,6 +167,7 @@ function TabsProfile({ profile }) {
 }
 
 function TabsClients({ clients = [] }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
   const [search, setSearch] = useState("")
   const [pagination, setPagination] = useState({ page: 1, limit: 10 })
 
@@ -218,12 +220,7 @@ function TabsClients({ clients = [] }) {
                   <TableCell>{client.email || "-"}</TableCell>
                   <TableCell>{client.mobileNumber || "-"}</TableCell>
                   <TableCell>{client.city || "-"}</TableCell>
-                  <TableCell onClick={e => e.stopPropagation()}>
-                    {/* <UpdateDetails
-                      actionType="UPDATE_CLIENT"
-                      title="Client Details"
-                      user={client}
-                    /> */}
+                  {["Club Leader", "Club Leader Jr"].includes(clubType) && <TableCell onClick={e => e.stopPropagation()}>
                     <SyncedCoachClientDetails
                       client={client}
                       onUpdate={() => location.reload()}
@@ -232,7 +229,7 @@ function TabsClients({ clients = [] }) {
                         <Eye className="hover:text-[var(--accent-1)] opacity-50 hover:opacity-100" />
                       </DialogTrigger>
                     </SyncedCoachClientDetails>
-                  </TableCell>
+                  </TableCell>}
                 </TableRow>
               ))}
               {paginatedClients.length === 0 && (
@@ -402,6 +399,7 @@ export function UpdateDetails({
   title,
   user
 }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
     actionType,
@@ -427,6 +425,8 @@ export function UpdateDetails({
       setLoading(false);
     }
   }
+
+  if (!["Club Leader", "Club Leader Jr"].includes(clubType)) return <></>
 
   return <Dialog>
     <DialogTrigger className=" self-start">
