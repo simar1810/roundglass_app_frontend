@@ -130,9 +130,7 @@ export default function RewardsDashboard() {
         category: rewardFormData.category,
         isActive: rewardFormData.isActive,
       };
-
-      const response = await sendData("app/rewards/catalog", payload);
-
+      const response = await sendData("app/rewards/catalog", payload);  
       if (response.status_code === 200) {
         toast.success("Reward created successfully");
         setIsRewardDialogOpen(false);
