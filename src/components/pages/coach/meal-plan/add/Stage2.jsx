@@ -40,7 +40,7 @@ export default function Stage2() {
             }
             if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
             meal.meal_time = format24hr_12hr(meal.time)
-          }
+          }          
         }
       }
 
@@ -103,7 +103,7 @@ export default function Stage2() {
       toast.dismiss(toastId);
       if (response.status_code !== 200) _throwError(response.message);
       toast.success(response.message);
-      window.location.href = (`/coach/meals/list-custom?mode=${state.mode}`)
+      router.push(`/coach/meals/list-custom?mode=${state.mode}`)
     } catch (error) {
       toast.error(error.message || "Something went wrong!");
     } finally {
