@@ -34,7 +34,7 @@ const categoriesFetcher = () =>
 
 export default function Page() {
 	const { data: coachData } = useAppSelector((state) => state.coach);
-	const { downline = {}, features } = coachData;
+	const { downline = {}, features, clunType } = coachData;
 
 	const {
 		data: categories,
@@ -62,7 +62,7 @@ export default function Page() {
 		}
 	};
 
-	if (!features?.includes(5)) {
+	if (!features?.includes(5) && ["Club Leader", "Club Leader Jr", "Club Captain"].includes(clunType)) {
 		return <ContentError title="This feature isn't enabled for you" />;
 	}
 

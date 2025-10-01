@@ -36,6 +36,7 @@ export default function ManualAttendance({
 }
 
 export function AttendanceClients({ clients }) {
+  // console.log(clients)
   return (
     <div className="flex-1 space-y-2 bg-[var(--comp-1)] border-1 p-2 rounded-[8px]">
       <div className="mb-4 text-lg font-semibold">
@@ -107,7 +108,11 @@ export function AttendanceCalendar({
   range,
   setRange,
 }) {
-  const clients = manualAttendanceWithRange(data, { from: startOfMonth(range.from), to: endOfMonth(range.from) })
+  const clients = manualAttendanceWithRange(data, {
+    from: startOfMonth(range.from),
+    to: endOfMonth(range.from)
+  })
+
   const badgeData = dateWiseAttendanceSplit(clients)
   return (
     <div className="w-full">

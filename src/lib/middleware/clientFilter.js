@@ -4,35 +4,34 @@ export function withClientFilter(originalFetcher) {
   return async function filteredFetcher(...args) {
     try {
       const userType = getUserType();
-      
+
       if (userType === "coach") {
         return await originalFetcher(...args);
       }
-      
+
       if (userType === "user") {
         // Get assigned client IDs from cookies
         const clientIdsCookie = document.cookie
           .split('; ')
           .find(row => row.startsWith('userClientIds='))
           ?.split('=')[1];
-        
+
         let assignedClientIds = [];
-        
+
         if (clientIdsCookie) {
           try {
             const decodedCookie = decodeURIComponent(clientIdsCookie);
             assignedClientIds = JSON.parse(decodedCookie);
-                        if (Array.isArray(assignedClientIds)) {
+            if (Array.isArray(assignedClientIds)) {
               assignedClientIds = assignedClientIds.map(id => String(id));
             } else {
               assignedClientIds = [];
             }
           } catch (error) {
-            console.warn('Failed to parse userClientIds cookie:', error);
             assignedClientIds = [];
           }
         }
-        
+
         // If no assigned clients, return empty data
         if (assignedClientIds.length === 0) {
           const response = await originalFetcher(...args);
@@ -49,9 +48,9 @@ export function withClientFilter(originalFetcher) {
           }
           return response;
         }
-        
+
         const response = await originalFetcher(...args);
-        
+
         if (response && response.status_code === 200 && response.data) {
           try {
             const filterClients = (clients) => {
@@ -61,7 +60,7 @@ export function withClientFilter(originalFetcher) {
                 return assignedClientIds.includes(clientId);
               });
             };
-            
+
             if (Array.isArray(response.data)) {
               response.data = filterClients(response.data);
             } else {
@@ -69,26 +68,24 @@ export function withClientFilter(originalFetcher) {
               if (response.data.clients) {
                 response.data.clients = filterClients(response.data.clients);
               }
-              
+
               if (response.data.assignedClients) {
                 response.data.assignedClients = filterClients(response.data.assignedClients);
               }
-              
+
               if (response.data.notAssignedClients) {
                 response.data.notAssignedClients = filterClients(response.data.notAssignedClients);
               }
-              
+
               if (response.data.unassignedClients) {
                 response.data.unassignedClients = filterClients(response.data.unassignedClients);
               }
-              
+
               if (response.data.assignedToOtherPlans) {
                 response.data.assignedToOtherPlans = filterClients(response.data.assignedToOtherPlans);
               }
             }
           } catch (error) {
-            console.warn('Error filtering client data:', error);
-            // Return empty arrays on error
             if (Array.isArray(response.data)) {
               response.data = [];
             } else {
@@ -100,14 +97,13 @@ export function withClientFilter(originalFetcher) {
             }
           }
         }
-        
+
         return response;
       }
-      
+
       // Default case - no filtering
       return await originalFetcher(...args);
     } catch (error) {
-      console.error('Error in client filtering middleware:', error);
       return {
         status_code: 500,
         message: "Error in client filtering",

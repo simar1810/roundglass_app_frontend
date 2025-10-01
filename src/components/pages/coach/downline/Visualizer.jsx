@@ -12,19 +12,12 @@ const TreeVisualizer = ({ initialNode }) => {
 	const nodes = useRef(new DataSet()).current;
 	const edges = useRef(new DataSet()).current;
 	const [expandedNodes, setExpandedNodes] = useState(new Set());
-	
+
 	const expandNode = async (nodeId) => {
 		if (!nodeId || expandedNodes.has(nodeId)) {
 			return;
 		}
-		console.log(nodeId)
 		try {
-			// const token = Cookies.get("token");
-			// console.log(token)
-			// if (!token) {
-			// 	toast.error("Authentication token not found.");
-			// 	return;
-			// }
 
 			const body = await fetchData(`app/downline/visualizer/${nodeId}`);
 			if (body.status_code !== 200) {
@@ -41,18 +34,14 @@ const TreeVisualizer = ({ initialNode }) => {
 						const tooltipElement = document.createElement("div");
 						tooltipElement.innerHTML = `
                             <div style="padding: 5px; color: #333;">
-                                <p style="margin: 0;"><b>Name:</b> ${
-																	node.label
-																}</p>
-                                <p style="margin: 0;"><b>ID:</b> ${
-																	node.coachId
-																}</p>
-                                <p style="margin: 0;"><b>Email:</b> ${
-																	node.email
-																}</p>
-                                <p style="margin: 0;"><b>Clients:</b> ${
-																	node.totalClients || 0
-																}</p>
+                                <p style="margin: 0;"><b>Name:</b> ${node.label
+							}</p>
+                                <p style="margin: 0;"><b>ID:</b> ${node.coachId
+							}</p>
+                                <p style="margin: 0;"><b>Email:</b> ${node.email
+							}</p>
+                                <p style="margin: 0;"><b>Clients:</b> ${node.totalClients || 0
+							}</p>
                             </div>
                         `;
 						function calcInit(node) {

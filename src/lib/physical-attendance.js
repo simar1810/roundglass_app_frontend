@@ -1,18 +1,22 @@
 import {
   addDays,
+  addMinutes,
   differenceInCalendarDays,
-  endOfDay, format, isAfter, isBefore,
-  isSameDay, startOfDay
+  endOfDay, endOfMonth, format, getDate, isAfter, isBefore,
+  isSameDay, startOfDay,
+  startOfMonth,
+  subMinutes
 } from "date-fns";
+import { _throwError } from "./formatter";
 
 export function manualAttendance(data, range) {
-  const startOfTheDay = startOfDay(range?.from, new Date());
-  const endOfTheDay = endOfDay(range?.to, new Date());
+  const startOfTheDay = startOfDay(range?.from);
+  const endOfTheDay = endOfDay(range?.to);
 
   return data.flatMap(client => {
     const filteredAttendance = (client?.attendance || []).filter(att =>
-      isAfter(att.markedAt, startOfTheDay) &&
-      isBefore(att.markedAt, endOfTheDay)
+      isAfter(att.date, startOfTheDay) &&
+      isBefore(att.date, endOfTheDay)
     )
     return filteredAttendance.map(att => ({
       clientId: client?.client?._id,
@@ -24,17 +28,20 @@ export function manualAttendance(data, range) {
 }
 
 export function manualAttendanceWithRange(data, range) {
-  const start = startOfDay(range?.from || new Date());
-  const end = endOfDay(range?.to || new Date());
+  const start = subMinutes(startOfDay(range?.from || new Date()), 0);
+  const end = addMinutes(endOfDay(range?.to || new Date()), 0);
+
   const totalDays = Math.abs(differenceInCalendarDays(range.from, range.to)) + 1;
 
   return data
     .map(client => {
       const attendanceMap = {};
       (client?.attendance || []).forEach(att => {
-        const marked = new Date(att.date);
-        if (marked >= start && marked <= end) {
-          const dayIndex = Math.floor((marked - start) / (1000 * 60 * 60 * 24));
+        if (
+          addMinutes(isBefore(new Date(att.date), end), 2) &&
+          subMinutes(isAfter(new Date(att.date), start), 2)
+        ) {
+          const dayIndex = getDate(new Date(att.date));
           attendanceMap[dayIndex] = att;
         }
       });
@@ -42,18 +49,19 @@ export function manualAttendanceWithRange(data, range) {
       const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
         const currentDate = addDays(start, i);
         const entry = attendanceMap[i];
-        return entry
+        if (entry) console.log(currentDate, entry)
+        return Boolean(entry)
           ? {
-            date: currentDate.toISOString(),
+            date: entry.date,
             status: entry.status,
-            markedAt: entry.markedAtl,
+            markedAt: entry.markedAt,
             name: client?.client?.name,
             profilePhoto: client?.client?.profilePhoto,
             clientId: client?.client?._id
           }
           : {
             date: currentDate.toISOString(),
-            status: undefined,
+            status: 123,
             name: client?.client?.name,
             profilePhoto: client?.client?.profilePhoto,
             clientId: client?.client?._id
@@ -81,41 +89,61 @@ export function shakeRequests(data) {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-export function clientWiseHistory(data, year = 2025, month = 8) {
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+export function clientWiseHistoryClientOptions(data) {
+  return data.map(item => ({
+    clientName: item?.client?.name,
+    clientId: item?.client?._id,
+    profilePhoto: item?.client?.profilePhoto
+  }))
+}
+
+export function clientWiseHistory(data, range) {
+  if (!range?.from || !range?.to) return [];
+
+  const start = new Date(range.from);
+  const end = new Date(range.to);
+
+  const totalDays =
+    Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
   return data.map(record => {
-    const attendanceMap = {};
-    record.attendance.forEach(a => {
-      const day = new Date(a.date).getDate();
-      attendanceMap[day] = a;
-    });
+    const attendanceMap = new Map(
+      record.attendance.map(a => {
+        const d = new Date(a.date);
+        const key = d.toISOString().split("T")[0];
+        return [key, a];
+      })
+    );
 
-    const monthlyAttendance = Array.from({ length: daysInMonth }, (_, i) => {
-      const dayNum = i + 1;
+    const attendanceInRange = Array.from({ length: totalDays }, (_, i) => {
+      const currentDate = new Date(start);
+      currentDate.setDate(start.getDate() + i);
 
-      const entry = attendanceMap[dayNum];
-      if (entry) {
-        return {
-          date: dayNum,
+      const key = currentDate.toISOString().split("T")[0];
+      const entry = attendanceMap.get(key);
+
+      return entry
+        ? {
+          date: currentDate.getDate(),
+          month: currentDate.getMonth(),
           status: entry.status,
-          markedAt: entry.markedAt
+          markedAt: entry.markedAt,
+        }
+        : {
+          date: currentDate.getDate(),
+          month: currentDate.getMonth(),
+          status: undefined,
         };
-      } else {
-        return {
-          date: dayNum,
-          status: undefined
-        };
-      }
     });
 
     return {
-      clientName: record?.client?.name,
-      clientProfile: record?.client?.profilePhoto,
-      monthlyAttendance
+      clientName: record?.client?.name ?? "Unknown",
+      clientProfile: record?.client?.profilePhoto ?? null,
+      attendanceInRange,
     };
   });
 }
+
 
 
 export function clubHistory(clients, { from, to } = {}) {
@@ -168,22 +196,25 @@ export function clubHistory(clients, { from, to } = {}) {
   });
 }
 
-export function generateAttendanceRows(data) {
-  const today = new Date()
-
-  return data.map((record, index) => {
-    const todayAttendance = record.attendance.find(a =>
-      isSameDay(new Date(a.markedAt), today)
-    )
-
-    return {
-      clientId: index + 1,
-      clientName: record?.client?.name,
-      date: format(today, "dd MMM, yyyy"),
-      status: todayAttendance ? todayAttendance.status : undefined,
-      profilePhoto: record?.client?.profilePhoto
-    }
-  })
+export function generateAttendanceRows(data, range) {
+  const month = new Date(range.year, range.month, 15)
+  const startOfRange = startOfMonth(month)
+  const endOfRange = endOfMonth(month)
+  return data
+    .map((record, index) => {
+      const todayAttendance = record.attendance.filter(a =>
+        isAfter(addMinutes(new Date(a.date), 4), startOfRange) &&
+        isBefore(new Date(a.date), endOfRange)
+      )
+      return todayAttendance.map(item => ({
+        clientId: index + 1,
+        clientName: record?.client?.name,
+        date: format(item.date, "dd MMM, yyyy"),
+        status: item.status,
+        profilePhoto: record?.client?.profilePhoto
+      }))
+    })
+    .flatMap(item => item)
 }
 
 export function statusClases(status) {
@@ -199,7 +230,6 @@ export function statusClases(status) {
 
 export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
-
   data.forEach(item => {
     const dateKey = format(item.date, "yyyy-MM-dd")
 
@@ -258,14 +288,22 @@ export function getPresentAbsent(data) {
   return { present, absent, requested }
 }
 
-function manualAttendanceExcelData(data) {
-  const attendance = manualAttendance(data)
-  for (const index of attendance) { }
-  return {}
+function manualAttendanceExcelData(data, range) {
+  const attendance = manualAttendance(data, range)
+  return attendance.map((item, index) => ({
+    "Sr No": index + 1,
+    "Name": item.name,
+    "Date": format(item.date, "dd-MM-yyyy"),
+    "Status": item.status
+  }))
 }
 
-function shakeRequestExcelData(data) {
+function shakeRequestExcelData(data, range) {
   const requests = shakeRequests(data)
+    .filter(item =>
+      isBefore(item.date, endOfDay(range.to)) &&
+      isAfter(item.date, startOfDay(range.from))
+    )
   return requests.map((record, index) => ({
     "Sr No.": index + 1,
     "Client Name": record.name,
@@ -275,22 +313,22 @@ function shakeRequestExcelData(data) {
   }))
 }
 
-function clientWiseExcelData(data) {
-  const records = clientWiseHistory(data);
+function clientWiseExcelData(data, range) {
+  const records = clientWiseHistory(data, range);
   return records.map((record, index) => {
     const item = {
       "Sr No.": index + 1,
       "Name": record.clientName,
     };
-    for (const info of record.monthlyAttendance) {
-      item[String(" " + info["date"])] = info["status"] || "requested"
+    for (const info of record.attendanceInRange) {
+      item[String(" " + info["date"])] = info["status"] || "N/A"
     }
     return item
   })
 }
 
-function clubHistoryExcelData(data) {
-  const records = clubHistory(data);
+function clubHistoryExcelData(data, range) {
+  const records = clubHistory(data, range);
   return records.map((record, index) => ({
     "Sr No.": index,
     "Name": record.clientName,
@@ -301,8 +339,8 @@ function clubHistoryExcelData(data) {
   }))
 }
 
-function generateAttendanceRowsExcelData(data) {
-  const records = generateAttendanceRows(data);
+function generateAttendanceRowsExcelData(data, range) {
+  const records = generateAttendanceRows(data, range);
   return records.map((record, index) => ({
     "Sr No.": index + 1,
     "Name": record.clientName,
@@ -313,19 +351,20 @@ function generateAttendanceRowsExcelData(data) {
 
 export function physicalAttendanceExcelDownload(
   tab,
-  data
+  data,
+  range
 ) {
   switch (tab) {
     case "manual-attendance":
-      return manualAttendanceExcelData(data)
+      return manualAttendanceExcelData(data, range)
     case "shake-requests":
-      return shakeRequestExcelData(data)
+      return shakeRequestExcelData(data, range)
     case "clientwise-history":
-      return clientWiseExcelData(data)
+      return clientWiseExcelData(data, range)
     case "club-history":
-      return clubHistoryExcelData(data)
+      return clubHistoryExcelData(data, range)
     case "daily-attendance":
-      return generateAttendanceRowsExcelData(data)
+      return generateAttendanceRowsExcelData(data, range)
     default:
       break;
   }
