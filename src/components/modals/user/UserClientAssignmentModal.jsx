@@ -57,13 +57,10 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
     try {
       setLoadingClients(true);
       const response = await getUserClients(user._id);
-      // console.log(response);
       if (response.status_code === 200) {
         setUserClients(response.data.clients || []);
       }
-    } catch (error) {
-      // Error handling
-    } finally {
+    } catch (error) { } finally {
       setLoadingClients(false);
     }
   };

@@ -28,7 +28,7 @@ export function manualAttendance(data, range) {
 }
 
 export function manualAttendanceWithRange(data, range) {
-  const start = subMinutes(startOfDay(range?.from || new Date()), 0);
+  const start = startOfDay(range?.from || new Date());
   const end = addMinutes(endOfDay(range?.to || new Date()), 0);
 
   const totalDays = Math.abs(differenceInCalendarDays(range.from, range.to)) + 1;
@@ -38,18 +38,16 @@ export function manualAttendanceWithRange(data, range) {
       const attendanceMap = {};
       (client?.attendance || []).forEach(att => {
         if (
-          addMinutes(isBefore(new Date(att.date), end), 2) &&
-          subMinutes(isAfter(new Date(att.date), start), 2)
+          isBefore(new Date(att.date), end) &&
+          isAfter(new Date(att.date), start)
         ) {
           const dayIndex = getDate(new Date(att.date));
           attendanceMap[dayIndex] = att;
         }
       });
-
       const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
         const currentDate = addDays(start, i);
-        const entry = attendanceMap[i];
-        if (entry) console.log(currentDate, entry)
+        const entry = attendanceMap[getDate(currentDate)];
         return Boolean(entry)
           ? {
             date: entry.date,
@@ -60,7 +58,7 @@ export function manualAttendanceWithRange(data, range) {
             clientId: client?.client?._id
           }
           : {
-            date: currentDate.toISOString(),
+            date: currentDate,
             status: 123,
             name: client?.client?.name,
             profilePhoto: client?.client?.profilePhoto,
