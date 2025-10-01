@@ -6,7 +6,6 @@ import { nameInitials } from "@/lib/formatter"
 import { generateAttendanceRows, statusClases } from "@/lib/physical-attendance"
 import { cn } from "@/lib/utils"
 
-
 function TableHeader() {
   return (
     <thead>
@@ -46,9 +45,10 @@ function TableRow({
 
 export default function DailyAttendancePage({
   query,
-  data
+  data,
+  range
 }) {
-  const clients = (generateAttendanceRows(data) || [])
+  const clients = (generateAttendanceRows(data, range) || [])
     .filter(client => new RegExp(query, "i").test(client?.clientName))
 
   return (
