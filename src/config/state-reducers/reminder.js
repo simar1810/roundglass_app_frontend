@@ -38,7 +38,9 @@ export function init(data, type) {
     const payload = {
       topic: data.topic,
       agenda: data.agenda,
-      date: format(parse(data.date, "dd-MM-yyyy", new Date()), "yyyy-MM-dd"),
+      date: data.date && /^\d{2}-\d{2}-\d{4}$/.test(data.date)
+        ? format(parse(data.date, "dd-MM-yyyy", new Date()), "yyyy-MM-dd")
+        : (data.date || ""),
       time: data.time,
       attendeeType: "none",
       view: 1
