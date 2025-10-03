@@ -68,10 +68,10 @@ export function resetCurrentState() {
 }
 
 export const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7, 9, 10, 12],
-  scheduled: [1, 2, 3, 4, 6, 7, 9, 10, 12],
-  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12],
-  event: [1, 2, 3, 4, 6, 7, 8, 9, 10, 12],
+  quick: [1, 2, 6, 7, 9, 10, 12, 13],
+  scheduled: [1, 2, 3, 4, 6, 7, 9, 10, 12, 13],
+  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13],
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13],
   one_to_one: [1, 2, 3, 4, 6, 7, 9, 11, 12],
 }
 
@@ -111,6 +111,10 @@ export function generateRequestPayload(state) {
   payload.delete("allowed_client_type");
   for (const type of state.allowed_client_type) {
     payload.append("allowed_client_type", type);
+  }
+  payload.delete("allowed_client_rollnos");
+  for (const type of state.allowed_client_rollnos) {
+    payload.append("allowed_client_rollnos", type);
   }
   return payload;
 }

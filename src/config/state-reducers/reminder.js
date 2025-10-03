@@ -1,4 +1,6 @@
+import { format, parse } from "date-fns";
 import { reminderInitialState } from "../state-data/reminder";
+import { _throwError } from "@/lib/formatter";
 
 export function reminderReducer(state, action) {
   switch (action.type) {
@@ -36,7 +38,7 @@ export function init(data, type) {
     const payload = {
       topic: data.topic,
       agenda: data.agenda,
-      date: data.date,
+      date: format(parse(data.date, "dd-MM-yyyy", new Date()), "yyyy-MM-dd"),
       time: data.time,
       attendeeType: "none",
       view: 1
@@ -73,10 +75,14 @@ export function generateReminderPayload(state) {
   for (const field in state) {
     payload[field] = state[field];
   }
+  if (!payload.date) _throwError("Date is required");
   if (payload.attendeeType === "wz_client") {
     delete payload.other;
   } else {
     delete payload.client;
+  }
+  if (payload.date) {
+    payload.date = format(parse(payload.date, "yyyy-MM-dd", new Date()), "dd-MM-yyyy")
   }
   delete payload.attendeeType;
   return payload;

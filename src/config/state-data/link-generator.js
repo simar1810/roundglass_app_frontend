@@ -1,4 +1,5 @@
 export const linkGeneratorInitialState = {
+  allowed_client_rollnos: [],
   topics: "",
   meetingType: "quick",
   date: "",
