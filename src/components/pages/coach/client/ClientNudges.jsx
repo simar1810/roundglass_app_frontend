@@ -48,9 +48,7 @@ function groupNudgesByDay(notifications) {
         if (dayName) {
           groupedNudges[dayName].push(notification);
         }
-      } catch (error) {
-        console.error("Error parsing date:", notification.date, error);
-      }
+      } catch (error) { }
     }
   });
 
@@ -77,7 +75,7 @@ function getRecentNudges(notifications) {
       return 1;
     }
   });
-  
+
   // Return only the 4 most recent
   return sortedNotifications.slice(0, 4);
 }
@@ -105,20 +103,20 @@ export default function ClientNudges() {
   const { id } = useParams()
   const { isLoading, data, error } = useSWR(`client/nudges/${id}`, () => retrieveClientNudges(id, { limit: Infinity }))
   const [selectedDays, setSelectedDays] = useState([])
-  
+
   const { getCachedNotificationsForClientByContext } = useNotificationSchedulerCache()
   const cachedNotifications = getCachedNotificationsForClientByContext(id, 'client_nudges')
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error.message || data.message} />
-  
+
   const apiNotifications = data?.data?.results || []
   const allNotifications = [...cachedNotifications, ...apiNotifications]
-  
+
   const notifications = allNotifications
-    .filter((notification, index, self) => 
-      index === self.findIndex(n => 
+    .filter((notification, index, self) =>
+      index === self.findIndex(n =>
         n.subject === notification.subject && n.message === notification.message
       )
     )
@@ -131,8 +129,8 @@ export default function ClientNudges() {
   const recentNudges = getRecentNudges(notifications)
 
   const toggleDay = (day) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
+    setSelectedDays(prev =>
+      prev.includes(day)
         ? prev.filter(d => d !== day)
         : [...prev, day]
     )
@@ -167,17 +165,17 @@ export default function ClientNudges() {
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-sm font-medium text-gray-700">Filter by day:</span>
-        <Button 
+        <Button
           variant={showRecentView ? "wz" : "outline"}
-          size="sm" 
+          size="sm"
           onClick={clearAllDays}
           className="text-xs"
         >
           Recent
         </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={selectAllDays}
           className="text-xs"
         >
@@ -193,15 +191,15 @@ export default function ClientNudges() {
             onClick={() => toggleDay(day)}
             className={cn(
               "text-xs font-medium transition-colors",
-              selectedDays.includes(day) 
-                ? "bg-[var(--accent-1)] text-white hover:bg-[var(--accent-1)]/80" 
+              selectedDays.includes(day)
+                ? "bg-[var(--accent-1)] text-white hover:bg-[var(--accent-1)]/80"
                 : "hover:bg-gray-50"
             )}
           >
             {day}
             {groupedNudges[day]?.length > 0 && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="ml-2 text-[10px] px-1 py-0"
               >
                 {groupedNudges[day].length}
@@ -230,7 +228,7 @@ export default function ClientNudges() {
           {daysToShow.map(day => {
             const dayNudges = groupedNudges[day];
             if (dayNudges.length === 0) return null;
-            
+
             return (
               <DaySection key={day} dayName={day} nudges={dayNudges} />
             );
@@ -242,7 +240,7 @@ export default function ClientNudges() {
           )}
         </>
       )}
-      
+
       {notifications.length === 0 && <Card className="p-6 text-center text-muted-foreground">
         No notifications found.
       </Card>}
@@ -272,7 +270,7 @@ function DaySection({ dayName, nudges }) {
 export function NotificationItem({ item = {} }) {
   const { id } = useParams()
   const { _id, message, subject, isRead, notificationType, schedule_type, time, date, createdAt } = item;
-  
+
   const isCached = createdAt && !_id;
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
@@ -354,15 +352,15 @@ export function NotificationItem({ item = {} }) {
 
 function DeleteClientNotification({ id }) {
   const { removeNotificationFromCache } = useNotificationSchedulerCache()
-  
+
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
       setLoading(true);
       const response = await sendData("app/notifications-schedule", { actionType: "DELETE", id }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
-      
+
       removeNotificationFromCache(id);
-      
+
       toast.success(response.message);
       closeBtnRef.current.click();
       location.reload();

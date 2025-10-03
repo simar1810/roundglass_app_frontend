@@ -372,8 +372,11 @@ export async function retrieveBankDetails(query) {
 }
 
 // Users management functions
-export function getUsers() {
-  return fetchData("app/users?person=coach");
+export function getUsers(coachId = null) {
+  const endpoint = coachId 
+    ? `app/users?person=coach&coachId=${coachId}`
+    : "app/users?person=coach";
+  return fetchData(endpoint);
 }
 
 

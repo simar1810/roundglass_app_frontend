@@ -25,7 +25,7 @@ import {
 import { sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
-import { CircleMinus, CirclePlus, Copy } from "lucide-react";
+import { CircleMinus, CirclePlus, Copy, Minus } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
@@ -372,4 +372,58 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
       setSelectedTime={value => dispatch(changeFieldvalue(field.name, value))}
     />
   </>
+  else if (field.inputtype === 9) return <UpdateAllowedRollnos
+    field={field}
+    formData={formData}
+    dispatch={dispatch}
+    onChange={value => dispatch(changeFieldvalue("allowed_client_rollnos", value))}
+  />
+}
+
+export function UpdateAllowedRollnos({ field, formData, onChange }) {
+  const [newRollnos, setNewRollnos] = useState("")
+  const allSeries = formData.allowed_client_rollnos || []
+  return <div>
+    <div className="mb-4 flex items-end gap-4">
+      <FormControl
+        key={field.id}
+        className="text-[14px] [&_.label]:font-[400] block grow"
+        value={newRollnos}
+        onChange={e => setNewRollnos(e.target.value)}
+        label={field.label}
+        placeholder={field.placeholder}
+      />
+      {newRollnos && <Button
+        variant="wz"
+        onClick={() => {
+          if (allSeries.includes(newRollnos.trim())) {
+            toast.error("Roll no series already added");
+            return
+          }
+          onChange([...allSeries, newRollnos.trim().toLocaleLowerCase()]);
+          setNewRollnos("")
+        }}
+      >
+        Save
+      </Button>}
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {allSeries.map(roll => <div
+        key={roll}
+        className="relative"
+      >
+        <Badge>
+          {roll}
+
+        </Badge>
+        <Minus
+          className="text-white bg-[var(--accent-2)] absolute top-0 right-[-8px] translate-y-[-20%]
+                      w-[16px] h-[16px] cursor-pointer z-[100] rounded-full"
+          strokeWidth={3}
+          onClick={() => onChange(allSeries.filter(item => item !== roll)
+          )}
+        />
+      </div>)}
+    </div>
+  </div>
 }

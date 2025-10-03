@@ -8,7 +8,10 @@ import {
   parse,
   setHours,
   setMinutes,
-  setSeconds
+  setSeconds,
+  eachDayOfInterval,
+  startOfDay,
+  endOfDay
 } from 'date-fns';
 
 export function ISO__getTime(timestamp) {
@@ -106,7 +109,7 @@ export function _throwError(message = "checking payload") {
 }
 
 export function setDateWithNewTime(date, timeString) {
-  const parsedTime = parse(timeString, "hh:mm a", new Date())
+  const parsedTime = parse(timeString, "hh:mm", new Date())
 
   let updatedDate = new Date(date)
   updatedDate = setHours(updatedDate, parsedTime.getHours())
@@ -146,4 +149,18 @@ export function getDaysInMonth(year, month) {
       day: format(dateObj, "EEE")
     };
   });
+}
+
+export function datesInRange(range) {
+  if (!range?.from || !range?.to) return [];
+
+  return eachDayOfInterval({
+    start: startOfDay(range.from),
+    end: endOfDay(range.to)
+  }).map(dateObj => ({
+    date: dateObj.getDate(),
+    month: dateObj.getMonth(),
+    year: dateObj.getFullYear(),
+    day: format(dateObj, "EEE"),
+  }));
 }

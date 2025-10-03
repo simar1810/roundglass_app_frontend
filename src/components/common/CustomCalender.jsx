@@ -4,125 +4,128 @@ import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { cn, nowIST } from "@/lib/utils"
-import { addMonths, format, isSameDay, isToday, isWithinInterval, max, min, set, startOfMonth, subMonths } from "date-fns"
+import { cn } from "@/lib/utils"
+import {
+  addMonths,
+  format,
+  isSameDay,
+  isToday,
+  isWithinInterval,
+  max,
+  min,
+  set,
+  startOfMonth,
+  subMonths,
+} from "date-fns"
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ]
 
 export function CustomCalendar({
   badgeData = {},
   className,
   range,
-  onRangeSelect
+  onRangeSelect,
 }) {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 8, 16))
+  const [currentDate, setCurrentDate] = useState(range?.from || new Date())
+  const [selectedRange, setSelectedRange] = useState({
+    from: range?.from || null,
+    to: range?.to || null,
+  })
+
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState(null)
+  const [dragEnd, setDragEnd] = useState(null)
+
+  const [clickStart, setClickStart] = useState(null)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
-
   const firstDayOfMonth = new Date(year, month, 1)
   const lastDayOfMonth = new Date(year, month + 1, 0)
   const firstDayOfWeek = firstDayOfMonth.getDay()
   const daysInMonth = lastDayOfMonth.getDate()
 
-  const [selectedRange, setSelectedRange] = useState({ from: range.from || null, to: range.to || null })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState(null)
-  const [dragEnd, setDragEnd] = useState(null)
-
   const previousMonth = () => {
-    setCurrentDate(subMonths(startOfMonth(new Date(year, month, 1)), 1))
+    setCurrentDate(subMonths(startOfMonth(currentDate), 1))
   }
-
   const nextMonth = () => {
-    setCurrentDate(addMonths(startOfMonth(new Date(year, month, 1)), 1))
+    setCurrentDate(addMonths(startOfMonth(currentDate), 1))
   }
 
-  const formatDateKey = (date) => {
-    return format(date, "yyyy-MM-dd")
-  }
+  const formatDateKey = (date) => format(date, "yyyy-MM-dd")
 
-  const isDateInRange = (date, start, end) => {
-    if (!start || !end) return false
-    return isWithinInterval(date, {
-      start: min([start, end]),
-      end: max([start, end])
-    })
-  }
+  const isDateInRange = (date, start, end) =>
+    isWithinInterval(date, { start: min([start, end]), end: max([start, end]) })
 
-  const isDateRangeStart = (date, start, end) => {
-    if (!start || !end) return false
-    return isSameDay(date, min([start, end]))
-  }
+  const isDateRangeStart = (date, start, end) =>
+    isSameDay(date, min([start, end]))
 
-  const isDateRangeEnd = (date, start, end) => {
-    if (!start || !end) return false
-    return isSameDay(date, max([start, end]))
-  }
+  const isDateRangeEnd = (date, start, end) =>
+    isSameDay(date, max([start, end]))
 
   const handleMouseDown = (date) => {
     setIsDragging(true)
     setDragStart(date)
     setDragEnd(date)
   }
-
   const handleMouseEnter = (date) => {
-    if (isDragging) {
-      setDragEnd(date)
-    }
+    if (isDragging) setDragEnd(date)
   }
-
   const handleMouseUp = () => {
     if (isDragging && dragStart && dragEnd) {
-      const startDate = dragStart <= dragEnd ? dragStart : dragEnd
-      const endDate = dragStart <= dragEnd ? dragEnd : dragStart
-      const newRange = { from: startDate, to: endDate }
+      const start = dragStart <= dragEnd ? dragStart : dragEnd
+      const end = dragStart <= dragEnd ? dragEnd : dragStart
+      const newRange = { from: start, to: end }
       setSelectedRange(newRange)
-      if (onRangeSelect) {
-        onRangeSelect(newRange)
-      }
+      onRangeSelect?.(newRange)
     }
     setIsDragging(false)
     setDragStart(null)
     setDragEnd(null)
   }
 
+  const handleClick = (date) => {
+    if (!clickStart) {
+      setClickStart(date)
+      const newRange = { from: date, to: date }
+      setSelectedRange(newRange)
+      onRangeSelect?.(newRange)
+    } else {
+      const start = clickStart <= date ? clickStart : date
+      const end = clickStart <= date ? date : clickStart
+      const newRange = { from: start, to: end }
+      setSelectedRange(newRange)
+      onRangeSelect?.(newRange)
+      setClickStart(null)
+    }
+  }
+
   const renderCalendarDays = () => {
     const days = []
-
     for (let i = 0; i < firstDayOfWeek; i++) {
       days.push(<div key={`empty-${i}`} className="h-20"></div>)
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = set(new Date(), { year, month, date: day });
+      const date = set(new Date(), { year, month, date: day })
       const dateKey = formatDateKey(date)
       const badges = badgeData[dateKey] || []
       const todayClass = isToday(date)
 
+      const activeStart = isDragging ? dragStart : selectedRange.from
+      const activeEnd = isDragging ? dragEnd : selectedRange.to
+
       const isInSelectedRange =
-        selectedRange.from && selectedRange.to && isDateInRange(date, selectedRange.from, selectedRange.to)
-      const isInDragRange = isDragging && dragStart && dragEnd && isDateInRange(date, dragStart, dragEnd)
+        activeStart && activeEnd && isDateInRange(date, activeStart, activeEnd)
       const isRangeStart =
-        (selectedRange.from && selectedRange.to && isDateRangeStart(date, selectedRange.from, selectedRange.to)) ||
-        (isDragging && dragStart && dragEnd && isDateRangeStart(date, dragStart, dragEnd))
+        activeStart && activeEnd && isDateRangeStart(date, activeStart, activeEnd)
       const isRangeEnd =
-        (selectedRange.from && selectedRange.to && isDateRangeEnd(date, selectedRange.from, selectedRange.to)) ||
-        (isDragging && dragStart && dragEnd && isDateRangeEnd(date, dragStart, dragEnd))
+        activeStart && activeEnd && isDateRangeEnd(date, activeStart, activeEnd)
+
       days.push(
         <div
           key={day}
@@ -130,27 +133,33 @@ export function CustomCalendar({
             "h-20 border border-gray-200 p-2 relative flex flex-col cursor-pointer select-none rounded-[6px]",
             todayClass && "border-2 border-green-500 bg-green-50",
             [0, 6].includes(date.getDay()) && "bg-[var(--comp-1)]",
-            (isInSelectedRange || isInDragRange) && "bg-blue-100",
-            (isRangeStart || isRangeEnd) && "bg-blue-200",
+            isInSelectedRange && "bg-blue-100",
+            (isRangeStart || isRangeEnd) && "bg-blue-200"
           )}
+          onClick={() => handleClick(date)}
           onMouseDown={() => handleMouseDown(date)}
           onMouseEnter={() => handleMouseEnter(date)}
           onMouseUp={handleMouseUp}
         >
           <div className="flex flex-col justify-between items-start">
-            <span className={cn("text-sm font-medium", todayClass ? "text-green-600" : "text-gray-900")}>{day}</span>
+            <span className={cn("text-sm font-medium", todayClass ? "text-green-600" : "text-gray-900")}>
+              {day}
+            </span>
             {todayClass && <span className="text-xs text-green-600 font-medium">Today</span>}
           </div>
           {badges.length > 0 && (
             <div className="flex gap-1 mt-auto">
               {badges.map((badge, index) => (
-                <span key={index} className={cn("text-white text-[8px] px-1 py-0.5 rounded font-medium", badge.color)}>
+                <span
+                  key={index}
+                  className={cn("text-white text-[12px] font-bold px-1 py-0.5 rounded", badge.color)}
+                >
                   {badge.value}
                 </span>
               ))}
             </div>
           )}
-        </div>,
+        </div>
       )
     }
     return days
@@ -177,9 +186,7 @@ export function CustomCalendar({
           <div className="grid grid-cols-7 mb-0 gap-1">
             {DAYS_OF_WEEK.map((day, index) => (
               <div key={day} className="p-2 text-center">
-                <span
-                  className={cn("text-xs font-bold", index === 0 || index === 6 ? "text-gray-900" : "text-gray-400")}
-                >
+                <span className={cn("text-xs font-bold", index === 0 || index === 6 ? "text-gray-900" : "text-gray-400")}>
                   {day}
                 </span>
               </div>

@@ -19,9 +19,11 @@ import UserClientAssignmentModal from "@/components/modals/user/UserClientAssign
 import { getUsers } from "@/lib/fetchers/app";
 import { isCoach } from "@/lib/permissions";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function UsersPage() {
   const router = useRouter();
+  const coach = useAppSelector(state => state.coach.data);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,13 +39,18 @@ export default function UsersPage() {
       router.push("/coach/dashboard");
       return;
     }
-    fetchUsers();
-  }, [router]);
+    // Only fetch users when coach data is available
+    if (coach?._id) {
+      fetchUsers();
+    }
+  }, [router, coach?._id]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await getUsers();
+      // Pass the current coach's ID to filter users
+      const coachId = coach?._id;
+      const response = await getUsers(coachId);
       if (response.status_code === 200) {
         setUsers(response.data);
       } else {

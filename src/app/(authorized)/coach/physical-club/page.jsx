@@ -2,6 +2,7 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { CustomCalendar } from "@/components/common/CustomCalender";
+import MonthYearPicker from "@/components/common/MonthYearPicker";
 import { ClientwiseHistory } from "@/components/pages/coach/physical-club/ClientwiseHistory";
 import ClubHistoryPage from "@/components/pages/coach/physical-club/ClubHistory";
 import DailyAttendancePage from "@/components/pages/coach/physical-club/DailyAttendance";
@@ -10,15 +11,15 @@ import QRCodeModal from "@/components/pages/coach/physical-club/QRCodeModal";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
-import { endOfDay, startOfDay } from "date-fns";
+import { endOfDay, getMonth, getYear, startOfDay, startOfMonth } from "date-fns";
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink, CalendarRange } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -51,19 +52,39 @@ const tabItems = [
   },
 ];
 
-export default function Page() {
-  const [range, setRange] = useState({
+const CalendarMap = {
+  "manual-attendance": {
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
-  })
-  const [query, setQuery] = useState("");
+  },
+  "shake-requests": {
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
+  },
+  "clientwise-history": {
+    from: startOfMonth(new Date()),
+    to: endOfDay(new Date())
+  },
+  "club-history": {
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
+  },
+  "daily-attendance": {
+    month: getMonth(new Date()).toString(),
+    year: getYear(new Date()).toString(),
+  }
+};
+
+export default function Page() {
+  const [calendarRange, setCalendarRange] = useState(CalendarMap)
   const [tab, setTab] = useState("manual-attendance");
+  const [query, setQuery] = useState("");
 
   const { isLoading, error, data } = useSWR(
     "app/physical-club/attendance",
     () => getPhysicalAttendance({
       person: "coach",
-      populate: "client:name|mobileNumber|rollno|profilePhoto|isPhysicalClubActive,membership:membershipType|pendingServings|endDate",
+      populate: "client:name|mobileNumber|rollno|profilePhoto|isPhysicalClubActive,membership:membershipType|pendingServings|endDate|isActive",
       limit: 1000000
     })
   );
@@ -72,7 +93,18 @@ export default function Page() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const attendance = data?.data?.results || []
+  const attendance = (data?.data?.results || [])
+    .filter(record => record.membership?.isActive);
+
+  const range = calendarRange[tab];
+
+
+  function onChangeCalendarRange(payload) {
+    setCalendarRange(prev => ({
+      ...prev,
+      [tab]: payload
+    }))
+  }
 
   return <div className="content-container content-height-screen">
     <div className="mb-8 flex items-center justify-between">
@@ -85,26 +117,26 @@ export default function Page() {
       <ToolsBar
         data={attendance} tab={tab}
         query={query} setQuery={setQuery}
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
       />
       <ManualAttendance
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
       <ShakeRequestsTable
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
       <ClientwiseHistory
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
       <ClubHistoryPage
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
       <DailyAttendancePage
-        range={range} setRange={setRange}
+        range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
     </Tabs>
@@ -138,7 +170,7 @@ function ToolsBar({
 }) {
   async function downloadExcelSheet() {
     try {
-      const excelData = physicalAttendanceExcelDownload(tab, data)
+      const excelData = physicalAttendanceExcelDownload(tab, data, range)
       exportToExcel(excelData)
     } catch (error) {
       toast.error(error.message || "Something went wrong!");
@@ -151,10 +183,18 @@ function ToolsBar({
       value={query}
       onChange={e => setQuery(e.target.value)}
     />
-    {["shake-requests", "club-history"].includes(tab) && <SelectDateRange
-      range={range}
+    {["daily-attendance"].includes(tab) && <MonthYearPicker
+      month={range.month}
+      year={range.year}
       setRange={setRange}
     />}
+    {[
+      "shake-requests", "club-history",
+      "clientwise-history"
+    ].includes(tab) && <SelectDateRange
+        range={range}
+        setRange={setRange}
+      />}
     <Button
       onClick={downloadExcelSheet}
       variant="wz"
@@ -171,7 +211,10 @@ function SelectDateRange({
 }) {
   return <Sheet>
     <SheetTrigger>
-      <CalendarRange />
+      <CalendarRange
+        strokeWidth={2.4}
+        className="h-[34px] w-[34px] text-white bg-black [var(--accent-1)] p-2 rounded-[4px]"
+      />
     </SheetTrigger>
     <SheetContent align="start" className="!max-w-[600px] !w-[600px]">
       <SheetTitle className="text-[28px] p-4 border-b-1">Date Range</SheetTitle>
@@ -180,6 +223,9 @@ function SelectDateRange({
           range={range}
           onRangeSelect={setRange}
         />
+        <SheetClose asChild>
+          <Button className="w-full mt-4">Done</Button>
+        </SheetClose>
       </div>
     </SheetContent>
   </Sheet>
