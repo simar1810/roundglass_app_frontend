@@ -411,6 +411,7 @@ export function UpdateDetails({
     email: user.email || "",
     mobileNumber: user.mobileNumber || "",
     city: user.city || "",
+    rollno: user.rollno || ""
   })
 
   const closeBtnRef = useRef();
@@ -462,6 +463,13 @@ export function UpdateDetails({
           value={payload.city}
           onChange={e => setPayload(prev => ({ ...prev, city: e.target.value }))}
           label="City"
+          className="block mb-4"
+        />
+        <FormControl
+          value={payload.rollno}
+          onChange={e => setPayload(prev => ({ ...prev, rollno: e.target.value }))}
+          label="Roll No."
+          placeholder="Enter Roll No."
           className="block mb-4"
         />
         <Button

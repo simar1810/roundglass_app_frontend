@@ -9,6 +9,7 @@ import {
   CardHeader
 } from "@/components/ui/card";
 import {
+  Clipboard,
   Link2,
 } from "lucide-react";
 import { coachPortfolioFields } from "@/config/data/ui";
@@ -44,7 +45,19 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
       </Avatar>
       <div>
         <h4 className="my-2">{coachData.name}</h4>
-        <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1] mb-2">ID #{coachData.coachId}</p>
+        <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1] mb-2">
+          <Button
+            onClick={() => {
+              copyText(coachId)
+              toast.success("Coach ID copied")
+            }}
+            variant="icon"
+            className="text-[var(--accent-1)] h-auto py-0"
+          >
+            <Clipboard className="w-[20px] h-[20px]" strokeWidth={3} />
+          </Button>
+          ID #{coachData.coachId}
+        </p>
       </div>
     </CardHeader>
     <CardContent>
