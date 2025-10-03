@@ -109,7 +109,7 @@ export function _throwError(message = "checking payload") {
 }
 
 export function setDateWithNewTime(date, timeString) {
-  const parsedTime = parse(timeString, "hh:mm a", new Date())
+  const parsedTime = parse(timeString, "hh:mm", new Date())
 
   let updatedDate = new Date(date)
   updatedDate = setHours(updatedDate, parsedTime.getHours())

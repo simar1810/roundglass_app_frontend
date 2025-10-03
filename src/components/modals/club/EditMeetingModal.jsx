@@ -28,6 +28,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import { UpdateAllowedRollnos } from "./LinkGenerator";
 
 export default function EditMeetingModal({ meeting }) {
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,12 @@ export default function EditMeetingModal({ meeting }) {
       for (const field in formData) {
         if (formData[field]) data[field] = formData[field];
       }
-      data.scheduleDate = setDateWithNewTime(new Date(formData.date), formData.time)
+
+      if (formData.date && formData.time) data.scheduleDate = setDateWithNewTime(
+        new Date(formData.date),
+        formData.time
+      )
+
       const response = await sendData(`edit-meetingLink?meetingId=${meeting._id}`, data, "PUT");
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
@@ -140,6 +146,11 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
       setSelectedTime={value => dispatch(prev => ({ ...prev, "time": value }))}
     />
   </div>
+  else if (field.inputtype === 9) return <UpdateAllowedRollnos
+    field={field}
+    formData={formData}
+    onChange={(value) => dispatch(prev => ({ ...prev, "allowed_client_rollnos": value }))}
+  />;
 }
 
 
@@ -149,17 +160,18 @@ function generatePayload(meeting) {
     baseLink: meeting?.baseLink || "",
     date: meeting?.scheduleDate
       ? format(parseISO(meeting.scheduleDate), "yyyy-MM-dd")
-      : "",
+      : format(new Date(), "yyyy-MM-dd"),
     time: meeting?.scheduleDate
       ? format(parseISO(meeting.scheduleDate), "HH:mm")
-      : "",
+      : format(new Date(), "HH:mm"),
     reOcurred: meeting?.reOcurred || false,
     description: meeting?.description || "",
     duration: meeting?.duration || "",
     eventVolumePointAmount: meeting?.eventVolumePointAmount || "",
     banner: meeting?.banner || "/",
     allowed_client_type: meeting?.allowed_client_type || "",
-    one_to_one_client_id: meeting?.one_to_one_client_id || ""
+    one_to_one_client_id: meeting?.one_to_one_client_id || "",
+    allowed_client_rollnos: meeting?.allowed_client_rollnos || []
   };
 }
 

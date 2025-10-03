@@ -111,6 +111,14 @@ export const linkGeneratorFields = [
   {
     id: 11, label: "Select A Client", inputtype: 7, name: "one_to_one_client_id",
     options: []
+  },
+  {
+    id: 12,
+    label: "Allowed Client Roll Nos Series",
+    type: "text",
+    inputtype: 9,
+    placeholder: "Enter comma separated roll no series",
+    name: "allowed_client_rollnos"
   }
 ];
 
