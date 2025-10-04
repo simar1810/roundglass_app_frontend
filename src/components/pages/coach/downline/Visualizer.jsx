@@ -313,7 +313,6 @@ function CoachActions({
 	coachData,
 	positions
 }) {
-	console.log(coachData)
 	return <div
 		// className="absolute top-0 left-0 text-white text-xs bg-black bg-opacity-50 p-1 rounded z-[1000000]"
 		// style={{

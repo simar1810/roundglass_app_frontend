@@ -5,7 +5,7 @@ import { CustomCalendar } from "@/components/common/CustomCalender";
 import MonthYearPicker from "@/components/common/MonthYearPicker";
 import { ClientwiseHistory } from "@/components/pages/coach/physical-club/ClientwiseHistory";
 import ClubHistoryPage from "@/components/pages/coach/physical-club/ClubHistory";
-import DailyAttendancePage from "@/components/pages/coach/physical-club/DailyAttendance";
+import PhysicalClubReports from "@/components/pages/coach/physical-club/PhysicalClubReports";
 import ManualAttendance from "@/components/pages/coach/physical-club/ManualAttendance";
 import QRCodeModal from "@/components/pages/coach/physical-club/QRCodeModal";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
@@ -47,8 +47,8 @@ const tabItems = [
   },
   {
     icon: <CalendarDays className="w-[16px] h-[16px]" />,
-    value: "daily-attendance",
-    label: "Daily Attendance"
+    value: "reports",
+    label: "Reports"
   },
 ];
 
@@ -69,9 +69,17 @@ const CalendarMap = {
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
   },
-  "daily-attendance": {
+  "club-history": {
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
+  },
+  "physical-club": {
     month: getMonth(new Date()).toString(),
     year: getYear(new Date()).toString(),
+  },
+  "reports": {
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
   }
 };
 
@@ -135,7 +143,7 @@ export default function Page() {
         range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
-      <DailyAttendancePage
+      <PhysicalClubReports
         range={range} setRange={onChangeCalendarRange}
         query={query} data={attendance}
       />
@@ -183,14 +191,14 @@ function ToolsBar({
       value={query}
       onChange={e => setQuery(e.target.value)}
     />
-    {["daily-attendance"].includes(tab) && <MonthYearPicker
+    {["physical-club"].includes(tab) && <MonthYearPicker
       month={range.month}
       year={range.year}
       setRange={setRange}
     />}
     {[
       "shake-requests", "club-history",
-      "clientwise-history"
+      "clientwise-history", "reports"
     ].includes(tab) && <SelectDateRange
         range={range}
         setRange={setRange}
@@ -222,6 +230,7 @@ function SelectDateRange({
         <CustomCalendar
           range={range}
           onRangeSelect={setRange}
+          mode="both"
         />
         <SheetClose asChild>
           <Button className="w-full mt-4">Done</Button>

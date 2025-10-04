@@ -13,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { MONTHS } from "@/config/data/date";
 import { CalendarRange } from "lucide-react";
 
 export default function MonthYearPicker({
@@ -20,10 +21,7 @@ export default function MonthYearPicker({
   year,
   setRange,
 }) {
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
 
@@ -31,20 +29,22 @@ export default function MonthYearPicker({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-[200px] bg-[var(--accent-1)] text-white font-bold justify-center">
-          <CalendarRange /> {months[parseInt(month)]} {year}
+          <CalendarRange /> {MONTHS[parseInt(month)]} {year}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-3 space-y-2">
         <div className="flex items-center gap-4">
           <Select
-            value={month}
+            defaultValue={MONTHS[month].slice(0, 3)}
             onValueChange={(m) => setRange({ month: m, year })}
           >
             <SelectTrigger className="!bg-white">
-              <SelectValue placeholder="Select month" />
+              <SelectValue placeholder="Select month">
+                {MONTHS[month].slice(0, 3)}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {months.map((m, i) => (
+              {MONTHS.map((m, i) => (
                 <SelectItem key={i} value={i.toString()}>
                   {m.slice(0, 3)}
                 </SelectItem>
@@ -52,11 +52,13 @@ export default function MonthYearPicker({
             </SelectContent>
           </Select>
           <Select
-            value={year}
+            defaultValue={year}
             onValueChange={(y) => setRange({ month, year: y })}
           >
             <SelectTrigger className="!bg-white">
-              <SelectValue placeholder="Select year" />
+              <SelectValue placeholder="Select year">
+                {year}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {years.map((y) => (

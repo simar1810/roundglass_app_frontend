@@ -1,13 +1,14 @@
 import {
-  addDays,
-  addMinutes,
-  differenceInCalendarDays,
-  endOfDay, endOfMonth, format, getDate, isAfter, isBefore,
-  isSameDay, startOfDay,
-  startOfMonth,
-  subMinutes
+  endOfMonth, format, getDate, isAfter, isBefore,
+  startOfDay, startOfMonth, subMinutes,
+  addDays, addMinutes, differenceInCalendarDays, endOfDay,
+  getDaysInMonth,
+  startOfYear,
+  endOfYear,
+  getMonth,
 } from "date-fns";
 import { _throwError } from "./formatter";
+import { MONTHS } from "@/config/data/date";
 
 export function manualAttendance(data, range) {
   const startOfTheDay = startOfDay(range?.from);
@@ -29,7 +30,7 @@ export function manualAttendance(data, range) {
 
 export function manualAttendanceWithRange(data, range) {
   const start = startOfDay(range?.from || new Date());
-  const end = addMinutes(endOfDay(range?.to || new Date()), 0);
+  const end = endOfDay(range?.to || new Date());
 
   const totalDays = Math.abs(differenceInCalendarDays(range.from, range.to)) + 1;
 
@@ -38,13 +39,14 @@ export function manualAttendanceWithRange(data, range) {
       const attendanceMap = {};
       (client?.attendance || []).forEach(att => {
         if (
-          isBefore(new Date(att.date), end) &&
-          isAfter(new Date(att.date), start)
+          isBefore(subMinutes(new Date(att.date), 1), end) &&
+          isAfter(addMinutes(new Date(att.date), 1), start)
         ) {
           const dayIndex = getDate(new Date(att.date));
           attendanceMap[dayIndex] = att;
         }
       });
+
       const dailyAttendance = Array.from({ length: totalDays }, (_, i) => {
         const currentDate = addDays(start, i);
         const entry = attendanceMap[getDate(currentDate)];
@@ -226,6 +228,72 @@ export function statusClases(status) {
   }
 }
 
+export function physicalClubReportsMonthly(data, range) {
+  const start = subMinutes(startOfDay(range.from), 1)
+  const end = endOfDay(range.to)
+
+  const daysList = Array.from(
+    { length: getDaysInMonth(new Date()) },
+    (_, i) => i + 1
+  )
+    .map((item) => (
+      { date: item, presentee: 0 }
+    ))
+
+  const attendanceMap = data
+    .flatMap(client => client.attendance)
+    .filter(({ date }) =>
+      isAfter(new Date(date), start) &&
+      isBefore(new Date(date), end)
+    )
+    .reduce((acc, record) => ({
+      ...acc,
+      [getDate(new Date(record.date))]: (acc[new Date(record.date)] || 0) + 1
+    }), {})
+
+  return {
+    XAxisDataKey: "date",
+    YAxisDataKey: "presentee",
+    data: daysList
+      .map(date => ({
+        ...date,
+        presentee: attendanceMap[date.date] || 0
+      })),
+  }
+}
+
+export function physicalClubReportsYearly(data, range) {
+  const start = subMinutes(startOfYear(range.from), 1)
+  const end = endOfYear(range.to)
+
+  const monthsList = MONTHS.map(name => ({
+    month: name,
+    presentee: 0,
+  }))
+
+  const attendanceMap = data
+    .flatMap(client => client.attendance)
+    .filter(({ date }) =>
+      isAfter(new Date(date), start) && isBefore(new Date(date), end)
+    )
+    .reduce((acc, record) => {
+      const monthIndex = getMonth(new Date(record.date)) // 0–11
+      const monthName = MONTHS[monthIndex]
+      acc[monthName] = (acc[monthName] || 0) + 1
+      return acc
+    }, {})
+
+  return {
+    XAxisDataKey: "month",
+    YAxisDataKey: "presentee",
+    data: monthsList.map(item => ({
+      ...item,
+      presentee: attendanceMap[item.month] || 0,
+    })),
+  }
+}
+
+
 export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
   data.forEach(item => {
@@ -361,7 +429,7 @@ export function physicalAttendanceExcelDownload(
       return clientWiseExcelData(data, range)
     case "club-history":
       return clubHistoryExcelData(data, range)
-    case "daily-attendance":
+    case "reports":
       return generateAttendanceRowsExcelData(data, range)
     default:
       break;
