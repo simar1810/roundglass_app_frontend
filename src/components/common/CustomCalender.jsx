@@ -25,6 +25,7 @@ const MONTHS = [
 ]
 
 export function CustomCalendar({
+  mode = "both", // drag, click, both, single
   badgeData = {},
   className,
   range,
@@ -90,7 +91,7 @@ export function CustomCalendar({
 
   const handleClick = (date) => {
     if (!clickStart) {
-      setClickStart(date)
+      if (["both", "click"].includes(mode)) setClickStart(date)
       const newRange = { from: date, to: date }
       setSelectedRange(newRange)
       onRangeSelect?.(newRange)
@@ -100,7 +101,7 @@ export function CustomCalendar({
       const newRange = { from: start, to: end }
       setSelectedRange(newRange)
       onRangeSelect?.(newRange)
-      setClickStart(null)
+      if (["both", "click"].includes(mode)) setClickStart(null)
     }
   }
 

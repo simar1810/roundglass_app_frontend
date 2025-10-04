@@ -119,6 +119,7 @@ export function AttendanceCalendar({
         range={range}
         badgeData={badgeData}
         onRangeSelect={setRange}
+        mode="single"
       />
     </div>
   );
