@@ -25,6 +25,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
 
 const categoriesFetcher = () =>
 	fetchData("app/coach-categories").then((res) => {
@@ -33,6 +34,11 @@ const categoriesFetcher = () =>
 	});
 
 export default function Page() {
+	const { tabChange, selectedTab } = useTabsContentNavigation(
+		"list",
+		["list", "visualizer", "manageCategories"]
+	);
+
 	const { data: coachData } = useAppSelector((state) => state.coach);
 	const { downline = {}, features, clubType } = coachData;
 
@@ -92,7 +98,11 @@ export default function Page() {
 		<div className="content-container content-height-screen">
 			{downline.status === "requested" && <Invitations />}
 			{downline.status === "in-downline" && (
-				<Tabs defaultValue="list" className="w-full">
+				<Tabs
+					value={selectedTab}
+					onValueChange={tabChange}
+					className="w-full"
+				>
 					<TabsList className="grid w-full max-w-md mx-auto mb-4 grid-cols-3">
 						<TabsTrigger value="list">List View</TabsTrigger>
 						<TabsTrigger value="visualizer">Visualizer</TabsTrigger>
