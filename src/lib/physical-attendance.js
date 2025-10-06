@@ -242,13 +242,14 @@ export function physicalClubReportsMonthly(data, range) {
 
   const attendanceMap = data
     .flatMap(client => client.attendance)
-    .filter(({ date }) =>
+    .filter(({ date, status }) =>
       isAfter(new Date(date), start) &&
-      isBefore(new Date(date), end)
+      isBefore(new Date(date), end) &&
+      status === "present"
     )
     .reduce((acc, record) => ({
       ...acc,
-      [getDate(new Date(record.date))]: (acc[new Date(record.date)] || 0) + 1
+      [getDate(new Date(record.date))]: (acc[getDate(new Date(record.date))] || 0) + 1
     }), {})
 
   return {
