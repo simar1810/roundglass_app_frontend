@@ -49,8 +49,9 @@ jobs:
         SSH_USER: ${{ secrets.SSH_USER_STAGING }}
       run: |
         sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
-        cd /home/Wellnessz_stage/wellnessz_backend && \
+        cd /home/Wellnessz_stage/wellnessz_web_app && \
         git pull origin stage && \
         npm install && \
-        pm2 reload stage.wellnessz.in && \
+        npm run build && \
+        pm2 reload stageapp.wellnessz.in && \
         echo 'Staging deployment successful'" || echo 'Staging deployment failed'
