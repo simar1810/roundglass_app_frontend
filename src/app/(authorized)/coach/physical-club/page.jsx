@@ -198,7 +198,7 @@ function ToolsBar({
     />}
     {[
       "shake-requests", "club-history",
-      "clientwise-history", "reports"
+      "clientwise-history"
     ].includes(tab) && <SelectDateRange
         range={range}
         setRange={setRange}
