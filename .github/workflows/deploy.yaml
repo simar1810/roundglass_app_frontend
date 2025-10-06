@@ -30,3 +30,27 @@ jobs:
         npm run build && \
         sudo systemctl restart app-front.service && \
         echo 'Deployment successful'" || echo 'Deployment failed'
+
+  deploy_to_staging:
+    if: github.ref == 'refs/heads/stage'  # Ensure job runs only on push to staging
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install SSH Pass
+      run: sudo apt-get install sshpass -y
+
+    - name: SSH and Deploy to Staging
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD_STAGING }}
+        SERVER_IP: ${{ secrets.SERVER_IP_STAGING }}
+        SSH_USER: ${{ secrets.SSH_USER_STAGING }}
+      run: |
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
+        cd /home/Wellnessz_stage/wellnessz_backend && \
+        git pull origin stage && \
+        npm install && \
+        pm2 reload stage.wellnessz.in && \
+        echo 'Staging deployment successful'" || echo 'Staging deployment failed'
