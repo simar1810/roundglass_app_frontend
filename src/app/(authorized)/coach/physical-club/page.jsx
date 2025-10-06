@@ -218,11 +218,11 @@ function SelectDateRange({
   setRange
 }) {
   return <Sheet>
-    <SheetTrigger>
-      <CalendarRange
-        strokeWidth={2.4}
-        className="h-[34px] w-[34px] text-white bg-black [var(--accent-1)] p-2 rounded-[4px]"
-      />
+    <SheetTrigger asChild>
+      <Button className="font-bold">
+        Select Date Range
+        <CalendarRange strokeWidth={2.4} />
+      </Button>
     </SheetTrigger>
     <SheetContent align="start" className="!max-w-[600px] !w-[600px]">
       <SheetTitle className="text-[28px] p-4 border-b-1">Date Range</SheetTitle>
