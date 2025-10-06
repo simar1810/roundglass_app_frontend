@@ -1,7 +1,5 @@
 "use client"
-
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   Card,
@@ -12,25 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
-
-export const description = "A bar chart"
-
-const chartData = [
-  { month: "January", presentees: 186 },
-  { month: "February", presentees: 305 },
-  { month: "March", presentees: 237 },
-  { month: "April", presentees: 73 },
-  { month: "May", presentees: 209 },
-  { month: "June", presentees: 214 },
-]
-
-
 
 export function BarChartComponent({
   className,
@@ -51,7 +35,11 @@ export function BarChartComponent({
             color: "var(--chart-1)",
           }
         }}>
-          <BarChart accessibilityLayer data={xAxis.data}>
+          <BarChart
+            margin={{ left: 6, right: 20, top: 10, bottom: 0 }}
+            accessibilityLayer
+            data={xAxis.data}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey={xAxis.XAxisDataKey}
@@ -59,6 +47,13 @@ export function BarChartComponent({
               tickMargin={10}
               axisLine={false}
               tickFormatter={(value) => String(value).slice(0, 3)}
+            />
+            <YAxis
+              width={30}
+              tickLine={false}
+              tickMargin={5}
+              axisLine={false}
+              tickFormatter={(value) => value}
             />
             <ChartTooltip
               cursor={false}
