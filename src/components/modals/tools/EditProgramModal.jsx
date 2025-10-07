@@ -1,3 +1,4 @@
+import { UpdateAllowedRollnos } from "@/app/(authorized)/coach/tools/programs/add/page";
 import FormControl from "@/components/FormControl";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ function ProgramContainer() {
       label="Link "
       value={state.link}
       onChange={e => dispatch(changeProgramFieldValue("link", e.target.value))}
-      className="block mt-2"
+      className="block mt-2 mb-4"
     />
 
     <SelectMultiple
@@ -83,6 +84,10 @@ function ProgramContainer() {
       value={state.availability}
       onChange={value => dispatch(changeProgramFieldValue("availability", value))}
       className="mb-4"
+    />
+    <UpdateAllowedRollnos
+      rollnos={state.allowed_rollno_series}
+      onChange={value => dispatch(changeProgramFieldValue("allowed_rollno_series", value))}
     />
     <div className="relative">
       <Image
