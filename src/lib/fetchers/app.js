@@ -301,7 +301,7 @@ export function retrieveAIAgentHistory(clientId, date) {
   return fetchData(endpoint)
 }
 
-export const retrieveReports = withClientFilter(function(person = "coach", clientId) {
+export const retrieveReports = withClientFilter(function (person = "coach", clientId) {
   let query = `person=${person}`
   if (clientId) query += `&clientId=${clientId}`
   return fetchData(`app/reports/client?${query}`)
@@ -373,7 +373,7 @@ export async function retrieveBankDetails(query) {
 
 // Users management functions
 export function getUsers(coachId = null) {
-  const endpoint = coachId 
+  const endpoint = coachId
     ? `app/users?person=coach&coachId=${coachId}`
     : "app/users?person=coach";
   return fetchData(endpoint);
@@ -383,26 +383,26 @@ export function getUsers(coachId = null) {
 export async function createUser(userData) {
   try {
     const { permissions, ...userDataWithoutPermissions } = userData;
-    
+
     const createResponse = await sendData("app/users", userData, "POST");
-    
+
     if (createResponse.status_code === 200 && permissions && permissions.length > 0) {
       try {
         const userId = createResponse.data?._id;
-        
+
         if (userId) {
-          const permissionsData = { 
-            id: userId, 
-            permissions: permissions 
+          const permissionsData = {
+            id: userId,
+            permissions: permissions
           };
-          
+
           await sendData("app/users/permissions", permissionsData, "PUT");
         }
       } catch (permissionsError) {
         // Don't fail the entire request if permissions update fails
       }
     }
-    
+
     return createResponse;
   } catch (error) {
     throw error;
@@ -439,6 +439,11 @@ export const getAvailableClients = withClientFilter((page = 1, limit = 1000, sea
   return fetchData(`app/users/clients/available?page=${page}&limit=${limit}${searchParam}`);
 });
 
+export const fetchClubSubscription = function (coachId) {
+  const endpoint = "app/clubSubscription/coach/" + coachId
+  return fetchData(endpoint)
+}
+
 // User login function
 export async function loginUser(userData) {
   try {
@@ -460,16 +465,16 @@ export async function loginUser(userData) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
           _id: responseData.data.createdBy._id,
           userType: "user",
           userData: responseData.data
         })
       });
-      
+
       const authHeaderData = await authHeaderResponse.json();
-      
+
       if (authHeaderData.status_code !== 200) {
         throw new Error(authHeaderData.message || "Failed to set authentication token");
       }

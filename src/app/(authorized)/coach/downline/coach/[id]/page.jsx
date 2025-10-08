@@ -3,7 +3,7 @@ import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
+import { fetchClubSubscription, retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,8 @@ import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
 import { useAppSelector } from "@/providers/global/hooks";
+import CreateSubscriptionDialog from "@/components/pages/coach/club/club-subscription/CreateClubSubscription";
+import SubscriptionsTable from "@/components/pages/coach/club/club-subscription/ListClubSubscriptions";
 
 const tabItems = [
   {
@@ -33,6 +35,11 @@ const tabItems = [
     id: 2,
     title: "Clients",
     value: "clients"
+  },
+  {
+    id: 3,
+    title: "Subscriptions",
+    value: "subscriptions"
   },
   // {
   //   id: 3,
@@ -81,6 +88,12 @@ export default function Page() {
       <TabsHeader />
       <TabsProfile profile={profile} />
       <TabsClients clients={clients} />
+      <TabsContent
+        className="bg-[var(--comp-1)] p-4 border-1 rounded-[10px]"
+        value="subscriptions"
+      >
+        <SubscriptionsTab coachId={coachId} />
+      </TabsContent>
       <TabsRetail retailOrders={retailOrders} />
       <TabsPlans plans={plans} />
     </Tabs>
@@ -88,16 +101,23 @@ export default function Page() {
 }
 
 function TabsHeader() {
+  const { clubType } = useAppSelector(state => state.coach.data)
   return <TabsList className="bg-transparent flex items-center gap-4 mb-4">
-    {tabItems.map(tab => <TabsTrigger
-      key={tab.id}
-      value={tab.value}
-      className="text-[16px] text-[var(--accent-1)] data-[state=active]:bg-[var(--accent-1)] 
+    {tabItems
+      .filter(item =>
+        [3].includes(item.id)
+          ? ["System Leader", "Club Leader"].includes(clubType)
+          : true
+      )
+      .map(tab => <TabsTrigger
+        key={tab.id}
+        value={tab.value}
+        className="text-[16px] text-[var(--accent-1)] data-[state=active]:bg-[var(--accent-1)] 
              data-[state=active]:text-[var(--comp-1)] border-1 rounded-[6px] border-[var(--accent-1)]
              bg-[var(--comp-2)] px-4 py-4 data-[state=active]:font-semibold"
-    >
-      {tab.title}
-    </TabsTrigger>)}
+      >
+        {tab.title}
+      </TabsTrigger>)}
   </TabsList>
 }
 
@@ -535,5 +555,36 @@ function UpdateRollno({ rollno: defaultRollno, coachId }) {
           <Pen />
         </Button>
       </>}
+  </div>
+}
+
+function SubscriptionsTab({ coachId }) {
+  const { isLoading, error, data, mutate } = useSWR(
+    `clubSubscription/${coachId}`,
+    () => fetchClubSubscription(coachId)
+  );
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <div>
+    <CreateSubscriptionDialog
+      coachId={coachId}
+      onCreated={mutate}
+    />
+    <ContentError title={error?.message || data.message} />
+  </div>
+
+  return <div>
+    <div className="flex items-center justify-between">
+      <h2>Subscription</h2>
+      <CreateSubscriptionDialog
+        coachId={coachId}
+        onCreated={mutate}
+      />
+    </div>
+    <SubscriptionsTable
+      subscriptions={data.data?.history || []}
+      onDeleted={mutate}
+    />
   </div>
 }
