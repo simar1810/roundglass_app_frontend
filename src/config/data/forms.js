@@ -102,7 +102,7 @@ export const meetingEditFormControls = [
     label: "Allowed Client Roll Nos Series",
     type: "text",
     inputtype: 9,
-    placeholder: "Enter comma separated roll no series",
+    placeholder: "Enter roll no series",
     name: "allowed_client_rollnos",
     getvalue: (obj) => obj.allowed_client_rollnos || []
   }

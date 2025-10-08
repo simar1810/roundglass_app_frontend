@@ -346,6 +346,7 @@ function CreateInvitation() {
 }
 
 function CoachesList() {
+	const [query, setQuery] = useState("")
 	const { isLoading, error, data } = useSWR(
 		"app/downline/coaches",
 		retrieveDownlineCoaches
@@ -356,10 +357,17 @@ function CoachesList() {
 	if (error || data.status_code !== 200)
 		return <ContentError title={error?.message || data.message} />;
 
-	const coaches = data?.data || [];
+	const coaches = data?.data
+		.filter(coach => new RegExp(query, "i").test(coach.name)) || [];
 	return (
-		<div className="bg-[var(--comp-1)] px-4 py-8 rounded-[8px] space-y-2 border-1">
+		<div className="bg-[var(--comp-2)] px-4 py-8 rounded-[8px] space-y-2 border-1">
 			<h4 className="mb-4">Coaches under You {coaches.length}</h4>
+			<FormControl
+				value={query}
+				onChange={e => setQuery(e.target.value)}
+				className="block [&_.input]:bg-white mb-4"
+				placeholder="Search Coach Name..."
+			/>
 			<div className="divide-y-1">
 				{coaches.map((coach, index) => (<div
 					key={index}
