@@ -52,7 +52,8 @@ function ProgramList({ programs }) {
           <DeleteProgramAction id={program._id} />
         </div>
         <Image
-          src={program.image || "/"}
+          src={program.image || "/not-found.png"}
+          onError={e => e.target.src = "/not-found.png"}
           alt=""
           height={400}
           width={400}
@@ -139,7 +140,8 @@ function Program({ program }) {
   >
     <div>
       <Image
-        src={program.image || "/"}
+        src={program.image || "/not-found.png"}
+        onError={e => e.target.src = "/not-found.png"}
         alt=""
         height={400}
         width={400}

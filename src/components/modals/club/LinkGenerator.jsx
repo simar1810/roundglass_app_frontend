@@ -30,7 +30,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
 import { copyText, getObjectUrl } from "@/lib/utils";
-import useSWR, { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 import Image from "next/image";
 import { getMeetingClientList } from "@/lib/fetchers/club";
 import ContentError from "@/components/common/ContentError";
@@ -39,7 +39,7 @@ import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
 import SelectMultiple from "@/components/SelectMultiple";
 import TimePicker from "@/components/common/TimePicker";
-import { _throwError } from "@/lib/formatter";
+import { _throwError, validLink } from "@/lib/formatter";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -112,7 +112,13 @@ function MeetingLink() {
         <Button
           variant="wz"
           className="block mt-4 mx-auto"
-          onClick={() => dispatch(setCurrentView(1))}
+          onClick={() => {
+            if (!validLink(baseLink)) {
+              toast.error("Should be a valid Link");
+              return;
+            }
+            dispatch(setCurrentView(1))
+          }}
         >
           Convert
         </Button>
@@ -159,6 +165,7 @@ async function generateMeeting(withZoom, data, baseLink) {
 }
 
 function MeetingForm({ withZoom }) {
+  const { cache } = useSWRConfig();
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef();
 
@@ -173,8 +180,8 @@ function MeetingForm({ withZoom }) {
       const response = await generateMeeting(withZoom, data, state.baseLink);
       if (!response.status && !response.success) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");
-      mutate("getMeetings")
       dispatch(setWellnessZLink(response?.data?.wellnessZLink || response?.data?.newMeeting?.wellnessZLink));
+      cache.delete('getMeetings');
       if (state.copyToClipboard) {
         copyText(response?.data?.wellnessZLink);
         toast.success("Link copied");
