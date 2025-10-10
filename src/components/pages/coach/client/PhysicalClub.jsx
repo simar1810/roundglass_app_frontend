@@ -23,7 +23,6 @@ import { sendData } from "@/lib/api"
 import { Trash2, X } from "lucide-react"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
-import { RadioGroup } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
@@ -33,7 +32,7 @@ export default function PhysicalClub() {
     className="space-y-6"
   >
     <MembershipData />
-    <PhysicalClubAttendance />
+    {/* <PhysicalClubAttendance /> */}
   </TabsContent>
 }
 
@@ -56,6 +55,16 @@ function MembershipData() {
     return (<ContentError className="mt-0" title={error || data?.message} />)
 
   const membership = data.data?.results?.[0]
+
+  if (membership.isActive === false) return <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
+    <p>Service Status</p>
+    <div>
+      <UpdatePhysicalServiceStatus
+        status={Boolean(membership.isActive)}
+        clientId={clientId}
+      />
+    </div>
+  </div>
 
   if (!membership) {
     return (
