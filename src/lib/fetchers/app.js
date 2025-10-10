@@ -444,6 +444,10 @@ export const fetchClubSubscription = function (coachId) {
   return fetchData(endpoint)
 }
 
+export async function retrieveClientList() {
+  return fetchData("app/downline/client-list")
+}
+
 // User login function
 export async function loginUser(userData) {
   try {
