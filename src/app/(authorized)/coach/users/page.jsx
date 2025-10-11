@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Trash2, Search, UserPlus, Eye, Settings, Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit, Trash2, Search, UserPlus, Settings, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { sendData, sendDataWithFormData } from "@/lib/api";
+import { sendData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import AddUserModal from "@/components/modals/user/AddUserModal";
 import EditUserModal from "@/components/modals/user/EditUserModal";
@@ -20,6 +19,10 @@ import { getUsers } from "@/lib/fetchers/app";
 import { isCoach } from "@/lib/permissions";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/providers/global/hooks";
+import { Switch } from "@/components/ui/switch";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { mutate } from "swr";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -34,12 +37,11 @@ export default function UsersPage() {
   const [showClientAssignmentModal, setShowClientAssignmentModal] = useState(false);
 
   useEffect(() => {
-    // Redirect if user is not a coach
     if (!isCoach()) {
       router.push("/coach/dashboard");
       return;
     }
-    // Only fetch users when coach data is available
+
     if (coach?._id) {
       fetchUsers();
     }
@@ -65,7 +67,7 @@ export default function UsersPage() {
 
   const handleDeleteUser = async (userId) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
-    
+
     try {
       const response = await sendData("app/users", { id: userId }, "DELETE");
       if (response.status_code === 200) {
@@ -198,6 +200,12 @@ export default function UsersPage() {
                   )}
                 </div>
               </CardContent>
+              <CardFooter>
+                <UpdateUserStatus
+                  userId={user._id}
+                  status={user.isActive}
+                />
+              </CardFooter>
             </Card>
           ))}
         </div>
@@ -263,4 +271,35 @@ export default function UsersPage() {
       )}
     </div>
   );
+}
+
+function UpdateUserStatus({ userId, status = true }) {
+  const triggerRef = useRef()
+  async function udpateUserStatus(setLoading) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/users/actions",
+        { userId, status: !Boolean(status) },
+        "PATCH"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      location.reload()
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure? You are changing the status of user!"
+    action={(setLoading, btnRef) => udpateUserStatus(setLoading, btnRef)}
+  >
+    <Switch
+      checked={status}
+      onCheckedChange={() => triggerRef.current.click()}
+    />
+    <AlertDialogTrigger ref={triggerRef} />
+  </DualOptionActionModal>
 }

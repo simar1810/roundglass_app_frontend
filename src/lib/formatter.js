@@ -168,3 +168,14 @@ export function datesInRange(range) {
 export function validLink(link) {
   return /^https?:\/\/.*$/.test(link);
 }
+
+export function ensureHttps(url = "") {
+  if (typeof url !== "string") return "";
+  url = url.trim();
+  url = url.replace(/^.*?:\/\/.*?:\/\/|^.*?:\/\/|:\/\/.*?:\/\/|:\/\/+|:.*?:\/\/+/gi, "https://");
+  url = url.replace(/^(?:https?:\/\/)+/i, "https://");
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+  return url;
+}

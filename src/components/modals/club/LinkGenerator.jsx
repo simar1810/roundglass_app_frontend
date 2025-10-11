@@ -39,7 +39,7 @@ import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
 import SelectMultiple from "@/components/SelectMultiple";
 import TimePicker from "@/components/common/TimePicker";
-import { _throwError, validLink } from "@/lib/formatter";
+import { _throwError, ensureHttps, validLink } from "@/lib/formatter";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -104,7 +104,7 @@ function MeetingLink() {
       <FormControl
         label="Meeting Link"
         value={baseLink}
-        onChange={e => dispatch(changeFieldvalue("baseLink", e.target.value))}
+        onChange={e => dispatch(changeFieldvalue("baseLink", ensureHttps(e.target.value)))}
         placeholder="Type or paste your link here"
         className="block mt-4"
       />
@@ -113,10 +113,6 @@ function MeetingLink() {
           variant="wz"
           className="block mt-4 mx-auto"
           onClick={() => {
-            if (!validLink(baseLink)) {
-              toast.error("Should be a valid Link");
-              return;
-            }
             dispatch(setCurrentView(1))
           }}
         >
