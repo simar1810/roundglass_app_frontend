@@ -109,8 +109,7 @@ export function _throwError(message = "checking payload") {
 }
 
 export function setDateWithNewTime(date, timeString) {
-  const parsedTime = parse(timeString, "hh:mm", new Date())
-
+  const parsedTime = parse(timeString, "hh:mm a", new Date())
   let updatedDate = new Date(date)
   updatedDate = setHours(updatedDate, parsedTime.getHours())
   updatedDate = setMinutes(updatedDate, parsedTime.getMinutes())
@@ -163,4 +162,20 @@ export function datesInRange(range) {
     year: dateObj.getFullYear(),
     day: format(dateObj, "EEE"),
   }));
+}
+
+
+export function validLink(link) {
+  return /^https?:\/\/.*$/.test(link);
+}
+
+export function ensureHttps(url = "") {
+  if (typeof url !== "string") return "";
+  url = url.trim();
+  url = url.replace(/^.*?:\/\/.*?:\/\/|^.*?:\/\/|:\/\/.*?:\/\/|:\/\/+|:.*?:\/\/+/gi, "https://");
+  url = url.replace(/^(?:https?:\/\/)+/i, "https://");
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+  return url;
 }

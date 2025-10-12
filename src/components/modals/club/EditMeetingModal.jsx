@@ -98,6 +98,7 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
   if (field.inputtype === 1) return <FormControl
     key={field.id}
     className="text-[14px] [&_.label]:font-[400] block mb-4"
+    type={field.type || "text"}
     value={formData[field.name]}
     onChange={e => dispatch(prev => ({ ...prev, [field.name]: e.target.value }))}
     label={field.label}
@@ -162,8 +163,8 @@ function generatePayload(meeting) {
       ? format(parseISO(meeting.scheduleDate), "yyyy-MM-dd")
       : format(new Date(), "yyyy-MM-dd"),
     time: meeting?.scheduleDate
-      ? format(parseISO(meeting.scheduleDate), "HH:mm")
-      : format(new Date(), "HH:mm"),
+      ? format(parseISO(meeting.scheduleDate), "hh:mm a")
+      : format(new Date(), "hh:mm a"),
     reOcurred: meeting?.reOcurred || false,
     description: meeting?.description || "",
     duration: meeting?.duration || "",
@@ -202,7 +203,7 @@ export function MeetingRepeat({
 }
 
 export function MeetingDescription({ field, formData, dispatch }) {
-  return <div className="mb-4">
+  return <div className="my-4">
     <Label className="mb-2">Meeting Description</Label>
     <Textarea
       placeholder={field.placeholder}
