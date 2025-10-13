@@ -63,7 +63,7 @@ export const sidebar__coachContent = [
     title: "Portfolio",
     icon: <User className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/portfolio",
-    permission: null, // Always visible
+    permission: 100, // Always visible
   },
   {
     id: 3,
