@@ -556,7 +556,7 @@ function DownlineClientList() {
 			<TableBody>
 				{clients.map((client) => (
 					<TableRow key={client._id}>
-						<TableCell className="font-medium">{client.name}</TableCell>
+						<TableCell className="font-medium max-w-[10ch] truncate text-wrap">{client.name}</TableCell>
 						<TableCell>{client.coach}</TableCell>
 						<TableCell>{client.clientId}</TableCell>
 						<TableCell>{client.email || "-"}</TableCell>
