@@ -54,7 +54,7 @@ function MembershipData() {
   if (error || !Boolean(data) || data?.status_code !== 200)
     return (<ContentError className="mt-0" title={error || data?.message} />)
 
-  const membership = data.data?.results?.[0]
+  const membership = data.data?.results?.[0] || {}
 
   if (membership.isActive === false) return <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
     <p>Service Status</p>
@@ -178,7 +178,7 @@ function PhysicalClubAttendance() {
 function ClientDetails({ membership }) {
   const { id: clientId } = useParams()
   const { end, type } = getMembershipType(membership)
-  const active = membership.client.isPhysicalClubActive
+  const active = membership?.client?.isPhysicalClubActive
 
   return (
     <div className="flex flex-row items-center justify-between">
