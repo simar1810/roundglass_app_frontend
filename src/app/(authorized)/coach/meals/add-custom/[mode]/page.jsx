@@ -22,6 +22,12 @@ function CustomMealPlanContainer() {
     if (["daily", "weekly", "monthly"].includes(mode)) {
       dispatch(selectWorkoutType(mode))
     }
+    const aiData = localStorage.getItem("aiMealPlan");
+    if (aiData) {
+      const parsed = JSON.parse(aiData);
+      localStorage.removeItem("aiMealPlan");
+      dispatch({ type: "LOAD_AI_MEAL_PLAN", payload: parsed });
+    }
   }, [])
   if (!["daily", "weekly", "monthly"].includes(mode)) return <ContentError title="Invalid Creation Mode selected" />
   return <div className="content-container content-height-screen">

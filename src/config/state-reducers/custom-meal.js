@@ -250,6 +250,23 @@ export function customMealReducer(state, action) {
         },
         selectedPlan: action.payload.new,
       };
+    case "LOAD_AI_MEAL_PLAN": {
+      const ai = action.payload.mealPlan;
+
+      return {
+        ...state,
+        title: ai.title,
+        description: ai.description,
+        mode: ai.mode || "daily",
+        creationType: "new",
+        stage: 2,
+        selectedPlan: "day_1",
+        selectedMealType:
+          ai.plan?.day_1?.meals?.[0]?.mealType || "Breakfast",
+        selectedPlans: ai.plan || {},
+        isAiGenerated: true,
+      };
+    }
     default:
       return state;
   }
