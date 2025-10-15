@@ -1,10 +1,12 @@
 import { TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getDaysInMonth, nameInitials } from "@/lib/formatter"
+import { datesInRange, nameInitials } from "@/lib/formatter"
 import { cn } from "@/lib/utils"
-import { clientWiseHistory, statusClases } from "@/lib/physical-attendance"
-import { getMonth, getYear } from "date-fns"
+import { clientWiseHistory, clientWiseHistoryClientOptions, statusClases } from "@/lib/physical-attendance"
+import { useMemo, useRef, useState } from "react"
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 function TableHeader({ days }) {
   return (
@@ -37,10 +39,10 @@ function TableRow({
         </Avatar>
         {client.clientName}
       </td>
-      {client.monthlyAttendance.map((day, i) => (
+      {client.attendanceInRange.map((day, i) => (
         <td key={i} className="px-2 py-1">
           <div
-            className={cn("w-6 h-6 flex items-center justify-center rounded-md", statusClases(day.status))}
+            className={cn("w-6 h-6 mx-auto flex items-center justify-center rounded-md", statusClases(day.status))}
           >
             {nameInitials(day.status) || <>-</>}
           </div>
@@ -52,17 +54,29 @@ function TableRow({
 
 export function ClientwiseHistory({
   query,
-  data
+  data,
+  range
 }) {
-  const now = new Date();
-  const days = getDaysInMonth(getYear(now), getMonth(now))
+  const [selectedClients, setSelectedClients] = useState([])
+  const clientSet = new Set(selectedClients)
 
-  const result = (clientWiseHistory(data) || [])
+  const days = datesInRange(range)
+  const result = (clientWiseHistory(
+    data.filter(item => clientSet.has(item?.client?._id)),
+    range
+  ) || [])
     .filter(client => new RegExp(query, "i").test(client?.clientName))
 
   return (
     <TabsContent value="clientwise-history">
-      <Card className="p-0 shadow-none border-1 rounded-[10px] bg-[var(--comp-1)]">
+      <div className="w-fit ml-auto">
+        <SelectClients
+          clients={data}
+          selectedClients={selectedClients}
+          onSelectClients={setSelectedClients}
+        />
+      </div>
+      <Card className="mt-4 p-0 shadow-none border-1 rounded-[10px] bg-[var(--comp-1)]">
         <div className="p-4 overflow-x-auto">
           <table className="min-w-full border-collapse">
             <TableHeader days={days} />
@@ -78,10 +92,71 @@ export function ClientwiseHistory({
             </tbody>
           </table>
         </div>
-        {result.length === 0 && <div className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold">
-          No Matches Found!
+        {result.length === 0 && <div
+          className="bg-white m-4 border-1 rounded-[6px] h-[200px] flex items-center justify-center font-bold"
+        >
+          {clientSet.size === 0
+            ? <>Please Select a Client</>
+            : <>No Matches Found!</>}
         </div>}
       </Card>
     </TabsContent>
   )
+}
+
+function SelectClients({
+  clients,
+  selectedClients,
+  onSelectClients
+}) {
+  const [selected, setSelected] = useState(selectedClients);
+  const dialogRef = useRef()
+
+  const clientList = useMemo(() => clientWiseHistoryClientOptions(clients), [])
+
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button className="font-bold">Select Clients</Button>
+    </DialogTrigger>
+    <DialogContent className="p-0 gap-0 max-h-[70vh] overflow-y-auto">
+      <DialogTitle className="p-4 border-b-1">Select Clients</DialogTitle>
+      <div className="p-4">
+        {clientList.map((client, idx) => (
+          <label key={client.clientId} className="flex items-center gap-2 mb-4 cursor-pointer">
+            <Avatar>
+              <AvatarImage src={client.profilePhoto} />
+              <AvatarFallback>{nameInitials(client?.clientName)}</AvatarFallback>
+            </Avatar>
+            <p htmlFor={client.clientId}
+              className="mr-auto"
+            >
+              {client.clientName}
+            </p>
+            <input
+              type="checkbox"
+              id={client.clientId}
+              checked={selected.includes(client.clientId)}
+              value={client.clientId}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelected(prev => [...prev, client.clientId])
+                } else {
+                  setSelected(prev => prev.filter(id => id !== client.clientId))
+                }
+              }}
+            />
+          </label>
+        ))}
+        <Button
+          onClick={() => {
+            onSelectClients(selected);
+            dialogRef.current?.click();
+          }}
+        >
+          Save
+        </Button>
+      </div>
+      <DialogClose ref={dialogRef} />
+    </DialogContent>
+  </Dialog>
 }

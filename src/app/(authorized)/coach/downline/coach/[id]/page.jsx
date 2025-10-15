@@ -3,7 +3,7 @@ import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
+import { fetchClubSubscription, retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,9 @@ import { Button } from "@/components/ui/button";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
+import { useAppSelector } from "@/providers/global/hooks";
+import CreateSubscriptionDialog from "@/components/pages/coach/club/club-subscription/CreateClubSubscription";
+import SubscriptionsTable from "@/components/pages/coach/club/club-subscription/ListClubSubscriptions";
 
 const tabItems = [
   {
@@ -32,6 +35,11 @@ const tabItems = [
     id: 2,
     title: "Clients",
     value: "clients"
+  },
+  {
+    id: 3,
+    title: "Subscriptions",
+    value: "subscriptions"
   },
   // {
   //   id: 3,
@@ -80,6 +88,12 @@ export default function Page() {
       <TabsHeader />
       <TabsProfile profile={profile} />
       <TabsClients clients={clients} />
+      <TabsContent
+        className="bg-[var(--comp-1)] p-4 border-1 rounded-[10px]"
+        value="subscriptions"
+      >
+        <SubscriptionsTab coachId={coachId} />
+      </TabsContent>
       <TabsRetail retailOrders={retailOrders} />
       <TabsPlans plans={plans} />
     </Tabs>
@@ -87,16 +101,23 @@ export default function Page() {
 }
 
 function TabsHeader() {
+  const { clubType } = useAppSelector(state => state.coach.data)
   return <TabsList className="bg-transparent flex items-center gap-4 mb-4">
-    {tabItems.map(tab => <TabsTrigger
-      key={tab.id}
-      value={tab.value}
-      className="text-[16px] text-[var(--accent-1)] data-[state=active]:bg-[var(--accent-1)] 
+    {tabItems
+      .filter(item =>
+        [3].includes(item.id)
+          ? ["System Leader", "Club Leader"].includes(clubType)
+          : true
+      )
+      .map(tab => <TabsTrigger
+        key={tab.id}
+        value={tab.value}
+        className="text-[16px] text-[var(--accent-1)] data-[state=active]:bg-[var(--accent-1)] 
              data-[state=active]:text-[var(--comp-1)] border-1 rounded-[6px] border-[var(--accent-1)]
              bg-[var(--comp-2)] px-4 py-4 data-[state=active]:font-semibold"
-    >
-      {tab.title}
-    </TabsTrigger>)}
+      >
+        {tab.title}
+      </TabsTrigger>)}
   </TabsList>
 }
 
@@ -107,19 +128,17 @@ function TabsProfile({ profile }) {
   >
     <Card className="shadow-none">
       <CardContent className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           <Avatar className="w-16 h-16 border-1">
             <AvatarImage src={profile.profilePhoto} alt={profile.name} />
             <AvatarFallback>
               {nameInitials(profile.name)}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="mt-1">
             <h2 className="text-lg font-semibold">{profile.name}</h2>
             <p className="text-sm text-muted-foreground">{profile.email}</p>
-            <p className="text-sm text-muted-foreground">
-              {profile.mobileNumber}
-            </p>
+            <p className="text-sm text-muted-foreground">{profile.mobileNumber}</p>
           </div>
           <UpdateDetails
             actionType="UPDATE_COACH"
@@ -127,6 +146,11 @@ function TabsProfile({ profile }) {
             user={profile}
           />
         </div>
+
+        <UpdateRollno
+          rollno={profile.rollno}
+          coachId={profile._id}
+        />
 
         {profile.downline?.lineage?.length > 0 && (
           <div>
@@ -166,6 +190,7 @@ function TabsProfile({ profile }) {
 }
 
 function TabsClients({ clients = [] }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
   const [search, setSearch] = useState("")
   const [pagination, setPagination] = useState({ page: 1, limit: 10 })
 
@@ -218,12 +243,7 @@ function TabsClients({ clients = [] }) {
                   <TableCell>{client.email || "-"}</TableCell>
                   <TableCell>{client.mobileNumber || "-"}</TableCell>
                   <TableCell>{client.city || "-"}</TableCell>
-                  <TableCell onClick={e => e.stopPropagation()}>
-                    {/* <UpdateDetails
-                      actionType="UPDATE_CLIENT"
-                      title="Client Details"
-                      user={client}
-                    /> */}
+                  {["Club Leader", "Club Leader Jr"].includes(clubType) && <TableCell onClick={e => e.stopPropagation()}>
                     <SyncedCoachClientDetails
                       client={client}
                       onUpdate={() => location.reload()}
@@ -232,7 +252,7 @@ function TabsClients({ clients = [] }) {
                         <Eye className="hover:text-[var(--accent-1)] opacity-50 hover:opacity-100" />
                       </DialogTrigger>
                     </SyncedCoachClientDetails>
-                  </TableCell>
+                  </TableCell>}
                 </TableRow>
               ))}
               {paginatedClients.length === 0 && (
@@ -402,6 +422,7 @@ export function UpdateDetails({
   title,
   user
 }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
   const [loading, setLoading] = useState(false)
   const [payload, setPayload] = useState({
     actionType,
@@ -410,6 +431,7 @@ export function UpdateDetails({
     email: user.email || "",
     mobileNumber: user.mobileNumber || "",
     city: user.city || "",
+    rollno: user.rollno || ""
   })
 
   const closeBtnRef = useRef();
@@ -428,9 +450,11 @@ export function UpdateDetails({
     }
   }
 
+  if (!["Club Leader", "Club Leader Jr"].includes(clubType)) return <></>
+
   return <Dialog>
     <DialogTrigger className=" self-start">
-      <Pen className="w-[14px] h-[14px] text-[var(--accent-1)]" />
+      <Pen className="w-[14px] h-[14px] mt-2 text-[var(--accent-1)]" />
     </DialogTrigger>
     <DialogContent className="max-w-[100px] w-full gap-0 p-0">
       <DialogTitle className="p-4 border-b-1">{title}</DialogTitle>
@@ -461,6 +485,13 @@ export function UpdateDetails({
           label="City"
           className="block mb-4"
         />
+        <FormControl
+          value={payload.rollno}
+          onChange={e => setPayload(prev => ({ ...prev, rollno: e.target.value }))}
+          label="Roll No."
+          placeholder="Enter Roll No."
+          className="block mb-4"
+        />
         <Button
           variant="wz"
           className="w-xs mx-auto block"
@@ -471,4 +502,89 @@ export function UpdateDetails({
       <DialogClose ref={closeBtnRef} />
     </DialogContent>
   </Dialog>
+}
+
+function UpdateRollno({ rollno: defaultRollno, coachId }) {
+  const { clubType } = useAppSelector(state => state.coach.data)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [rollno, setRollno] = useState(defaultRollno || "")
+  const [loading, setLoading] = useState(false)
+
+  async function saveRollno() {
+    try {
+      setLoading(true)
+      const response = await sendData("app/downline/coach/rollno", {
+        coachId,
+        rollno
+      }, "POST")
+      if (response.status_code !== 200) throw new Error(response.message)
+      toast.success(response.message)
+      location.reload()
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!["Club Leader", "Club Leader Jr"].includes(clubType)) return <></>
+
+  return <div className="flex items-center gap-3">
+    {isUpdating
+      ? <>
+        <FormControl
+          value={rollno}
+          onChange={e => setRollno(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button
+          variant="wz"
+          className="whitespace-nowrap"
+          onClick={saveRollno}
+          disabled={loading || !rollno.trim() || defaultRollno === rollno.trim()}
+        >Update Roll No</Button>
+      </>
+      : <>
+        <span className="text-sm text-muted-foreground">Roll No: {defaultRollno || "N/A"}</span>
+        <Button
+          variant="icon"
+          className="whitespace-nowrap text-[var(--accent-1)] bg-[var(--comp-1)] border-1 font-bold"
+          onClick={() => setIsUpdating(true)}
+        >
+          {defaultRollno ? "Update" : "Add"}
+          <Pen />
+        </Button>
+      </>}
+  </div>
+}
+
+function SubscriptionsTab({ coachId }) {
+  const { isLoading, error, data, mutate } = useSWR(
+    `clubSubscription/${coachId}`,
+    () => fetchClubSubscription(coachId)
+  );
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <div>
+    <CreateSubscriptionDialog
+      coachId={coachId}
+      onCreated={mutate}
+    />
+    <ContentError title={error?.message || data.message} />
+  </div>
+
+  return <div>
+    <div className="flex items-center justify-between">
+      <h2>Subscription</h2>
+      <CreateSubscriptionDialog
+        coachId={coachId}
+        onCreated={mutate}
+      />
+    </div>
+    <SubscriptionsTable
+      subscriptions={data.data?.history || []}
+      onDeleted={mutate}
+    />
+  </div>
 }

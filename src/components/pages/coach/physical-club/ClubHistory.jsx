@@ -10,13 +10,13 @@ function TableHeader() {
   return (
     <thead>
       <tr className="text-sm text-gray-500">
-        <th className="px-4 py-2 text-left">Sr No.</th>
-        <th className="px-4 py-2 text-left">Client Name</th>
-        <th className="px-4 py-2 text-left">Client Status</th>
-        <th className="px-4 py-2 text-left">Present Days</th>
-        <th className="px-4 py-2 text-left">Absent Days</th>
-        <th className="px-4 py-2 text-left">Pending Servings</th>
-        <th className="px-4 py-2 text-left">Showup Percentage</th>
+        <th className="px-4 py-2 text-center">Sr No.</th>
+        <th className="px-4 py-2 text-center">Client Name</th>
+        <th className="px-4 py-2 text-center">Client Status</th>
+        <th className="px-4 py-2 text-center">Present Days</th>
+        <th className="px-4 py-2 text-center">Absent Days</th>
+        <th className="px-4 py-2 text-center">Pending Servings /<br /> End Date</th>
+        <th className="px-4 py-2 text-center">Showup Percentage</th>
       </tr>
     </thead>
   )
@@ -58,7 +58,7 @@ function TableRow({
   } || {})
 
   return (
-    <tr className="text-sm">
+    <tr className="text-sm [&_td]:text-center">
       <td className="px-4 py-2">{index}</td>
       <td className="px-4 py-2 flex items-center gap-2">
         <Avatar>
@@ -99,7 +99,7 @@ export default function ClubHistoryPage({
   return (
     <TabsContent value="club-history">
       <Card className="p-0 shadow-none border-1 rounded-[10px] bg-[var(--comp-1)]">
-        <div className="p-4 overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="min-w-full border-collapse">
             <TableHeader />
             <tbody>

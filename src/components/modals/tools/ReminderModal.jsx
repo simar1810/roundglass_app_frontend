@@ -1,5 +1,6 @@
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
+import TimePicker from "@/components/common/TimePicker";
 import FormControl from "@/components/FormControl";
 import {
   Avatar,
@@ -47,7 +48,7 @@ export default function ReminderModal({
   >
     <Dialog>
       {children}
-      <DialogContent className="!max-w-[450px] max-h-[65vh] w-full p-0 overflow-y-auto">
+      <DialogContent className="!max-w-[450px] max-h-[65vh] w-full p-0 overflow-y-auto gap-0">
         <DialogHeader className="p-4 border-b-1">
           <DialogTitle>Appointment</DialogTitle>
         </DialogHeader>
@@ -132,6 +133,14 @@ function fieldComponent(field, formData, dispatch) {
         field={field}
         formData={formData}
       />
+    case 4:
+      return <div key={field.id} className="mt-4">
+        <label className="text-[14px]">{field.label}</label>
+        <TimePicker
+          selectedTime={formData[field.name]}
+          setSelectedTime={value => dispatch(changeFieldValue(field.name, value))}
+        />
+      </div>
     default:
       return
   }
@@ -189,6 +198,7 @@ const query = {
 }
 
 function SelectClients() {
+  const [searchTerm, setSearchTerm] = useState("");
   const { client, dispatch } = useCurrentStateContext();
 
   const { isLoading, error, data } = useSWR(
@@ -199,8 +209,15 @@ function SelectClients() {
   if (isLoading) return <Loader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const clients = data.data;
+  const clients = data.data
+    .filter(c => new RegExp(searchTerm, "i").test(c.name));
   return <div>
+    <FormControl
+      placeholder="Search client..."
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
+      className="text-[14px] block mb-4"
+    />
     {clients.map(clientData => <ClientCard
       key={clientData._id}
       client={clientData}
@@ -218,7 +235,7 @@ function ClientCard({
   selectedClient,
   setSetSelectedClients
 }) {
-  return <div className="max-w-[400px] mx-auto flex items-center gap-4 border-b-1 py-2">
+  return <label className="max-w-[400px] mb-2 cursor-pointer mx-auto flex items-center gap-4 border-b-1 py-2">
     <Avatar className="w-[40px] h-[40px] rounded-[4px]">
       <AvatarImage src={client.profilePhoto} />
       <AvatarFallback className="rounded-[4px]">{nameInitials(client.name)}</AvatarFallback>
@@ -230,5 +247,5 @@ function ClientCard({
       checked={selectedClient === client._id}
       onChange={() => setSetSelectedClients(selectedClient === client._id ? null : client._id)}
     />
-  </div>
+  </label>
 }

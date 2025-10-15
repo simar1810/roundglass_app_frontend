@@ -107,7 +107,11 @@ export function AttendanceCalendar({
   range,
   setRange,
 }) {
-  const clients = manualAttendanceWithRange(data, { from: startOfMonth(range.from), to: endOfMonth(range.from) })
+  const clients = manualAttendanceWithRange(data, {
+    from: startOfMonth(range.from),
+    to: endOfMonth(range.from)
+  })
+
   const badgeData = dateWiseAttendanceSplit(clients)
   return (
     <div className="w-full">
@@ -115,6 +119,7 @@ export function AttendanceCalendar({
         range={range}
         badgeData={badgeData}
         onRangeSelect={setRange}
+        mode="single"
       />
     </div>
   );

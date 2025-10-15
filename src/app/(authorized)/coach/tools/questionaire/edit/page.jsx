@@ -48,6 +48,7 @@ function QuestionaireContainer() {
   const [loading, setLoading] = useState(false);
   const { dispatch, ...state } = useCurrentStateContext();
 
+
   async function saveQuestionaire() {
     try {
       setLoading(true);
@@ -104,25 +105,95 @@ function PageHeader() {
 
 function SectionList() {
   const { sections } = useCurrentStateContext();
+  const [editingSectionKey, setEditingSectionKey] = useState(null);
+
+  // Separate nested and normal sections
+  const normalSections = {};
+  const nestedSections = {};
+
+  Object.keys(sections).forEach((key) => {
+    if (sections[key].isNested) {
+      nestedSections[key] = sections[key];
+    } else {
+      normalSections[key] = sections[key];
+    }
+  });
+
+  const handleEditNestedSection = (sectionKey) => {
+    setEditingSectionKey(sectionKey);
+    // Scroll to the section
+    setTimeout(() => {
+      const element = document.getElementById(`section-${sectionKey}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+        }, 2000);
+      }
+    }, 100);
+  };
 
   return (
-    <div className="mt-10 grid grid-cols-2 gap-4">
-      {Object.keys(sections).map((section) => (
-        <SectionDetails key={section} sectionKey={section} />
-      ))}
+    <div className="mt-10 space-y-8">
+      {/* Normal Sections */}
+      <div>
+        <h5 className="mb-4 text-gray-700">Main Sections</h5>
+        <div className="grid grid-cols-2 gap-4">
+          {Object.keys(normalSections).map((section) => (
+            <SectionDetails
+              key={section}
+              sectionKey={section}
+              onEditNestedSection={handleEditNestedSection}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Nested Sections */}
+      {Object.keys(nestedSections).length > 0 && (
+        <div>
+          <h5 className="mb-4 text-gray-700 flex items-center gap-2">
+            <span>Nested Sections</span>
+            <span className="text-xs text-gray-500">(shown when specific options are selected)</span>
+          </h5>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.keys(nestedSections).map((section) => (
+              <SectionDetails
+                key={section}
+                sectionKey={section}
+                isNested={true}
+                onEditNestedSection={handleEditNestedSection}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function SectionDetails({ sectionKey }) {
+function SectionDetails({ sectionKey, isNested = false, onEditNestedSection }) {
   const { sections, dispatch } = useCurrentStateContext();
   const { name, questions } = sections[sectionKey];
 
   return (
-    <Collapsible>
-      <div className="bg-[var(--comp-2)] border-1 pr-2 flex items-center justify-between gap-4">
+    <Collapsible id={`section-${sectionKey}`}>
+      <div className={cn(
+        "border-1 pr-2 flex items-center justify-between gap-4 transition-all",
+        isNested
+          ? "bg-blue-50 border-blue-200"
+          : "bg-[var(--comp-2)]"
+      )}>
         <CollapsibleTrigger className={cn("text-left grow px-4 py-3")}>
-          <h5>{name}</h5>
+          <h5 className="flex items-center gap-2">
+            {name}
+            {isNested && (
+              <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded">
+                Nested
+              </span>
+            )}
+          </h5>
         </CollapsibleTrigger>
         <UpdateSectionModal
           key={sections[sectionKey].questions.length}
@@ -133,13 +204,19 @@ function SectionDetails({ sectionKey }) {
           onClick={() => dispatch(removeSection(sectionKey))}
         />
       </div>
-      <CollapsibleContent className="px-4 py-3 border-1 bg-[var(--comp-2)] rounded-b-[8px]">
+      <CollapsibleContent className={cn(
+        "px-4 py-3 border-1 rounded-b-[8px]",
+        isNested
+          ? "bg-blue-50 border-blue-200"
+          : "bg-[var(--comp-2)]"
+      )}>
         {questions.map((question, index) => (
           <QuestionDetailsModal
             key={index}
             sectionKey={sectionKey}
             question={question}
             index={index}
+            onEditNestedSection={onEditNestedSection}
           />
         ))}
         <Button
@@ -156,17 +233,31 @@ function SectionDetails({ sectionKey }) {
 }
 
 function QuestionPreview({ question }) {
+  const { sections } = useCurrentStateContext();
+
   const renderQuestionInput = () => {
     switch (question.type) {
       case "multipleChoice":
         return (
           <RadioGroup value={question.answer} className="space-y-2">
-            {question.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`}>{option}</Label>
-              </div>
-            ))}
+            {question.options.map((option, index) => {
+              const hasNestedSection = question.optionToSectionMap?.[option];
+              const nestedSectionName = hasNestedSection && sections[hasNestedSection]?.name;
+
+              return (
+                <div key={index} className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={`option-${index}`} />
+                    <Label htmlFor={`option-${index}`}>{option}</Label>
+                  </div>
+                  {hasNestedSection && (
+                    <div className="ml-6 text-xs text-blue-600 flex items-center gap-1">
+                      → {nestedSectionName}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </RadioGroup>
         );
 
@@ -193,32 +284,56 @@ function QuestionPreview({ question }) {
       case "checkBoxes":
         return (
           <div className="space-y-2">
-            {question.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`checkbox-${index}`}
-                  checked={question.answer?.includes(option)}
-                />
-                <Label htmlFor={`checkbox-${index}`}>{option}</Label>
-              </div>
-            ))}
+            {question.options.map((option, index) => {
+              const hasNestedSection = question.optionToSectionMap?.[option];
+              const nestedSectionName = hasNestedSection && sections[hasNestedSection]?.name;
+
+              return (
+                <div key={index} className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`checkbox-${index}`}
+                      checked={question.answer?.includes(option)}
+                    />
+                    <Label htmlFor={`checkbox-${index}`}>{option}</Label>
+                  </div>
+                  {hasNestedSection && (
+                    <div className="ml-6 text-xs text-blue-600 flex items-center gap-1">
+                      → {nestedSectionName}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
 
       case "dropdown":
         return (
-          <Select value={question.answer}>
-            <SelectTrigger className="bg-gray-50">
-              <SelectValue placeholder="Choose an option" />
-            </SelectTrigger>
-            <SelectContent>
-              {question.options.map((option, index) => (
-                <SelectItem key={index} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <Select value={question.answer}>
+              <SelectTrigger className="bg-gray-50">
+                <SelectValue placeholder="Choose an option" />
+              </SelectTrigger>
+              <SelectContent>
+                {question.options.map((option, index) => (
+                  <SelectItem key={index} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {question.optionToSectionMap && Object.keys(question.optionToSectionMap).length > 0 && (
+              <div className="text-xs text-gray-600 space-y-1">
+                <div className="font-medium">Nested sections:</div>
+                {Object.entries(question.optionToSectionMap).map(([optionText, sectionKey]) => (
+                  <div key={optionText} className="ml-2 text-blue-600">
+                    "{optionText}" → {sections[sectionKey]?.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         );
 
       case "linearScale":
@@ -328,8 +443,8 @@ function QuestionPreview({ question }) {
 
 function UpdateSectionModal({ sectionKey }) {
   const { sections, dispatch } = useCurrentStateContext();
-  const { name, questions } = sections[sectionKey];
-  const [payload, setPayload] = useState({ name, questions });
+  const { name, questions, ...sectionInfo } = sections[sectionKey];
+  const [payload, setPayload] = useState({ name, questions, ...sectionInfo });
 
   return (
     <Dialog>

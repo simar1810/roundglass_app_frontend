@@ -28,21 +28,30 @@ const questionTypes = [
   { value: "attachFile", label: "File Upload" },
 ];
 
-export default function QuestionEditor({ question, onUpdate }) {
+export default function QuestionEditor({ question, onUpdate, sectionKey, questionIndex, allSections, onAddNestedSection, onEditNestedSection, onRemoveNestedSection }) {
   const updateQuestion = (updates) => {
     onUpdate({ ...question, ...updates });
   };
   const renderQuestionTypeComponent = () => {
+    const nestedProps = {
+      sectionKey,
+      questionIndex,
+      allSections,
+      onAddNestedSection,
+      onEditNestedSection,
+      onRemoveNestedSection
+    };
+
     switch (question.type) {
       case "multipleChoice":
       case "dropdown":
-        return <MultipleChoiceQuestion question={question} onUpdate={onUpdate} />;
+        return <MultipleChoiceQuestion question={question} onUpdate={onUpdate} {...nestedProps} />;
       case "shortAnswer":
         return <ShortAnswerQuestion question={question} onUpdate={onUpdate} />;
       case "paragraph":
         return <ParagraphQuestion question={question} onUpdate={onUpdate} />;
       case "checkBoxes":
-        return <CheckboxQuestion question={question} onUpdate={onUpdate} />;
+        return <CheckboxQuestion question={question} onUpdate={onUpdate} {...nestedProps} />;
       case "linearScale":
         return <LinearScaleQuestion question={question} onUpdate={onUpdate} />;
       case "rating":

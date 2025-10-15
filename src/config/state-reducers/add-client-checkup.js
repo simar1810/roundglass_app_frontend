@@ -119,7 +119,7 @@ export function updateMatrices(matrices, values) {
 }
 
 const fields = {
-  stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
+  stage1: ["name", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
   requestFields: [
     "name", "email", "mobileNumber", "notes", "gender",
     "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
@@ -129,6 +129,7 @@ const fields = {
 }
 
 export function stage1Completed(state, stage) {
+  if (!state.age && !state.dob) return { success: false, field: "Either select dob or age" };
   for (const field of fields[stage]) {
     if (!state[field]) return { success: false, field };
   }

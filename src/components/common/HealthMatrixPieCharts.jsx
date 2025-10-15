@@ -149,7 +149,11 @@ export default function HealthMetrics({ data, onUpdate }) {
     return (
       <>
         {healtMetrics
-          .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
+          .filter((metric) =>
+            !isNaN(payload[metric.name]) &&
+            payload[metric.name] !== 0 &&
+            payload[metric.name] !== ""
+          )
           .map((metric) => (
             <MetricProgress
               key={metric.id}

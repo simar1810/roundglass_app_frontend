@@ -60,9 +60,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
       if (response.status_code === 200) {
         setUserClients(response.data.clients || []);
       }
-    } catch (error) {
-      // Error handling
-    } finally {
+    } catch (error) { } finally {
       setLoadingClients(false);
     }
   };

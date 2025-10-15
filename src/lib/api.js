@@ -91,7 +91,7 @@ export async function sendDataWithFormData(
     const retrievedData = await response.json();
     if (response.status === 401) {
       if (expireUserSession) await expireUserSession();
-      return null;
+      return retrievedData;
     }
     return retrievedData;
   } catch (error) {

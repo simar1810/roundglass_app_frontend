@@ -40,34 +40,115 @@ export default function Page() {
 }
 
 export function OnboardingQuestionContainer({ sections }) {
-  return <div className="mt-10 grid grid-cols-2 gap-4">
-    {sections.map(section => <Collapsible key={section._id}>
-      <CollapsibleTrigger className="w-full text-left font-bold bg-[var(--comp-1)] px-4 py-2 border-1">
-        {section.name}
-      </CollapsibleTrigger>
-      <CollapsibleContent className="bg-[var(--comp-1)] p-4 rounded-b-[4px] border-1">
-        <h5>Questions - ({section.questions.length})</h5>
-        <div className="mt-4">
-          {section.questions.map((question, index) => <QuestionDetails
-            key={index}
-            index={index}
-            question={question}
-          />)}
+  // Create a map of sectionId to section for looking up nested sections
+  const sectionMap = {};
+  sections.forEach(section => {
+    sectionMap[section.sectionId || section._id] = section;
+  });
+
+  // Separate normal and nested sections
+  const normalSections = sections.filter(s => !s.isNested);
+  const nestedSections = sections.filter(s => s.isNested);
+
+  return (
+    <div className="mt-10 space-y-8">
+      {/* Main Sections */}
+      <div>
+        <h5 className="mb-4 text-gray-700">Main Sections</h5>
+        <div className="grid grid-cols-2 gap-4">
+          {normalSections.map(section => (
+            <SectionDisplay key={section._id} section={section} sectionMap={sectionMap} />
+          ))}
         </div>
-      </CollapsibleContent>
-    </Collapsible>)}
-  </div>
+      </div>
+
+      {/* Nested Sections */}
+      {nestedSections.length > 0 && (
+        <div>
+          <h5 className="mb-4 text-gray-700 flex items-center gap-2">
+            <span>Nested Sections</span>
+            <span className="text-xs text-gray-500">(shown when specific options are selected)</span>
+          </h5>
+          <div className="grid grid-cols-2 gap-4">
+            {nestedSections.map(section => (
+              <SectionDisplay key={section._id} section={section} sectionMap={sectionMap} isNested={true} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function QuestionDetails({ index, question }) {
-  return <Collapsible className="mb-2">
-    <CollapsibleTrigger className="font-bold w-full text-left bg-white px-4 py-1 border-1">
-      {index}{")"} {question.text}
-    </CollapsibleTrigger>
-    <CollapsibleContent className="bg-white p-4 border-1 rounded-[4px]">
-      {renderQuestionDisplayComponent(question)}
-    </CollapsibleContent>
-  </Collapsible>
+function SectionDisplay({ section, sectionMap, isNested = false }) {
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className={`w-full text-left font-bold px-4 py-2 border-1 ${isNested ? 'bg-blue-50 border-blue-200' : 'bg-[var(--comp-1)]'
+        }`}>
+        <div className="flex items-center gap-2">
+          {section.name}
+          {isNested && (
+            <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded">
+              Nested
+            </span>
+          )}
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent className={`p-4 rounded-b-[4px] border-1 ${isNested ? 'bg-blue-50 border-blue-200' : 'bg-[var(--comp-1)]'
+        }`}>
+        <h5>Questions - ({section.questions.length})</h5>
+        <div className="mt-4">
+          {section.questions.map((question, index) => (
+            <QuestionDetails
+              key={index}
+              index={index}
+              question={question}
+              sectionMap={sectionMap}
+            />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function QuestionDetails({ index, question, sectionMap }) {
+  const hasNestedSections = question.optionToSectionMap && Object.keys(question.optionToSectionMap).length > 0;
+
+  return (
+    <Collapsible className="mb-2">
+      <CollapsibleTrigger className="font-bold w-full text-left bg-white px-4 py-1 border-1">
+        <div className="flex items-center justify-between">
+          <span>{index}{")"} {question.text}</span>
+          {hasNestedSections && (
+            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+              Has nested sections
+            </span>
+          )}
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="bg-white p-4 border-1 rounded-[4px] space-y-3">
+        {renderQuestionDisplayComponent(question)}
+
+        {/* Show nested section mappings */}
+        {hasNestedSections && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="text-sm text-gray-700 font-medium mb-2">Nested Section Redirects:</div>
+            <div className="space-y-1">
+              {Object.entries(question.optionToSectionMap).map(([optionText, sectionId]) => {
+                const nestedSection = sectionMap[sectionId];
+                return (
+                  <div key={optionText} className="text-xs text-blue-600 ml-2">
+                    "{optionText}" → {nestedSection?.name || 'Unknown Section'}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 function renderQuestionDisplayComponent(question) {

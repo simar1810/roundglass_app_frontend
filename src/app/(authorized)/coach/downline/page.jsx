@@ -1,4 +1,5 @@
 "use client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,19 @@ import ContentError from "@/components/common/ContentError";
 import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import {
+	retrieveClientList,
 	retrieveDownlineCoaches,
 	retrieveDownlineRequests,
 } from "@/lib/fetchers/app";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
-import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Eye } from "lucide-react";
 import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
+import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
 
 const categoriesFetcher = () =>
 	fetchData("app/coach-categories").then((res) => {
@@ -33,8 +37,13 @@ const categoriesFetcher = () =>
 	});
 
 export default function Page() {
+	const { tabChange, selectedTab } = useTabsContentNavigation(
+		"list",
+		["list", "visualizer", "manageCategories", "clients"]
+	);
+
 	const { data: coachData } = useAppSelector((state) => state.coach);
-	const { downline = {}, features } = coachData;
+	const { downline = {}, features, clubType } = coachData;
 
 	const {
 		data: categories,
@@ -62,7 +71,7 @@ export default function Page() {
 		}
 	};
 
-	if (!features?.includes(5)) {
+	if (!features?.includes(5) && ["Club Leader", "Club Leader Jr", "Club Captain"].includes(clubType)) {
 		return <ContentError title="This feature isn't enabled for you" />;
 	}
 
@@ -92,13 +101,18 @@ export default function Page() {
 		<div className="content-container content-height-screen">
 			{downline.status === "requested" && <Invitations />}
 			{downline.status === "in-downline" && (
-				<Tabs defaultValue="list" className="w-full">
-					<TabsList className="grid w-full max-w-md mx-auto mb-4 grid-cols-3">
+				<Tabs
+					value={selectedTab}
+					onValueChange={tabChange}
+					className="w-full"
+				>
+					<TabsList className="grid w-full max-w-lg mx-auto mb-4 grid-cols-4">
 						<TabsTrigger value="list">List View</TabsTrigger>
 						<TabsTrigger value="visualizer">Visualizer</TabsTrigger>
 						<TabsTrigger value="manageCategories">
 							Manage Categories
 						</TabsTrigger>
+						<TabsTrigger value="clients">Clients</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="list">
@@ -215,6 +229,10 @@ export default function Page() {
 								)}
 							</div>
 						)}
+					</TabsContent>
+
+					<TabsContent value="clients">
+						<DownlineClientList />
 					</TabsContent>
 				</Tabs>
 			)}
@@ -336,6 +354,7 @@ function CreateInvitation() {
 }
 
 function CoachesList() {
+	const [query, setQuery] = useState("")
 	const { isLoading, error, data } = useSWR(
 		"app/downline/coaches",
 		retrieveDownlineCoaches
@@ -346,10 +365,17 @@ function CoachesList() {
 	if (error || data.status_code !== 200)
 		return <ContentError title={error?.message || data.message} />;
 
-	const coaches = data?.data || [];
+	const coaches = data?.data
+		.filter(coach => new RegExp(query, "i").test(coach.name)) || [];
 	return (
-		<div className="bg-[var(--comp-1)] px-4 py-8 rounded-[8px] space-y-2 border-1">
+		<div className="bg-[var(--comp-2)] px-4 py-8 rounded-[8px] space-y-2 border-1">
 			<h4 className="mb-4">Coaches under You {coaches.length}</h4>
+			<FormControl
+				value={query}
+				onChange={e => setQuery(e.target.value)}
+				className="block [&_.input]:bg-white mb-4"
+				placeholder="Search Coach Name..."
+			/>
 			<div className="divide-y-1">
 				{coaches.map((coach, index) => (<div
 					key={index}
@@ -499,4 +525,63 @@ function SyncCoachModal({ coachId }) {
 			</div>
 		</DialogContent>
 	</Dialog>
+}
+
+function DownlineClientList() {
+	const { isLoading, error, data } = useSWR(
+		"downline-clients",
+		() => retrieveClientList()
+	);
+
+	if (isLoading) return <ContentLoader />
+
+	if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
+
+	const clients = data.data || [];
+
+	return <div className="bg-[var(--comp-1)] p-4 rounded-[10px] border-1">
+		{/* <h2>Client List</h2> */}
+		<Table className="border-1">
+			<TableHeader>
+				<TableRow className="bg-white [&_th]:font-bold">
+					<TableHead>Name</TableHead>
+					<TableHead>Coach</TableHead>
+					<TableHead>Client ID</TableHead>
+					<TableHead>Email</TableHead>
+					<TableHead>Mobile</TableHead>
+					<TableHead>City</TableHead>
+					<TableHead />
+				</TableRow>
+			</TableHeader>
+			<TableBody>
+				{clients.map((client) => (
+					<TableRow key={client._id}>
+						<TableCell className="font-medium max-w-[10ch] truncate text-wrap">{client.name}</TableCell>
+						<TableCell>{client.coach}</TableCell>
+						<TableCell>{client.clientId}</TableCell>
+						<TableCell>{client.email || "-"}</TableCell>
+						<TableCell>{client.mobileNumber || "-"}</TableCell>
+						<TableCell>{client.city || "-"}</TableCell>
+						{<TableCell onClick={e => e.stopPropagation()}>
+							<SyncedCoachClientDetails
+								client={client}
+								onUpdate={() => location.reload()}
+							>
+								<DialogTrigger>
+									<Eye className="hover:text-[var(--accent-1)] opacity-50 hover:opacity-100" />
+								</DialogTrigger>
+							</SyncedCoachClientDetails>
+						</TableCell>}
+					</TableRow>
+				))}
+				{clients.length === 0 && (
+					<TableRow>
+						<TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+							No clients found
+						</TableCell>
+					</TableRow>
+				)}
+			</TableBody>
+		</Table>
+	</div>
 }

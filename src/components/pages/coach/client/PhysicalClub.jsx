@@ -23,7 +23,8 @@ import { sendData } from "@/lib/api"
 import { Trash2, X } from "lucide-react"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
-import { useAppSelector } from "@/providers/global/hooks"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 export default function PhysicalClub() {
   return <TabsContent
@@ -31,7 +32,7 @@ export default function PhysicalClub() {
     className="space-y-6"
   >
     <MembershipData />
-    <PhysicalClubAttendance />
+    {/* <PhysicalClubAttendance /> */}
   </TabsContent>
 }
 
@@ -53,7 +54,17 @@ function MembershipData() {
   if (error || !Boolean(data) || data?.status_code !== 200)
     return (<ContentError className="mt-0" title={error || data?.message} />)
 
-  const membership = data.data?.results?.[0]
+  const membership = data.data?.results?.[0] || {}
+
+  if (membership.isActive === false) return <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
+    <p>Service Status</p>
+    <div>
+      <UpdatePhysicalServiceStatus
+        status={Boolean(membership.isActive)}
+        clientId={clientId}
+      />
+    </div>
+  </div>
 
   if (!membership) {
     return (
@@ -71,13 +82,24 @@ function MembershipData() {
   }
 
   return (
-    <div
-      value="physical-club"
-      className="bg-[var(--comp-1)] p-4 border-1 rounded-[8px]"
-    >
-      <div className="space-y-6">
-        <ClientDetails membership={membership} />
-        <SubscriptionHistoryTable history={membership.history} />
+    <div>
+      <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
+        <p>Service Status</p>
+        <div>
+          <UpdatePhysicalServiceStatus
+            status={Boolean(membership.isActive)}
+            clientId={clientId}
+          />
+        </div>
+      </div>
+      <div
+        value="physical-club"
+        className="bg-[var(--comp-1)] p-4 border-1 rounded-[8px]"
+      >
+        <div className="space-y-6">
+          <ClientDetails membership={membership} />
+          <SubscriptionHistoryTable history={membership.history} />
+        </div>
       </div>
     </div>
   )
@@ -156,7 +178,7 @@ function PhysicalClubAttendance() {
 function ClientDetails({ membership }) {
   const { id: clientId } = useParams()
   const { end, type } = getMembershipType(membership)
-  const active = membership.client.isPhysicalClubActive
+  const active = membership?.client?.isPhysicalClubActive
 
   return (
     <div className="flex flex-row items-center justify-between">
@@ -195,7 +217,7 @@ function SubscriptionHistoryTable({ history }) {
             <TableHead>Amount</TableHead>
             <TableHead>Mode</TableHead>
             <TableHead>Membership Type</TableHead>
-            <TableHead>Pending</TableHead>
+            <TableHead>Servings</TableHead>
             <TableHead>Start Date</TableHead>
             <TableHead>End Date</TableHead>
             <TableHead>Actions</TableHead>
@@ -212,7 +234,7 @@ function SubscriptionHistoryTable({ history }) {
                 {type === "Servings"
                   ? <TableCell className="text-center">{end}</TableCell>
                   : <TableCell className="text-center">-</TableCell>}
-                {type === "Monthly"
+                {item.startDate
                   ? <TableCell className="text-center">{format(item.startDate, "dd/MM/yyyy")}</TableCell>
                   : <TableCell className="text-center">-</TableCell>}
                 {type === "Monthly"
@@ -372,29 +394,27 @@ function AddMembershipDialog({
               className="border rounded px-2 py-1"
             />
           </div>
-          {payload.membershipType === 1 && (
-            <>
-              <div className="flex flex-col">
-                <label>Start Date</label>
-                <input
-                  type="date"
-                  value={payload.startDate}
-                  onChange={e => handleChange("startDate", e.target.value)}
-                  className="border rounded px-2 py-1"
-                  required
-                />
-              </div>
-              <div className="flex flex-col">
-                <label>End Date</label>
-                <input
-                  type="date"
-                  value={payload.endDate}
-                  onChange={e => handleChange("endDate", e.target.value)}
-                  className="border rounded px-2 py-1"
-                  required
-                />
-              </div>
-            </>
+
+          <div className="flex flex-col">
+            <label>Start Date</label>
+            <input
+              type="date"
+              value={payload.startDate}
+              onChange={e => handleChange("startDate", e.target.value)}
+              className="border rounded px-2 py-1"
+              required
+            />
+          </div>
+          {payload.membershipType === 1 && (<div className="flex flex-col">
+            <label>End Date</label>
+            <input
+              type="date"
+              value={payload.endDate}
+              onChange={e => handleChange("endDate", e.target.value)}
+              className="border rounded px-2 py-1"
+              required
+            />
+          </div>
           )}
           {payload.membershipType === 2 && (
             <div className="flex flex-col">
@@ -451,4 +471,39 @@ function AddMembershipDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+function UpdatePhysicalServiceStatus({
+  status = false,
+  clientId
+}) {
+  async function updatePhysicalServiceStatus(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/physical-club/update-status",
+        { clientId, status: !status },
+        "PATCH"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/physical-club/memberships/${clientId}`);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      closeBtnRef.current.click();
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure to update physical service status?"
+    action={updatePhysicalServiceStatus}
+  >
+    <AlertDialogTrigger asChild>
+      <div className="flex items-center space-x-2">
+        <Switch checked={status} id="active-status" />
+        <Label htmlFor="active-status">Active</Label>
+      </div>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }
