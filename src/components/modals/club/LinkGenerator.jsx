@@ -332,7 +332,8 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
   const { client_categories } = useAppSelector(state => state.coach.data)
   if (field.inputtype === 1) return <FormControl
     key={field.id}
-    className="text-[14px] [&_.label]:font-[400] block mb-4"
+    className="text-[14px] [&_.label]:font-[400] block mb-4 [&_.input]:focus:cursor-text [&_.input]:foc us:pointer-events-none
+                hover:cursor-text [&_.input]:hover:pointer-events-none"
     value={formData[field.name]}
     onChange={e => dispatch(changeFieldvalue(field.name, e.target.value))}
     {...field}
