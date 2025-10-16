@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
-import { Trash2 } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -89,7 +89,11 @@ function CustomMealsListing({ customPlan }) {
     setSelectedMealType(customPlan.plans[selectedPlan]?.meals?.at(0)?.mealType || "");
   }, [selectedPlan]);
 
-  return <div className="p-4 pl-8">
+  return <div className="p-4 pl-8 relative">
+    {customPlan.draft && <Badge className="absolute top-2 right-2">
+      <SquarePen />
+      Draft
+    </Badge>}
     <div className="flex gap-4 mb-8 overflow-x-auto pb-4">
       {days.map(day => <Button
         key={day}

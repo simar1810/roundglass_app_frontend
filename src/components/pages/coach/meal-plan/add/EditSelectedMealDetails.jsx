@@ -11,6 +11,7 @@ import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { format, parse } from "date-fns";
 
 export default function EditSelectedMealDetails({
   defaultOpen,
@@ -54,7 +55,12 @@ export default function EditSelectedMealDetails({
         />
         <div className="text-left">
           <h3>{recipe.dish_name || recipe.title}</h3>
-          <p>{recipe.meal_time}</p>
+          {recipe.time && <p>
+            {format(
+              parse(recipe.time, "HH:mm", new Date()),
+              "hh:mm a"
+            )}
+          </p>}
           <div className="mt-2 flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
             {typeof recipe.calories === "object"
               ? <RecipeCalories recipe={recipe} />

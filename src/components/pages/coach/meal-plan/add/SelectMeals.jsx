@@ -16,8 +16,10 @@ export default function SelectMeals() {
     selectedPlan
   } = useCurrentStateContext();
 
-  const mealTypes = selectedPlans[selectedPlan]?.map(meal => meal.mealType)
-  const selectedMealTypeRecipee = selectedPlans[selectedPlan]?.find(mealType => mealType.mealType === selectedMealType)?.meals || []
+  const mealTypes = selectedPlans[selectedPlan]
+    ?.map(meal => meal.mealType)
+  const selectedMealTypeRecipee = selectedPlans[selectedPlan]
+    ?.find(mealType => mealType.mealType === selectedMealType)?.meals || []
 
   const errorMessage = !mealTypes ?
     "Please select a date"
