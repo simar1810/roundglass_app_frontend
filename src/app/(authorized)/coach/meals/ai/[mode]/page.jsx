@@ -28,7 +28,7 @@ export default function Page() {
       toast.loading("Generating AI meal plan...");
 
       const response = await fetch(
-        `http://localhost:8080/api/app/meal-plan/ai/generate?clientId=${clientId}&mode=${mode}`,
+        `${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/meal-plan/ai/generate?clientId=${clientId}&mode=${mode}`,
         {
           method: "POST",
           headers: {

@@ -25,7 +25,6 @@ function CustomMealPlanContainer() {
     const aiData = localStorage.getItem("aiMealPlan");
     if (aiData) {
       const parsed = JSON.parse(aiData);
-      localStorage.removeItem("aiMealPlan");
       dispatch({ type: "LOAD_AI_MEAL_PLAN", payload: parsed });
     }
   }, [])
