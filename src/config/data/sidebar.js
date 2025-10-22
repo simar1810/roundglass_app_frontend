@@ -197,26 +197,26 @@ export const sidebar__coachContent = [
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
         title: "AI Generation",
         url: "/coach/meals/ai",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/meals/ai/daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/meals/ai/weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/meals/ai/monthly",
-          },
-        ]
+        // items: [
+        //   {
+        //     id: 1,
+        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Daily",
+        //     url: "/coach/meals/ai/daily",
+        //   },
+        //   {
+        //     id: 2,
+        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Weekly",
+        //     url: "/coach/meals/ai/weekly",
+        //   },
+        //   {
+        //     id: 3,
+        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Monthly",
+        //     url: "/coach/meals/ai/monthly",
+        //   },
+        // ]
       },
     ],
   },
