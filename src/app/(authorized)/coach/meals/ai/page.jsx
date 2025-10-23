@@ -108,7 +108,7 @@ export default function Page() {
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+            className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#67BC2A] transition-all"
           />
         </div>
       </div>
@@ -145,8 +145,8 @@ export default function Page() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1 bg-gray-100 px-2 pl-4 py-2 rounded-md">
-                    <PiSparkleFill size={14} className="text-green-600" />
-                    <p className="text-[10px] text-green-600 font-medium ">
+                    <PiSparkleFill size={14} className="text-[#67BC2A]" />
+                    <p className="text-[10px] text-[#67BC2A] font-medium ">
                       {client.creditsLeft || 3} Credits Left
                     </p>
                   </div>
@@ -154,9 +154,9 @@ export default function Page() {
 
                 <div className="flex gap-2 mt-3 relative">
                   <Button
-                    className="bg-white text-green-700 border border-green-200 hover:bg-green-100 text-xs px-3 py-1 rounded-md"
+                    className="bg-white text-[#67BC2A] border border-green-200 hover:bg-[#67BC2A] hover:text-white text-xs px-3 py-1 rounded-md"
                     onClick={() =>
-                      router.push(`/coach/meals/list-custom?mode=daily`)
+                      router.push(`/coach/meals/list-custom`)
                     }
                   >
                     View Current Meal Plan
@@ -172,7 +172,7 @@ export default function Page() {
                       className={`text-xs px-3 py-1 rounded-md ${
                         isGenerating === client._id
                           ? "bg-gray-300 cursor-not-allowed"
-                          : "bg-green-500 text-white hover:bg-green-600"
+                          : "bg-[#67BC2A] text-white hover:bg-green-600"
                       }`}
                     >
                       {isGenerating === client._id

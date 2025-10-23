@@ -46,6 +46,7 @@ import {
   Users,
   Video,
   QrCode,
+  Salad
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
@@ -114,57 +115,57 @@ export const sidebar__coachContent = [
     url: "/coach/meals",
     permission: 1, // Permission 1 = Meal Plan
     items: [
-      {
-        id: 1,
-        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Meal Plan",
-        url: "/coach/meals/add-custom",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/meals/add-custom/daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/meals/add-custom/weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/meals/add-custom/monthly",
-          },
-        ],
-      },
+      // {
+      //   id: 1,
+      //   icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Add Meal Plan",
+      //   url: "/coach/meals/add-custom",
+      //   items: [
+      //     {
+      //       id: 1,
+      //       icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Daily",
+      //       url: "/coach/meals/add-custom/daily",
+      //     },
+      //     {
+      //       id: 2,
+      //       icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Weekly",
+      //       url: "/coach/meals/add-custom/weekly",
+      //     },
+      //     {
+      //       id: 3,
+      //       icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Monthly",
+      //       url: "/coach/meals/add-custom/monthly",
+      //     },
+      //   ],
+      // },
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
         title: "View Meal Plan",
         url: "/coach/meals/list-custom",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/meals/list-custom/?mode=daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/meals/list-custom/?mode=weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/meals/list-custom/?mode=monthly",
-          },
-        ],
+        // items: [
+        //   {
+        //     id: 1,
+        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Daily",
+        //     url: "/coach/meals/list-custom/?mode=daily",
+        //   },
+        //   {
+        //     id: 2,
+        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Weekly",
+        //     url: "/coach/meals/list-custom/?mode=weekly",
+        //   },
+        //   {
+        //     id: 3,
+        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Monthly",
+        //     url: "/coach/meals/list-custom/?mode=monthly",
+        //   },
+        // ],
       },
       {
         id: 3,
@@ -194,7 +195,7 @@ export const sidebar__coachContent = [
       },
       {
         id: 5,
-        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+        icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,
         title: "AI Generation",
         url: "/coach/meals/ai",
         // items: [
