@@ -107,33 +107,51 @@ export function clientWiseHistory(data, range) {
     Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
   return data.map(record => {
-    const attendanceMap = new Map(
-      record.attendance.map(a => {
-        const d = new Date(a.date);
-        const key = d.toISOString().split("T")[0];
-        return [key, a];
-      })
-    );
+    // Group attendance by date to handle multiple servings per day
+    const attendanceByDate = new Map();
+    record.attendance.forEach(a => {
+      const d = new Date(a.date);
+      const key = d.toISOString().split("T")[0];
+      
+      if (!attendanceByDate.has(key)) {
+        attendanceByDate.set(key, []);
+      }
+      attendanceByDate.get(key).push(a);
+    });
 
     const attendanceInRange = Array.from({ length: totalDays }, (_, i) => {
       const currentDate = new Date(start);
       currentDate.setDate(start.getDate() + i);
 
       const key = currentDate.toISOString().split("T")[0];
-      const entry = attendanceMap.get(key);
+      const dayAttendances = attendanceByDate.get(key) || [];
 
-      return entry
-        ? {
-          date: currentDate.getDate(),
-          month: currentDate.getMonth(),
-          status: entry.status,
-          markedAt: entry.markedAt,
-        }
-        : {
-          date: currentDate.getDate(),
-          month: currentDate.getMonth(),
-          status: undefined,
-        };
+      // Calculate serving counts for the day
+      const presentCount = dayAttendances.filter(a => a.status === "present").length;
+      const absentCount = dayAttendances.filter(a => a.status === "absent").length;
+      const unmarkedCount = dayAttendances.filter(a => a.status === "unmarked").length;
+      
+      
+      // Determine the primary status for the day
+      let primaryStatus = undefined;
+      if (presentCount > 0) {
+        primaryStatus = "present";
+      } else if (absentCount > 0) {
+        primaryStatus = "absent";
+      } else if (unmarkedCount > 0) {
+        primaryStatus = "unmarked";
+      }
+
+      return {
+        date: currentDate.getDate(),
+        month: currentDate.getMonth(),
+        status: primaryStatus,
+        presentCount,
+        absentCount,
+        unmarkedCount,
+        totalServings: presentCount + absentCount + unmarkedCount,
+        markedAt: dayAttendances.length > 0 ? dayAttendances[0].markedAt : undefined,
+      };
     });
 
     return {
@@ -150,17 +168,63 @@ export function clubHistory(clients, { from, to } = {}) {
   return clients.map((record, index) => {
     const { client, attendance, membership } = record;
 
-    const filteredAttendance = attendance.filter(item =>
-      isBefore(item.date, endOfDay(to)) &&
-      isAfter(item.date, startOfDay(from))
-    )
+    const filteredAttendance = attendance;
 
-    const presentDays = filteredAttendance
-      .filter(a => a.status === "present")
-      .length;
-    const absentDays = filteredAttendance
-      .filter(a => a.status === "absent")
-      .length;
+    const presentRecords = filteredAttendance.filter(a => a.status === "present");
+    const servingsTaken = presentRecords.length;
+    
+    const presentDays = new Set(
+      presentRecords.map(a => {
+        try {
+          return startOfDay(new Date(a.date)).getTime();
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean)
+    ).size;
+    
+    const dayStatusMap = new Map();
+    filteredAttendance.forEach(record => {
+      try {
+        const dayKey = startOfDay(new Date(record.date)).getTime();
+        const currentRecord = dayStatusMap.get(dayKey);
+        
+        if (!currentRecord) {
+          dayStatusMap.set(dayKey, record);
+        } else {
+          const currentTime = new Date(currentRecord.markedAt || currentRecord.date).getTime();
+          const recordTime = new Date(record.markedAt || record.date).getTime();
+          
+          if (recordTime > currentTime) {
+            dayStatusMap.set(dayKey, record);
+          }
+        }
+      } catch (error) {
+        // Skip invalid dates
+      }
+    });
+    
+    const finalStatusMap = new Map();
+    dayStatusMap.forEach((record, dayKey) => {
+      finalStatusMap.set(dayKey, record.status);
+    });
+    
+    const correctedPresentDays = Array.from(finalStatusMap.values()).filter(status => status === "present").length;
+    const correctedAbsentDays = Array.from(finalStatusMap.values()).filter(status => status === "absent").length;
+    
+    const absentDays = new Set(
+      filteredAttendance
+        .filter(a => a.status === "absent")
+        .map(a => {
+          try {
+            return startOfDay(new Date(a.date)).getTime();
+          } catch (error) {
+            return null;
+          }
+        })
+        .filter(Boolean)
+    ).size;
 
     const totalConsidered = Math.abs(differenceInCalendarDays(from, to)) + 1;
     const showupPercentage =
@@ -185,8 +249,9 @@ export function clubHistory(clients, { from, to } = {}) {
       clientName: client?.name,
       clientProfile: client?.profilePhoto,
       clientStatus: client?.isPhysicalClubActive,
-      presentDays,
-      absentDays,
+      presentDays: correctedPresentDays,
+      servingsTaken: correctedPresentDays,
+      absentDays: correctedAbsentDays,
       showupPercentage: Number(showupPercentage),
       showupLabel,
       pendingServings: membership?.pendingServings || 0,

@@ -12,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { format } from "date-fns"
+import { format, startOfDay } from "date-fns"
 import { getMembershipType } from "@/lib/formatter";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR(
@@ -42,6 +43,7 @@ export default function Page() {
           <TableHead>Start Date</TableHead>
           <TableHead>End Date</TableHead>
           <TableHead>Pending Servings</TableHead>
+          <TableHead>Attendance Stats</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -59,6 +61,21 @@ function AttendanceItem({ attendance }) {
     type: membershipType,
     end: membershipEnd
   } = getMembershipType(attendance.membership)
+  
+  // Calculate statistics from attendance data
+  const attendanceRecords = attendance.attendance || []
+  const presentAttendances = attendanceRecords.filter(att => att.status === "present")
+  const uniqueDays = new Set(presentAttendances.map(att => {
+    try {
+      return startOfDay(new Date(att.date)).getTime()
+    } catch (error) {
+      console.warn("Invalid date for statistics:", att.date)
+      return null
+    }
+  }).filter(Boolean)).size
+  const totalServings = presentAttendances.length
+  const unmarkedServings = attendanceRecords.filter(att => att.status === "unmarked").length
+  
   return (
     <TableRow
       className="hover:bg-gray-50 cursor-pointer"
@@ -87,6 +104,23 @@ function AttendanceItem({ attendance }) {
       {attendance.membership.membershipType === 2
         ? <TableCell>{attendance.membership.pendingServings ?? "—"}</TableCell>
         : <TableCell>-</TableCell>}
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-2">
+            <Badge variant="outline" className="text-xs">
+              {uniqueDays} days
+            </Badge>
+            <Badge variant="default" className="text-xs">
+              {totalServings} servings
+            </Badge>
+          </div>
+          {unmarkedServings > 0 && (
+            <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+              {unmarkedServings} unmarked
+            </Badge>
+          )}
+        </div>
+      </TableCell>
     </TableRow>
   )
 }

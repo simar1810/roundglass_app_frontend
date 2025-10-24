@@ -153,7 +153,7 @@ export function init(payload) {
       margins: payload.margins,
       _id: payload.selectedBrandId
     },
-    clientId: payload.clientId._id || "",
+    clientId: payload.clientId && payload.clientId._id ? payload.clientId._id : null,
     productModule: payload.productModule,
     status: payload.status,
     clientName: payload?.clientId?.name || "",
