@@ -15,6 +15,7 @@ import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
 import { useRouter } from "next/navigation";
 import { _throwError, format24hr_12hr } from "@/lib/formatter";
+import { SquarePen } from "lucide-react";
 
 export default function Stage2() {
 	const [loading, setLoading] = useState(false);
@@ -23,52 +24,55 @@ export default function Stage2() {
 	const { cache } = useSWRConfig();
 
 	const router = useRouter();
-	async function saveCustomWorkout() {
-		try {
-			for (const field of ["title", "description"]) {
-				if (!Boolean(state[field]))
-					_throwError(`${field} - for the meal plan is required!`);
-			}
 
-			for (const day in state.selectedPlans) {
-				if (state.selectedPlans[day]?.length === 0)
-					_throwError(`There are no plans assigned for the day - ${day}!`);
-				for (const mealType of (Array.isArray(state.selectedPlans[day]) ? state.selectedPlans[day] : 											state.selectedPlans[day]?.meals || [])) {
-					if (!mealType.meals || mealType.meals?.length === 0)
-						_throwError(
-							`On ${day}, for ${
-								mealType.mealType || "First Meal Type"
-							} at least one meal should be assigned!`
-						);
-					for (const meal of mealType.meals) {
-						delete meal.isNew;
-						
-						if (!(meal.meal_time || meal.time)) {
-							_throwError(`Meal time should be selected for all the meals. Not provided for ${mealType.mealType}`);
-					}
-						if (!meal.dish_name) {
-							_throwError(`Dish name should be selected for all the meals. Not provided for ${mealType.mealType}`);
+	async function saveCustomWorkout({
+		draft
+	}) {
+		try {
+			// check the conditions only if creation type is not a draft.
+			if (!draft) {
+				for (const field of ["title", "description"]) {
+					if (!Boolean(state[field]))
+						_throwError(`${field} - for the meal plan is required!`);
 				}
-						// if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
-						meal.meal_time = format24hr_12hr(meal.time || meal.meal_time);
+
+				for (const day in state.selectedPlans) {
+					if (state.selectedPlans[day]?.length === 0)
+						_throwError(`There are no plans assigned for the day - ${day}!`);
+					for (const mealType of state.selectedPlans[day]) {
+						if (!mealType.meals || mealType.meals?.length === 0)
+							_throwError(
+								`On ${day}, for ${mealType.mealType || "First Meal Type"
+								} at least one meal should be assigned!`
+							);
+						for (const meal of mealType.meals) {
+							delete meal.isNew;
+							for (const field of ["time", "dish_name"]) {
+								if (!meal[field])
+									_throwError(
+										`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`
+									);
+							}
+							// if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
+							meal.meal_time = format24hr_12hr(meal.time);
+						}
 					}
 				}
 			}
 
 			if (["new", "copy_edit"].includes(state.creationType)) {
-				newWorkout();
+				newWorkout({ draft });
 			} else if (["edit"].includes(state.creationType)) {
-				editWorkout();
+				editWorkout({ draft });
 			}
 		} catch (error) {
 			toast.error(error.message || "Something went wrong!");
 		}
 	}
 
-	async function editWorkout() {
+	async function editWorkout({ draft }) {
 		try {
 			setLoading(true);
-
 			let thumbnail;
 			if (state.file) {
 				const toastId = toast.loading("Uploading Thumbnail...");
@@ -83,7 +87,7 @@ export default function Stage2() {
 				if (state.editPlans[key]) {
 					createdMealPlan = await sendData(
 						`app/update-custom-plan?id=${state.editPlans[key]}`,
-						mealPlanCreationRP(state.selectedPlans[key]),
+						mealPlanCreationRP(state.selectedPlans[key],),
 						"PUT"
 					);
 				} else {
@@ -113,6 +117,7 @@ export default function Stage2() {
 					plans: state.selectedPlans,
 					id: state.id,
 					planIds: plans,
+					draft
 				},
 				"PUT"
 			);
@@ -127,7 +132,7 @@ export default function Stage2() {
 		}
 	}
 
-	async function newWorkout() {
+	async function newWorkout({ draft }) {
 		try {
 			setLoading(true);
 			const plans = {};
@@ -160,6 +165,7 @@ export default function Stage2() {
 				...formData,
 				image: thumbnail?.img || state.thumbnail,
 				plans,
+				draft
 			});
 			toast.dismiss(toastId);
 			if (response.status_code !== 200) _throwError(response.message);
@@ -184,14 +190,22 @@ export default function Stage2() {
 						<SelectMeals
 							key={`${state.selectedPlan}${state.selectedMealType}`}
 						/>
-						<Button
-							disabled={loading}
-							variant="wz"
-							className="w-full mt-8"
-							onClick={saveCustomWorkout}
-						>
-							Save Meal
-						</Button>
+						<div className="mt-10 grid grid-cols-2 gap-4">
+							<Button
+								disabled={loading}
+								onClick={() => saveCustomWorkout({ draft: true })}
+							>
+								<SquarePen />
+								Draft
+							</Button>
+							<Button
+								disabled={loading}
+								variant="wz"
+								onClick={() => saveCustomWorkout({ draft: false })}
+							>
+								Save Meal
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

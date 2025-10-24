@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, previousStage, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
-import { buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
+import { _throwError, buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -250,6 +250,7 @@ function Stage3() {
         coachMargin,
         customerMargin
       })
+
       const promises = [sendData("app/addClientOrder", payload)]
 
       if (state.status === "Pending") {
@@ -261,12 +262,14 @@ function Stage3() {
       }
       const response = await Promise.all(promises);
       for (const item of response) {
-        if (item.status_code === 200) toast.message(item.message || "Successfull");
+        if (item.status_code !== 200) throw new Error(item.message)
+        toast.message(item.message || "Successfull");
       }
       dispatch(orderCreated(response[0].data))
-      mutate("app/coach-retail")
+      mutate("app/coach-retail");
+      mutate("app/order-history");
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }

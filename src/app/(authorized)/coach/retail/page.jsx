@@ -6,6 +6,7 @@ import FormControl from "@/components/FormControl";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import AddRetailModal from "@/components/modals/tools/AddRetailModal";
+import CreateRetailPurchaseModal from "@/components/modals/tools/CreateRetailPurchaseModal";
 import { UpdateClientOrderAmount } from "@/components/pages/coach/client/ClientData";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
-import { sendData } from "@/lib/api";
+import { fetchData, sendData } from "@/lib/api";
 import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { buildUrlWithQueryParams } from "@/lib/formatter";
@@ -23,9 +26,8 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed } from "lucide-react";
+import { Clock, EllipsisVertical, Eye, EyeClosed, RefreshCcw, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -43,6 +45,7 @@ export default function Page() {
     error: ordersError,
     data: ordersData
   } = useSWR("app/order-history", getOrderHistory);
+
   if (retailLoading || ordersLoading) return <ContentLoader />
 
   if (
@@ -57,6 +60,7 @@ export default function Page() {
     <RetailStatisticsCards
       totalSales={retails.totalSale}
       totalOrders={orders.myOrder.length}
+      acumulatedVP={orders?.acumulatedVP || 0}
     />
     <div className="content-container">
       <RetailContainer
@@ -67,7 +71,11 @@ export default function Page() {
   </div>
 }
 
-function RetailStatisticsCards({ totalSales, totalOrders }) {
+function RetailStatisticsCards({
+  totalSales,
+  totalOrders,
+  acumulatedVP
+}) {
   const [hide, setHide] = useState(true);
   return <div className="grid grid-cols-3 gap-4">
     <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
@@ -97,6 +105,14 @@ function RetailStatisticsCards({ totalSales, totalOrders }) {
         <h4 className="!text-[28px]">₹ {totalOrders}</h4>
       </CardContent>
     </Card>
+    <Card className="p-4 rounded-[10px] shadow-none">
+      <CardHeader className="p-0 mb-0">
+        <CardTitle>Volume Points</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <h4 className="!text-[28px]">{acumulatedVP}</h4>
+      </CardContent>
+    </Card>
   </div>
 }
 
@@ -115,9 +131,16 @@ function RetailContainer({ orders, retails }) {
       >
         Order History
       </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="inventory"
+      >
+        Inventory
+      </TabsTrigger>
     </TabsList>
     <Brands brands={retails.brands} />
     <Orders orders={orders} />
+    <Inventory />
   </Tabs>
 }
 
@@ -144,27 +167,38 @@ function Brand({
   const coachId = useAppSelector(state => state.coach.data._id);
   const [retailModal, setRetailModal] = useState(false)
   return <Card className="p-0 shadow-none border-0 gap-2 relative">
-    <RetailMarginDropDown
-      margins={brand.margins}
-      setMargin={setMargin}
-      setOpen={setRetailModal}
-      brand={brand}
-      children={children}
-    />
-    <AddRetailModal
-      payload={{
-        coachId,
-        margin,
-        selectedBrandId: brand._id,
-        margins: brand.margins,
-        clientId: brand.clientId || "",
-        productModule: brand.productModule || [],
-        orderId: brand.orderId || "",
-        status: brand.status || "Completed",
-      }}
-      open={retailModal}
-      setOpen={setRetailModal}
-    />
+    <div className="relative hover:[&_.badge]:opacity-100">
+      <Image
+        src={brand.image || "/not-found.png"}
+        alt=""
+        height={540}
+        width={540}
+        className="object-cover shadow-md shadow-[#808080]/80"
+      />
+      <RetailMarginDropDown
+        margins={brand.margins}
+        setMargin={setMargin}
+        setOpen={setRetailModal}
+        brand={brand}
+        children={children}
+      />
+      <AddRetailModal
+        payload={{
+          coachId,
+          margin,
+          selectedBrandId: brand._id,
+          margins: brand.margins,
+          clientId: brand.clientId || "",
+          productModule: brand.productModule || [],
+          orderId: brand.orderId || "",
+          status: brand.status || "Completed",
+        }}
+        open={retailModal}
+        setOpen={setRetailModal}
+      />
+      <CreateRetailPurchaseModal brandId={brand._id} />
+    </div>
+    <p className="px-1 text-left mt-2 font-bold">{brand.name}</p>
   </Card>
 }
 
@@ -186,6 +220,54 @@ function Orders({ orders }) {
 }
 
 function Order({ order }) {
+  if (order.orderType === "purchase") return <PurchaseOrder order={order} />
+  if (order.orderType === "sale") return <SaleOrder order={order} />
+}
+
+function PurchaseOrder({ order }) {
+  const coach = useAppSelector(state => state.coach.data);
+  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
+    <CardHeader className="px-0">
+      <div className="flex justify-between items-center">
+        <div className="text-yellow-600 text-[14px] font-bold flex items-center gap-1">
+          <ShoppingCart className="bg-yellow-600 text-white w-[28px] h-[28px] p-1 rounded-full" />
+          <p>Purchase Order</p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="text-black w-[16px]">
+            <EllipsisVertical className="cursor-pointer" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="font-semibold px-2 py-[6px]">
+            <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
+              <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
+                Invoice
+              </DialogTrigger>
+            </PDFRenderer>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </CardHeader>
+    <CardContent className="px-0">
+      <div className="flex gap-4">
+        <Image
+          height={100}
+          width={100}
+          unoptimized
+          src={order.productModule?.at(0)?.productImage}
+          alt=""
+          className="bg-black w-[64px] h-[64px] object-cover rounded-md"
+        />
+        <div>
+          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
+          {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+}
+
+function SaleOrder({ order }) {
   const coach = useAppSelector(state => state.coach.data);
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
@@ -270,7 +352,8 @@ function ExportOrdersoExcel({ orders }) {
 
   function exportExcelSheet() {
     try {
-      const data = excelRetailOrdersData(orders, dates)
+      const filteredOrders = orders.myOrder.filter(order => order.orderType === "sale");
+      const data = excelRetailOrdersData(filteredOrders, dates)
       exportToExcel(data, "Retail Orders", "orders.xlsx")
     } catch (error) {
       toast.error(error.message)
@@ -372,4 +455,59 @@ function AcceptRetailsOrder({ order }) {
         variant="wz">Accept</Button>
     </Brand>
   </div >
+}
+
+function Inventory() {
+  return <TabsContent value="inventory">
+    <InventoryContainer />
+  </TabsContent>
+}
+
+function InventoryContainer() {
+  const [query, setQuery] = useState("")
+
+  const { isLoading, error, data, mutate } = useSWR(
+    "app/getAllReminder?person=coach",
+    () => fetchData("app/inventory?whitelabel=thewellnessspot")
+  );
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  const regex = new RegExp(query, "i")
+  const products = data.data.filter(
+    product => regex.test(product.productName)
+  ) || []
+
+  return <div>
+    <div className="mb-8 flex items-center justify-between">
+      <h5>Products</h5>
+      <Input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Product Name..."
+        className="max-w-[400px] bg-[var(--comp-1)] ml-auto"
+      />
+      <Button onClick={mutate} variant="icon">
+        <RefreshCcw />
+      </Button>
+    </div>
+    <Table className="border-1">
+      <TableHeader>
+        <TableRow className="bg-[var(--comp-1)] [&_th]:font-bold">
+          <TableHead>Sr No.</TableHead>
+          <TableHead>Product Name</TableHead>
+          <TableHead>Quantity</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {products.map((product, index) => <TableRow key={product._id}>
+          <TableCell>{index + 1}</TableCell>
+          <TableCell>{product.productName}</TableCell>
+          <TableCell>{product.quantity}</TableCell>
+        </TableRow>)}
+      </TableBody>
+    </Table>
+  </div>
 }

@@ -5,7 +5,7 @@ export function excelRetailOrdersData(orders, dates) {
   const startDate = parse(dates.startDate, 'yyyy-MM-dd', new Date());
   const endDate = parse(dates.endDate, 'yyyy-MM-dd', new Date());
 
-  const exporting = (orders.myOrder || [])
+  const exporting = (orders || [])
     .filter(order => {
       const parsedDate = parse(order.createdAt, "dd-MM-yyyy", new Date())
       return isAfter(parsedDate, startDate) && isBefore(parsedDate, endDate)
