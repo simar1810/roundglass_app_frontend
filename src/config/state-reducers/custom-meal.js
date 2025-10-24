@@ -85,118 +85,169 @@ export function customMealReducer(state, action) {
         selectedMealType: action.payload,
       }
     case "CHANGE_SELECTED_PLAN":
+      const plan = state.selectedPlans[action.payload];
+      const selectMeal = Array.isArray(plan) ? plan.at(0)?.mealType : plan?.meals?.at(0)?.mealType;
       return {
         ...state,
         selectedPlan: action.payload,
-        selectedMealType: state.selectedPlans[action.payload]?.at(0).mealType
+        selectedMealType: selectMeal
       }
-    case "SAVE_MEAL_TYPE":
+    case "SAVE_MEAL_TYPE": {
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
       if (action.payload.type === "new") {
+        const updatedMeals = [
+          ...currentMeals,
+          { mealType: action.payload.mealType, meals: [] },
+        ];
+
         return {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: [
-              ...state.selectedPlans[state.selectedPlan],
-              {
-                mealType: action.payload.mealType,
-                meals: []
-              }
-            ]
-          },
-          selectedMealType: action.payload.mealType
-        }
-      } else if (action.payload.type === "edit") {
-        return {
-          ...state,
-          selectedPlans: {
-            ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealPlan, index) => index === action.payload.index
-              ? { ...mealPlan, mealType: action.payload.mealType }
-              : mealPlan),
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
           },
           selectedMealType: action.payload.mealType,
-        }
-      } else {
+        };
+      }
+
+      if (action.payload.type === "edit") {
+        const updatedMeals = currentMeals.map((mealPlan, index) =>
+          index === action.payload.index
+            ? { ...mealPlan, mealType: action.payload.mealType }
+            : mealPlan
+        );
+
         return {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan].filter((_, index) => index !== action.payload.index),
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
           },
-          selectedMealType: state.selectedPlans[state.selectedPlan]?.at(state.selectedPlans[state.selectedPlan].length - 2)?.mealType || "",
-        }
+          selectedMealType: action.payload.mealType,
+        };
       }
-    case "SAVE_RECIPE":
-      if (action.payload.index || action.payload.index === 0) {
-        const dishesPayload = !action.payload.isNew
-          ? {
-            ...action.payload.recipe,
-            dish_name: action.payload.recipe.dish_name || action.payload.recipe.title,
-            image: action.payload.recipe.image || action.payload.recipe.image,
-            fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
-            calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
-            protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
-            carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
-            isNew: !action.payload.recipe.time || false
+      const updatedMeals = currentMeals.filter(
+        (_, index) => index !== action.payload.index
+      );
+      const newSelectedMealType =
+        updatedMeals.at(updatedMeals.length - 1)?.mealType || "";
+
+      return {
+        ...state,
+       selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+        selectedMealType: newSelectedMealType,
+      };
+    }
+    case "SAVE_RECIPE": {
+      const { recipe, index, isNew } = action.payload;
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      const dishesPayload = !isNew
+        ? {
+            ...recipe,
+            dish_name: recipe.dish_name || recipe.title,
+            image: recipe.image || recipe.image,
+            fats: recipe.fats || recipe?.calories?.fats,
+            calories: recipe?.calories?.total || recipe.calories,
+            protein: recipe.protein || recipe?.calories?.proteins,
+            carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+            isNew: !recipe.time || false,
           }
-          : {
-            isNew: false
-          }
+        : {
+        isNew: false,
+         };
+       
+      if (index || index === 0) {
+        const updatedMeals = currentMeals.map((mealType) =>
+          mealType.mealType === state.selectedMealType
+            ? {
+                ...mealType,
+                meals: mealType.meals.map((meal, i) =>
+                  i === index ? { ...meal, ...dishesPayload } : meal
+                ),
+              }
+            : mealType
+        );
+      
         return {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-              .map((mealType => mealType.mealType === state.selectedMealType
-                ? {
-                  ...mealType,
-                  meals: mealType.meals.map((meal, index) => index === action.payload.index
-                    ? {
-                      ...meal,
-                      ...dishesPayload
-                    }
-                    : meal)
-                } : mealType
-              ))
-          }
-        }
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
+          },
+        };
       }
-      return {
-        ...state,
-        selectedPlans: {
-          ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealType => mealType.mealType === state.selectedMealType
-            ? {
+
+      const updatedMeals = currentMeals.map((mealType) =>
+        mealType.mealType === state.selectedMealType
+          ? {
               ...mealType,
-              meals: [...(mealType.meals || []), {
-                ...action.payload.recipe,
-                dish_name: action.payload.recipe.dish_name || action.payload.recipe.name,
-                fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
-                calories: action.payload.recipe.calories || action.payload.recipe?.calories?.total,
-                protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
-                carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
-                isNew: true
-              }]
-            }
-            : mealType
-          ))
-        }
-      }
-    case "DELETE_RECIPE":
+              meals: [
+                ...(mealType.meals || []),
+                {
+                  ...recipe,
+                  dish_name: recipe.dish_name || recipe.name,
+                  fats: recipe.fats || recipe?.calories?.fats,
+                  calories: recipe.calories || recipe?.calories?.total,
+                  protein: recipe.protein || recipe?.calories?.proteins,
+                  carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+                  isNew: true,
+                },
+             ],
+           }
+         : mealType
+     );
+   
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-            .map((mealType => mealType.mealType === state.selectedMealType
-              ? {
-                ...mealType,
-                meals: mealType.meals.filter((_, index) => index !== action.payload)
-              } : mealType
-            ))
-        }
-      }
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+      };
+    }
+    case "DELETE_RECIPE": {
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      const updatedMeals = currentMeals.map((mealType) =>
+        mealType.mealType === state.selectedMealType
+          ? {
+              ...mealType,
+              meals: mealType.meals.filter((_, index) => index !== action.payload),
+            }
+          : mealType
+      );
+
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+      };
+    }
     case "MEAL_PLAN_CREATED":
       return {
         ...state,
@@ -250,6 +301,31 @@ export function customMealReducer(state, action) {
         },
         selectedPlan: action.payload.new,
       };
+    case "LOAD_AI_MEAL_PLAN": {
+      const ai = action.payload.mealPlan;
+
+      return {
+        ...state,
+        title: ai.title,
+        description: ai.description,
+        mode: ai.mode || "daily",
+        creationType: "new",
+        stage: 2,
+        selectedPlan: "day_1",
+        selectedMealType:
+          ai.plan?.day_1?.meals?.[0]?.mealType || "Breakfast",
+        selectedPlans: Object.fromEntries(
+          Object.entries(ai.plan || {}).map(([day, data]) => [
+            day,
+            {
+              ...data,
+              meals: Array.isArray(data.meals) ? data.meals : [],
+            },
+          ])
+        ),
+        isAiGenerated: true,
+      };
+    }
     default:
       return state;
   }

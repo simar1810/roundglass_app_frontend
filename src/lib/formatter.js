@@ -47,8 +47,26 @@ export function getRelativeTime(dateString) {
   return format(date, 'dd-MM');
 }
 
-export function format24hr_12hr(time24) {
-  return format(parse(time24, 'HH:mm', new Date()), 'hh:mm a');
+export function format24hr_12hr(timeStr) {
+  if (!timeStr) return "";
+
+  // Already in 12-hour format (e.g., "8:00 AM" or "08:00 pm")
+  if (/[ap]m$/i.test(timeStr.trim())) {
+    try {
+      const date = parse(timeStr.trim().toUpperCase(), "hh:mm a", new Date());
+      return format(date, "hh:mm a");
+    } catch {
+      return timeStr;
+    }
+  }
+
+  // 24-hour format (e.g., "08:00" or "18:30")
+  try {
+    const date = parse(timeStr.trim(), "HH:mm", new Date());
+    return format(date, "hh:mm a");
+  } catch {
+    return timeStr;
+  }
 }
 
 export function trimString(str, max = 20) {

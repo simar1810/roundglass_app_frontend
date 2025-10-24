@@ -29,7 +29,7 @@ export default function AssignMealModal({
   return (
     <Dialog>
       <DialogTrigger className="p-0">
-        <Badge variant="wz_fill">Assign</Badge>
+        <Badge variant="wz_fill" className={"px-4 py-2 font-semibold"}>Assign Meal</Badge>
       </DialogTrigger>
       <DialogContent className="!max-w-[650px] h-[70vh] border-0 p-0 overflow-auto block">
         <DialogHeader className="p-4 border-b-1">

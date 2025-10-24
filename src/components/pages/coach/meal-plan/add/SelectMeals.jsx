@@ -16,11 +16,16 @@ export default function SelectMeals() {
     selectedPlan
   } = useCurrentStateContext();
 
-  const mealTypes = selectedPlans[selectedPlan]
-    ?.map(meal => meal.mealType)
-  const selectedMealTypeRecipee = selectedPlans[selectedPlan]
-    ?.find(mealType => mealType.mealType === selectedMealType)?.meals || []
+const plan = selectedPlans[selectedPlan];
+const isArray = Array.isArray(plan);
 
+const mealTypes = isArray
+  ? plan.map(m => m.mealType)
+  : plan?.meals?.map(m => m.mealType);
+
+const selectedMealTypeRecipee = isArray
+  ? plan.find(m => m.mealType === selectedMealType)?.meals || []
+  : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];  
   const errorMessage = !mealTypes ?
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
@@ -54,10 +59,10 @@ export default function SelectMeals() {
     <div>
       {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-center gap-4">
         <EditSelectedMealDetails
-          key={recipe?._id}
+          key={recipe?._id || index}
           index={index}
           recipe={recipe}
-          defaultOpen={recipe.isNew}
+          defaultOpen={recipe.isNew || false}
         />
         <Minus
           className="bg-[var(--accent-2)] text-white cursor-pointer ml-auto rounded-full px-[2px]"
