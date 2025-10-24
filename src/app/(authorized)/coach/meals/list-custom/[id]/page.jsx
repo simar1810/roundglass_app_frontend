@@ -139,7 +139,7 @@ function MealDetails({ meal }) {
   </div>
 }
 
-function DeleteCustomMealPlan({ id }) {
+export function DeleteCustomMealPlan({ id }) {
   const { cache } = useSWRConfig()
   const router = useRouter();
   async function deleteCustomPlan(setLoading, closeBtnRef) {

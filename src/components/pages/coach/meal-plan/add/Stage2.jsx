@@ -136,11 +136,12 @@ export default function Stage2() {
 		try {
 			setLoading(true);
 			const plans = {};
+			let toastId;
 			for (const key in state.selectedPlans) {
-				const toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+				toastId = toast.loading(`Creating Meal Plan - ${key}...`);
 				const createdMealPlan = await sendData(
 					"app/create-custom-plan",
-					mealPlanCreationRP(state.selectedPlans[key])
+					mealPlanCreationRP(Array.isArray(state.selectedPlans[key]) ? state.selectedPlans[key] : state.selectedPlans[key]?.meals)
 				);
 				if (createdMealPlan.status_code !== 200) {
 					toast.dismiss(toastId);
@@ -152,13 +153,13 @@ export default function Stage2() {
 
 			let thumbnail;
 			if (state.file) {
-				const toastId = toast.loading("Uploading Thumbnail...");
+				const uploadToastId = toast.loading("Uploading Thumbnail...");
 				thumbnail = await uploadImage(state.file);
 				dispatch(customWorkoutUpdateField("image", thumbnail.img));
-				toast.dismiss(toastId);
+				toast.dismiss(uploadToastId);
 			}
 
-			const toastId = toast.loading("Creating The Custom Meal Plan...");
+			toastId = toast.loading("Creating The Custom Meal Plan...");
 			const formData = dailyMealRP(state);
 			const response = await sendData(`app/meal-plan/custom`, {
 				...formData,
@@ -170,6 +171,7 @@ export default function Stage2() {
 			if (response.status_code !== 200) _throwError(response.message);
 			cache.delete("custom-meal-plans");
 			toast.success(response.message);
+			localStorage.removeItem("aiMealPlan");
 			router.push(`/coach/meals/list-custom?mode=${state.mode}`);
 		} catch (error) {
 			toast.error(error.message || "Something went wrong!");
