@@ -17,7 +17,7 @@ import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
-import { endOfDay, getMonth, getYear, startOfDay, startOfMonth } from "date-fns";
+import { endOfDay, endOfMonth, getMonth, getYear, startOfDay, startOfMonth } from "date-fns";
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink, CalendarRange } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -63,14 +63,10 @@ const CalendarMap = {
   },
   "clientwise-history": {
     from: startOfMonth(new Date()),
-    to: endOfDay(new Date())
+    to: endOfMonth(new Date())
   },
   "club-history": {
-    from: startOfDay(new Date()),
-    to: endOfDay(new Date())
-  },
-  "club-history": {
-    from: startOfDay(new Date()),
+    from: startOfMonth(new Date()),
     to: endOfDay(new Date())
   },
   "physical-club": {

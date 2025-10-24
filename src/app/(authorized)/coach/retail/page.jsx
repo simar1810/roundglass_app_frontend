@@ -60,8 +60,8 @@ export default function Page() {
     <RetailStatisticsCards
       totalSales={retails.totalSale}
       totalOrders={orders.myOrder.length}
-      acumulatedVP={orders?.acumulatedVP || 0}
-    />
+      acumulatedVP={(orders?.acumulatedVP || 0).toFixed(2)}
+      />
     <div className="content-container">
       <RetailContainer
         orders={ordersData.data}
@@ -102,7 +102,7 @@ function RetailStatisticsCards({
         <CardTitle>Total Orders</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="!text-[28px]">₹ {totalOrders}</h4>
+        <h4 className="!text-[28px]">{totalOrders}</h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
@@ -188,7 +188,7 @@ function Brand({
           margin,
           selectedBrandId: brand._id,
           margins: brand.margins,
-          clientId: brand.clientId || "",
+          clientId: brand.clientId && brand.clientId.trim() !== "" ? brand.clientId : null,
           productModule: brand.productModule || [],
           orderId: brand.orderId || "",
           status: brand.status || "Completed",
@@ -209,7 +209,12 @@ function Orders({ orders }) {
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
       return dateB - dateA;
     })
-    .sort((a, b) => a.status === "Completed");
+    .sort((a, b) => {
+      // Sort by status: Completed first, then others
+      if (a.status === "Completed" && b.status !== "Completed") return -1;
+      if (a.status !== "Completed" && b.status === "Completed") return 1;
+      return 0;
+    });
 
   return <TabsContent value="order-history">
     <ExportOrdersoExcel orders={orders} />
@@ -220,8 +225,22 @@ function Orders({ orders }) {
 }
 
 function Order({ order }) {
-  if (order.orderType === "purchase") return <PurchaseOrder order={order} />
-  if (order.orderType === "sale") return <SaleOrder order={order} />
+  // Handle orders with explicit orderType
+  if (order.orderType === "purchase") {
+    return <PurchaseOrder order={order} />
+  }
+  if (order.orderType === "sale") {
+    return <SaleOrder order={order} />
+  }
+  
+  // Handle orders without orderType field - assume they are sale orders
+  // This is based on the pattern we see in the data where missing orderType usually means sale
+  if (!order.orderType) {
+    return <SaleOrder order={order} />
+  }
+  
+  // Fallback for unknown order types
+  return <div>Unknown order type: {order.orderType}</div>
 }
 
 function PurchaseOrder({ order }) {
@@ -233,18 +252,23 @@ function PurchaseOrder({ order }) {
           <ShoppingCart className="bg-yellow-600 text-white w-[28px] h-[28px] p-1 rounded-full" />
           <p>Purchase Order</p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild className="text-black w-[16px]">
-            <EllipsisVertical className="cursor-pointer" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="font-semibold px-2 py-[6px]">
-            <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
-              <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
-                Invoice
-              </DialogTrigger>
-            </PDFRenderer>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
+            {order.orderType || 'Purchase'}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="text-black w-[16px]">
+              <EllipsisVertical className="cursor-pointer" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="font-semibold px-2 py-[6px]">
+              <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
+                <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
+                  Invoice
+                </DialogTrigger>
+              </PDFRenderer>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </CardHeader>
     <CardContent className="px-0">
@@ -272,9 +296,14 @@ function SaleOrder({ order }) {
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
-        {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
-        {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
-        {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
+        <div className="flex items-center gap-2">
+          {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
+          {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
+          {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
+          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+            {order.orderType || 'Sale'}
+          </span>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="text-black w-[16px]">
             <EllipsisVertical className="cursor-pointer" />
@@ -443,7 +472,7 @@ function AcceptRetailsOrder({ order }) {
     <Brand
       brand={{
         ...order.brand,
-        clientId: order.clientId,
+        clientId: order.clientId && order.clientId.trim() !== "" ? order.clientId : null,
         productModule: order.productModule,
         status: order.status,
         orderId: order.orderId,

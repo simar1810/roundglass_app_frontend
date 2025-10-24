@@ -148,18 +148,106 @@ function CreateOrder() {
   if (stocks.length === 0) return
 
   return <div className="bg-white sticky-0 bottom-0 py-2 px-4 border-t-1 border-gray-600 flex items-center justify-between gap-2">
-    <Button
-      className="grow"
-      variant="wz"
-      onClick={saveOrder}
-      disabled={loading}
-    >
-      {loading ? <Loader className="!w-6 border-white" /> : "Save"}
-    </Button>
+    <PurchaseConfirmationModal 
+      stocks={stocks} 
+      onConfirm={saveOrder} 
+      loading={loading}
+    />
     <div className="flex items-center gap-2">
       <ShoppingCart className="ml-4" />
       {stocks.length}
     </div>
     <DialogClose ref={closeRef} />
+  </div>
+}
+
+function PurchaseConfirmationModal({ stocks, onConfirm, loading }) {
+  const totalItems = stocks.reduce((acc, stock) => acc + stock.quantity, 0);
+
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button
+        className="grow"
+        variant="wz"
+        disabled={loading}
+      >
+        {loading ? <Loader className="!w-6 border-white" /> : "Review Order"}
+      </Button>
+    </DialogTrigger>
+    <DialogContent className="max-w-[500px] w-full p-0 gap-0 overflow-hidden">
+      <DialogTitle className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            <ShoppingCart className="w-4 h-4 text-green-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Review Purchase Order</h3>
+            <p className="text-sm text-gray-500">Confirm your inventory purchase</p>
+          </div>
+        </div>
+      </DialogTitle>
+      
+      <div className="p-6 max-h-[400px] overflow-y-auto">
+        <div className="space-y-3">
+          {stocks.map((stock, index) => (
+            <PurchaseItemCard key={index} item={stock} />
+          ))}
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-gray-200 bg-gray-50 rounded-lg p-4">
+          <div className="flex justify-between items-center text-base font-semibold text-gray-900 mb-1">
+            <span>Total Items:</span>
+            <span className="text-green-600">{totalItems} items</span>
+          </div>
+          <div className="flex justify-between items-center text-sm text-gray-600">
+            <span>Products:</span>
+            <span>{stocks.length} different products</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
+        <DialogClose asChild>
+          <Button variant="outline" className="flex-1 h-11">
+            Cancel
+          </Button>
+        </DialogClose>
+        <Button
+          variant="wz"
+          onClick={onConfirm}
+          disabled={loading}
+          className="flex-1 h-11"
+        >
+          {loading ? <Loader className="!w-4 border-white" /> : "Confirm Purchase"}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function PurchaseItemCard({ item }) {
+  // Truncate the product ID to make it more readable
+  const shortId = item.productId ? item.productId.substring(0, 8) + "..." : "N/A";
+  
+  return <div className="flex items-start gap-3 border-b pb-4 last:border-b-0">
+    <Image
+      src="/not-found.png"
+      alt="Product"
+      width={60}
+      height={60}
+      className="w-[60px] h-[60px] rounded-[6px] object-cover bg-gray-100"
+    />
+    <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-gray-900 mb-1">Product Item</h4>
+          <p className="text-xs text-gray-500 leading-[1.3] mb-2">Product details will be loaded from inventory</p>
+          <div className="flex items-center gap-3 text-xs text-gray-600">
+            <span className="bg-gray-100 px-2 py-1 rounded">ID: {shortId}</span>
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Qty: {item.quantity}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 }
