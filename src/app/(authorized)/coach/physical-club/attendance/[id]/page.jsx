@@ -98,13 +98,20 @@ export default function Page() {
 
   const unmarkServing = async (date, servingNumber) => {
     try {
+      // Instead of using the unmark API, use the regular attendance API to change status to "unmarked"
       const response = await sendData(
-        "app/physical-club/attendance/unmark",
-        { clientId: id, date, servingNumber },
-        "PATCH"
+        "app/physical-club/attendance?person=coach",
+        { 
+          clientId: id, 
+          date, 
+          servingNumber, 
+          status: "unmarked",
+          person: "coach"
+        },
+        "PUT"
       )
       if (response.status_code !== 200) throw new Error(response.message)
-      toast.success("Serving unmarked successfully")
+      toast.success("Serving status changed to unmarked")
       // Refresh all attendance-related data with a small delay to ensure backend processing
       refreshAttendanceDataWithDelay(id)
     } catch (error) {
@@ -314,9 +321,10 @@ export default function Page() {
                             variant="outline"
                             size="sm"
                             onClick={() => unmarkServing(attendance.date, attendance.servingNumber || 1)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 text-xs"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Remove Serving
                           </Button>
                         )}
                       </TableCell>

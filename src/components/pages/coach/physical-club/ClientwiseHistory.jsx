@@ -45,9 +45,11 @@ function TableRow({
         <td key={i} className="px-1 py-1 min-w-[50px]">
           <div className="flex flex-col items-center gap-0.5">
             <div
-              className={cn("w-5 h-5 mx-auto flex items-center justify-center rounded text-xs font-medium", statusClases(day.status))}
+              className={cn("w-5 h-5 mx-auto flex items-center justify-center rounded text-xs font-medium", 
+                day.status ? statusClases(day.status) : "bg-gray-100 text-gray-400"
+              )}
             >
-              {nameInitials(day.status) || <>-</>}
+              {day.status ? nameInitials(day.status) : <>-</>}
             </div>
           
           </div>

@@ -49,6 +49,7 @@ export function AttendanceClients({ clients }) {
         name: client.name,
         profilePhoto: client.profilePhoto,
         date: client.date,
+        membership: client.membership, // Store membership data
         servings: []
       };
     }
@@ -64,25 +65,27 @@ export function AttendanceClients({ clients }) {
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
       
+      // Instead of using the unmark API, use the regular attendance API to change status to "unmarked"
       const requestData = {
         clientId: clientId,
         date: formattedDate,
         servingNumber: servingNumber,
-        person: "coach"  // Add person parameter like the mark attendance API
+        status: "unmarked",
+        person: "coach"
       };
       
       console.log("Unmark request data:", requestData);
       
       const response = await sendData(
-        "app/physical-club/attendance/unmark?person=coach",
+        "app/physical-club/attendance?person=coach",
         requestData,
-        "PATCH"
+        "PUT"
       );
       
       console.log("Unmark API response:", response);
       
       if (response.status_code !== 200) throw new Error(response.message);
-      toast.success("Serving unmarked successfully");
+      toast.success("Serving status changed to unmarked");
       // Refresh all attendance-related data with a small delay to ensure backend processing
       refreshAttendanceDataWithDelay(clientId);
     } catch (error) {
@@ -178,26 +181,44 @@ export function AttendanceClients({ clients }) {
                       </Button>
                     </ChangeClientAttendanceStatus>
 
-                    {/* Remove Servings button - shows count of present servings */}
-                    {group.servings.filter(s => s.status === "present").length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full font-bold hover:text-red-600 text-red-600 border-red-600 hover:border-red-600"
-                        onClick={() => {
-                          // Remove all present servings for this day
-                          const presentServings = group.servings.filter(s => s.status === "present");
-                          presentServings.forEach((serving, index) => {
-                            setTimeout(() => {
-                              // Use group.clientId instead of serving.clientId
-                              unmarkServing(group.clientId, serving.date, serving.servingNumber || index + 1);
-                            }, index * 200); // Stagger the requests
-                          });
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Remove Servings ({group.servings.filter(s => s.status === "present").length})
-                      </Button>
+                    {/* Remove Servings buttons */}
+                    {group.servings.filter(s => s.status === "present").length > 1 && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full font-bold hover:text-red-600 text-red-600 border-red-600 hover:border-red-600"
+                          onClick={() => {
+                            // Remove only the last present serving, keeping at least one
+                            const presentServings = group.servings.filter(s => s.status === "present");
+                            if (presentServings.length > 1) {
+                              const lastServing = presentServings[presentServings.length - 1];
+                              unmarkServing(group.clientId, lastServing.date, lastServing.servingNumber || presentServings.length);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove Serving
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full font-bold hover:text-red-700 text-red-700 border-red-700 hover:border-red-700"
+                          onClick={() => {
+                            // Remove all present servings for this day
+                            const presentServings = group.servings.filter(s => s.status === "present");
+                            presentServings.forEach((serving, index) => {
+                              setTimeout(() => {
+                                unmarkServing(group.clientId, serving.date, serving.servingNumber || index + 1);
+                              }, index * 200); // Stagger the requests
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove All Servings ({group.servings.filter(s => s.status === "present").length})
+                        </Button>
+                      </>
                     )}
                   </>
                 )}
@@ -209,7 +230,12 @@ export function AttendanceClients({ clients }) {
               {group.servings.map((serving, servingIndex) => (
                 <div key={servingIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">#{serving.servingNumber || servingIndex + 1}</Badge>
+                    <Badge variant="outline">
+                      {serving.status === "present" ? 
+                        `${(group.membership?.pendingServings || 0) - group.servings.filter(s => s.status === "present").length} Remaining` : 
+                        "Not Taken"
+                      }
+                    </Badge>
                     <Badge 
                       variant={serving.status === "present" ? "default" : 
                               serving.status === "absent" ? "destructive" : 
@@ -235,9 +261,10 @@ export function AttendanceClients({ clients }) {
                         });
                         unmarkServing(group.clientId, serving.date, serving.servingNumber || servingIndex + 1);
                       }}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 text-xs"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Remove Serving
                     </Button>
                   )}
                 </div>
