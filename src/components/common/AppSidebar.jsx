@@ -310,10 +310,10 @@ export function ClientSearchBar({ setModal }) {
     function () {
       (async function () {
         try {
-          if (debouncedQuery === "") return;
+          if (debouncedQuery === "" || debouncedQuery.trim() === "") return;
           setLoading(true);
           const response = await fetchData(
-            `app/allClient?limit=5&search=${debouncedQuery}`
+            `app/allClient?limit=5&search=${encodeURIComponent(debouncedQuery.trim())}`
           );
           if (response.status_code !== 200)
             throw new Error(response.message || "Internal Server Error!");
