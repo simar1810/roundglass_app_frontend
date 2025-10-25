@@ -61,7 +61,7 @@ export default function Page() {
       totalSales={retails.totalSale}
       totalOrders={orders.myOrder.length}
       acumulatedVP={(orders?.acumulatedVP || 0).toFixed(2)}
-      />
+    />
     <div className="content-container">
       <RetailContainer
         orders={ordersData.data}
@@ -232,13 +232,13 @@ function Order({ order }) {
   if (order.orderType === "sale") {
     return <SaleOrder order={order} />
   }
-  
+
   // Handle orders without orderType field - assume they are sale orders
   // This is based on the pattern we see in the data where missing orderType usually means sale
   if (!order.orderType) {
     return <SaleOrder order={order} />
   }
-  
+
   // Fallback for unknown order types
   return <div>Unknown order type: {order.orderType}</div>
 }
@@ -337,7 +337,7 @@ function SaleOrder({ order }) {
     </CardContent>
     <CardFooter className="px-0 items-end justify-between">
       <div className="text-[12px]">
-        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order?.clientId?.name || "-"}</span></p>
+        <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order.clientName || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
         <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
