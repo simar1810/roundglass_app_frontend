@@ -15,6 +15,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+
 export default function CreateRetailSaleModal({
   brandId
 }) {
@@ -230,8 +231,8 @@ function PurchaseItemCard({ item }) {
   const shortId = item.productId ? item.productId.substring(0, 8) + "..." : "N/A";
   return <div className="flex items-start gap-3 border-b pb-4 last:border-b-0">
     <Image
-      src="/not-found.png"
-      alt="Product"
+      src={item.productImage || "/not-found.png"}
+      alt={item.productName || "Product"}
       width={60}
       height={60}
       className="w-[60px] h-[60px] rounded-[6px] object-cover bg-gray-100"

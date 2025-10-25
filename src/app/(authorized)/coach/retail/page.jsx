@@ -381,9 +381,31 @@ function ExportOrdersoExcel({ orders }) {
 
   function exportExcelSheet() {
     try {
-      const filteredOrders = orders.myOrder.filter(order => order.orderType === "sale");
-      const data = excelRetailOrdersData(filteredOrders, dates)
+      if (!dates.startDate || !dates.endDate) {
+        toast.error("Please select both start and end dates");
+        return;
+      }
+
+      const allOrders = [...(orders.myOrder || []), ...(orders.retailRequest || [])];
+      
+      const saleOrders = allOrders.filter(order => {
+        return order.orderType === "sale" || !order.orderType;
+      });
+      
+      if (saleOrders.length === 0) {
+        toast.error("No sale orders found to export");
+        return;
+      }
+      
+      const data = excelRetailOrdersData(saleOrders, dates);
+      
+      if (!data || data.length === 0) {
+        toast.error("No orders found in the selected date range");
+        return;
+      }
+      
       exportToExcel(data, "Retail Orders", "orders.xlsx")
+      toast.success(`Exported ${data.length} orders successfully`);
     } catch (error) {
       toast.error(error.message)
     }
