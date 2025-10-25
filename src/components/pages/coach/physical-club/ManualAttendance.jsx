@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendanceWithRange } from "@/lib/physical-attendance";
+import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendanceWithRange, manualAttendanceWithRangeMultiple } from "@/lib/physical-attendance";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { CheckCircle, X, Trash2, Plus } from "lucide-react";
@@ -22,9 +22,9 @@ export default function ManualAttendance({
   range,
   setRange
 }) {
-  const clients = manualAttendanceWithRange(data, range)
+  const clients = manualAttendanceWithRangeMultiple(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
-
+  // console.log(clients)
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} />
     <div className="flex-1">
@@ -60,27 +60,27 @@ export function AttendanceClients({ clients }) {
     try {
       // Debug logging
       console.log("Unmarking serving:", { clientId, date, servingNumber });
-      
+
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
-      
+
       const requestData = {
         clientId: clientId,
         date: formattedDate,
         servingNumber: servingNumber,
         person: "coach"  // Add person parameter like the mark attendance API
       };
-      
+
       console.log("Unmark request data:", requestData);
-      
+
       const response = await sendData(
         "app/physical-club/attendance/unmark?person=coach",
         requestData,
         "PATCH"
       );
-      
+
       console.log("Unmark API response:", response);
-      
+
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success("Serving unmarked successfully");
       // Refresh all attendance-related data with a small delay to ensure backend processing
@@ -149,6 +149,7 @@ export function AttendanceClients({ clients }) {
                     {/* Add Serving button */}
                     <ChangeClientAttendanceStatus
                       clientId={group.clientId}
+                      type="new"
                       date={group.date}
                       status="present"
                     >
@@ -166,6 +167,7 @@ export function AttendanceClients({ clients }) {
                     <ChangeClientAttendanceStatus
                       date={group.date}
                       clientId={group.clientId}
+                      type="new"
                       status="absent"
                     >
                       <Button
@@ -203,17 +205,18 @@ export function AttendanceClients({ clients }) {
                 )}
               </div>
             </div>
-            
+
             {/* Show existing servings */}
             <div className="ml-12 space-y-1">
-              {group.servings.map((serving, servingIndex) => (
+              <span className="text-gray-700 font-bold text-xs">Todays Servings - {group.servings.length}</span>
+              {/* {group.servings.map((serving, servingIndex) => (
                 <div key={servingIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">#{serving.servingNumber || servingIndex + 1}</Badge>
-                    <Badge 
-                      variant={serving.status === "present" ? "default" : 
-                              serving.status === "absent" ? "destructive" : 
-                              serving.status === "unmarked" ? "secondary" : "outline"}
+                    <Badge
+                      variant={serving.status === "present" ? "default" :
+                        serving.status === "absent" ? "destructive" :
+                          serving.status === "unmarked" ? "secondary" : "outline"}
                       className={serving.status === "unmarked" ? "bg-orange-100 text-orange-700" : ""}
                     >
                       {serving.status}
@@ -241,7 +244,7 @@ export function AttendanceClients({ clients }) {
                     </Button>
                   )}
                 </div>
-              ))}
+              ))} */}
             </div>
           </div>
         ))}
@@ -258,7 +261,7 @@ export function AttendanceCalendar({
   range,
   setRange,
 }) {
-  const clients = manualAttendanceWithRange(data, {
+  const clients = manualAttendanceWithRangeMultiple(data, {
     from: startOfMonth(range.from),
     to: endOfMonth(range.from)
   })

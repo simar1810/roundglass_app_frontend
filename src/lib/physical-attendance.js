@@ -77,6 +77,81 @@ export function manualAttendanceWithRange(data, range) {
     .flatMap(client => client?.dailyAttendance);
 }
 
+/**
+ * Enhanced version of manualAttendanceWithRange that supports multiple attendance records per day.
+ * 
+ * Key differences from manualAttendanceWithRange:
+ * - Groups attendance by date to handle multiple records per day
+ * - Creates separate records for each attendance entry on the same day
+ * - Includes servingNumber to track multiple servings
+ * - Maintains all attendance records instead of overwriting with the latest one
+ * 
+ * @param {Array} data - Array of client data with attendance records
+ * @param {Object} range - Date range object with from and to properties
+ * @returns {Array} Array of attendance records with support for multiple records per day
+ */
+export function manualAttendanceWithRangeMultiple(data, range) {
+  const start = startOfDay(range?.from || new Date());
+  const end = endOfDay(range?.to || new Date());
+
+  const totalDays = Math.abs(differenceInCalendarDays(range.from, range.to)) + 1;
+
+  return data
+    .flatMap(client => {
+      // Group attendance by date to handle multiple records per day
+      const attendanceByDate = new Map();
+
+      (client?.attendance || []).forEach(att => {
+        if (
+          isBefore(subMinutes(new Date(att.date), 1), end) &&
+          isAfter(addMinutes(new Date(att.date), 1), start)
+        ) {
+          const dateKey = format(new Date(att.date), "yyyy-MM-dd");
+
+          if (!attendanceByDate.has(dateKey)) {
+            attendanceByDate.set(dateKey, []);
+          }
+          attendanceByDate.get(dateKey).push(att);
+        }
+      });
+
+      // Generate records for each day in the range
+      const dailyRecords = [];
+
+      for (let i = 0; i < totalDays; i++) {
+        const currentDate = addDays(start, i);
+        const dateKey = format(currentDate, "yyyy-MM-dd");
+        const dayAttendances = attendanceByDate.get(dateKey) || [];
+
+        if (dayAttendances.length > 0) {
+          // Create a record for each attendance entry on this day
+          dayAttendances.forEach((att, index) => {
+            dailyRecords.push({
+              date: att.date,
+              status: att.status,
+              markedAt: att.markedAt,
+              servingNumber: att.servingNumber || index + 1,
+              name: client?.client?.name,
+              profilePhoto: client?.client?.profilePhoto,
+              clientId: client?.client?._id
+            });
+          });
+        } else {
+          // Create an unmarked record for this day
+          dailyRecords.push({
+            date: currentDate,
+            status: "unmarked",
+            name: client?.client?.name,
+            profilePhoto: client?.client?.profilePhoto,
+            clientId: client?.client?._id
+          });
+        }
+      }
+
+      return dailyRecords;
+    });
+}
+
 export function shakeRequests(data) {
   return data
     .flatMap(client => {
@@ -112,7 +187,7 @@ export function clientWiseHistory(data, range) {
     record.attendance.forEach(a => {
       const d = new Date(a.date);
       const key = d.toISOString().split("T")[0];
-      
+
       if (!attendanceByDate.has(key)) {
         attendanceByDate.set(key, []);
       }
@@ -130,8 +205,8 @@ export function clientWiseHistory(data, range) {
       const presentCount = dayAttendances.filter(a => a.status === "present").length;
       const absentCount = dayAttendances.filter(a => a.status === "absent").length;
       const unmarkedCount = dayAttendances.filter(a => a.status === "unmarked").length;
-      
-      
+
+
       // Determine the primary status for the day
       let primaryStatus = undefined;
       if (presentCount > 0) {
@@ -172,7 +247,7 @@ export function clubHistory(clients, { from, to } = {}) {
 
     const presentRecords = filteredAttendance.filter(a => a.status === "present");
     const servingsTaken = presentRecords.length;
-    
+
     const presentDays = new Set(
       presentRecords.map(a => {
         try {
@@ -181,21 +256,21 @@ export function clubHistory(clients, { from, to } = {}) {
           return null;
         }
       })
-      .filter(Boolean)
+        .filter(Boolean)
     ).size;
-    
+
     const dayStatusMap = new Map();
     filteredAttendance.forEach(record => {
       try {
         const dayKey = startOfDay(new Date(record.date)).getTime();
         const currentRecord = dayStatusMap.get(dayKey);
-        
+
         if (!currentRecord) {
           dayStatusMap.set(dayKey, record);
         } else {
           const currentTime = new Date(currentRecord.markedAt || currentRecord.date).getTime();
           const recordTime = new Date(record.markedAt || record.date).getTime();
-          
+
           if (recordTime > currentTime) {
             dayStatusMap.set(dayKey, record);
           }
@@ -204,15 +279,15 @@ export function clubHistory(clients, { from, to } = {}) {
         // Skip invalid dates
       }
     });
-    
+
     const finalStatusMap = new Map();
     dayStatusMap.forEach((record, dayKey) => {
       finalStatusMap.set(dayKey, record.status);
     });
-    
+
     const correctedPresentDays = Array.from(finalStatusMap.values()).filter(status => status === "present").length;
     const correctedAbsentDays = Array.from(finalStatusMap.values()).filter(status => status === "absent").length;
-    
+
     const absentDays = new Set(
       filteredAttendance
         .filter(a => a.status === "absent")
