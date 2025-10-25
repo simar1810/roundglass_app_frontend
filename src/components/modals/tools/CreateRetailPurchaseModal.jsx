@@ -15,6 +15,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+
 export default function CreateRetailSaleModal({
   brandId
 }) {
@@ -96,7 +97,12 @@ function ProductCard({ product, quantity }) {
     <p className="text-[12px] text-[var(--dark-1)]/25 leading-[1.2] mb-2">{product.productDescription?.slice(0, 100)}</p>
     {quantity === 0
       ? <Button
-        onClick={() => dispatch(addProductToStock({ productId: product._id }))}
+        onClick={() => dispatch(addProductToStock({ 
+          productId: product._id,
+          productName: product.productName,
+          productDescription: product.productDescription,
+          productImage: product.productImage
+        }))}
         variant="wz"
         size="sm"
         className="w-full mt-auto text-[12px]"
@@ -231,8 +237,8 @@ function PurchaseItemCard({ item }) {
   
   return <div className="flex items-start gap-3 border-b pb-4 last:border-b-0">
     <Image
-      src="/not-found.png"
-      alt="Product"
+      src={item.productImage || "/not-found.png"}
+      alt={item.productName || "Product"}
       width={60}
       height={60}
       className="w-[60px] h-[60px] rounded-[6px] object-cover bg-gray-100"
@@ -240,8 +246,15 @@ function PurchaseItemCard({ item }) {
     <div className="flex-1 min-w-0">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-gray-900 mb-1">Product Item</h4>
-          <p className="text-xs text-gray-500 leading-[1.3] mb-2">Product details will be loaded from inventory</p>
+          <h4 className="text-sm font-semibold text-gray-900 mb-1">
+            {item.productName || "Product Item"}
+          </h4>
+          <p className="text-xs text-gray-500 leading-[1.3] mb-2">
+            {item.productDescription 
+              ? item.productDescription.slice(0, 100) + (item.productDescription.length > 100 ? "..." : "")
+              : "Product details will be loaded from inventory"
+            }
+          </p>
           <div className="flex items-center gap-3 text-xs text-gray-600">
             <span className="bg-gray-100 px-2 py-1 rounded">ID: {shortId}</span>
             <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Qty: {item.quantity}</span>
