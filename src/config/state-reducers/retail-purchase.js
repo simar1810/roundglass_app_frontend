@@ -13,19 +13,17 @@ export function retailPurchaseReducer(state, action) {
       }
 
     case "REMOVE_PRODUCT_FROM_STOCK":
-      console.log(state.stocks.filter(stock => stock.productId !== action.payload.productId))
       return {
         ...state,
         stocks: state.stocks.filter(stock => stock.productId !== action.payload.productId)
       }
 
     case "SET_PRODUCT_QUANTITY":
-      console.log(state.stocks)
       return {
         ...state,
         stocks: state.stocks.map(stock =>
           stock.productId === action.payload.productId
-            ? { ...stock, quantity: action.payload.quantity }
+            ? { ...stock, quantity: action.payload.quantity, name: action.payload.name }
             : stock
         )
       }

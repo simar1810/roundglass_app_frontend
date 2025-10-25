@@ -96,7 +96,7 @@ function ProductCard({ product, quantity }) {
     <p className="text-[12px] text-[var(--dark-1)]/25 leading-[1.2] mb-2">{product.productDescription?.slice(0, 100)}</p>
     {quantity === 0
       ? <Button
-        onClick={() => dispatch(addProductToStock({ productId: product._id }))}
+        onClick={() => dispatch(addProductToStock({ productId: product._id, name: product.productName }))}
         variant="wz"
         size="sm"
         className="w-full mt-auto text-[12px]"
@@ -106,14 +106,14 @@ function ProductCard({ product, quantity }) {
       </Button>
       : <div className="mt-auto flex items-center justify-center gap-4">
         <Button
-          onClick={() => dispatch(setProductQuantity({ productId: product._id, quantity: quantity + 1 }))}
+          onClick={() => dispatch(setProductQuantity({ productId: product._id, quantity: quantity + 1, name: product.productName }))}
           size="sm" variant="wz_outline">
           <Plus />
         </Button>
         <p className="text-[18px]">{quantity}</p>
         <Button
           onClick={() => quantity >= 2
-            ? dispatch(setProductQuantity({ productId: product._id, quantity: quantity - 1 }))
+            ? dispatch(setProductQuantity({ productId: product._id, quantity: quantity - 1, name: product.productName }))
             : dispatch(removeProductFromStock({ productId: product._id }))
           }
           size="sm" variant="wz_outline">
@@ -148,9 +148,9 @@ function CreateOrder() {
   if (stocks.length === 0) return
 
   return <div className="bg-white sticky-0 bottom-0 py-2 px-4 border-t-1 border-gray-600 flex items-center justify-between gap-2">
-    <PurchaseConfirmationModal 
-      stocks={stocks} 
-      onConfirm={saveOrder} 
+    <PurchaseConfirmationModal
+      stocks={stocks}
+      onConfirm={saveOrder}
       loading={loading}
     />
     <div className="flex items-center gap-2">
@@ -186,14 +186,14 @@ function PurchaseConfirmationModal({ stocks, onConfirm, loading }) {
           </div>
         </div>
       </DialogTitle>
-      
+
       <div className="p-6 max-h-[400px] overflow-y-auto">
         <div className="space-y-3">
           {stocks.map((stock, index) => (
             <PurchaseItemCard key={index} item={stock} />
           ))}
         </div>
-        
+
         <div className="mt-6 pt-4 border-t border-gray-200 bg-gray-50 rounded-lg p-4">
           <div className="flex justify-between items-center text-base font-semibold text-gray-900 mb-1">
             <span>Total Items:</span>
@@ -205,7 +205,7 @@ function PurchaseConfirmationModal({ stocks, onConfirm, loading }) {
           </div>
         </div>
       </div>
-      
+
       <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
         <DialogClose asChild>
           <Button variant="outline" className="flex-1 h-11">
@@ -228,7 +228,6 @@ function PurchaseConfirmationModal({ stocks, onConfirm, loading }) {
 function PurchaseItemCard({ item }) {
   // Truncate the product ID to make it more readable
   const shortId = item.productId ? item.productId.substring(0, 8) + "..." : "N/A";
-  
   return <div className="flex items-start gap-3 border-b pb-4 last:border-b-0">
     <Image
       src="/not-found.png"
@@ -240,7 +239,7 @@ function PurchaseItemCard({ item }) {
     <div className="flex-1 min-w-0">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-gray-900 mb-1">Product Item</h4>
+          <h4 className="text-sm font-semibold text-gray-900 mb-1">{item.name}</h4>
           <p className="text-xs text-gray-500 leading-[1.3] mb-2">Product details will be loaded from inventory</p>
           <div className="flex items-center gap-3 text-xs text-gray-600">
             <span className="bg-gray-100 px-2 py-1 rounded">ID: {shortId}</span>
