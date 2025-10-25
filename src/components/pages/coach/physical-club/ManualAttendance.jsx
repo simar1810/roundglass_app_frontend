@@ -24,9 +24,10 @@ export default function ManualAttendance({
 }) {
   const clients = manualAttendanceWithRange(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
+    console.log("Filtered clients for ManualAttendance:", clients);
 
   return (<TabsContent value="manual-attendance" className="flex gap-6">
-    <AttendanceClients clients={clients} />
+    <AttendanceClients clients={clients} originalData={data} range={range} />
     <div className="flex-1">
       <AttendanceCalendar
         range={range}
@@ -39,7 +40,12 @@ export default function ManualAttendance({
   );
 }
 
-export function AttendanceClients({ clients }) {
+export function AttendanceClients({ clients, originalData, range }) {
+  console.log("=== DATA LOGGING ===");
+  console.log("Clients for ManualAttendance:", clients);
+  console.log("Original data:", originalData);
+  console.log("Range:", range);
+  
   // Group clients by date and clientId to show multiple servings per day
   const groupedClients = clients.reduce((acc, client) => {
     const key = `${client.clientId}-${format(client.date, "yyyy-MM-dd")}`;
@@ -53,9 +59,67 @@ export function AttendanceClients({ clients }) {
         servings: []
       };
     }
-    acc[key].servings.push(client);
+    
+    // Get attendance data from original data for this client
+    const clientAttendanceData = originalData.find(origClient => 
+      origClient.client?._id === client.clientId
+    );
+    
+    console.log(`\n--- Processing client: ${client.name} (${client.clientId}) ---`);
+    console.log("Client attendance data found:", clientAttendanceData);
+    
+    if (clientAttendanceData && clientAttendanceData.attendance) {
+      console.log(`Found ${clientAttendanceData.attendance.length} attendance records for this client`);
+      
+      // Filter attendance by the specific date
+      const clientDateStr = format(client.date, "yyyy-MM-dd");
+      const filteredAttendance = clientAttendanceData.attendance.filter(attendance => {
+        let attendanceDate;
+        if (attendance.date && attendance.date.$date) {
+          attendanceDate = new Date(attendance.date.$date);
+        } else if (attendance.date) {
+          attendanceDate = new Date(attendance.date);
+        } else {
+          return false;
+        }
+        
+        const attendanceDateStr = format(attendanceDate, "yyyy-MM-dd");
+        return attendanceDateStr === clientDateStr;
+      });
+      
+      console.log(`Filtered to ${filteredAttendance.length} records for date ${clientDateStr}`);
+      
+      // Add filtered attendance data to servings
+      filteredAttendance.forEach((attendance, index) => {
+        console.log(`Adding attendance ${index} to servings:`, attendance);
+        
+        acc[key].servings.push({
+          ...attendance,
+          clientId: client.clientId,
+          name: client.name,
+          profilePhoto: client.profilePhoto
+        });
+      });
+    } else {
+      console.log("No attendance data found, using fallback client data");
+      // Fallback to original client data
+      acc[key].servings.push(client);
+    }
+    
+    console.log(`Final servings for ${client.name}:`, acc[key].servings);
+    
     return acc;
   }, {});
+
+  console.log("\n=== FINAL GROUPED CLIENTS ===");
+  console.log("Total groups:", Object.keys(groupedClients).length);
+  Object.entries(groupedClients).forEach(([key, group]) => {
+    console.log(`\nGroup: ${key}`);
+    console.log(`- Client: ${group.name}`);
+    console.log(`- Date: ${format(group.date, "yyyy-MM-dd")}`);
+    console.log(`- Servings count: ${group.servings.length}`);
+    console.log(`- Servings data:`, group.servings);
+  });
 
   const unmarkServing = async (clientId, date, servingNumber) => {
     try {
@@ -65,7 +129,7 @@ export function AttendanceClients({ clients }) {
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
       
-      // Instead of using the unmark API, use the regular attendance API to change status to "unmarked"
+      // Use the regular attendance API to change status to "unmarked"
       const requestData = {
         clientId: clientId,
         date: formattedDate,
@@ -85,12 +149,46 @@ export function AttendanceClients({ clients }) {
       console.log("Unmark API response:", response);
       
       if (response.status_code !== 200) throw new Error(response.message);
-      toast.success("Serving status changed to unmarked");
+      toast.success("Serving removed successfully");
       // Refresh all attendance-related data with a small delay to ensure backend processing
       refreshAttendanceDataWithDelay(clientId);
     } catch (error) {
       console.error("Unmark serving error:", error);
       toast.error(error.message);
+    }
+  };
+
+  const clearAbsentStatus = async (clientId, date) => {
+    try {
+      console.log("Clearing absent status:", { clientId, date });
+      
+      // Format the date properly for the API
+      const formattedDate = typeof date === 'string' ? date : date.toISOString();
+      
+      // Clear absent status by setting it to unmarked
+      const requestData = {
+        clientId: clientId,
+        date: formattedDate,
+        status: "unmarked",
+        person: "coach"
+      };
+      
+      console.log("Clear absent request data:", requestData);
+      
+      const response = await sendData(
+        "app/physical-club/attendance?person=coach",
+        requestData,
+        "PUT"
+      );
+      
+      console.log("Clear absent API response:", response);
+      
+      if (response.status_code !== 200) throw new Error(response.message);
+      console.log("Absent status cleared successfully");
+      refreshAttendanceDataWithDelay(clientId);
+    } catch (error) {
+      console.error("Clear absent status error:", error);
+      // Don't show error toast for this, as it's a background operation
     }
   };
 
@@ -111,164 +209,125 @@ export function AttendanceClients({ clients }) {
                 <Link href={`/coach/clients/${group.clientId}?tab=physical-club`}>{group.name}</Link>
                 <span className="text-[12px] mt-1">{format(group.date, "dd-MM-yyyy")}</span>
               </div>
-              <div className="flex gap-2">
-                {/* Show Present/Absent buttons only if no present servings yet */}
-                {!group.servings.some(s => s.status === "present") && (
-                  <>
-                    <ChangeClientAttendanceStatus
-                      clientId={group.clientId}
-                      date={group.date}
-                      status="present"
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Always show Absent button */}
+                <ChangeClientAttendanceStatus
+                  date={group.date}
+                  clientId={group.clientId}
+                  status="absent"
+                >
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full font-bold hover:text-[var(--accent-2)] text-[var(--accent-2)] border-[var(--accent-2)] hover:border-[var(--accent-2)]"
+                  >
+                    <X className="bg-[var(--accent-2)] text-white rounded-full p-[2px]" />
+                    Absent
+                  </Button>
+                </ChangeClientAttendanceStatus>
+
+                {/* Show Present/Add Servings button based on status - prioritize present over absent */}
+                {group.servings.some(s => s.status === "present") ? (
+                  // If present, show Add Servings button
+                  <ChangeClientAttendanceStatus
+                    clientId={group.clientId}
+                    date={group.date}
+                    status="present"
+                    isFirstRecord={false}
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full font-bold hover:text-[var(--accent-1)] text-[var(--accent-1)] border-[var(--accent-1)] hover:border-[var(--accent-1)]"
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full font-bold hover:text-[var(--accent-1)] text-[var(--accent-1)] border-[var(--accent-1)] hover:border-[var(--accent-1)]"
-                      >
-                        <CheckCircle className="text-[var(--accent-1)]" />
-                        Present
-                      </Button>
-                    </ChangeClientAttendanceStatus>
-                    <ChangeClientAttendanceStatus
-                      date={group.date}
-                      clientId={group.clientId}
-                      status="absent"
+                      <Plus className="h-4 w-4" />
+                      Add Servings
+                    </Button>
+                  </ChangeClientAttendanceStatus>
+                ) : (
+                  // If not present (absent or no attendance), show Present button
+                  <ChangeClientAttendanceStatus
+                    clientId={group.clientId}
+                    date={group.date}
+                    status="present"
+                    isFirstRecord={true}
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full font-bold hover:text-[var(--accent-1)] text-[var(--accent-1)] border-[var(--accent-1)] hover:border-[var(--accent-1)]"
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full font-bold hover:text-[var(--accent-2)] text-[var(--accent-2)] border-[var(--accent-2)] hover:border-[var(--accent-2)]"
-                      >
-                        <X className="bg-[var(--accent-2)] text-white rounded-full p-[2px]" />
-                        Absent
-                      </Button>
-                    </ChangeClientAttendanceStatus>
-                  </>
+                      <CheckCircle className="text-[var(--accent-1)]" />
+                      Present
+                    </Button>
+                  </ChangeClientAttendanceStatus>
                 )}
 
-                {/* Show these buttons only if already marked present */}
-                {group.servings.some(s => s.status === "present") && (
+                {/* Show Remove buttons only if present and has multiple servings */}
+                {group.servings.some(s => s.status === "present") && group.servings.filter(s => s.status === "present").length > 1 && (
                   <>
-                    {/* Add Serving button */}
-                    <ChangeClientAttendanceStatus
-                      clientId={group.clientId}
-                      date={group.date}
-                      status="present"
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full font-bold hover:text-red-600 text-red-600 border-red-600 hover:border-red-600"
+                      onClick={() => {
+                        // Remove one present serving from the total count
+                        const presentServings = group.servings.filter(s => s.status === "present");
+                        if (presentServings.length > 1) {
+                          // Find the serving with the highest serving number to remove
+                          const sortedServings = presentServings.sort((a, b) => (b.servingNumber || 0) - (a.servingNumber || 0));
+                          const servingToRemove = sortedServings[0]; // Get the serving with highest number
+                          console.log("Removing serving:", servingToRemove);
+                          unmarkServing(group.clientId, servingToRemove.date, servingToRemove.servingNumber || presentServings.length);
+                        }
+                      }}
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full font-bold hover:text-[var(--accent-1)] text-[var(--accent-1)] border-[var(--accent-1)] hover:border-[var(--accent-1)]"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Servings
-                      </Button>
-                    </ChangeClientAttendanceStatus>
-
-                    {/* Absent button */}
-                    <ChangeClientAttendanceStatus
-                      date={group.date}
-                      clientId={group.clientId}
-                      status="absent"
+                      <Trash2 className="h-4 w-4" />
+                      Remove Serving
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full font-bold hover:text-red-700 text-red-700 border-red-700 hover:border-red-700"
+                      onClick={() => {
+                        // Remove all present servings for this day
+                        const presentServings = group.servings.filter(s => s.status === "present");
+                        console.log("Removing all servings:", presentServings);
+                        presentServings.forEach((serving, index) => {
+                          setTimeout(() => {
+                            unmarkServing(group.clientId, serving.date, serving.servingNumber || index + 1);
+                          }, index * 200); // Stagger the requests
+                        });
+                      }}
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full font-bold hover:text-[var(--accent-2)] text-[var(--accent-2)] border-[var(--accent-2)] hover:border-[var(--accent-2)]"
-                      >
-                        <X className="bg-[var(--accent-2)] text-white rounded-full p-[2px]" />
-                        Absent
-                      </Button>
-                    </ChangeClientAttendanceStatus>
-
-                    {/* Remove Servings buttons */}
-                    {group.servings.filter(s => s.status === "present").length > 1 && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full font-bold hover:text-red-600 text-red-600 border-red-600 hover:border-red-600"
-                          onClick={() => {
-                            // Remove only the last present serving, keeping at least one
-                            const presentServings = group.servings.filter(s => s.status === "present");
-                            if (presentServings.length > 1) {
-                              const lastServing = presentServings[presentServings.length - 1];
-                              unmarkServing(group.clientId, lastServing.date, lastServing.servingNumber || presentServings.length);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove Serving
-                        </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full font-bold hover:text-red-700 text-red-700 border-red-700 hover:border-red-700"
-                          onClick={() => {
-                            // Remove all present servings for this day
-                            const presentServings = group.servings.filter(s => s.status === "present");
-                            presentServings.forEach((serving, index) => {
-                              setTimeout(() => {
-                                unmarkServing(group.clientId, serving.date, serving.servingNumber || index + 1);
-                              }, index * 200); // Stagger the requests
-                            });
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove All Servings ({group.servings.filter(s => s.status === "present").length})
-                        </Button>
-                      </>
-                    )}
+                      <Trash2 className="h-4 w-4" />
+                      Remove All ({group.servings.filter(s => s.status === "present").length})
+                    </Button>
                   </>
                 )}
               </div>
             </div>
             
-            {/* Show existing servings */}
-            <div className="ml-12 space-y-1">
-              {group.servings.map((serving, servingIndex) => (
-                <div key={servingIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">
-                      {serving.status === "present" ? 
-                        `${(group.membership?.pendingServings || 0) - group.servings.filter(s => s.status === "present").length} Remaining` : 
-                        "Not Taken"
-                      }
-                    </Badge>
-                    <Badge 
-                      variant={serving.status === "present" ? "default" : 
-                              serving.status === "absent" ? "destructive" : 
-                              serving.status === "unmarked" ? "secondary" : "outline"}
-                      className={serving.status === "unmarked" ? "bg-orange-100 text-orange-700" : ""}
-                    >
-                      {serving.status}
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      {serving.markedAt ? format(new Date(serving.markedAt), "hh:mm a") : "—"}
+            {/* Show simple count of servings based on status */}
+            <div className="ml-12">
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="text-sm text-gray-600">
+                  {group.servings.some(s => s.status === "present") ? (
+                    <span className="font-medium text-green-600">
+                      {group.servings.filter(s => s.status === "present").length} Serving{group.servings.filter(s => s.status === "present").length > 1 ? 's' : ''}
                     </span>
-                  </div>
-                  {serving.status === "present" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        console.log("Delete button clicked for serving:", {
-                          clientId: group.clientId,
-                          date: serving.date,
-                          servingNumber: serving.servingNumber,
-                          servingIndex: servingIndex + 1
-                        });
-                        unmarkServing(group.clientId, serving.date, serving.servingNumber || servingIndex + 1);
-                      }}
-                      className="text-red-600 hover:text-red-700 text-xs"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Remove Serving
-                    </Button>
+                  ) : group.servings.some(s => s.status === "absent") ? (
+                    <span className="font-medium text-red-600">
+                      Absent
+                    </span>
+                  ) : (
+                    <span className="font-medium text-gray-500">
+                      No attendance marked
+                    </span>
                   )}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         ))}
