@@ -100,7 +100,7 @@ function QuestionsContainer({ sections = [] }) {
 
   const toBeAnswered = formState
     .filter(section => !hiddenSections.has(section._id))
-
+  console.log(formState)
   function onChange(questionId, answer) {
     setFormState(prev => (
       prev.map(section => ({
@@ -120,7 +120,8 @@ function QuestionsContainer({ sections = [] }) {
     try {
       setLoading(true);
       const payload = generateQuestionaireRP(clientId, formState, hiddenSections);
-
+      console.log(payload)
+      // throw new Error("test")
       const response = await sendData("app/onboarding/questionaire/client?person=coach", payload);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);

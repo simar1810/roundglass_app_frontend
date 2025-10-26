@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendanceWithRange } from "@/lib/physical-attendance";
+import { dateWiseAttendanceSplit, getPresentAbsent, manualAttendanceWithRange, manualAttendanceWithRangeMultiple } from "@/lib/physical-attendance";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { CheckCircle, X, Trash2, Plus } from "lucide-react";
@@ -22,9 +22,9 @@ export default function ManualAttendance({
   range,
   setRange
 }) {
-  const clients = manualAttendanceWithRange(data, range)
+  const clients = manualAttendanceWithRangeMultiple(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
-    console.log("Filtered clients for ManualAttendance:", clients);
+  console.log("Filtered clients for ManualAttendance:", clients);
 
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} originalData={data} range={range} />
@@ -45,7 +45,7 @@ export function AttendanceClients({ clients, originalData, range }) {
   console.log("Clients for ManualAttendance:", clients);
   console.log("Original data:", originalData);
   console.log("Range:", range);
-  
+
   // Group clients by date and clientId to show multiple servings per day
   const groupedClients = clients.reduce((acc, client) => {
     const key = `${client.clientId}-${format(client.date, "yyyy-MM-dd")}`;
@@ -59,18 +59,18 @@ export function AttendanceClients({ clients, originalData, range }) {
         servings: []
       };
     }
-    
+
     // Get attendance data from original data for this client
-    const clientAttendanceData = originalData.find(origClient => 
+    const clientAttendanceData = originalData.find(origClient =>
       origClient.client?._id === client.clientId
     );
-    
+
     console.log(`\n--- Processing client: ${client.name} (${client.clientId}) ---`);
     console.log("Client attendance data found:", clientAttendanceData);
-    
+
     if (clientAttendanceData && clientAttendanceData.attendance) {
       console.log(`Found ${clientAttendanceData.attendance.length} attendance records for this client`);
-      
+
       // Filter attendance by the specific date
       const clientDateStr = format(client.date, "yyyy-MM-dd");
       const filteredAttendance = clientAttendanceData.attendance.filter(attendance => {
@@ -82,17 +82,17 @@ export function AttendanceClients({ clients, originalData, range }) {
         } else {
           return false;
         }
-        
+
         const attendanceDateStr = format(attendanceDate, "yyyy-MM-dd");
         return attendanceDateStr === clientDateStr;
       });
-      
+
       console.log(`Filtered to ${filteredAttendance.length} records for date ${clientDateStr}`);
-      
+
       // Add filtered attendance data to servings
       filteredAttendance.forEach((attendance, index) => {
         console.log(`Adding attendance ${index} to servings:`, attendance);
-        
+
         acc[key].servings.push({
           ...attendance,
           clientId: client.clientId,
@@ -105,9 +105,9 @@ export function AttendanceClients({ clients, originalData, range }) {
       // Fallback to original client data
       acc[key].servings.push(client);
     }
-    
+
     console.log(`Final servings for ${client.name}:`, acc[key].servings);
-    
+
     return acc;
   }, {});
 
@@ -125,10 +125,10 @@ export function AttendanceClients({ clients, originalData, range }) {
     try {
       // Debug logging
       console.log("Unmarking serving:", { clientId, date, servingNumber });
-      
+
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
-      
+
       // Use the regular attendance API to change status to "unmarked"
       const requestData = {
         clientId: clientId,
@@ -137,17 +137,17 @@ export function AttendanceClients({ clients, originalData, range }) {
         status: "unmarked",
         person: "coach"
       };
-      
+
       console.log("Unmark request data:", requestData);
-      
+
       const response = await sendData(
         "app/physical-club/attendance?person=coach",
         requestData,
         "PUT"
       );
-      
+
       console.log("Unmark API response:", response);
-      
+
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success("Serving removed successfully");
       // Refresh all attendance-related data with a small delay to ensure backend processing
@@ -161,10 +161,10 @@ export function AttendanceClients({ clients, originalData, range }) {
   const clearAbsentStatus = async (clientId, date) => {
     try {
       console.log("Clearing absent status:", { clientId, date });
-      
+
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
-      
+
       // Clear absent status by setting it to unmarked
       const requestData = {
         clientId: clientId,
@@ -172,17 +172,17 @@ export function AttendanceClients({ clients, originalData, range }) {
         status: "unmarked",
         person: "coach"
       };
-      
+
       console.log("Clear absent request data:", requestData);
-      
+
       const response = await sendData(
         "app/physical-club/attendance?person=coach",
         requestData,
         "PUT"
       );
-      
+
       console.log("Clear absent API response:", response);
-      
+
       if (response.status_code !== 200) throw new Error(response.message);
       console.log("Absent status cleared successfully");
       refreshAttendanceDataWithDelay(clientId);
@@ -285,7 +285,7 @@ export function AttendanceClients({ clients, originalData, range }) {
                       <Trash2 className="h-4 w-4" />
                       Remove Serving
                     </Button>
-                    
+
                     <Button
                       size="sm"
                       variant="outline"
@@ -308,7 +308,7 @@ export function AttendanceClients({ clients, originalData, range }) {
                 )}
               </div>
             </div>
-            
+
             {/* Show simple count of servings based on status */}
             <div className="ml-12">
               <div className="bg-gray-50 p-3 rounded">
@@ -344,7 +344,7 @@ export function AttendanceCalendar({
   range,
   setRange,
 }) {
-  const clients = manualAttendanceWithRange(data, {
+  const clients = manualAttendanceWithRangeMultiple(data, {
     from: startOfMonth(range.from),
     to: endOfMonth(range.from)
   })

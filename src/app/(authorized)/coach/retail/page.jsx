@@ -188,7 +188,7 @@ function Brand({
           margin,
           selectedBrandId: brand._id,
           margins: brand.margins,
-          clientId: brand.clientId && brand.clientId.trim() !== "" ? brand.clientId : null,
+          clientId: brand.clientId && String(brand.clientId)?.trim() !== "" ? brand.clientId : null,
           productModule: brand.productModule || [],
           orderId: brand.orderId || "",
           status: brand.status || "Completed",
@@ -387,23 +387,23 @@ function ExportOrdersoExcel({ orders }) {
       }
 
       const allOrders = [...(orders.myOrder || []), ...(orders.retailRequest || [])];
-      
+
       const saleOrders = allOrders.filter(order => {
         return order.orderType === "sale" || !order.orderType;
       });
-      
+
       if (saleOrders.length === 0) {
         toast.error("No sale orders found to export");
         return;
       }
-      
+
       const data = excelRetailOrdersData(saleOrders, dates);
-      
+
       if (!data || data.length === 0) {
         toast.error("No orders found in the selected date range");
         return;
       }
-      
+
       exportToExcel(data, "Retail Orders", "orders.xlsx")
       toast.success(`Exported ${data.length} orders successfully`);
     } catch (error) {
@@ -494,7 +494,7 @@ function AcceptRetailsOrder({ order }) {
     <Brand
       brand={{
         ...order.brand,
-        clientId: order.clientId && order.clientId.trim() !== "" ? order.clientId : null,
+        clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
         productModule: order.productModule,
         status: order.status,
         orderId: order.orderId,

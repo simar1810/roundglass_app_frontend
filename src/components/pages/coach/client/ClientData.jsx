@@ -426,6 +426,7 @@ export function WorkoutDetails({ workout }) {
 }
 
 function CaseFile({ sections }) {
+  console.log(sections)
   if (sections?.length === 0) return <TabsContent
     className="h-[200px] leading-[200px] text-center bg-[var(--comp-1)] border-1 rounded-[10px]"
     value="case-file"
