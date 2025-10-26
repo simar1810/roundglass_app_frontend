@@ -57,14 +57,16 @@ export function manualAttendanceWithRange(data, range) {
             markedAt: entry.markedAt,
             name: client?.client?.name,
             profilePhoto: client?.client?.profilePhoto,
-            clientId: client?.client?._id
+            clientId: client?.client?._id,
+            membership: client?.membership // Preserve membership data
           }
           : {
             date: currentDate,
             status: 123,
             name: client?.client?.name,
             profilePhoto: client?.client?.profilePhoto,
-            clientId: client?.client?._id
+            clientId: client?.client?._id,
+            membership: client?.membership // Preserve membership data
           };
       });
 
@@ -201,11 +203,24 @@ export function clientWiseHistory(data, range) {
       const key = currentDate.toISOString().split("T")[0];
       const dayAttendances = attendanceByDate.get(key) || [];
 
+      // Only show days where there's actual attendance data
+      if (dayAttendances.length === 0) {
+        return {
+          date: currentDate.getDate(),
+          month: currentDate.getMonth(),
+          status: undefined, // No attendance data for this day
+          presentCount: 0,
+          absentCount: 0,
+          unmarkedCount: 0,
+          totalServings: 0,
+          markedAt: undefined,
+        };
+      }
+
       // Calculate serving counts for the day
       const presentCount = dayAttendances.filter(a => a.status === "present").length;
       const absentCount = dayAttendances.filter(a => a.status === "absent").length;
       const unmarkedCount = dayAttendances.filter(a => a.status === "unmarked").length;
-
 
       // Determine the primary status for the day
       let primaryStatus = undefined;
