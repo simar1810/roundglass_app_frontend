@@ -1,5 +1,11 @@
 "use client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import React, { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,12 +29,14 @@ import {
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
-import { PlusCircle, Edit, Trash2, Eye } from "lucide-react";
+import HierarchicalCoachTable from "@/components/pages/coach/downline/HierarchicalCoachTable";
+import { PlusCircle, Edit, Trash2, Eye, ChevronDown } from "lucide-react";
 import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
+import { cn } from "@/lib/utils";
 
 const categoriesFetcher = () =>
 	fetchData("app/coach-categories").then((res) => {
@@ -106,17 +114,17 @@ export default function Page() {
 					onValueChange={tabChange}
 					className="w-full"
 				>
-					<TabsList className="grid w-full max-w-lg mx-auto mb-4 grid-cols-4">
+					<TabsList className="grid w-full max-w-lg mx-auto mb-4 grid-cols-3">
 						<TabsTrigger value="list">List View</TabsTrigger>
 						<TabsTrigger value="visualizer">Visualizer</TabsTrigger>
-						<TabsTrigger value="manageCategories">
+						{/* <TabsTrigger value="manageCategories">
 							Manage Categories
-						</TabsTrigger>
+						</TabsTrigger> */}
 						<TabsTrigger value="clients">Clients</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="list">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div className="flex flex-col gap-4">
 							<CreateInvitation />
 							<CoachesList />
 						</div>
@@ -331,7 +339,7 @@ function Invitations() {
 function CreateInvitation() {
 	const [coachId, setCoachId] = useState("");
 	return (
-		<div className="bg-[var(--comp-2)] w-full grow px-4 py-8 border-1 rounded-[8px]">
+		<div className="bg-[var(--comp-2)] w-full px-4 py-8 border-1 rounded-[8px]">
 			<h4 className="mb-4">Invite a Coach</h4>
 			<div className="flex flex-col gap-4">
 				<FormControl
@@ -355,7 +363,7 @@ function CreateInvitation() {
 
 function CoachesList() {
 	const [query, setQuery] = useState("")
-	const { isLoading, error, data } = useSWR(
+	const { isLoading, error, data, mutate } = useSWR(
 		"app/downline/coaches",
 		retrieveDownlineCoaches
 	);
@@ -365,44 +373,31 @@ function CoachesList() {
 	if (error || data.status_code !== 200)
 		return <ContentError title={error?.message || data.message} />;
 
-	const coaches = data?.data
-		.filter(coach => new RegExp(query, "i").test(coach.name)) || [];
+	const allCoaches = data?.data || [];
+	const coaches = allCoaches.filter(coach => new RegExp(query, "i").test(coach.name));
+
+	const handleMakeTop = async (coachId) => {
+		try {
+			toast.info("Make Top functionality - API endpoint needs to be implemented");
+		} catch (error) {
+			toast.error(error.message);
+		}
+	};
+
 	return (
-		<div className="bg-[var(--comp-2)] px-4 py-8 rounded-[8px] space-y-2 border-1">
-			<h4 className="mb-4">Coaches under You {coaches.length}</h4>
+		<div className="bg-[var(--comp-2)] px-4 py-8 rounded-[8px] space-y-4 border-1">
+			<h4 className="mb-4">Coaches under You ({allCoaches.length})</h4>
 			<FormControl
 				value={query}
 				onChange={e => setQuery(e.target.value)}
 				className="block [&_.input]:bg-white mb-4"
 				placeholder="Search Coach Name..."
 			/>
-			<div className="divide-y-1">
-				{coaches.map((coach, index) => (<div
-					key={index}
-					className="flex items-center justify-between hover:bg-white pr-4"
-				>
-					<Link
-						href={`/coach/downline/coach/${coach._id}`}
-						className="w-full flex items-center justify-between p-2"
-					>
-						<div className="flex items-center gap-3">
-							<Avatar className="rounded-[8px] w-12 h-12 border-1">
-								<AvatarImage src={coach.profilePhoto} alt="Symond Write" />
-								<AvatarFallback className="rounded-[8px]">
-									{nameInitials(coach.name)}
-								</AvatarFallback>
-							</Avatar>
-							<div className="font-medium text-base grow">{coach.name}</div>
-						</div>
-					</Link>
-					<SyncCoachComponent coach={coach} />
-				</div>))}
-			</div>
-			{coaches.length === 0 && (
-				<div className="h-[150px] flex items-center justify-center">
-					No coach under you!
-				</div>
-			)}
+
+			<HierarchicalCoachTable
+				coaches={coaches}
+				onMakeTop={handleMakeTop}
+			/>
 		</div>
 	);
 }
@@ -462,69 +457,102 @@ function ActionOnRequest({
 		</AlertDialogTrigger>
 	</DualOptionActionModal>
 }
-const syncStatus = { 1: "Requested", 2: "Synced", 3: "Unsync" }
-const syncBadgeVariant = { 1: "primary", 2: "wz_fill", 3: "destructive" }
 
-function SyncCoachComponent({ coach }) {
-	const { clubType } = useAppSelector(state => state.coach.data)
-	if (!["Club Leader", "System Leader"].includes(clubType)) return <></>
-	return <div className="ml-auto flex items-center gap-2">
-		{coach.super_coach && <Badge
-			variant={syncBadgeVariant[coach.super_coach?.status]}
-		>
-			{syncStatus[coach.super_coach?.status]}
-		</Badge>}
-		<SyncCoachModal coachId={coach._id} />
-	</div>
+export function SyncCoachComponent({ coach }) {
+	const { clubType } = useAppSelector((state) => state.coach.data)
+	if (!["Club Leader", "System Leader"].includes(clubType)) return null
+
+	return (
+		<div className="flex items-center gap-2">
+			<SyncCoachDropdown
+				coachId={coach._id}
+				status={coach.super_coach?.status}
+			/>
+		</div>
+	)
 }
 
-function SyncCoachModal({ coachId }) {
-	const [loading, setLoading] = useState(false);
+function SyncCoachDropdown({ coachId, status }) {
+	const [loading, setLoading] = useState(false)
+	const [openModal, setOpenModal] = useState(false)
+	const [pendingStatus, setPendingStatus] = useState(null)
 
-	const closeBtnRef = useRef();
+	const currentStatus = status === 2 ? "Synced" : "Unsynced"
 
-	async function changeSyncStatus(status) {
+	async function handleSyncAction(setLoadingFn, closeRef) {
 		try {
-			setLoading(true);
-			const response = await sendData(`app/sync-coach/super`, { status, coachId });
-			if (response.status_code !== 200) throw new Error(response.message);
-			toast.success(response.message);
+			setLoadingFn(true)
+			const response = await sendData(`app/sync-coach/super`, {
+				status: pendingStatus,
+				coachId,
+			})
+			if (response.status_code !== 200) throw new Error(response.message)
+			toast.success(response.message)
 			location.reload()
-			closeBtnRef.current.click();
+			closeRef.current.click()
 		} catch (error) {
-			toast.error(error.message);
+			toast.error(error.message)
 		} finally {
-			setLoading(false);
+			setLoadingFn(false)
+			setOpenModal(false)
 		}
 	}
 
-	return <Dialog>
-		<DialogTrigger asChild>
-			<Button size="sm" variant="wz">Sync</Button>
-		</DialogTrigger>
-		<DialogContent className="!max-w-[500px] max-h-[70vh] overflow-y-auto gap-0 border-0 p-0">
-			<DialogHeader className="py-4 px-6 border-b">
-				<DialogTitle className="text-lg font-semibold">
-					Update The Club Sync Status
-				</DialogTitle>
-			</DialogHeader>
-			<div className="p-4">
-				<Button
-					onClick={() => changeSyncStatus(2)}
-					disabled={loading}
-					variant="wz"
-					className="mt-0 mr-4"
-				>Sync</Button>
-				<Button
-					onClick={() => changeSyncStatus(3)}
-					disabled={loading}
-					variant="destructive"
-					className="mt-0"
-				>Unsync</Button>
-				<DialogClose ref={closeBtnRef} />
-			</div>
-		</DialogContent>
-	</Dialog>
+	return (
+		<>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						size="sm"
+						variant={"icon"}
+						disabled={loading}
+						className={cn(
+							"h-auto py-[6px]",
+							currentStatus === "Synced"
+								? "bg-[var(--accent-1)] text-white font-bold text-[14px]"
+								: "bg-[var(--accent-2)] text-white font-bold text-[14px]"
+						)}
+					>
+						{currentStatus}
+						<ChevronDown className="h-[20px] w-[20px]" />
+					</Button>
+				</DropdownMenuTrigger>
+
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem
+						onClick={() => {
+							setPendingStatus(2)
+							setOpenModal(true)
+						}}
+						disabled={loading || status === 2}
+					>
+						Sync
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={() => {
+							setPendingStatus(3)
+							setOpenModal(true)
+						}}
+						disabled={loading || status === 3}
+						className="text-destructive"
+					>
+						Unsync
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			{/* Confirmation Modal */}
+			{openModal && (
+				<DualOptionActionModal
+					defaultOpen
+					description={`Are you sure you want to ${pendingStatus === 2 ? "sync" : "unsync"
+						} this coach?`}
+					action={handleSyncAction}
+					onClose={() => setOpenModal(false)}
+				/>
+			)}
+		</>
+	)
 }
 
 function DownlineClientList() {
@@ -556,7 +584,7 @@ function DownlineClientList() {
 			<TableBody>
 				{clients.map((client) => (
 					<TableRow key={client._id}>
-						<TableCell className="font-medium max-w-[10ch] truncate text-wrap">{client.name}</TableCell>
+						<TableCell className="font-medium">{client.name}</TableCell>
 						<TableCell>{client.coach}</TableCell>
 						<TableCell>{client.clientId}</TableCell>
 						<TableCell>{client.email || "-"}</TableCell>

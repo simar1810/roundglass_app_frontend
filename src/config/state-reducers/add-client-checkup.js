@@ -164,7 +164,10 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   } else {
     formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
   }
-  for (const field of ["followUpDate", "joiningDate", "dob"]) {
+  if (state.dob) {
+    formData.append("dob", format(parse(state.dob, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
+  }
+  for (const field of ["followUpDate", "joiningDate"]) {
     formData.append(field, format(parse(state[field], 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
   }
   formData.append("coachId", coachId);

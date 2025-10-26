@@ -5,8 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus, ChevronRight, Edit } from 'lucide-react';
+import { toast } from "sonner";
+import { useState } from "react";
 
 export default function MultipleChoiceQuestion({ question, onUpdate, sectionKey, questionIndex, allSections, onAddNestedSection, onEditNestedSection, onRemoveNestedSection }) {
+  const [optionErrors, setOptionErrors] = useState({});
+
   const updateQuestion = (updates) => {
     onUpdate({ ...question, ...updates });
   };
@@ -17,6 +21,24 @@ export default function MultipleChoiceQuestion({ question, onUpdate, sectionKey,
   };
 
   const updateOption = (index, value) => {
+    // Check if the option value already exists (excluding the current index)
+    const isDuplicate = (question.options || []).some((opt, i) =>
+      i !== index && opt.trim() !== "" && value.trim() !== "" && opt.trim().toLowerCase() === value.trim().toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast.error("This option already exists. Please enter a unique option.");
+      setOptionErrors(prev => ({ ...prev, [index]: true }));
+      return;
+    }
+
+    // Clear error for this option if it exists
+    setOptionErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
+
     const newOptions = [...(question.options || [])];
     newOptions[index] = value;
     updateQuestion({ options: newOptions });
@@ -25,6 +47,13 @@ export default function MultipleChoiceQuestion({ question, onUpdate, sectionKey,
   const removeOption = (index) => {
     const optionText = question.options[index];
     const newOptions = question.options.filter((_, i) => i !== index);
+
+    // Clear error for this option if it exists
+    setOptionErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
 
     // Remove nested section mapping if exists
     const newOptionToSectionMap = { ...(question.optionToSectionMap || {}) };
@@ -94,11 +123,17 @@ export default function MultipleChoiceQuestion({ question, onUpdate, sectionKey,
             return (
               <div key={index} className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Input
-                    value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
-                  />
+                  <div className="flex-1">
+                    <Input
+                      value={option}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      className={optionErrors[index] ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    />
+                    {optionErrors[index] && (
+                      <p className="text-xs text-red-500 mt-1">This option already exists</p>
+                    )}
+                  </div>
                   <Button
                     type="button"
                     variant="outline"

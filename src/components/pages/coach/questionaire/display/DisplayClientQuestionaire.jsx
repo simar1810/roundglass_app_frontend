@@ -12,7 +12,7 @@ export default function DisplayClientQuestionaire({ data }) {
         return (
           <div className="mt-2">
             <p className="text-sm text-muted-foreground">Answer:</p>
-            <p className="font-medium">{question.answerText || "No answer provided"}</p>
+            <p className="font-medium">{question.answer || "No answer provided"}</p>
           </div>
         )
 
@@ -20,7 +20,7 @@ export default function DisplayClientQuestionaire({ data }) {
         return (
           <div className="mt-2">
             <p className="text-sm text-muted-foreground">Answer:</p>
-            <p className="font-medium whitespace-pre-wrap">{question.answerText || "No answer provided"}</p>
+            <p className="font-medium whitespace-pre-wrap">{question.answer || "No answer provided"}</p>
           </div>
         )
 
@@ -163,7 +163,7 @@ export default function DisplayClientQuestionaire({ data }) {
     switch (type) {
       case "shortAnswer":
       case "paragraph":
-        hasAnswer = question.answerText && question.answerText.trim() !== ""
+        hasAnswer = question.answer && question.answer.trim() !== ""
         break
       case "multipleChoice":
       case "checkBoxes":
