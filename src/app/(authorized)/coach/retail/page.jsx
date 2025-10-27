@@ -516,15 +516,21 @@ function Inventory() {
 
 function InventoryContainer() {
   const [query, setQuery] = useState("")
+  const { isWhitelabel } = useAppSelector(state => state.coach.data)
 
   const { isLoading, error, data, mutate } = useSWR(
     "app/getAllReminder?person=coach",
-    () => fetchData("app/inventory?whitelabel=thewellnessspot")
+    () => fetchData(
+      buildUrlWithQueryParams(
+        "app/inventory",
+        isWhitelabel && { whitelabel: "thewellnessspot" }
+      )
+    )
   );
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
 
   const regex = new RegExp(query, "i")
   const products = data.data.filter(
