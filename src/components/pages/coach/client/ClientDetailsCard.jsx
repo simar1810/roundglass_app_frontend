@@ -57,6 +57,11 @@ export default function ClientDetailsCard({ clientData }) {
   </div>
 }
 
+function findClientLatestWeight(matrices = []) {
+  const lastIndex = findClientLatestWeight.length - 1;
+  return `${matrices?.at(lastIndex)?.weight} ${matrices?.at(lastIndex)?.weightUnit}`
+}
+
 function ClientDetails({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
   async function sendAnalysis() {
@@ -74,6 +79,9 @@ function ClientDetails({ clientData }) {
     ? false
     : (generateWeightStandard(clienthealthMatrix?.at(0)) - generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1)))
       .toFixed(2)
+
+  const latestWeight = findClientLatestWeight(clienthealthMatrix)
+
   return <Card className="bg-white rounded-[18px] shadow-none">
     <Header clientData={clientData} />
     <CardContent>
@@ -119,6 +127,10 @@ function ClientDetails({ clientData }) {
         <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Height</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData.healthMatrix.height} ${clientData.healthMatrix.heightUnit}`}</p>
+        </div>
+        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Latest Weight</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{latestWeight}</p>
         </div>
       </div>
     </CardContent>
