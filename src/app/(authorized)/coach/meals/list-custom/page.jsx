@@ -49,6 +49,9 @@ export default function Page() {
     : data.data;
   console.log(filteredMealPlans)
   const handleNavigate = (planMode) => {
+    if (localStorage.getItem("aiMealPlan")) {
+      localStorage.removeItem('aiMealPlan')
+    }
     router.push(`/coach/meals/add-custom/${planMode}`);
     setShowDropdown(false);
   };
