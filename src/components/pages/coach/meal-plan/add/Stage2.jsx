@@ -46,15 +46,12 @@ export default function Stage2() {
 					if (mealTypesArray.length === 0)
 						_throwError(`There are no plans assigned for the day - ${day}!`);
 					for (const mealType of mealTypesArray) {
-						console.log("MealType", mealType)
 						if (!mealType.meals || mealType.meals?.length === 0)
 							_throwError(
 								`On ${day}, for ${mealType.mealType || "First Meal Type"
 								} at least one meal should be assigned!`
 							);
-						console.log("Meals", mealType.meals)
 						for (const meal of mealType.meals) {
-							console.log("Meal",meal);
 							delete meal.isNew;
 							// for (const field of ["time", "dish_name", "meal_time"]) {
 								if (!meal.time && !meal.meal_time )
