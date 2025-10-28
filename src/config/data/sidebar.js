@@ -144,7 +144,7 @@ export const sidebar__coachContent = [
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Meal Plan",
+        title: "Meal Plan",
         url: "/coach/meals/list-custom",
         // items: [
         //   {
@@ -167,26 +167,26 @@ export const sidebar__coachContent = [
         //   },
         // ],
       },
-      {
-        id: 3,
-        icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Routine Meal Plan",
-        url: "/coach/meals/list/",
-        items: [
-          {
-            id: 1,
-            icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
-            title: "All Plans",
-            url: "/coach/meals/list/",
-          },
-          {
-            id: 2,
-            icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Add",
-            url: "/coach/meals/add-plan",
-          },
-        ],
-      },
+      // {
+      //   id: 3,
+      //   icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Routine Meal Plan",
+      //   url: "/coach/meals/list/",
+      //   items: [
+      //     {
+      //       id: 1,
+      //       icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "All Plans",
+      //       url: "/coach/meals/list/",
+      //     },
+      //     {
+      //       id: 2,
+      //       icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Add",
+      //       url: "/coach/meals/add-plan",
+      //     },
+      //   ],
+      // },
       {
         id: 4,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
