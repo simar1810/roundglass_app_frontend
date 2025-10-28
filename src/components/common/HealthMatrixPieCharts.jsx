@@ -129,7 +129,7 @@ export default function HealthMetrics({ data, onUpdate }) {
     muscle: data.muscle || calculateSMPFinal(data),
     fat: data.fat || calculateBodyFatFinal(data),
     rm: data.rm || calculateBMRFinal(data),
-    idealWeight: data.idealWeight || calculateIdealWeightFinal(data),
+    idealWeight: data.idealWeight || data.ideal_weight || calculateIdealWeightFinal(data),
     bodyAge: data.bodyAge || calculateBodyAgeFinal(data),
     visceral_fat: data.visceral_fat,
     weightInKgs: updateWeightField() === "weightInKgs"
