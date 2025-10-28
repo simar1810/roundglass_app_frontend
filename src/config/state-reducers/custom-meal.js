@@ -311,7 +311,7 @@ export function customMealReducer(state, action) {
         mode: ai.mode || "daily",
         creationType: "new",
         stage: 2,
-        selectedPlan: "day_1",
+        selectedPlan: "daily",
         selectedMealType:
           ai.plan?.day_1?.meals?.[0]?.mealType || "Breakfast",
         selectedPlans: Object.fromEntries(
