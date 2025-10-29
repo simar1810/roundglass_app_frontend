@@ -37,9 +37,15 @@ export default function Stage2() {
 				}
 
 				for (const day in state.selectedPlans) {
-					if (state.selectedPlans[day]?.length === 0)
+					const dayPlan = state.selectedPlans[day];
+					const mealTypesArray = Array.isArray(dayPlan)
+          				? dayPlan 
+          				: Array.isArray(dayPlan?.meals)
+         				 ? dayPlan.meals 
+          				: [];
+					if (mealTypesArray.length === 0)
 						_throwError(`There are no plans assigned for the day - ${day}!`);
-					for (const mealType of state.selectedPlans[day]) {
+					for (const mealType of mealTypesArray) {
 						if (!mealType.meals || mealType.meals?.length === 0)
 							_throwError(
 								`On ${day}, for ${mealType.mealType || "First Meal Type"
@@ -47,14 +53,19 @@ export default function Stage2() {
 							);
 						for (const meal of mealType.meals) {
 							delete meal.isNew;
-							for (const field of ["time", "dish_name"]) {
-								if (!meal[field])
+							// for (const field of ["time", "dish_name", "meal_time"]) {
+								if (!meal.time && !meal.meal_time )
 									_throwError(
-										`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`
+										`Time should be selected for all the meals. Not provided for ${mealType.mealType}`
 									);
-							}
+								if (!meal.dish_name)
+									_throwError(
+										`Dish should be selected for all the meals. Not provided for ${mealType.mealType}`
+									);
+							// }
 							// if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
-							meal.meal_time = format24hr_12hr(meal.time);
+							meal.meal_time = format24hr_12hr(meal.time || meal.meal_time);
+							
 						}
 					}
 				}

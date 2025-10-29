@@ -22,21 +22,25 @@ const isArray = Array.isArray(plan);
 const mealTypes = isArray
   ? plan.map(m => m.mealType)
   : plan?.meals?.map(m => m.mealType);
-
+const desiredOrder = ["breakfast", "lunch", "snack", "dinner"];
+  const sortedMealTypes = mealTypes
+    ? [...mealTypes].sort(
+        (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
+      )
+    : [];
 const selectedMealTypeRecipee = isArray
   ? plan.find(m => m.mealType === selectedMealType)?.meals || []
   : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];  
   const errorMessage = !mealTypes ?
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
-
   return <div>
     <div className="pt-4 flex gap-4 overflow-x-auto pb-4">
-      {(!mealTypes || mealTypes?.length === 0) && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
+      {(!sortedMealTypes || sortedMealTypes?.length === 0) && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
       >
         {errorMessage}
       </div>}
-      {mealTypes?.map((type, index) => <div key={index} className="relative">
+      {sortedMealTypes?.map((type, index) => <div key={index} className="relative">
         <Button
           variant={type === selectedMealType ? "wz" : "outline"}
           onClick={() => dispatch(selectMealPlanType(type))}
