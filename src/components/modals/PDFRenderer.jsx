@@ -52,8 +52,8 @@ function Container({ Component, pdfData }) {
     brand={{
       ...(brands[0] || {}),
       brandLogo,
-      primaryColor: `#${brands[lastIndex]?.primaryColor?.slice(0, 6)}` || "#000000",
-      textColor: `#${brands[lastIndex]?.textColor?.slice(0, 6)}` || "#000000",
+      primaryColor: `#${brands[lastIndex]?.primaryColor?.slice(-6)}` || "#000000",
+      textColor: `#${brands[lastIndex]?.textColor?.slice(-6)}` || "#000000",
     }}
   />
 }

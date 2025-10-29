@@ -66,7 +66,7 @@ function Stage1() {
   const { isLoading, error, data, mutate } = useSWR("app/personalBranding", () => getPersonalBranding());
   const { dispatch } = useCurrentStateContext();
   const brands = data?.data;
-  console.log(brands)
+
   useEffect(function () {
     if (!error && data?.status_code === 200) dispatch(selectPersonalBrandToEdit(brands, mutate))
   }, [data, isLoading])
