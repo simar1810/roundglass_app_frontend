@@ -16,8 +16,8 @@ export function personalBrandingReducer(state, action) {
         selectedBrand: action.payload.length >= 1
           ? {
             ...action.payload.at(lastIndex),
-            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(0, 6) || "",
-            textColor: action.payload.at(lastIndex)?.textColor?.slice(0, 6) || ""
+            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(-6) || "",
+            textColor: action.payload.at(lastIndex)?.textColor?.slice(-6) || ""
           }
           : null,
         formData: action.payload.length >= 1
@@ -25,8 +25,8 @@ export function personalBrandingReducer(state, action) {
             ...action.payload.at(lastIndex),
             brandLogo: "",
             file: action.payload.length >= 1 ? action.payload.at(lastIndex).brandLogo : undefined,
-            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(0, 6) || "",
-            textColor: action.payload.at(lastIndex)?.textColor?.slice(0, 6) || ""
+            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(-6) || "",
+            textColor: action.payload.at(lastIndex)?.textColor?.slice(-6) || ""
           }
           : { ...state.formData },
         type: action.payload.length >= 1 ? "edit" : "new",
@@ -91,7 +91,7 @@ export function generateRequestPayload(state, id) {
     if (state[field]) payload.append(field, state[field]);
   }
   for (const field of ["primaryColor", "textColor"]) {
-    if (state[field]) payload.append(field, `${state[field]}ff`)
+    if (state[field]) payload.append(field, `ff${state[field]}`)
   }
   if (state.brandLogo && Boolean(id)) {
     payload.append("file", state.brandLogo)
