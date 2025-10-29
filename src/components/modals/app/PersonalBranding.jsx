@@ -19,6 +19,7 @@ import {
 } from "@/config/state-reducers/personal-branding";
 import { sendDataWithFormData } from "@/lib/api";
 import { getPersonalBranding } from "@/lib/fetchers/app";
+import { _throwError } from "@/lib/formatter";
 import { getObjectUrl, normalizeHexColor } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Pen, X } from "lucide-react";
@@ -65,7 +66,7 @@ function Stage1() {
   const { isLoading, error, data, mutate } = useSWR("app/personalBranding", () => getPersonalBranding());
   const { dispatch } = useCurrentStateContext();
   const brands = data?.data;
-
+  console.log(brands)
   useEffect(function () {
     if (!error && data?.status_code === 200) dispatch(selectPersonalBrandToEdit(brands, mutate))
   }, [data, isLoading])
