@@ -661,7 +661,7 @@ function StatisticsPage2({ data, styles, brand }) {
           and achieving your health objectives.
         </Text>
 
-        <View style={{ height: 40, width: 40 }}>
+        <View style={{ height: 40, }}>
           <Text>
             {bodyComposition} Body Comp.
           </Text>
@@ -711,7 +711,7 @@ function StatisticsPage2({ data, styles, brand }) {
               marginBottom: 4,
             }}
           >
-            risks
+            Risks
           </Text>
           <Text style={{ color: "#444", fontSize: 10 }}>
             Being overweight can lead to serious health risks, including

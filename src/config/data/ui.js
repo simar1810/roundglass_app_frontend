@@ -64,7 +64,7 @@ export const clientDetailsFields = [
       { id: 2, name: "Female", value: "female" },
     ]
   },
-  { id: 7, label: "Weight", name: "weight", type: 3 },
+  // { id: 7, label: "Weight", name: "weight", type: 3 },
   { id: 8, label: "Height", name: "height", type: 2 },
 ]
 

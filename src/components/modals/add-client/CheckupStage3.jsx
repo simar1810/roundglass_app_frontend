@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { changeFieldvalue, changeNextFollowUpType, createdClient, generateRequestPayload, setCurrentStage } from "@/config/state-reducers/add-client-checkup";
 import { sendDataWithFormData } from "@/lib/api";
+import { _throwError } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Camera } from "lucide-react";
@@ -11,7 +12,6 @@ import { mutate } from "swr";
 
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
-
   async function createClient() {
     try {
       const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID);

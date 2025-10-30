@@ -25,6 +25,7 @@ import {
   calculateBodyFatFinal,
   calculateIdealWeightFinal,
   calculateSMPFinal,
+  calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
@@ -190,6 +191,7 @@ function Stage2({
       heightUnit,
       heightCms: height
     }
+
   const clienthealthStats = {
     bmi: calculateBMIFinal({ ...payload, ...statObj }),
     muscle: calculateSMPFinal({ ...payload, ...statObj }),
@@ -197,6 +199,7 @@ function Stage2({
     rm: calculateBMRFinal({ ...payload, ...statObj }),
     idealWeight: calculateIdealWeightFinal({ ...payload, ...statObj }),
     bodyAge: calculateBodyAgeFinal({ ...payload, ...statObj }),
+    sub_fat: calculateSubcutaneousFat(payload)?.subcutaneousPercent
   }
 
   async function createFollowUp() {

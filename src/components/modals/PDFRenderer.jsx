@@ -10,6 +10,7 @@ import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
 import { getBase64ImageFromUrl } from "@/lib/image";
 import { useEffect, useState } from "react";
+import { useAppSelector } from "@/providers/global/hooks";
 
 const Templates = {
   PDFComparison,
@@ -35,13 +36,20 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
 }
 
 function Container({ Component, pdfData }) {
+  const { profilePhoto } = useAppSelector(state => state.coach.data)
+
   const [brandLogo, setBrandLogo] = useState("");
+  const [coachLogo, setCoachLogo] = useState("");
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = data?.data;
   const lastIndex = brands?.length - 1
   useEffect(function () {
-    if (brands?.at(lastIndex)?.brandLogo) getBase64ImageFromUrl(brands[lastIndex]?.brandLogo).then(setBrandLogo)
+    if (brands?.at(lastIndex)?.brandLogo) getBase64ImageFromUrl(brands[lastIndex]?.brandLogo)
+      .then(setBrandLogo)
+
+    if (profilePhoto) getBase64ImageFromUrl(profilePhoto)
+      .then(setCoachLogo)
   }, [brands])
 
   if (isLoading) return <ContentLoader />
@@ -52,6 +60,7 @@ function Container({ Component, pdfData }) {
     brand={{
       ...(brands[0] || {}),
       brandLogo,
+      coachLogo,
       primaryColor: `#${brands[lastIndex]?.primaryColor?.slice(-6)}` || "#000000",
       textColor: `#${brands[lastIndex]?.textColor?.slice(-6)}` || "#000000",
     }}
