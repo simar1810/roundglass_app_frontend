@@ -124,7 +124,7 @@ const fields = {
     "name", "email", "mobileNumber", "notes", "gender",
     "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
     "visceral_fat", "activeType", "rm", "muscle",
-    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID"
+    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "sub_fat"
   ],
 }
 

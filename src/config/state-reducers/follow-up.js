@@ -1,6 +1,6 @@
 import { addDays, format, parse } from "date-fns";
 import { followUpInitialState } from "../state-data/follow-up";
-import { calculateIdealWeightFinal } from "@/lib/client/statistics";
+import { calculateIdealWeightFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 
 export function followUpReducer(state, action) {
   switch (action.type) {
@@ -88,12 +88,13 @@ export function changeWeightUnit(payload) {
 }
 
 export function init(data) {
+  console.log(data)
   return {
     ...followUpInitialState,
     healthMatrix: {
       ...followUpInitialState.healthMatrix,
       heightUnit: data.healthMatrix.heightUnit,
-      heightCms: data.healthMatrix.heightUnit.toLowerCase() === "cm"
+      heightCms: ["cm", "cms"].includes(data.healthMatrix.heightUnit.toLowerCase())
         ? data.healthMatrix.height
         : "",
       heightFeet: data.healthMatrix.heightUnit.toLowerCase() === "inches"
@@ -118,6 +119,7 @@ export function generateRequestPayload(state, forIdealWeight) {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
   };
   if (["cm", "cms"].includes(state.healthMatrix["heightUnit"].toLowerCase())) {
+    console.log(state.healthMatrix)
     payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
   } else {
     payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
@@ -126,6 +128,14 @@ export function generateRequestPayload(state, forIdealWeight) {
     if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = String(state.healthMatrix[field]);
   }
   payload.healthMatrix.ideal_weight = String(calculateIdealWeightFinal(forIdealWeight))
+  payload.healthMatrix.sub_fat = String(calculateSubcutaneousFat({
+    ...state,
+    ...state.healthMatrix
+  })?.subcutaneousPercent)
+  console.log(calculateSubcutaneousFat({
+    ...state,
+    ...state.healthMatrix
+  }))
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
     : format(addDays(new Date(), 8), 'dd-MM-yyyy');

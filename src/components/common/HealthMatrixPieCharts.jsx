@@ -7,6 +7,7 @@ import {
   calculateBodyFatFinal,
   calculateIdealWeightFinal,
   calculateSMPFinal,
+  calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -69,8 +70,8 @@ const healtMetrics = [
     icon: "/svgs/weight.svg",
     name: "idealWeight",
     id: 5,
-    getMaxValue: (value) => value + 5,
-    getMinValue: (value) => value - 5,
+    getMaxValue: ({ value }) => value + 5,
+    getMinValue: ({ value }) => value - 5,
   },
   {
     title: "Body Age",
@@ -113,6 +114,16 @@ const healtMetrics = [
     getMaxValue: () => 260,
     getMinValue: () => 1,
   },
+  {
+    title: "Subcutaneous Fat",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "sub_fat",
+    id: 9,
+    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
+    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+  },
 
 ];
 
@@ -138,7 +149,9 @@ export default function HealthMetrics({ data, onUpdate }) {
     weightInPounds: updateWeightField() === "weightInPounds"
       ? data.weightInPounds
       : undefined,
+    sub_fat: data.sub_fat || calculateSubcutaneousFat(data)?.subcutaneousPercent
   };
+
   function updateWeightField() {
     if (["kgs", "kg"].includes(data?.weightUnit?.toLowerCase())) {
       return "weightInKgs"
@@ -159,9 +172,18 @@ export default function HealthMetrics({ data, onUpdate }) {
               key={metric.id}
               {...metric}
               value={payload[metric.name]}
-              maxPossibleValue={metric.getMaxValue(payload[metric.name])}
-              maxThreshold={metric.getMaxValue(payload[metric.name])}
-              minThreshold={metric.getMinValue(payload[metric.name])}
+              maxPossibleValue={metric.getMaxValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
+              maxThreshold={metric.getMaxValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
+              minThreshold={metric.getMinValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -282,7 +304,7 @@ function EditHealthMatric({
           value={formData[name]}
           onChange={(e) => setFormData(prev => ({
             ...prev,
-            [matrix.name]: Number(e.target.value)
+            [matrix.name]: String(e.target.value)
           }))}
           className="block mb-4"
         />
