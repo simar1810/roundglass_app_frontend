@@ -4,6 +4,7 @@ import PDFShareStatistics from "@/components/pages/coach/client/PDFShareStatisti
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PDFInvoice from "../pages/coach/meals/PDFInvoice";
 import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
+import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
 import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
@@ -16,7 +17,8 @@ const Templates = {
   PDFComparison,
   PDFShareStatistics,
   PDFInvoice,
-  PDFMealPlan
+  PDFMealPlan,
+  PDFDailyMealSchedule
 }
 
 export default function PDFRenderer({ children, pdfTemplate, data }) {
@@ -42,27 +44,37 @@ function Container({ Component, pdfData }) {
   const [coachLogo, setCoachLogo] = useState("");
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
-  const brands = data?.data;
-  const lastIndex = brands?.length - 1
-  useEffect(function () {
-    if (brands?.at(lastIndex)?.brandLogo) getBase64ImageFromUrl(brands[lastIndex]?.brandLogo)
-      .then(setBrandLogo)
+  const brands = Array.isArray(data?.data) ? data.data : [];
 
-    if (profilePhoto) getBase64ImageFromUrl(profilePhoto)
-      .then(setCoachLogo)
-  }, [brands])
+  useEffect(function () {
+    const latestBrand = brands.length > 0 ? brands[brands.length - 1] : null;
+
+    if (latestBrand?.brandLogo) {
+      getBase64ImageFromUrl(latestBrand.brandLogo).then(setBrandLogo);
+    }
+
+    if (profilePhoto) {
+      getBase64ImageFromUrl(profilePhoto).then(setCoachLogo);
+    }
+  }, [brands, profilePhoto])
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data?.status_code !== 200) return <ContentError title={error.message || data?.message} />
+  if (error || data?.status_code !== 200) return <ContentError title={error?.message || data?.message} />
+
+  const primaryBrand = brands[0] || {};
+  const latestBrand = brands.length > 0 ? brands[brands.length - 1] : {};
+  const primaryColor = latestBrand?.primaryColor ? `#${latestBrand.primaryColor.slice(-6)}` : "#000000";
+  const textColor = latestBrand?.textColor ? `#${latestBrand.textColor.slice(-6)}` : "#000000";
+
   return <Component
     data={pdfData}
     brand={{
-      ...(brands[0] || {}),
+      ...primaryBrand,
       brandLogo,
       coachLogo,
-      primaryColor: `#${brands[lastIndex]?.primaryColor?.slice(-6)}` || "#000000",
-      textColor: `#${brands[lastIndex]?.textColor?.slice(-6)}` || "#000000",
+      primaryColor,
+      textColor
     }}
   />
 }

@@ -3,18 +3,21 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
-import { SquarePen, Trash2 } from "lucide-react";
+import { customMealDailyPDFData } from "@/lib/pdf";
+import { useAppSelector } from "@/providers/global/hooks";
+import { FileDown, SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useReducer, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -27,23 +30,100 @@ export default function Page() {
 
 function MealPlanDetailsContainer({ id }) {
   const { isLoading, error, data } = useSWR(`custom-meal-plans/${id}`, () => getCustomMealPlans("coach", id));
+
+  const responseData = data?.data;
+  const hasNoPlan = Array.isArray(responseData) ? responseData.length === 0 : !responseData;
+  const customPlan = Array.isArray(responseData) ? responseData[0] : responseData;
+  const planKeys = useMemo(() => Object.keys(customPlan?.plans || {}), [customPlan?.plans]);
+
+  const [selectedPlan, setSelectedPlan] = useState(() => planKeys.at(0) || "");
+  const [selectedMealType, setSelectedMealType] = useState("");
+
+  useEffect(() => {
+    if (planKeys.length === 0) {
+      if (selectedPlan) setSelectedPlan("");
+      return;
+    }
+
+    if (!planKeys.includes(selectedPlan)) {
+      setSelectedPlan(planKeys[0]);
+    }
+  }, [planKeys, selectedPlan]);
+
+  useEffect(() => {
+    if (!selectedPlan) {
+      if (selectedMealType) setSelectedMealType("");
+      return;
+    }
+
+    const planForDay = customPlan?.plans?.[selectedPlan];
+    const mealsForPlan = Array.isArray(planForDay)
+      ? planForDay
+      : Array.isArray(planForDay?.meals)
+        ? planForDay.meals
+        : [];
+
+    if (mealsForPlan.length === 0) {
+      if (selectedMealType) setSelectedMealType("");
+      return;
+    }
+
+    const hasSelected = mealsForPlan.some(entry => entry?.mealType === selectedMealType);
+    if (!hasSelected) {
+      setSelectedMealType(mealsForPlan[0]?.mealType || "");
+    }
+  }, [customPlan?.plans, selectedPlan, selectedMealType]);
+
   if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200 || data.data.length === 0) return <ContentError
-    title={error || data?.message || "No Such Plan Found!"}
-  />
-  const customPlan = data.data;
+
+  if (error || data?.status_code !== 200 || hasNoPlan) {
+    return <ContentError
+      title={error || data?.message || "No Such Plan Found!"}
+    />
+  }
+
   return <main className="content-container">
     <div className="content-height-screen grid grid-cols-2 divide-x-1">
-      <CustomMealMetaData customPlan={customPlan} />
-      <CustomMealsListing customPlan={customPlan} />
+      <CustomMealMetaData
+        customPlan={customPlan}
+        selectedPlan={selectedPlan}
+        hasPlanData={planKeys.length > 0}
+      />
+      <CustomMealsListing
+        customPlan={customPlan}
+        days={planKeys}
+        selectedPlan={selectedPlan}
+        onPlanChange={setSelectedPlan}
+        selectedMealType={selectedMealType}
+        onMealTypeChange={setSelectedMealType}
+      />
     </div>
   </main>
 }
 
-function CustomMealMetaData({ customPlan }) {
+function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
+  const coach = useAppSelector(state => state.coach.data);
+  const coachName = coach?.name || "";
+
+  const pdfData = useMemo(() => {
+    if (!hasPlanData || !selectedPlan) return null;
+    return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName });
+  }, [coachName, customPlan, hasPlanData, selectedPlan]);
+
+  const pdfDisabled = !pdfData || !pdfData.meals?.length;
+
   return <div className="p-4 pr-8">
     <div className="flex items-center gap-2">
       <h4 className="mr-auto">{customPlan.title}</h4>
+      <PDFRenderer pdfTemplate="PDFDailyMealSchedule" data={pdfData || {}}>
+        <DialogTrigger
+          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={pdfDisabled}
+        >
+          <FileDown size={16} />
+          Plan PDF
+        </DialogTrigger>
+      </PDFRenderer>
       <Link
         href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
         className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
@@ -75,19 +155,23 @@ function CustomMealMetaData({ customPlan }) {
   </div >
 }
 
-function CustomMealsListing({ customPlan }) {
-  const days = Object.keys(customPlan.plans || []);
-  const [selectedPlan, setSelectedplan] = useState(days?.at(0));
-  const [selectedMealType, setSelectedMealType] = useState(days?.at(0));
+function CustomMealsListing({
+  customPlan,
+  days = [],
+  selectedPlan,
+  onPlanChange,
+  selectedMealType,
+  onMealTypeChange,
+}) {
+  const planForDay = selectedPlan ? customPlan.plans?.[selectedPlan] : undefined;
+  const selectedMealTypes = Array.isArray(planForDay)
+    ? planForDay
+    : Array.isArray(planForDay?.meals)
+      ? planForDay.meals
+      : [];
 
-  const selectedMealTypes = customPlan.plans[selectedPlan]?.meals || [];
-  const selectedMealsForMealType = (customPlan.plans[selectedPlan]?.meals || [])
-    ?.find(type => type.mealType === selectedMealType)
-    ?.meals || [];
-
-  useEffect(function () {
-    setSelectedMealType(customPlan.plans[selectedPlan]?.meals?.at(0)?.mealType || "");
-  }, [selectedPlan]);
+  const selectedMealsForMealType = selectedMealTypes
+    .find(type => type?.mealType === selectedMealType)?.meals || [];
 
   return <div className="p-4 pl-8 relative">
     {customPlan.draft && <Badge className="absolute top-2 right-2">
@@ -98,7 +182,7 @@ function CustomMealsListing({ customPlan }) {
       {days.map(day => <Button
         key={day}
         variant={day === selectedPlan ? "wz" : "wz_outline"}
-        onClick={() => setSelectedplan(day)}
+        onClick={() => onPlanChange?.(day)}
       >
         {day}
       </Button>)}
@@ -108,7 +192,7 @@ function CustomMealsListing({ customPlan }) {
       {selectedMealTypes.map((mealType, index) => <Button
         key={index}
         variant={mealType.mealType === selectedMealType ? "wz" : "wz_outline"}
-        onClick={() => setSelectedMealType(mealType.mealType)}
+        onClick={() => onMealTypeChange?.(mealType.mealType)}
       >
         {mealType.mealType}
       </Button>)}

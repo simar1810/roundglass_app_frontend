@@ -1,4 +1,4 @@
-import { differenceInYears, format, parse } from "date-fns"
+import { differenceInYears, format, isValid, parse } from "date-fns"
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics"
 
 function calcAge(data) {
@@ -75,6 +75,109 @@ export function mealPlanDetailsPDFData(plan) {
     mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
     meals: []
   }
+}
+
+function formatCustomPlanLabel(planKey, mode, explicitLabel) {
+  if (explicitLabel) return explicitLabel;
+  if (!planKey) return "";
+
+  if (mode === "monthly") {
+    const parsedDate = parse(planKey, "dd-MM-yyyy", new Date());
+    if (isValid(parsedDate)) {
+      return format(parsedDate, "LLL dd, yyyy EEE");
+    }
+  }
+
+  if (mode === "weekly") {
+    return planKey.charAt(0).toUpperCase() + planKey.slice(1);
+  }
+
+  if (mode === "daily") {
+    return "Daily Schedule";
+  }
+
+  return planKey;
+}
+
+function normalizeMealEntries(planForDay) {
+  if (!planForDay) return [];
+  if (Array.isArray(planForDay)) return planForDay;
+  if (Array.isArray(planForDay.meals)) return planForDay.meals;
+  return [];
+}
+
+function buildMealItemsForPDF(mealEntry) {
+  if (!mealEntry) return [];
+  const dishes = Array.isArray(mealEntry.meals) ? mealEntry.meals : [];
+
+  return dishes.map((dish, index) => {
+    const title = dish?.dish_name || dish?.name || dish?.title || `Item ${index + 1}`;
+
+    const detailsParts = [];
+    if (dish?.measure) detailsParts.push(dish.measure);
+    if (dish?.quantity) detailsParts.push(dish.quantity);
+    if (dish?.description) detailsParts.push(dish.description);
+
+    const macroParts = [];
+    if (dish?.calories) macroParts.push(`${dish.calories} kcal`);
+    if (dish?.protein) macroParts.push(`Protein ${dish.protein}g`);
+    if (dish?.carbohydrates) macroParts.push(`Carbs ${dish.carbohydrates}g`);
+    if (dish?.fats) macroParts.push(`Fats ${dish.fats}g`);
+    if (macroParts.length) detailsParts.push(macroParts.join(", "));
+
+    return {
+      title,
+      details: detailsParts.filter(Boolean).join(" | ")
+    };
+  });
+}
+
+export function customMealDailyPDFData(customPlan, planKey, coach) {
+  if (!customPlan || !planKey) return null;
+
+  const rawPlan = customPlan?.plans?.[planKey];
+  const normalizedMeals = normalizeMealEntries(rawPlan);
+  if (!Array.isArray(normalizedMeals) || normalizedMeals.length === 0) return null;
+
+  const scheduleMeals = normalizedMeals.map((mealEntry, index) => {
+    const dishes = Array.isArray(mealEntry?.meals) ? mealEntry.meals : [];
+    const firstTimedDish = dishes.find(dish => dish?.meal_time);
+
+    return {
+      name: mealEntry?.mealType || mealEntry?.title || `Meal ${index + 1}`,
+      timeWindow: mealEntry?.time || mealEntry?.meal_time || firstTimedDish?.meal_time || "",
+      items: buildMealItemsForPDF(mealEntry)
+    };
+  });
+
+  const planMeta = Array.isArray(rawPlan) ? {} : rawPlan || {};
+  const explicitLabel = planMeta?.dateLabel || planMeta?.displayDate || planMeta?.title;
+  const dateLabel = formatCustomPlanLabel(planKey, customPlan.mode, explicitLabel);
+
+  const collectNotes = [];
+  const planNotes = planMeta?.notes;
+  if (Array.isArray(planNotes)) {
+    collectNotes.push(...planNotes.filter(Boolean));
+  } else if (typeof planNotes === "string" && planNotes.trim()) {
+    collectNotes.push(planNotes.trim());
+  }
+
+  const generalNotes = customPlan?.notes;
+  if (Array.isArray(generalNotes)) {
+    collectNotes.push(...generalNotes.filter(Boolean));
+  } else if (typeof generalNotes === "string" && generalNotes.trim()) {
+    collectNotes.push(generalNotes.trim());
+  }
+
+  const normalizedNotes = collectNotes.filter(note => typeof note === "string" && note.trim());
+
+  return {
+    title: customPlan?.title || "Custom Meal Plan",
+    coachName: coach?.name || "",
+    dateLabel,
+    meals: scheduleMeals,
+    notes: normalizedNotes.length > 0 ? normalizedNotes : undefined,
+  };
 }
 
 export function invoicePDFData(order, coach) {

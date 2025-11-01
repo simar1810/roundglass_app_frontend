@@ -2,6 +2,29 @@ import { format, parse } from "date-fns";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
 
+const defaultMealTypes = [
+  {
+    mealType: "Breakfast",
+    meals: []
+  },
+  {
+    mealType: "Morning Snacks",
+    meals: []
+  },
+  {
+    mealType: "Lunch",
+    meals: []
+  },
+  {
+    mealType: "Evening Snacks",
+    meals: []
+  },
+  {
+    mealType: "Dinner",
+    meals: []
+  },
+]
+
 export function customMealReducer(state, action) {
   switch (action.type) {
     case "SELECT_MEAL_TYPE":
@@ -13,7 +36,7 @@ export function customMealReducer(state, action) {
         selectedPlan: "daily",
         selectedMealType: "Breakfast",
         selectedPlans: {
-          daily: [{ mealType: "Breakfast", meals: [] }]
+          daily: defaultMealTypes
         },
       }
       else if (action.payload === "weekly") return {
@@ -24,7 +47,7 @@ export function customMealReducer(state, action) {
         selectedPlan: "sun",
         selectedMealType: "Breakfast",
         selectedPlans: DAYS.reduce((acc, curr) => {
-          acc[curr] = [{ mealType: "Breakfast", meals: [] }];
+          acc[curr] = defaultMealTypes;
           return acc;
         }, {})
       }
@@ -36,7 +59,7 @@ export function customMealReducer(state, action) {
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedMealType: "Breakfast",
         selectedPlans: {
-          [format(new Date(), 'dd-MM-yyyy')]: [{ mealType: "Breakfast", meals: [] }]
+          [format(new Date(), 'dd-MM-yyyy')]: defaultMealTypes
         }
       }
 
@@ -264,7 +287,7 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [formatted]: [{ mealType: "Breakfast", meals: [] }]
+          [formatted]: defaultMealTypes
         },
         selectedPlan: formatted,
         selectedMealType: "Breakfast"
