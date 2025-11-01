@@ -9,7 +9,7 @@ import {
 import WeeklyMealCreation from "./WeeklyMealCreation";
 import CustomMealMetaData from "./CustomMealMetaData";
 import SelectMeals from "./SelectMeals";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
@@ -25,6 +25,49 @@ export default function Stage2() {
 
 	const router = useRouter();
 
+	const mealsForSelectedType = useMemo(() => {
+		const plan = state.selectedPlans?.[state.selectedPlan];
+		const mealTypesArray = Array.isArray(plan)
+			? plan
+			: Array.isArray(plan?.meals)
+				? plan.meals
+				: [];
+		const selected = mealTypesArray.find(
+			(item) => item?.mealType === state.selectedMealType
+		);
+		return Array.isArray(selected?.meals) ? selected.meals : [];
+	}, [state.selectedPlans, state.selectedPlan, state.selectedMealType]);
+
+	const totals = useMemo(() => {
+		const parseNum = (val) => {
+			if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+			if (typeof val === "string") {
+				const n = parseFloat(val.replace(/,/g, ""));
+				return Number.isFinite(n) ? n : 0;
+			}
+			return 0;
+		};
+
+		return mealsForSelectedType.reduce(
+			(acc, meal) => {
+				const caloriesVal =
+					typeof meal?.calories === "object"
+						? meal?.calories?.total
+						: meal?.calories;
+				const proteinVal = meal?.protein ?? meal?.calories?.proteins;
+				const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
+				const fatsVal = meal?.fats ?? meal?.calories?.fats;
+
+				acc.calories += parseNum(caloriesVal);
+				acc.protein += parseNum(proteinVal);
+				acc.carbohydrates += parseNum(carbsVal);
+				acc.fats += parseNum(fatsVal);
+				return acc;
+			},
+			{ calories: 0, protein: 0, carbohydrates: 0, fats: 0 }
+		);
+	}, [mealsForSelectedType]);
+
 	async function saveCustomWorkout({
 		draft
 	}) {
@@ -39,10 +82,10 @@ export default function Stage2() {
 				for (const day in state.selectedPlans) {
 					const dayPlan = state.selectedPlans[day];
 					const mealTypesArray = Array.isArray(dayPlan)
-          				? dayPlan 
-          				: Array.isArray(dayPlan?.meals)
-         				 ? dayPlan.meals 
-          				: [];
+						? dayPlan
+						: Array.isArray(dayPlan?.meals)
+							? dayPlan.meals
+							: [];
 					if (mealTypesArray.length === 0)
 						_throwError(`There are no plans assigned for the day - ${day}!`);
 					for (const mealType of mealTypesArray) {
@@ -54,18 +97,18 @@ export default function Stage2() {
 						for (const meal of mealType.meals) {
 							delete meal.isNew;
 							// for (const field of ["time", "dish_name", "meal_time"]) {
-								if (!meal.time && !meal.meal_time )
-									_throwError(
-										`Time should be selected for all the meals. Not provided for ${mealType.mealType}`
-									);
-								if (!meal.dish_name)
-									_throwError(
-										`Dish should be selected for all the meals. Not provided for ${mealType.mealType}`
-									);
+							if (!meal.time && !meal.meal_time)
+								_throwError(
+									`Time should be selected for all the meals. Not provided for ${mealType.mealType}`
+								);
+							if (!meal.dish_name)
+								_throwError(
+									`Dish should be selected for all the meals. Not provided for ${mealType.mealType}`
+								);
 							// }
 							// if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
 							meal.meal_time = format24hr_12hr(meal.time || meal.meal_time);
-							
+
 						}
 					}
 				}
@@ -201,6 +244,12 @@ export default function Stage2() {
 						<SelectMeals
 							key={`${state.selectedPlan}${state.selectedMealType}`}
 						/>
+						<div className="mt-4 rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
+							<div>{totals.calories.toFixed(2)} Calories</div>
+							<div>{totals.protein.toFixed(2)} Protein</div>
+							<div>{totals.fats.toFixed(2)} Fats</div>
+							<div>{totals.carbohydrates.toFixed(2)} Carbs</div>
+						</div>
 						<div className="mt-10 grid grid-cols-2 gap-4">
 							<Button
 								disabled={loading}

@@ -141,7 +141,7 @@ export function customMealReducer(state, action) {
 
       return {
         ...state,
-       selectedPlans: {
+        selectedPlans: {
           ...state.selectedPlans,
           [state.selectedPlan]: isArray
             ? updatedMeals
@@ -158,31 +158,32 @@ export function customMealReducer(state, action) {
 
       const dishesPayload = !isNew
         ? {
-            ...recipe,
-            dish_name: recipe.dish_name || recipe.title,
-            image: recipe.image || recipe.image,
-            fats: recipe.fats || recipe?.calories?.fats,
-            calories: recipe?.calories?.total || recipe.calories,
-            protein: recipe.protein || recipe?.calories?.proteins,
-            carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
-            isNew: !recipe.time || false,
-          }
+          ...recipe,
+          dish_name: recipe.dish_name || recipe.title,
+          image: recipe.image || recipe.image,
+          fats: recipe.fats || recipe?.calories?.fats,
+          calories: recipe?.calories?.total || recipe.calories,
+          protein: recipe.protein || recipe?.calories?.proteins,
+          carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+          measure: recipe.measure,
+          isNew: !recipe.time || false,
+        }
         : {
-        isNew: false,
-         };
-       
+          isNew: false,
+        };
+
       if (index || index === 0) {
         const updatedMeals = currentMeals.map((mealType) =>
           mealType.mealType === state.selectedMealType
             ? {
-                ...mealType,
-                meals: mealType.meals.map((meal, i) =>
-                  i === index ? { ...meal, ...dishesPayload } : meal
-                ),
-              }
+              ...mealType,
+              meals: mealType.meals.map((meal, i) =>
+                i === index ? { ...meal, ...dishesPayload } : meal
+              ),
+            }
             : mealType
         );
-      
+
         return {
           ...state,
           selectedPlans: {
@@ -197,23 +198,24 @@ export function customMealReducer(state, action) {
       const updatedMeals = currentMeals.map((mealType) =>
         mealType.mealType === state.selectedMealType
           ? {
-              ...mealType,
-              meals: [
-                ...(mealType.meals || []),
-                {
-                  ...recipe,
-                  dish_name: recipe.dish_name || recipe.name,
-                  fats: recipe.fats || recipe?.calories?.fats,
-                  calories: recipe.calories || recipe?.calories?.total,
-                  protein: recipe.protein || recipe?.calories?.proteins,
-                  carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
-                  isNew: true,
-                },
-             ],
-           }
-         : mealType
-     );
-   
+            ...mealType,
+            meals: [
+              ...(mealType.meals || []),
+              {
+                ...recipe,
+                dish_name: recipe.dish_name || recipe.name,
+                fats: recipe.fats || recipe?.calories?.fats,
+                calories: recipe.calories || recipe?.calories?.total,
+                protein: recipe.protein || recipe?.calories?.proteins,
+                carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+                measure: recipe.measure,
+                isNew: true,
+              },
+            ],
+          }
+          : mealType
+      );
+
       return {
         ...state,
         selectedPlans: {
@@ -232,9 +234,9 @@ export function customMealReducer(state, action) {
       const updatedMeals = currentMeals.map((mealType) =>
         mealType.mealType === state.selectedMealType
           ? {
-              ...mealType,
-              meals: mealType.meals.filter((_, index) => index !== action.payload),
-            }
+            ...mealType,
+            meals: mealType.meals.filter((_, index) => index !== action.payload),
+          }
           : mealType
       );
 
@@ -276,6 +278,58 @@ export function customMealReducer(state, action) {
           [action.payload.to]: state.selectedPlans[action.payload.from]
         }
       }
+
+    case "COPY_MEAL_REPLACE_DESTINATIONS": {
+      const { replacements = [] } = action.payload || {};
+      if (!Array.isArray(replacements) || replacements.length === 0) return state;
+
+      const updatedPlans = { ...state.selectedPlans };
+
+      replacements.forEach(({ fromPlan, fromMealIndex, toPlan, toMealType }) => {
+        if (!fromPlan || typeof fromMealIndex !== "number" || !toPlan) return;
+
+        const sourcePlan = state.selectedPlans[fromPlan];
+        const sourceMealsArray = Array.isArray(sourcePlan)
+          ? sourcePlan
+          : sourcePlan?.meals || [];
+
+        const sourceMealEntry = sourceMealsArray[fromMealIndex];
+        if (!sourceMealEntry) return;
+
+        const normalizedMealType = toMealType || sourceMealEntry?.mealType || sourceMealEntry?.fromMealType;
+        if (!normalizedMealType) return;
+
+        const mealsToCopy = Array.isArray(sourceMealEntry?.meals)
+          ? sourceMealEntry.meals.map((meal) => ({ ...meal }))
+          : [];
+
+        const targetPlan = updatedPlans[toPlan];
+        const targetIsArray = Array.isArray(targetPlan);
+        const targetMealsArray = targetIsArray ? targetPlan : targetPlan?.meals || [];
+
+        const targetIndex = targetMealsArray.findIndex((meal) => meal.mealType === normalizedMealType);
+
+        const nextMealsArray = targetIndex >= 0
+          ? targetMealsArray.map((meal, index) =>
+            index === targetIndex
+              ? { ...meal, mealType: normalizedMealType, meals: mealsToCopy }
+              : meal,
+          )
+          : [...targetMealsArray, { mealType: normalizedMealType, meals: mealsToCopy }];
+
+        updatedPlans[toPlan] = targetIsArray
+          ? nextMealsArray
+          : {
+            ...targetPlan,
+            meals: nextMealsArray,
+          };
+      });
+
+      return {
+        ...state,
+        selectedPlans: updatedPlans,
+      }
+    }
 
     case "DELETE_MONTHLY_DATE":
       delete state.selectedPlans[action.payload]
@@ -448,6 +502,15 @@ export function copyAllMealPlans(from, to) {
     payload: {
       from, to
     }
+  }
+}
+
+export function replaceMealPlanSelections(replacements) {
+  return {
+    type: "COPY_MEAL_REPLACE_DESTINATIONS",
+    payload: {
+      replacements,
+    },
   }
 }
 

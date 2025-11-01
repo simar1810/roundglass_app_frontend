@@ -12,6 +12,7 @@ import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format, parse } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function EditSelectedMealDetails({
   defaultOpen,
@@ -153,6 +154,21 @@ export default function EditSelectedMealDetails({
             onChange={onChangeHandler}
           />
         </label>
+        <label className="mt-2 flex justify-between items-center">
+          <span>Measure</span>
+          <Select
+            value={formData.measure || undefined}
+            onValueChange={(value) => setFormData({ ...formData, measure: value })}
+          >
+            <SelectTrigger className="min-w-[180px]">
+              <SelectValue placeholder="Select measure" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quantity">Quantity</SelectItem>
+              <SelectItem value="gram">Gram</SelectItem>
+            </SelectContent>
+          </Select>
+        </label>
         <Button
           className="w-full mt-4"
           variant="wz"
@@ -173,6 +189,7 @@ function MealCalories({ recipe }) {
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Protien -</span> {recipe.protein}</Badge>
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Carbs -</span> {recipe.carbohydrates}</Badge>
     <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Fats -</span> {recipe.fats}</Badge>
+    {recipe.measure !== undefined && <Badge className="bg-[#EFEFEF] text-black"><span className="text-black/40">Measure -</span> {recipe.measure}</Badge>}
   </>
 }
 

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useRef, useState } from "react";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import CopyMealPlanDays from "./CopyMealPlanDays";
 
 export default function MonthlyMealCreation() {
   const { dispatch, selectedPlans, selectedPlan } = useCurrentStateContext();
@@ -19,7 +20,8 @@ export default function MonthlyMealCreation() {
   return <>
     <div className="flex items-center justify-between">
       <h3 className="mt-4">Days</h3>
-      <CopyMealPlanModal to={selectedPlan} />
+      {/* <CopyMealPlanModal to={selectedPlan} /> */}
+      <CopyMealPlanDays />
     </div>
     <div className="mt-4 flex gap-2 overflow-x-auto pb-4">
       {days.length === 0 && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
