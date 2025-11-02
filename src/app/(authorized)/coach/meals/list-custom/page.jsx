@@ -3,21 +3,18 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import { Badge } from "@/components/ui/badge";
+import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import useSWR from "swr";
-import { cn } from "@/lib/utils";
-import { PiSparkleFill } from "react-icons/pi";
-import { IoMdAddCircle } from "react-icons/io";
+import { useEffect, useRef, useState } from "react";
+import { IoIosArrowDropdown, IoMdAddCircle } from "react-icons/io";
 import { LuTrash } from "react-icons/lu";
-import { IoIosArrowDropdown } from "react-icons/io";
-import { useState, useRef, useEffect } from "react";
-import { set } from "date-fns";
-import { useSWRConfig } from "swr";
-import { sendData } from "@/lib/api";
+import { PiSparkleFill } from "react-icons/pi";
 import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("custom-meal-plans", () =>
@@ -156,14 +153,16 @@ export default function Page() {
                 "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
               )}
             >
-              {meal.admin ? "AI Generated" : "Manual"}
+              {meal.admin ? "Admin" : "Manual"}
             </Badge>
-            <button
-              onClick={() => handleDeleteMeal(meal._id)}
-              className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
-            >
-              <LuTrash size={14} />
-            </button>
+            {!meal.admin && (
+              <button
+                onClick={() => handleDeleteMeal(meal._id)}
+                className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
+              >
+                <LuTrash size={14} />
+              </button>
+            )}
             <div className="p-4 flex items-center justify-between gap-5">
               <Link href={`/coach/meals/list-custom/${meal._id}`}>
                 <p className="text-sm font-semibold text-gray-800 line-clamp-2">
