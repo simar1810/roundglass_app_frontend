@@ -340,7 +340,10 @@ export function NotificationItem({ item = {} }) {
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
-          <ScheduleNotificationWrapper selectedClients={[id]} defaultPayload={item}>
+          <ScheduleNotificationWrapper
+            selectedClients={[id]}
+            defaultPayload={item}
+          >
             <Pen className="w-[24px] h-[24px] text-white bg-[var(--accent-1)] p-[4px] rounded-[4px] cursor-pointer hover:bg-[var(--accent-1)]/80" />
           </ScheduleNotificationWrapper>
           <DeleteClientNotification id={item._id} />

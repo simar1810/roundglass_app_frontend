@@ -12,7 +12,7 @@ export function useNotificationSchedulerCache() {
       }
     } catch (error) {
     }
-    
+
     return { notifications: [] };
   });
 
@@ -25,6 +25,7 @@ export function useNotificationSchedulerCache() {
 
   const addNotificationToCache = useCallback((notificationData, context = 'notifications') => {
     const newNotification = {
+      _id: notificationData._id,
       id: `cached_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       subject: notificationData.subject || '',
       message: notificationData.message || '',
@@ -51,24 +52,24 @@ export function useNotificationSchedulerCache() {
 
   const getCachedNotificationsForClient = useCallback((clientId) => {
     if (!clientId) return cache.notifications || [];
-    
-    return (cache.notifications || []).filter(notification => 
+
+    return (cache.notifications || []).filter(notification =>
       notification.clients && notification.clients.includes(clientId)
     );
   }, [cache]);
 
   const getCachedNotificationsByContext = useCallback((context) => {
-    return (cache.notifications || []).filter(notification => 
+    return (cache.notifications || []).filter(notification =>
       notification.context === context
     );
   }, [cache]);
 
   const getCachedNotificationsForClientByContext = useCallback((clientId, context) => {
     if (!clientId) return getCachedNotificationsByContext(context);
-    
-    return (cache.notifications || []).filter(notification => 
-      notification.context === context && 
-      notification.clients && 
+
+    return (cache.notifications || []).filter(notification =>
+      notification.context === context &&
+      notification.clients &&
       notification.clients.includes(clientId)
     );
   }, [cache]);
