@@ -578,7 +578,6 @@ export function validStatistics(matrices) {
     index++
     for (const field of healthMatrixFields) {
       if (isInvalidField(matrix[field])) {
-        console.log(field, index)
         return false
       }
     }

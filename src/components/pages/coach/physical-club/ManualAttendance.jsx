@@ -24,7 +24,6 @@ export default function ManualAttendance({
 }) {
   const clients = manualAttendanceWithRangeMultiple(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
-  console.log("Filtered clients for ManualAttendance:", clients);
 
   return (<TabsContent value="manual-attendance" className="flex gap-6">
     <AttendanceClients clients={clients} originalData={data} range={range} />
@@ -41,11 +40,6 @@ export default function ManualAttendance({
 }
 
 export function AttendanceClients({ clients, originalData, range }) {
-  console.log("=== DATA LOGGING ===");
-  console.log("Clients for ManualAttendance:", clients);
-  console.log("Original data:", originalData);
-  console.log("Range:", range);
-
   // Group clients by date and clientId to show multiple servings per day
   const groupedClients = clients.reduce((acc, client) => {
     const key = `${client.clientId}-${format(client.date, "yyyy-MM-dd")}`;
@@ -65,12 +59,7 @@ export function AttendanceClients({ clients, originalData, range }) {
       origClient.client?._id === client.clientId
     );
 
-    console.log(`\n--- Processing client: ${client.name} (${client.clientId}) ---`);
-    console.log("Client attendance data found:", clientAttendanceData);
-
     if (clientAttendanceData && clientAttendanceData.attendance) {
-      console.log(`Found ${clientAttendanceData.attendance.length} attendance records for this client`);
-
       // Filter attendance by the specific date
       const clientDateStr = format(client.date, "yyyy-MM-dd");
       const filteredAttendance = clientAttendanceData.attendance.filter(attendance => {
@@ -87,12 +76,8 @@ export function AttendanceClients({ clients, originalData, range }) {
         return attendanceDateStr === clientDateStr;
       });
 
-      console.log(`Filtered to ${filteredAttendance.length} records for date ${clientDateStr}`);
-
       // Add filtered attendance data to servings
       filteredAttendance.forEach((attendance, index) => {
-        console.log(`Adding attendance ${index} to servings:`, attendance);
-
         acc[key].servings.push({
           ...attendance,
           clientId: client.clientId,
@@ -101,31 +86,15 @@ export function AttendanceClients({ clients, originalData, range }) {
         });
       });
     } else {
-      console.log("No attendance data found, using fallback client data");
       // Fallback to original client data
       acc[key].servings.push(client);
     }
 
-    console.log(`Final servings for ${client.name}:`, acc[key].servings);
-
     return acc;
   }, {});
 
-  console.log("\n=== FINAL GROUPED CLIENTS ===");
-  console.log("Total groups:", Object.keys(groupedClients).length);
-  Object.entries(groupedClients).forEach(([key, group]) => {
-    console.log(`\nGroup: ${key}`);
-    console.log(`- Client: ${group.name}`);
-    console.log(`- Date: ${format(group.date, "yyyy-MM-dd")}`);
-    console.log(`- Servings count: ${group.servings.length}`);
-    console.log(`- Servings data:`, group.servings);
-  });
-
   const unmarkServing = async (clientId, date, servingNumber) => {
     try {
-      // Debug logging
-      console.log("Unmarking serving:", { clientId, date, servingNumber });
-
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
 
@@ -138,30 +107,23 @@ export function AttendanceClients({ clients, originalData, range }) {
         person: "coach"
       };
 
-      console.log("Unmark request data:", requestData);
-
       const response = await sendData(
         "app/physical-club/attendance?person=coach",
         requestData,
         "PUT"
       );
 
-      console.log("Unmark API response:", response);
-
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success("Serving removed successfully");
       // Refresh all attendance-related data with a small delay to ensure backend processing
       refreshAttendanceDataWithDelay(clientId);
     } catch (error) {
-      console.error("Unmark serving error:", error);
       toast.error(error.message);
     }
   };
 
   const clearAbsentStatus = async (clientId, date) => {
     try {
-      console.log("Clearing absent status:", { clientId, date });
-
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
 
@@ -173,21 +135,15 @@ export function AttendanceClients({ clients, originalData, range }) {
         person: "coach"
       };
 
-      console.log("Clear absent request data:", requestData);
-
       const response = await sendData(
         "app/physical-club/attendance?person=coach",
         requestData,
         "PUT"
       );
 
-      console.log("Clear absent API response:", response);
-
       if (response.status_code !== 200) throw new Error(response.message);
-      console.log("Absent status cleared successfully");
       refreshAttendanceDataWithDelay(clientId);
     } catch (error) {
-      console.error("Clear absent status error:", error);
       // Don't show error toast for this, as it's a background operation
     }
   };
@@ -277,7 +233,6 @@ export function AttendanceClients({ clients, originalData, range }) {
                           // Find the serving with the highest serving number to remove
                           const sortedServings = presentServings.sort((a, b) => (b.servingNumber || 0) - (a.servingNumber || 0));
                           const servingToRemove = sortedServings[0]; // Get the serving with highest number
-                          console.log("Removing serving:", servingToRemove);
                           unmarkServing(group.clientId, servingToRemove.date, servingToRemove.servingNumber || presentServings.length);
                         }
                       }}
@@ -293,7 +248,6 @@ export function AttendanceClients({ clients, originalData, range }) {
                       onClick={() => {
                         // Remove all present servings for this day
                         const presentServings = group.servings.filter(s => s.status === "present");
-                        console.log("Removing all servings:", presentServings);
                         presentServings.forEach((serving, index) => {
                           setTimeout(() => {
                             unmarkServing(group.clientId, serving.date, serving.servingNumber || index + 1);

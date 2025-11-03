@@ -74,7 +74,6 @@ function generateDefaultPayload(obj) {
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => generateDefaultPayload(clientData));
-  console.log(formData)
   const closeBtnRef = useRef();
   const fileRef = useRef();
 

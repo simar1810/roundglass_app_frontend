@@ -88,7 +88,6 @@ export function changeWeightUnit(payload) {
 }
 
 export function init(data) {
-  console.log(data)
   return {
     ...followUpInitialState,
     healthMatrix: {
@@ -119,7 +118,6 @@ export function generateRequestPayload(state, forIdealWeight) {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
   };
   if (["cm", "cms"].includes(state.healthMatrix["heightUnit"].toLowerCase())) {
-    console.log(state.healthMatrix)
     payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
   } else {
     payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
@@ -132,10 +130,6 @@ export function generateRequestPayload(state, forIdealWeight) {
     ...state,
     ...state.healthMatrix
   })?.subcutaneousPercent)
-  console.log(calculateSubcutaneousFat({
-    ...state,
-    ...state.healthMatrix
-  }))
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
     : format(addDays(new Date(), 8), 'dd-MM-yyyy');

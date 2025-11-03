@@ -236,7 +236,6 @@ function UpdateCoachClubType({ coach }) {
         coachId: coach._id,
         clubType: selected,
       })
-      console.log(response)
       if (response.status_code !== 200) throw new Error(response.message)
       toast.success("Club type updated successfully!")
       mutate("app/downline/coaches")
