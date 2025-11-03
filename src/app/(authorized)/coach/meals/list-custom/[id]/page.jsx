@@ -7,6 +7,7 @@ import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { sendData } from "@/lib/api";
@@ -106,25 +107,35 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
   const coach = useAppSelector(state => state.coach.data);
   const coachName = coach?.name || "";
 
+  const defaultVariant = useMemo(() => {
+    if (customPlan?.mode === "weekly") return "landscape";
+    if (customPlan?.mode === "monthly") return "compact";
+    return "portrait";
+  }, [customPlan?.mode]);
+
+  const [selectedPdfVariant, setSelectedPdfVariant] = useState(defaultVariant);
+
+  useEffect(() => {
+    setSelectedPdfVariant(defaultVariant);
+  }, [defaultVariant]);
+
   const pdfData = useMemo(() => {
     if (!hasPlanData || !selectedPlan) return null;
     return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName });
   }, [coachName, customPlan, hasPlanData, selectedPlan]);
 
-  const pdfDisabled = !pdfData || !pdfData.meals?.length;
+  const pdfTemplateMap = {
+    portrait: "PDFCustomMealPortrait",
+    landscape: "PDFCustomMealLandscape",
+    compact: "PDFCustomMealCompactLandscape",
+  };
+
+  const pdfDisabled = !pdfData || !pdfData?.plans?.some(plan => Array.isArray(plan?.meals) && plan.meals.length > 0);
+  const pdfTemplateKey = pdfTemplateMap[selectedPdfVariant] || "PDFDailyMealSchedule";
 
   return <div className="p-4 pr-8">
     <div className="flex items-center gap-2">
       <h4 className="mr-auto">{customPlan.title}</h4>
-      <PDFRenderer pdfTemplate="PDFDailyMealSchedule" data={pdfData || {}}>
-        <DialogTrigger
-          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={pdfDisabled}
-        >
-          <FileDown size={16} />
-          Plan PDF
-        </DialogTrigger>
-      </PDFRenderer>
       <Link
         href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
         className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
@@ -142,8 +153,33 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
         </Link>
         <DeleteCustomMealPlan id={customPlan._id} />
       </>}
+      <AssignMealModal planId={customPlan._id} type="custom" />
     </div>
-    <AssignMealModal planId={customPlan._id} type="custom" />
+    <div className="flex items-center justify-between gap-4 mt-4">
+      <PDFRenderer pdfTemplate={pdfTemplateKey} data={pdfData || {}}>
+        <DialogTrigger
+          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={pdfDisabled}
+        >
+          <FileDown size={16} />
+          Plan PDF
+        </DialogTrigger>
+      </PDFRenderer>
+      <Select
+        value={selectedPdfVariant}
+        onValueChange={setSelectedPdfVariant}
+        disabled={pdfDisabled}
+      >
+        <SelectTrigger className="min-w-[200px]">
+          <SelectValue placeholder="Select PDF Layout" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="portrait">Portrait Overview</SelectItem>
+          <SelectItem value="landscape">Landscape Matrix</SelectItem>
+          <SelectItem value="compact">Compact Landscape</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
     <Image
       alt=""
       src={customPlan.image || "/not-found.png"}

@@ -5,6 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import PDFInvoice from "../pages/coach/meals/PDFInvoice";
 import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
 import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
+import PDFCustomMealPortrait from "../pages/coach/meals/PDFCustomMealPortrait";
+import PDFCustomMealLandscape from "../pages/coach/meals/PDFCustomMealLandscape";
+import PDFCustomMealCompactLandscape from "../pages/coach/meals/PDFCustomMealCompactLandscape";
 import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
@@ -18,7 +21,10 @@ const Templates = {
   PDFShareStatistics,
   PDFInvoice,
   PDFMealPlan,
-  PDFDailyMealSchedule
+  PDFDailyMealSchedule,
+  PDFCustomMealPortrait,
+  PDFCustomMealLandscape,
+  PDFCustomMealCompactLandscape
 }
 
 export default function PDFRenderer({ children, pdfTemplate, data }) {
