@@ -2,7 +2,7 @@ import { format, parse } from "date-fns";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
 
-const defaultMealTypes = [
+export const defaultMealTypes = [
   {
     mealType: "Breakfast",
     meals: []
@@ -326,7 +326,7 @@ export function customMealReducer(state, action) {
           ? sourceMealEntry.meals.map((meal) => ({ ...meal }))
           : [];
 
-        const targetPlan = updatedPlans[toPlan];
+        const targetPlan = updatedPlans[toPlan] || [];
         const targetIsArray = Array.isArray(targetPlan);
         const targetMealsArray = targetIsArray ? targetPlan : targetPlan?.meals || [];
 
@@ -346,8 +346,9 @@ export function customMealReducer(state, action) {
             ...targetPlan,
             meals: nextMealsArray,
           };
+        console.log(updatedPlans)
       });
-
+      // return state
       return {
         ...state,
         selectedPlans: updatedPlans,

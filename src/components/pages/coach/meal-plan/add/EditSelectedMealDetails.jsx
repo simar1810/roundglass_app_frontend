@@ -14,6 +14,35 @@ import { toast } from "sonner";
 import { format, parse } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const MEASURE_OPTIONS = [
+  { value: "cup", label: "Cup" },
+  { value: "tablespoon", label: "Tablespoon (tbsp)" },
+  { value: "teaspoon", label: "Teaspoon (tsp)" },
+  { value: "bowl", label: "Bowl (small/medium/large)" },
+  { value: "katori", label: "Katori (standard Indian bowl, ~150 ml)" },
+  { value: "glass", label: "Glass (small/medium/large)" },
+  { value: "plate", label: "Plate (small/full/half)" },
+  { value: "piece", label: "Piece" },
+  { value: "slice", label: "Slice" },
+  { value: "poha_serving", label: "Poha serving (1 medium bowl)" },
+  { value: "rice_serving", label: "Rice serving (1 medium bowl)" },
+  { value: "sabzi", label: "Sabzi (1 katori or ½ cup)" },
+  { value: "dal", label: "Dal (1 katori)" },
+  { value: "spoonful", label: "Spoonful (1 serving spoon, ~10 g)" },
+  { value: "handful", label: "Handful" },
+  { value: "pinch", label: "Pinch (spices, salt)" },
+  { value: "scoop", label: "Scoop" },
+  { value: "packet", label: "Packet" },
+  { value: "bottle", label: "Bottle" },
+  { value: "cup_240ml", label: "Cup (standard 240 ml)" },
+  { value: "gram", label: "Gram (g)" },
+  { value: "kilogram", label: "Kilogram (kg)" },
+  { value: "millilitre", label: "Millilitre (ml)" },
+  { value: "litre", label: "Litre (L)" },
+  { value: "small_medium_large", label: "Small / Medium / Large piece" },
+  { value: "serving", label: "Serving (customized portion)" },
+];
+
 export default function EditSelectedMealDetails({
   defaultOpen,
   children,
@@ -163,9 +192,12 @@ export default function EditSelectedMealDetails({
             <SelectTrigger className="min-w-[180px]">
               <SelectValue placeholder="Select measure" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="quantity">Quantity</SelectItem>
-              <SelectItem value="gram">Gram</SelectItem>
+            <SelectContent className="max-h-[300px] overflow-y-auto">
+              {MEASURE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </label>

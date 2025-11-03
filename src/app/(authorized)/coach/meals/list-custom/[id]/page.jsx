@@ -82,8 +82,9 @@ function MealPlanDetailsContainer({ id }) {
     />
   }
 
-  return <main className="content-container">
-    <div className="content-height-screen grid grid-cols-2 divide-x-1">
+  return <main>
+    <DisplayMealStats meals={customPlan} />
+    <div className="content-container content-height-screen mt-4 grid grid-cols-2 divide-x-1">
       <CustomMealMetaData
         customPlan={customPlan}
         selectedPlan={selectedPlan}
@@ -250,4 +251,56 @@ export function DeleteCustomMealPlan({ id }) {
       <Trash2 className="text-[var(--accent-2)]" />
     </AlertDialogTrigger>
   </DualOptionActionModal>
+}
+
+function DisplayMealStats({ meals: { plans = {} } = {} }) {
+  const allMeals = useMemo(() => {
+    const arr = []
+    for (const plan in plans) {
+      arr.push(plans[plan]?.meals || [])
+    }
+    return arr
+      .flat()
+      .map(meal => meal?.meals || [])
+      .flat()
+  }, [plans])
+
+  const totals = useMemo(() => {
+    return allMeals.reduce(
+      (acc, meal) => {
+        const caloriesVal =
+          typeof meal?.calories === "object"
+            ? meal?.calories?.total
+            : meal?.calories;
+        const proteinVal = meal?.protein ?? meal?.calories?.proteins;
+        const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
+        const fatsVal = meal?.fats ?? meal?.calories?.fats;
+
+        acc.calories += parseNum(caloriesVal);
+        acc.protein += parseNum(proteinVal);
+        acc.carbohydrates += parseNum(carbsVal);
+        acc.fats += parseNum(fatsVal);
+        return acc;
+      },
+      { calories: 0, protein: 0, carbohydrates: 0, fats: 0 }
+    );
+  }, [allMeals]);
+
+  return <div className="bg-white rounded-[10px]">
+    <div className="rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
+      <div>{totals.calories.toFixed(2)} Calories</div>
+      <div>{totals.protein.toFixed(2)} Protein</div>
+      <div>{totals.fats.toFixed(2)} Fats</div>
+      <div>{totals.carbohydrates.toFixed(2)} Carbs</div>
+    </div>
+  </div>
+}
+
+function parseNum(val) {
+  if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+  if (typeof val === "string") {
+    const n = parseFloat(val.replace(/,/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
 }

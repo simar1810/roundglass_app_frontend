@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -24,10 +24,11 @@ import {
   updateSlotSourceMeal,
   updateSlotSourcePlan,
 } from "@/providers/copy-meal-plan/reducer";
-import { replaceMealPlanSelections } from "@/config/state-reducers/custom-meal";
+import { defaultMealTypes, replaceMealPlanSelections } from "@/config/state-reducers/custom-meal";
+import { format, getDaysInMonth, parse } from "date-fns";
 
 export default function CopyMealPlanDays() {
-  const { selectedPlans, selectedPlan } = useCurrentStateContext();
+  const { selectedPlans, selectedPlan, mode } = useCurrentStateContext();
   const planKeys = Object.keys(selectedPlans ?? {});
   const safeSelectedPlan = selectedPlans?.[selectedPlan] ? selectedPlan : planKeys[0] ?? "";
 
@@ -119,7 +120,7 @@ function Container() {
         <Select
           value={sourcePlan || (planDays.length ? planDays[0] : undefined)}
           onValueChange={(value) => {
-            dispatch(setCopySourcePlan(value, selectedPlans?.[value] ?? []));
+            copyDispatch(setCopySourcePlan(value, selectedPlans?.[value] ?? []));
           }}
           disabled={!planDays.length}
         >
@@ -198,7 +199,10 @@ function Container() {
 }
 
 function CopyMealPlanSlot({ slot, dispatch }) {
-  const { selectedPlans } = useCurrentStateContext();
+  const { selectedPlans, mode, selectedPlan } = useCurrentStateContext();
+
+  const possibleModeDays = useMemo(() => possiblePlayDaysForCustomMeal(mode, selectedPlan), [mode])
+
   const planDays = Object.keys(selectedPlans ?? {});
   const planMeals = Array.isArray(selectedPlans?.[slot.sourcePlan])
     ? selectedPlans[slot.sourcePlan]
@@ -255,10 +259,9 @@ function CopyMealPlanSlot({ slot, dispatch }) {
   const handleRemoveSlot = () => {
     dispatch(removeCopySlot(slot.id));
   }
-
   return <div key={slot.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-start gap-4 bg-white px-4 py-3">
     <div className="grid gap-2">
-      <Select
+      {/* <Select
         value={slot.sourcePlan || undefined}
         onValueChange={handlePlanChange}
         disabled={!planDays.length}
@@ -276,7 +279,7 @@ function CopyMealPlanSlot({ slot, dispatch }) {
             </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+      </Select> */}
       <Select
         value={boundedMealIndex >= 0 ? String(boundedMealIndex) : undefined}
         onValueChange={handleMealChange}
@@ -329,16 +332,16 @@ function CopyMealPlanSlot({ slot, dispatch }) {
     <Select
       value={slot.toDate || undefined}
       onValueChange={(value) => dispatch(updateSlotDate(slot.id, value))}
-      disabled={!planDays.length}
+      disabled={!possibleModeDays.length}
     >
       <SelectTrigger className="w-full justify-between text-muted-foreground">
         <SelectValue placeholder="Nothing selected" />
       </SelectTrigger>
       <SelectContent>
-        {!planDays.length && (
+        {!possibleModeDays.length && (
           <SelectItem disabled value="__no-days">No days available</SelectItem>
         )}
-        {planDays.map((day) => (
+        {possibleModeDays.map((day) => (
           <SelectItem
             key={day}
             value={day}
@@ -354,9 +357,11 @@ function CopyMealPlanSlot({ slot, dispatch }) {
 }
 
 function SelectedSlotMealTypeOptions({ plan }) {
-  const { selectedPlans } = useCurrentStateContext();
-  const options = plan ? selectedPlans?.[plan] ?? [] : []
-  const uniqueMealTypes = Array.from(new Set(options.map((meal) => typeof meal === "string"
+  const { selectedPlans, selectedPlan } = useCurrentStateContext();
+  const options = plan
+    ? selectedPlans?.[plan] ?? selectedPlans?.[selectedPlan] ?? defaultMealTypes
+    : selectedPlans?.[selectedPlan] ?? defaultMealTypes
+  const uniqueMealTypes = Array.from(new Set(options?.map((meal) => typeof meal === "string"
     ? meal
     : meal?.mealType ?? meal?.fromMealType ?? ""
   ))).filter(Boolean)
@@ -373,4 +378,28 @@ function SelectedSlotMealTypeOptions({ plan }) {
       </SelectItem>
     ))}
   </SelectContent>
+}
+
+const possiblePlayDaysForCustomMeal = function (mode, ddMMyyyy) {
+  switch (mode) {
+    case "weekly":
+      return [
+        "mon", "tue", "wed",
+        "thu", "fri", "sat", "sun",
+      ]
+    case "monthly":
+      const date = parse(ddMMyyyy, "dd-MM-yyyy", new Date());
+      const daysInMonth = getDaysInMonth(date);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+
+      return Array.from({ length: daysInMonth }, (_, i) => {
+        const currentDate = new Date(year, month, i + 1);
+        return format(currentDate, 'dd-MM-yyyy');
+      });
+
+
+    default:
+      break;
+  }
 }
