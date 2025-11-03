@@ -42,10 +42,6 @@ export default function ClientStatisticsData({ clientData }) {
         const other = ["weightInKgs", "weightInPounds"].includes(name)
           ? { weight: formData[name] }
           : { [name]: formData[name] }
-        console.log({
-          ...clientStats?.at(selectedDate),
-          ...other
-        })
 
         const response = await sendData(
           `app/updateHealthMatrix?id=${matrixId}&clientId=${clientId}`,

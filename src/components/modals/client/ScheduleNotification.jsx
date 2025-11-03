@@ -1,6 +1,6 @@
 import { Textarea } from "@/components/ui/textarea";
 import { sendData } from "@/lib/api";
-import { format, parse } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
@@ -46,38 +46,44 @@ export default function ScheduleNotificationWrapper({
   />
 }
 
-function formatDate(date) {
-  if (!date) return ""
+export function formatDate(date) {
+  if (!date) return "";
   try {
-    const parsedDate = parse(date, "dd-MM-yyyy", new Date())
-    // Check if the parsed date is valid
-    if (isNaN(parsedDate.getTime())) {
-      return ""
+    const formats = ["dd-MM-yyyy", "yyyy-MM-dd"];
+    let parsedDate = null;
+    for (const fmt of formats) {
+      const attempt = parse(date, fmt, new Date());
+      if (isValid(attempt)) {
+        parsedDate = attempt;
+        break;
+      }
     }
-    return format(parsedDate, "yyyy-MM-dd")
+    if (!parsedDate) return "";
+    return format(parsedDate, "yyyy-MM-dd");
   } catch (error) {
-    return ""
+    return "";
   }
 }
 
+
 function formatTime(timeStr) {
   if (!timeStr) return "00:00:00"
-  
+
   try {
     // Handle TimePicker format (hh:mm a) - like "02:30 PM"
     if (timeStr.match(/^\d{1,2}:\d{2}\s+(AM|PM)$/i)) {
       const parsed = parse(timeStr, "hh:mm a", new Date())
       return format(parsed, "HH:mm:ss")
     }
-    
+
     // Handle 24-hour format (HH:mm) - like "14:30"
     if (timeStr.match(/^\d{2}:\d{2}$/)) {
       return `${timeStr}:00`
     }
-        if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
       return timeStr
     }
-    
+
     return "00:00:00"
   } catch (error) {
     return "00:00:00"
@@ -95,11 +101,11 @@ function ScheduleNotification({
   const [showHistory, setShowHistory] = useState(false);
   const subjectRef = useRef(null);
   const dropdownRef = useRef(null);
-  
-  const { 
-    addNotificationToCache, 
-    getCachedNotificationsByContext, 
-    getCachedNotificationsForClientByContext 
+
+  const {
+    addNotificationToCache,
+    getCachedNotificationsByContext,
+    getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
 
   const [payload, setPayload] = useState({
@@ -117,21 +123,21 @@ function ScheduleNotification({
   const clientId = selectedClients?.[0];
   const isClientNudgesContext = !!clientId;
   const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
-  
-  const cachedHistory = clientId 
+
+  const cachedHistory = clientId
     ? getCachedNotificationsForClientByContext(clientId, context)
     : getCachedNotificationsByContext(context);
   const { data: apiHistoryData } = useSWR(
     clientId ? `client/nudges/history/${clientId}` : null,
     () => retrieveClientNudges(clientId, { limit: 50 })
   );
-  
+
   const apiHistoryNudges = apiHistoryData?.data?.results || [];
   const allHistoryNudges = [...cachedHistory, ...apiHistoryNudges];
-  
+
   const uniqueHistoryNudges = allHistoryNudges
-    .filter((nudge, index, self) => 
-      index === self.findIndex(n => 
+    .filter((nudge, index, self) =>
+      index === self.findIndex(n =>
         n.subject === nudge.subject && n.message === nudge.message
       )
     )
@@ -143,8 +149,8 @@ function ScheduleNotification({
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-          subjectRef.current && !subjectRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+        subjectRef.current && !subjectRef.current.contains(event.target)) {
         setShowHistory(false);
       }
     }
@@ -170,21 +176,24 @@ function ScheduleNotification({
     const toastId = toast.loading("Please wait...")
     try {
       setLoading(true);
-      const formData = generatePayload(payload);
+      const formData = generatePayload(
+        payload,
+        defaultPayload._id,
+      );
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
-        defaultPayload._id ? "PUT" : "POST"
+        defaultPayload._id || defaultPayload.id ? "PUT" : "POST"
       );
       if (response.status_code !== 200) throw new Error(response.message);
-      
+
       if (!defaultPayload._id) {
         const clientNames = payload.clients.map(clientId => {
           const client = clients.find(c => c.value === clientId);
           return client ? client.name : `Client ${clientId}`;
         });
-
         addNotificationToCache({
+          _id: defaultPayload._id || response.data,
           subject: payload.subject,
           message: payload.message,
           notificationType: payload.notificationType,
@@ -195,7 +204,7 @@ function ScheduleNotification({
           clientNames: clientNames
         }, context);
       }
-      
+
       toast.success(response.message);
       location.reload()
     } catch (error) {
@@ -216,7 +225,7 @@ function ScheduleNotification({
     </DialogTrigger>
     <DialogContent className="!max-w-[450px] max-h-[65vh] border-0 p-0 overflow-auto">
       <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] ml-5">
-        {defaultPayload._id ? "Update Client Nudges" : "Add Client Nudges"}
+        {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
       <div className="px-4 pb-8">
         <div className="relative mb-4">
@@ -236,7 +245,7 @@ function ScheduleNotification({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--comp-1)]"
           />
           {showHistory && uniqueHistoryNudges.length > 0 && (
-            <div 
+            <div
               ref={dropdownRef}
               className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto"
             >
@@ -266,7 +275,7 @@ function ScheduleNotification({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2" style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -275,7 +284,7 @@ function ScheduleNotification({
                   }}>
                     {nudge.message}
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {nudge.time && (
@@ -291,14 +300,14 @@ function ScheduleNotification({
                         </div>
                       )}
                     </div>
-                    
+
                     {(nudge.clientNames && nudge.clientNames.length > 0) && (
                       <div className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-full">
                         {nudge.clientNames.length} client{nudge.clientNames.length > 1 ? 's' : ''}
                       </div>
                     )}
                   </div>
-                  
+
                   {nudge.clientNames && nudge.clientNames.length > 0 && (
                     <div className="mt-2 text-xs text-gray-600">
                       <span className="font-medium">Clients:</span> {nudge.clientNames.join(', ')}
@@ -309,7 +318,7 @@ function ScheduleNotification({
             </div>
           )}
         </div>
-        
+
         <div className="mb-4">
           <Label className="text-[14px] mb-2 block">Message</Label>
           <Textarea
@@ -342,7 +351,7 @@ function ScheduleNotification({
             </div>
           </RadioGroup>
         </div>
-        
+
         {(!selectedClients || selectedClients?.length <= 0) && (
           <div className="mb-4">
             <SelectMultiple
@@ -362,7 +371,7 @@ function ScheduleNotification({
             setSelectedTime={value => setPayload(prev => ({ ...prev, time: value }))}
           />
         </div>
-        
+
         {payload.notificationType === "schedule" && (
           <div className="mb-4">
             <FormControl
@@ -394,11 +403,12 @@ function ScheduleNotification({
   </Dialog>
 }
 
-function generatePayload(payload) {
+function generatePayload(payload, id) {
+  const isUpdate = Boolean(id)
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
-  
+
   if (payload.notificationType === "reocurr") {
     const result = {
       subject: payload.subject,
@@ -409,21 +419,21 @@ function generatePayload(payload) {
       reocurrence: payload.reocurrence,
       clients: payload.clients
     };
-    
+
     // Only add actionType and id if they have values
     if (payload.actionType) result.actionType = payload.actionType;
     if (payload.id) result.id = payload.id;
-    
+
     return result;
   } else if (payload.notificationType === "schedule") {
     if (!payload.date) throw new Error(`date is mandatory.`);
-    
+
     try {
       const parsedDate = parse(payload.date, "yyyy-MM-dd", new Date());
       if (isNaN(parsedDate.getTime())) {
         throw new Error("Invalid date format");
       }
-      
+
       const result = {
         subject: payload.subject,
         message: payload.message,
@@ -433,11 +443,16 @@ function generatePayload(payload) {
         time: formatTime(payload.time),
         clients: payload.clients
       };
-      
+
       // Only add actionType and id if they have values
       if (payload.actionType) result.actionType = payload.actionType;
       if (payload.id) result.id = payload.id;
-      
+
+      if (isUpdate) {
+        result.actionType = "UPDATE"
+        result.id = id
+      }
+
       return result;
     } catch (error) {
       throw new Error(`Invalid date format: ${payload.date}`);

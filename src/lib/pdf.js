@@ -1,4 +1,4 @@
-import { differenceInYears, format, parse } from "date-fns"
+import { differenceInYears, format, isValid, parse } from "date-fns"
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics"
 
 function calcAge(data) {
@@ -75,6 +75,162 @@ export function mealPlanDetailsPDFData(plan) {
     mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
     meals: []
   }
+}
+
+function formatCustomPlanLabel(planKey, mode, explicitLabel) {
+  if (explicitLabel) return explicitLabel;
+  if (!planKey) return "";
+
+  if (mode === "monthly") {
+    const parsedDate = parse(planKey, "dd-MM-yyyy", new Date());
+    if (isValid(parsedDate)) {
+      return format(parsedDate, "LLL dd, yyyy EEE");
+    }
+  }
+
+  if (mode === "weekly") {
+    return planKey.charAt(0).toUpperCase() + planKey.slice(1);
+  }
+
+  if (mode === "daily") {
+    return "Daily Schedule";
+  }
+
+  return planKey;
+}
+
+function normalizeMealEntries(planForDay) {
+  if (!planForDay) return [];
+  if (Array.isArray(planForDay)) return planForDay;
+  if (Array.isArray(planForDay.meals)) return planForDay.meals;
+  return [];
+}
+
+function buildMealItemsForPDF(mealEntry) {
+  if (!mealEntry) return [];
+  const dishes = Array.isArray(mealEntry.meals) ? mealEntry.meals : [];
+
+  return dishes.map((dish, index) => {
+    const title = dish?.dish_name || dish?.name || dish?.title || `Item ${index + 1}`;
+
+    const detailsParts = [];
+    if (dish?.measure) detailsParts.push(dish.measure);
+    if (dish?.quantity) detailsParts.push(dish.quantity);
+    if (dish?.description) detailsParts.push(dish.description);
+
+    const macroParts = [];
+    if (dish?.calories) macroParts.push(`${dish.calories} kcal`);
+    if (dish?.protein) macroParts.push(`Protein ${dish.protein}g`);
+    if (dish?.carbohydrates) macroParts.push(`Carbs ${dish.carbohydrates}g`);
+    if (dish?.fats) macroParts.push(`Fats ${dish.fats}g`);
+    if (macroParts.length) detailsParts.push(macroParts.join(", "));
+
+    return {
+      title,
+      details: detailsParts.filter(Boolean).join(" | ")
+    };
+  });
+}
+
+export function customMealDailyPDFData(customPlan, planKey, coach) {
+  if (!customPlan || typeof customPlan !== "object") return null;
+
+  const plansRecord = customPlan?.plans || {};
+  const planEntries = Object.entries(plansRecord);
+  if (planEntries.length === 0) return null;
+
+  const generalNotesList = normalizeNotes(customPlan?.notes);
+  const mealTypeOrder = [];
+  const planSummaries = [];
+
+  let selectedSummary = null;
+
+  planEntries.forEach(([planKeyEntry, planValue]) => {
+    const normalizedMeals = normalizeMealEntries(planValue);
+    const planMeta = Array.isArray(planValue) ? {} : planValue || {};
+
+    const planMeals = normalizedMeals.map((mealEntry, index) => {
+      const dishes = Array.isArray(mealEntry?.meals) ? mealEntry.meals : [];
+      const firstTimedDish = dishes.find(dish => dish?.meal_time);
+
+      const mealType = mealEntry?.mealType || mealEntry?.title || `Meal ${index + 1}`;
+      if (mealType && !mealTypeOrder.includes(mealType)) {
+        mealTypeOrder.push(mealType);
+      }
+
+      return {
+        mealType,
+        timeWindow: mealEntry?.time || mealEntry?.meal_time || firstTimedDish?.meal_time || "",
+        items: buildMealItemsForPDF(mealEntry),
+        dishes,
+      };
+    });
+
+    const explicitLabel = planMeta?.dateLabel || planMeta?.displayDate || planMeta?.title;
+    const dateLabel = formatCustomPlanLabel(planKeyEntry, customPlan.mode, explicitLabel);
+    const perPlanNotes = normalizeNotes(planMeta?.notes);
+
+    const summary = {
+      key: planKeyEntry,
+      label: dateLabel,
+      meals: planMeals,
+      notes: perPlanNotes,
+    };
+
+    planSummaries.push(summary);
+
+    if (planKey && planKeyEntry === planKey) {
+      selectedSummary = summary;
+    }
+  });
+
+  if (!planSummaries.length) return null;
+
+  if (!selectedSummary) {
+    selectedSummary = planSummaries[0];
+  }
+
+  const scheduleMeals = selectedSummary.meals.map((meal, index) => ({
+    name: meal.mealType || `Meal ${index + 1}`,
+    timeWindow: meal.timeWindow,
+    items: meal.items,
+  }));
+
+  const selectedNotes = [
+    ...selectedSummary.notes,
+    ...generalNotesList,
+  ].filter(Boolean);
+
+  const uniqueMealTypes = mealTypeOrder.length
+    ? mealTypeOrder
+    : selectedSummary.meals.map(meal => meal.mealType).filter(Boolean);
+
+  return {
+    title: customPlan?.title || "Custom Meal Plan",
+    coachName: coach?.name || "",
+    dateLabel: selectedSummary.label,
+    meals: scheduleMeals,
+    notes: selectedNotes.length > 0 ? selectedNotes : undefined,
+    mode: customPlan?.mode || "daily",
+    plans: planSummaries,
+    mealTypes: uniqueMealTypes,
+    selectedPlanKey: selectedSummary.key,
+    generalNotes: generalNotesList,
+  };
+}
+
+function normalizeNotes(notes) {
+  if (Array.isArray(notes)) {
+    return notes
+      .map(note => (typeof note === "string" ? note.trim() : ""))
+      .filter(Boolean);
+  }
+
+  if (typeof notes === "string" && notes.trim()) {
+    return [notes.trim()];
+  }
+
+  return [];
 }
 
 export function invoicePDFData(order, coach) {

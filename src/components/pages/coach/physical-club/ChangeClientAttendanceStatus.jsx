@@ -15,8 +15,6 @@ export default function ChangeClientAttendanceStatus({
 
   const clearAbsentStatus = async (clientId, date) => {
     try {
-      console.log("Clearing absent status:", { clientId, date });
-
       // Format the date properly for the API
       const formattedDate = typeof date === 'string' ? date : date.toISOString();
 
@@ -28,20 +26,14 @@ export default function ChangeClientAttendanceStatus({
         person: "coach"
       };
 
-      console.log("Clear absent request data:", requestData);
-
       const response = await sendData(
         "app/physical-club/attendance?person=coach",
         requestData,
         "PUT"
       );
 
-      console.log("Clear absent API response:", response);
-
       if (response.status_code !== 200) throw new Error(response.message);
-      console.log("Absent status cleared successfully");
     } catch (error) {
-      console.error("Clear absent status error:", error);
       // Don't show error toast for this, as it's a background operation
     }
   };
@@ -62,8 +54,6 @@ export default function ChangeClientAttendanceStatus({
         date,
         type: isFirstRecord ? undefined : "new" // First record doesn't need "new" type
       };
-
-      console.log("Changing attendance status:", requestData);
 
       const response = await sendData(
         "app/physical-club/attendance?person=coach",

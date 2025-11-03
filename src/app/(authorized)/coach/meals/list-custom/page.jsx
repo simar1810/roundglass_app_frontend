@@ -44,7 +44,6 @@ export default function Page() {
   const filteredMealPlans = ["daily", "weekly", "monthly"].includes(mode)
     ? data.data.filter((meal) => meal.mode === mode)
     : data.data;
-  console.log(filteredMealPlans)
   const handleNavigate = (planMode) => {
     if (localStorage.getItem("aiMealPlan")) {
       localStorage.removeItem('aiMealPlan')

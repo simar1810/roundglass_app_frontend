@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import SaveMealType from "./SaveMealType";
-import { DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Minus, Pen, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportRecipe, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
@@ -16,21 +16,21 @@ export default function SelectMeals() {
     selectedPlan
   } = useCurrentStateContext();
 
-const plan = selectedPlans[selectedPlan];
-const isArray = Array.isArray(plan);
+  const plan = selectedPlans[selectedPlan];
+  const isArray = Array.isArray(plan);
 
-const mealTypes = isArray
-  ? plan.map(m => m.mealType)
-  : plan?.meals?.map(m => m.mealType);
-const desiredOrder = ["breakfast", "lunch", "snack", "dinner"];
+  const mealTypes = isArray
+    ? plan.map(m => m.mealType)
+    : plan?.meals?.map(m => m.mealType);
+  const desiredOrder = ["breakfast", "lunch", "snack", "dinner"];
   const sortedMealTypes = mealTypes
     ? [...mealTypes].sort(
-        (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
-      )
+      (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
+    )
     : [];
-const selectedMealTypeRecipee = isArray
-  ? plan.find(m => m.mealType === selectedMealType)?.meals || []
-  : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];  
+  const selectedMealTypeRecipee = isArray
+    ? plan.find(m => m.mealType === selectedMealType)?.meals || []
+    : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];
   const errorMessage = !mealTypes ?
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
