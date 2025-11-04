@@ -34,7 +34,9 @@ export default function CopyMealPlanDays() {
 
   return <Dialog>
     <DialogTrigger asChild>
-      <Button>Copy Meal Plan</Button>
+      <Button
+        variant="wz"
+      >Copy Recipes</Button>
     </DialogTrigger>
     <DialogContent className="!max-w-4xl p-0 overflow-hidden max-h-[80vh] overflow-y-auto">
       <div className="border-b px-6 py-4">

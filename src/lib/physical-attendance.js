@@ -255,13 +255,13 @@ export function clientWiseHistory(data, range) {
 
 
 export function clubHistory(clients, { from, to } = {}) {
+  const daysPending = Math.abs(differenceInCalendarDays(from, to)) + 1;
   return clients.map((record, index) => {
     const { client, attendance, membership } = record;
 
     const filteredAttendance = attendance;
 
     const presentRecords = filteredAttendance.filter(a => a.status === "present");
-    const servingsTaken = presentRecords.length;
 
     const presentDays = new Set(
       presentRecords.map(a => {
@@ -290,9 +290,7 @@ export function clubHistory(clients, { from, to } = {}) {
             dayStatusMap.set(dayKey, record);
           }
         }
-      } catch (error) {
-        // Skip invalid dates
-      }
+      } catch (error) { }
     });
 
     const finalStatusMap = new Map();
@@ -303,20 +301,8 @@ export function clubHistory(clients, { from, to } = {}) {
     const correctedPresentDays = Array.from(finalStatusMap.values()).filter(status => status === "present").length;
     const correctedAbsentDays = Array.from(finalStatusMap.values()).filter(status => status === "absent").length;
 
-    const absentDays = new Set(
-      filteredAttendance
-        .filter(a => a.status === "absent")
-        .map(a => {
-          try {
-            return startOfDay(new Date(a.date)).getTime();
-          } catch (error) {
-            return null;
-          }
-        })
-        .filter(Boolean)
-    ).size;
-
     const totalConsidered = Math.abs(differenceInCalendarDays(from, to)) + 1;
+    const completionPercentage = parseInt(((membership?.pendingServings ?? 0) / daysPending) * 100);
     const showupPercentage =
       totalConsidered > 0
         ? ((presentDays / totalConsidered) * 100).toFixed(1)
@@ -347,6 +333,7 @@ export function clubHistory(clients, { from, to } = {}) {
       pendingServings: membership?.pendingServings || 0,
       membershipType: membership?.membershipType || "Monthly",
       endDate: membership?.endDate || new Date(),
+      completionPercentage
     };
   });
 }

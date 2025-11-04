@@ -13,7 +13,6 @@ export default function ChangeClientAttendanceStatus({
   status,
   date,
   servingNumber,
-  isFirstRecord = false
 }) {
   const clearAbsentStatus = async (clientId, date) => {
     try {
@@ -43,11 +42,6 @@ export default function ChangeClientAttendanceStatus({
   async function changeClientAttendanceStatus(setLoading, closeBtnRef) {
     try {
       setLoading(true);
-
-      if (isFirstRecord && status === "present") {
-        await clearAbsentStatus(clientId, date);
-      }
-
       const requestData = {
         clientId,
         status,

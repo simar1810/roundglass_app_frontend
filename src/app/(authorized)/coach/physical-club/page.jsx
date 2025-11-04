@@ -32,7 +32,7 @@ const tabItems = [
   {
     icon: <Bell className="w-[16px] h-[16px]" />,
     value: "shake-requests",
-    label: "Shake Requests",
+    label: "Serving Requests",
     badge: 15
   },
   {

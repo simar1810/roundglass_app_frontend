@@ -89,9 +89,12 @@ export default function UpcomingBirthdays({ birthdays }) {
   </div>
 }
 
+const ddMMyyyy = new RegExp('^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$')
+
 function getNextBirthdayDate(birthdays) {
   const today = new Date();
   return birthdays
+    .filter(client => ddMMyyyy.test(client.dob))
     .map(client => {
       const [day, month] = (client.dob || "")?.split("-") || [];
       const parsedDate = setMonth(
