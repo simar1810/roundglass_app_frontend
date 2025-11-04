@@ -62,14 +62,14 @@ export default function ClientStatisticsData({ clientData }) {
         toast.dismiss(toastId);
       }
     }
-    useEffect(function () {
-      ; (async function () {
-        if (data && !validStatistics(data.data)) {
-          await sendData("app/health-marices/recover", { clientId: clientData._id })
-          mutate()
-        }
-      })()
-    }, [isLoading])
+    // useEffect(function () {
+    //   ; (async function () {
+    //     if (data && !validStatistics(data.data)) {
+    //       await sendData("app/health-marices/recover", { clientId: clientData._id })
+    //       mutate()
+    //     }
+    //   })()
+    // }, [isLoading])
 
     if (isLoading) return <ContentLoader />
 
