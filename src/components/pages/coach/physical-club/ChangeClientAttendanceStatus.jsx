@@ -4,15 +4,17 @@ import { sendData } from "@/lib/api";
 import { _throwError } from "@/lib/formatter";
 import { toast } from "sonner";
 import { refreshAttendanceDataWithDelay, refreshClubHistoryData, refreshAttendanceData } from "@/lib/attendanceUtils";
+import { mutate } from "swr";
+import { format } from "date-fns";
 
 export default function ChangeClientAttendanceStatus({
   children,
-  date,
-  status,
   clientId,
+  status,
+  date,
+  servingNumber,
   isFirstRecord = false
 }) {
-
   const clearAbsentStatus = async (clientId, date) => {
     try {
       // Format the date properly for the API
@@ -42,17 +44,15 @@ export default function ChangeClientAttendanceStatus({
     try {
       setLoading(true);
 
-      // If marking present and it's the first record, clear any existing absent status first
       if (isFirstRecord && status === "present") {
         await clearAbsentStatus(clientId, date);
       }
 
-      // For first record, use regular creation. For additional records, use "new" type
       const requestData = {
-        status,
         clientId,
+        status,
         date,
-        type: isFirstRecord ? undefined : "new" // First record doesn't need "new" type
+        servingNumber,
       };
 
       const response = await sendData(
@@ -60,19 +60,9 @@ export default function ChangeClientAttendanceStatus({
         requestData,
         "PUT"
       );
-
       if (response.status_code !== 200) throw new Error(response.message);
-
-      if (status === "present") {
-        toast.success("New serving added successfully!");
-      } else if (status === "absent") {
-        toast.success("Attendance marked as absent");
-      } else if (status === "requested") {
-        toast.success("Attendance request submitted");
-      }
-
-      refreshClubHistoryData(clientId);
-
+      toast.success(response.message || "Successfully changed the attendance status");
+      mutate("app/physical-club/attendance");
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -82,11 +72,7 @@ export default function ChangeClientAttendanceStatus({
   }
 
   return <DualOptionActionModal
-    description={
-      status === "present"
-        ? "Are you sure you want to mark this serving as present? This will add a new serving for today."
-        : `Are you sure of changing the attendance? You are changing the status to ${status}!`
-    }
+    description={`You are changing the attendance status to ${status} for ${format(new Date(date), "dd-MM-yyyy")}.`}
     action={(setLoading, btnRef) => changeClientAttendanceStatus(setLoading, btnRef)}
   >
     <AlertDialogTrigger asChild>

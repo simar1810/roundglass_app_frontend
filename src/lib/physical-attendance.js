@@ -454,9 +454,16 @@ export function physicalClubReportsYearly(data, range) {
 
 export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
+  const clientSet = new Set();
   data.forEach(item => {
     const dateKey = format(item.date, "yyyy-MM-dd")
-
+    if (
+      item.status !== "present" &&
+      clientSet.has(`${item.clientId}-${dateKey}`)
+    ) {
+      return;
+    }
+    clientSet.add(`${item.clientId}-${dateKey}`);
     if (!badgeData[dateKey]) {
       badgeData[dateKey] = { present: 0, absent: 0, requested: 0 }
     }
@@ -475,21 +482,12 @@ export function dateWiseAttendanceSplit(data) {
         break
     }
   })
-
   const formattedData = {}
   Object.keys(badgeData).forEach(dateKey => {
     const badges = []
-
     if (badgeData[dateKey].present > 0) {
       badges.push({ value: String(badgeData[dateKey].present), color: "bg-green-500" })
     }
-    if (badgeData[dateKey].absent > 0) {
-      badges.push({ value: String(badgeData[dateKey].absent), color: "bg-red-500" })
-    }
-    if (badgeData[dateKey].requested > 0) {
-      badges.push({ value: String(badgeData[dateKey].requested), color: "bg-yellow-500" })
-    }
-
     formattedData[dateKey] = badges
   })
 
@@ -592,4 +590,54 @@ export function physicalAttendanceExcelDownload(
     default:
       break;
   }
+}
+
+export function manualAttendanceGroupClients(clients) {
+  let result = [] // {id: Number, clientId: mongo _id, history: []}
+  const clientSet = new Set();
+
+  for (const client of clients) {
+    if (clientSet.has(client.clientId)) {
+      result = result.map(item => item.clientId === client.clientId
+        ? ({
+          ...item,
+          history: [
+            ...item.history,
+            {
+              servingNumber: client.servingNumber,
+              markedAt: client.markedAt,
+              date: client.date,
+              status: client.status
+            }
+          ]
+        })
+        : item
+      )
+    }
+
+    else {
+      clientSet.add(client.clientId)
+      result = [
+        ...result,
+        {
+          name: client.name,
+          clientId: client.clientId,
+          profilePhoto: client.profilePhoto,
+          history: [
+            ...(client.status !==
+              "unmarked" ?
+              [{
+                servingNumber: client.servingNumber,
+                markedAt: client.markedAt,
+                date: client.date,
+                status: client.status
+              }]
+              : [])
+          ]
+        }
+      ]
+    }
+  }
+
+  return result
 }
