@@ -24,7 +24,7 @@ export default function UpcomingBirthdays({ birthdays }) {
   )
 
   return <div>
-    <h5>Upcoming BirthDays</h5>
+    <h5>Upcoming Birthdays</h5>
     <div className="w-full bg-[var(--comp-1)] rounded-xl border-1 my-4 overflow-clip">
       <Table>
         <TableHeader className="bg-white p-4 rounded-xl">
@@ -89,7 +89,7 @@ export default function UpcomingBirthdays({ birthdays }) {
   </div>
 }
 
-const ddMMyyyy = new RegExp('^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$')
+const ddMMyyyy = new RegExp(/^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/)
 
 function getNextBirthdayDate(birthdays) {
   const today = new Date();
@@ -97,9 +97,10 @@ function getNextBirthdayDate(birthdays) {
     .filter(client => ddMMyyyy.test(client.dob))
     .map(client => {
       const [day, month] = (client.dob || "")?.split("-") || [];
+      if (client.clientId === "pun393") console.log(day, month)
       const parsedDate = setMonth(
-        setDate(new Date(), day, { month }),
-        month
+        setDate(new Date(), day),
+        month - 1
       )
       const newDob = isBefore(parsedDate, today)
         ? addYears(parsedDate, 1)
