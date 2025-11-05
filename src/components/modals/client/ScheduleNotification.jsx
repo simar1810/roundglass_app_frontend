@@ -190,7 +190,7 @@ function ScheduleNotification({
         formData,
         defaultPayload._id || defaultPayload.id ? "PUT" : "POST"
       );
-      if (response.status_code !== 200) throw new Error(response.message);
+      if (response.status_code !== 200 && !response.errors.length) throw new Error(response.message);
       if (response.errors && response.errors.length) {
         for (const error of response.errors) {
           toast.error(error || "Something went wrong")
