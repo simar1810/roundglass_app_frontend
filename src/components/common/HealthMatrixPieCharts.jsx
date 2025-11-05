@@ -9,7 +9,7 @@ import {
   calculateSMPFinal,
   calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
-import { cn } from "@/lib/utils";
+import { cn, extractNumber } from "@/lib/utils";
 import Image from "next/image";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Pencil } from "lucide-react";
@@ -136,20 +136,20 @@ const weightDabba = {
 
 export default function HealthMetrics({ data, onUpdate }) {
   const payload = {
-    bmi: data.bmi || calculateBMIFinal(data),
-    muscle: data.muscle || calculateSMPFinal(data),
-    fat: data.fat || calculateBodyFatFinal(data),
-    rm: data.rm || calculateBMRFinal(data),
-    idealWeight: data.idealWeight || data.ideal_weight || calculateIdealWeightFinal(data),
-    bodyAge: data.bodyAge || calculateBodyAgeFinal(data),
-    visceral_fat: data.visceral_fat,
+    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
+    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
+    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
+    rm: extractNumber(data.rm) || calculateBMRFinal(data),
+    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
+    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
+    visceral_fat: extractNumber(data.visceral_fat),
     weightInKgs: updateWeightField() === "weightInKgs"
-      ? data.weightInKgs
+      ? extractNumber(data.weightInKgs)
       : undefined,
     weightInPounds: updateWeightField() === "weightInPounds"
-      ? data.weightInPounds
+      ? extractNumber(data.weightInPounds)
       : undefined,
-    sub_fat: data.sub_fat || calculateSubcutaneousFat(data)?.subcutaneousPercent
+    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
   };
 
   function updateWeightField() {

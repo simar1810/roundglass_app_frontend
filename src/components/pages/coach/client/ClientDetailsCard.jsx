@@ -49,6 +49,7 @@ import ClientUpdateCategories from "./ClientUpdateCategories";
 import { notesColors } from "@/config/data/other-tools";
 import { Badge } from "@/components/ui/badge";
 import ClientNudges from "./ClientNudges";
+import { extractNumber } from "@/lib/utils";
 
 export default function ClientDetailsCard({ clientData }) {
   return <div>
@@ -59,7 +60,7 @@ export default function ClientDetailsCard({ clientData }) {
 
 function findClientLatestWeight(matrices = []) {
   const lastIndex = findClientLatestWeight.length - 1;
-  return `${matrices?.at(lastIndex)?.weight} ${matrices?.at(lastIndex)?.weightUnit}`
+  return `${extractNumber(matrices?.at(lastIndex)?.weight)} ${matrices?.at(lastIndex)?.weightUnit}`
 }
 
 function ClientDetails({ clientData }) {
