@@ -16,6 +16,7 @@ import { useSWRConfig } from "swr";
 import { useRouter } from "next/navigation";
 import { _throwError, format24hr_12hr } from "@/lib/formatter";
 import { SquarePen } from "lucide-react";
+import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 
 export default function Stage2() {
 	const [loading, setLoading] = useState(false);
@@ -237,6 +238,7 @@ export default function Stage2() {
 	return (
 		<div>
 			<div className="flex flex-col gap-y-4">
+				<DisplayMealStats meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }} />
 				<div className="grid grid-cols-2 divide-x-2">
 					<CustomMealMetaData />
 					<div className="pl-8">
