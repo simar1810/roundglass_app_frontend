@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
-import useCurrentStateContext from "@/providers/CurrentStateContext";
-import SaveMealType from "./SaveMealType";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Minus, Move, Pen, PlusCircle } from "lucide-react";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { exportRecipe, reorderMealTypes, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { cn } from "@/lib/utils";
-import { exportRecipe, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
-import EditSelectedMealDetails from "./EditSelectedMealDetails";
-import { useEffect, useState } from "react";
-import { DndContext } from "@dnd-kit/core";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Minus, Move, Pen, PlusCircle } from "lucide-react";
+import { useState } from "react";
+import EditSelectedMealDetails from "./EditSelectedMealDetails";
+import SaveMealType from "./SaveMealType";
 
 export default function SelectMeals() {
   const {
@@ -19,18 +19,14 @@ export default function SelectMeals() {
     selectedPlan
   } = useCurrentStateContext();
 
+  const [activeId, setActiveId] = useState(null);
+
   const plan = selectedPlans[selectedPlan];
   const isArray = Array.isArray(plan);
 
   const mealTypes = isArray
     ? plan.map(m => m.mealType)
     : plan?.meals?.map(m => m.mealType);
-  const desiredOrder = ["breakfast", "lunch", "snack", "dinner"];
-  const sortedMealTypes = mealTypes
-    ? [...mealTypes].sort(
-      (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
-    )
-    : [];
   const selectedMealTypeRecipee = isArray
     ? plan.find(m => m.mealType === selectedMealType)?.meals || []
     : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];
@@ -38,22 +34,52 @@ export default function SelectMeals() {
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
 
-  function onSortMeals(...arg) { }
+  const currentMeals = isArray ? plan : plan?.meals || [];
+  const activeMeal = activeId ? currentMeals.find(m => m.mealType === activeId) : null;
+
+  function onSortMeals(event) {
+    const { active, over } = event;
+    setActiveId(null);
+    
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = currentMeals.findIndex(m => m.mealType === active.id);
+    const newIndex = currentMeals.findIndex(m => m.mealType === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      dispatch(reorderMealTypes(oldIndex, newIndex));
+    }
+  }
+
+  function handleDragStart(event) {
+    setActiveId(event.active.id);
+  }
 
   return <div>
-    <div className="pt-4 flex gap-4 overflow-x-auto pb-4">
-      {(!sortedMealTypes || sortedMealTypes?.length === 0) && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
+    <div className="pt-4 flex gap-4 overflow-x-auto pb-4 items-center">
+      {(!mealTypes || mealTypes?.length === 0) && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
       >
         {errorMessage}
       </div>}
-      <DndContext onDragEnd={onSortMeals}>
-        <SortableContext items={sortedMealTypes}>
-          {sortedMealTypes?.map((type, index) => <SortableMealType
-            key={index}
-            index={index}
-            type={type}
-          />)}
+      <DndContext 
+        collisionDetection={closestCenter} 
+        onDragStart={handleDragStart}
+        onDragEnd={onSortMeals}
+      >
+        <SortableContext items={mealTypes || []}>
+          {(isArray ? plan : plan?.meals || []).map((mealEntry, index) => (
+            <SortableMealType
+              key={mealEntry.mealType}
+              index={index}
+              type={mealEntry.mealType}
+            />
+          ))}
         </SortableContext>
+        <DragOverlay>
+          {activeId && activeMeal ? (
+            <MealTypeButton type={activeMeal.mealType} isSelected={activeMeal.mealType === selectedMealType} />
+          ) : null}
+        </DragOverlay>
       </DndContext>
       <SaveMealType type="new" />
     </div>
@@ -88,40 +114,71 @@ function SortableMealType({ type, index }) {
 
   const { dispatch, selectedMealType } = useCurrentStateContext()
 
+  const isSelected = type === selectedMealType;
+
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    cursor: isDragging ? "grabbing" : "grab",
+    transition: isDragging ? "none" : (transition || "transform 200ms ease"),
+    opacity: isDragging ? 0.4 : 1,
   };
 
   return (
-    <div className="relative">
-      <div style={style}>
-        <div className="relative">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative"
+    >
+      <div className="relative">
+        <Button
+          variant={isSelected ? "wz" : "outline"}
+          onClick={() => dispatch(selectMealPlanType(type))}
+          className="pr-6 pl-8 font-bold whitespace-nowrap"
+          disabled={isDragging}
+        >
+          {type}
+        </Button>
+        <div
+          {...attributes}
+          {...listeners}
+          className={cn(
+            "absolute left-[6px] top-1/2 translate-y-[-50%] flex items-center justify-center w-5 h-5 rounded cursor-grab active:cursor-grabbing",
+            "hover:bg-black/10 dark:hover:bg-white/10",
+            "transition-colors duration-150",
+            "touch-none select-none z-10"
+          )}
+          title="Drag to reorder"
+        >
           <Move
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
-            className="w-[14px] h-[14px] absolute translate-y-[-50%] translate-x-[50%] top-0 right-0 cursor-pointer"
+            className={cn(
+              "w-3.5 h-3.5",
+              isSelected ? "text-white/70" : "text-[var(--accent-1)]/70"
+            )}
+            strokeWidth={2}
           />
-          <Button
-            variant={type === selectedMealType ? "wz" : "outline"}
-            onClick={() => dispatch(selectMealPlanType(type))}
-            className="pr-6 font-bold"
-          >
-            {type}
-          </Button>
-          <SaveMealType
-            type="edit"
-            index={index}
-            defaulValue={type}
-          >
-            <DialogTrigger className="absolute top-1/2 translate-y-[-50%] right-[6px] cursor-pointer" asChild>
-              <Pen className={cn("w-[14px] h-[14px]", type === selectedMealType ? "text-white" : "text-[var(--accent-1)]")} />
-            </DialogTrigger>
-          </SaveMealType>
         </div>
+        <SaveMealType
+          type="edit"
+          index={index}
+          defaulValue={type}
+        >
+          <DialogTrigger className="absolute top-1/2 translate-y-[-50%] right-[6px] cursor-pointer z-10" asChild>
+            <Pen className={cn("w-[14px] h-[14px]", isSelected ? "text-white" : "text-[var(--accent-1)]")} />
+          </DialogTrigger>
+        </SaveMealType>
       </div>
+    </div>
+  );
+}
+
+function MealTypeButton({ type, isSelected }) {
+  return (
+    <div className="relative">
+      <Button
+        variant={isSelected ? "wz" : "outline"}
+        className="pr-6 pl-8 font-bold whitespace-nowrap shadow-xl opacity-95"
+      >
+        {type}
+      </Button>
     </div>
   );
 }
