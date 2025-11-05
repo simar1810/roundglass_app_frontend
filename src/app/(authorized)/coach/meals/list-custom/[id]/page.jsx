@@ -289,11 +289,11 @@ export function DeleteCustomMealPlan({ id }) {
   </DualOptionActionModal>
 }
 
-function DisplayMealStats({ meals: { plans = {} } = {} }) {
+export function DisplayMealStats({ meals: { plans = {} } = {} }) {
   const allMeals = useMemo(() => {
     const arr = []
     for (const plan in plans) {
-      arr.push(plans[plan]?.meals || [])
+      arr.push(plans[plan]?.meals || plans[plan] || [])
     }
     return arr
       .flat()

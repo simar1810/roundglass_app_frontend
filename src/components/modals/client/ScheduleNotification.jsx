@@ -191,7 +191,11 @@ function ScheduleNotification({
         defaultPayload._id || defaultPayload.id ? "PUT" : "POST"
       );
       if (response.status_code !== 200) throw new Error(response.message);
-
+      if (response.errors && response.errors.length) {
+        for (const error of response.errors) {
+          toast.error(error || "Something went wrong")
+        }
+      }
       toast.success(response.message);
       mutate(`client/nudges/${currentClientId}`)
       closeRef.current.click()
