@@ -109,11 +109,10 @@ export default function ClientNudges() {
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error.message || data.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
 
   const apiNotifications = data?.data?.results || []
   const allNotifications = [...cachedNotifications, ...apiNotifications]
-
   const notifications = allNotifications
     .filter((notification, index, self) =>
       index === self.findIndex(n =>
@@ -355,6 +354,7 @@ export function NotificationItem({ item = {} }) {
 
 function DeleteClientNotification({ id }) {
   const { removeNotificationFromCache } = useNotificationSchedulerCache()
+  const { id: currentClientId } = useParams();
 
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
@@ -366,7 +366,7 @@ function DeleteClientNotification({ id }) {
 
       toast.success(response.message);
       closeBtnRef.current.click();
-      location.reload();
+      mutate(`client/nudges/${currentClientId}`)
     } catch (error) {
       toast.error(error.message);
     } finally {
