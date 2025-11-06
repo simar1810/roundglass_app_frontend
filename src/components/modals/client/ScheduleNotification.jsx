@@ -188,19 +188,27 @@ function ScheduleNotification({
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
-        defaultPayload._id || defaultPayload.id ? "PUT" : "POST"
+        defaultPayload._id ? "PUT" : "POST"
       );
-      if (response.status_code !== 200 && !response.errors.length) throw new Error(response.message);
+
+      if (response.status_code === 200 && !response.errors?.length) {
+        toast.success(response.message)
+        closeRef.current.click()
+        mutate(`client/nudges/${currentClientId}`)
+        return
+      }
+
+      if (response.status_code !== 200) {
+        _throwError(response.message)
+      }
+
       if (response.errors && response.errors.length) {
         for (const error of response.errors) {
           toast.error(error || "Something went wrong")
         }
       }
-      toast.success(response.message);
-      mutate(`client/nudges/${currentClientId}`)
-      closeRef.current.click()
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong!");
       toast.dismiss(toastId);
     } finally {
       setLoading(false);
