@@ -8,15 +8,26 @@ import { Dialog } from "@radix-ui/react-dialog";
 import { DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useRef, useState } from "react";
-import { format, parse } from "date-fns";
+import { format, isBefore, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import CopyMealPlanDays from "./CopyMealPlanDays";
 
 export default function MonthlyMealCreation() {
   const { dispatch, selectedPlans, selectedPlan } = useCurrentStateContext();
 
-  const days = Object.keys(selectedPlans);
-
+  const days = Object
+    .keys(selectedPlans)
+    .sort((dateA, dateB) => {
+      console.log(isBefore(
+        parse(dateA, "dd-MM-yyyy", new Date()),
+        parse(dateB, "dd-MM-yyyy", new Date()),
+      ))
+      return isBefore(
+        parse(dateA, "dd-MM-yyyy", new Date()),
+        parse(dateB, "dd-MM-yyyy", new Date()),
+      ) ? -1 : 1
+    });
+  console.log(days)
   return <>
     <div className="flex items-center justify-between gap-4">
       <h3 className="mt-4 mr-auto">Days</h3>
