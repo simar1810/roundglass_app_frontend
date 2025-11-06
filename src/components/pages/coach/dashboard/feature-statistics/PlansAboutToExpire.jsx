@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 
 export default function PlansAboutToExpire({ plans = [] }) {
-  console.log(plans)
   const [pagination, setPagination] = useState({
     max: Math.ceil(plans.length / 10),
     current: 1,
@@ -77,7 +76,7 @@ function sortPlans(plans) {
       const endDate = Object
         ?.keys(plan?.plans || {})
         ?.map(plan => parse(plan, 'dd-MM-yyyy', new Date()))
-        ?.sort((a, b) => isBefore(b, a) ? 1 : -1)
+        ?.sort((a, b) => isBefore(b, a) ? -1 : 1)
         ?.at(0)
       plan.endDate = endDate
       return plan

@@ -9,6 +9,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ddMMyyyy } from "@/config/data/regex";
 
 export default function UpcomingBirthdays({ birthdays }) {
   const [pagination, setpagination] = useState({
@@ -24,7 +25,7 @@ export default function UpcomingBirthdays({ birthdays }) {
   )
 
   return <div>
-    <h5>Upcoming BirthDays</h5>
+    <h5>Upcoming Birthdays</h5>
     <div className="w-full bg-[var(--comp-1)] rounded-xl border-1 my-4 overflow-clip">
       <Table>
         <TableHeader className="bg-white p-4 rounded-xl">
@@ -89,7 +90,7 @@ export default function UpcomingBirthdays({ birthdays }) {
   </div>
 }
 
-const ddMMyyyy = new RegExp('^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$')
+
 
 function getNextBirthdayDate(birthdays) {
   const today = new Date();
@@ -98,8 +99,8 @@ function getNextBirthdayDate(birthdays) {
     .map(client => {
       const [day, month] = (client.dob || "")?.split("-") || [];
       const parsedDate = setMonth(
-        setDate(new Date(), day, { month }),
-        month
+        setDate(new Date(), day),
+        month - 1
       )
       const newDob = isBefore(parsedDate, today)
         ? addYears(parsedDate, 1)

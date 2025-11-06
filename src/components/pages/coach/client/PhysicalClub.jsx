@@ -83,13 +83,24 @@ function MembershipData() {
 
   return (
     <div>
-      <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
-        <p>Service Status</p>
-        <div>
-          <UpdatePhysicalServiceStatus
-            status={Boolean(membership.isActive)}
-            clientId={clientId}
-          />
+      <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px]">
+        <div className="flex items-center justify-between">
+          <p>Service Status</p>
+          <div>
+            <UpdatePhysicalServiceStatus
+              status={Boolean(membership.isActive)}
+              clientId={clientId}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p>Auto Mark Attendance</p>
+          <div>
+            <AutoMarkAttendance
+              status={Boolean(membership.autoMarkRequested)}
+              clientId={clientId}
+            />
+          </div>
         </div>
       </div>
       <div
@@ -497,6 +508,39 @@ function UpdatePhysicalServiceStatus({
   }
   return <DualOptionActionModal
     description="Are you sure to update physical service status?"
+    action={updatePhysicalServiceStatus}
+  >
+    <AlertDialogTrigger asChild>
+      <div className="flex items-center space-x-2">
+        <Switch checked={status} id="active-status" />
+        <Label htmlFor="active-status">Active</Label>
+      </div>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function AutoMarkAttendance({ clientId, status }) {
+  async function updatePhysicalServiceStatus(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/physical-club/attendance",
+        { clientId, status: !status },
+        "PATCH"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/physical-club/memberships/${clientId}`);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      closeBtnRef.current.click();
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure? Requested Attendance will be auto marked as present!"
     action={updatePhysicalServiceStatus}
   >
     <AlertDialogTrigger asChild>

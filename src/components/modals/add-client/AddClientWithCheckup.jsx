@@ -31,7 +31,8 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
             setInitialState(prev => ({
               ...prev,
               mobileNumber: response.data.mobileNumber,
-              clientId: response.data.clientId
+              clientId: response.data.clientId,
+              dob: response.data.dob
             }))
             setDataGenerated(true);
           } catch (error) {

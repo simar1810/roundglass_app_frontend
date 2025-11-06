@@ -1,3 +1,5 @@
+import { extractNumber } from "../utils";
+
 export function calculateBMI({ height, heightUnit, weight, weightUnit }) {
   let heightInMeters;
   // if (height == null) throw new Error("Height in cms is required.");
@@ -98,9 +100,9 @@ export function generateWeightStandard({
 }) {
   try {
     if (["kg", "kgs"].includes(weightUnit?.toLowerCase())) {
-      return Number(weightInKgs) || Number(weight)
+      return extractNumber(weightInKgs) || extractNumber(weight)
     } else if (["pounds", "pound"].includes(weightUnit?.toLowerCase())) {
-      return (Number(weightInPounds) * 0.453592).toFixed(2) || Number(weight)
+      return (extractNumber(weightInPounds) * 0.453592).toFixed(2) || extractNumber(weight)
     } else {
       throw new Error("Please provide correct height unit");
     }

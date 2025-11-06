@@ -18,7 +18,7 @@ export async function fetchData(endpoint, expireUserSession) {
     });
 
     if (response.status === 502) {
-      redirect("/502");
+      redirect("/maintenance");
     }
 
     const data = await response.json();
@@ -65,7 +65,7 @@ export async function sendData(
     });
 
     if (response.status === 502) {
-      redirect("/502");
+      redirect("/maintenance");
     }
 
     const retrievedData = await response.json();
@@ -108,7 +108,7 @@ export async function sendDataWithFormData(
     });
 
     if (response.status === 502) {
-      redirect("/502");
+      redirect("/maintenance");
     }
 
     const retrievedData = await response.json();

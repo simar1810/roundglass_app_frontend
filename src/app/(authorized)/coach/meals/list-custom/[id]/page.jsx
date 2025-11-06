@@ -84,7 +84,7 @@ function MealPlanDetailsContainer({ id }) {
   }
 
   return <main>
-    <DisplayMealStats meals={customPlan} />
+    <DisplayMealStats meals={{ plans: { [selectedPlan]: customPlan.plans[selectedPlan] } }} />
     <div className="content-container content-height-screen mt-4 grid grid-cols-2 divide-x-1">
       <CustomMealMetaData
         customPlan={customPlan}
@@ -289,11 +289,11 @@ export function DeleteCustomMealPlan({ id }) {
   </DualOptionActionModal>
 }
 
-function DisplayMealStats({ meals: { plans = {} } = {} }) {
+export function DisplayMealStats({ meals: { plans = {} } = {} }) {
   const allMeals = useMemo(() => {
     const arr = []
     for (const plan in plans) {
-      arr.push(plans[plan]?.meals || [])
+      arr.push(plans[plan]?.meals || plans[plan] || [])
     }
     return arr
       .flat()

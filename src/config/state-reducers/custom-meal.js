@@ -404,6 +404,30 @@ export function customMealReducer(state, action) {
         isAiGenerated: true,
       };
     }
+    case "REORDER_MEAL_TYPES": {
+      const { oldIndex, newIndex } = action.payload;
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      if (oldIndex === newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= currentMeals.length || newIndex >= currentMeals.length) {
+        return state;
+      }
+
+      const reorderedMeals = [...currentMeals];
+      const [movedMeal] = reorderedMeals.splice(oldIndex, 1);
+      reorderedMeals.splice(newIndex, 0, movedMeal);
+
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: isArray
+            ? reorderedMeals
+            : { ...currentPlan, meals: reorderedMeals },
+        },
+      };
+    }
     default:
       return state;
   }
@@ -588,5 +612,15 @@ export function deleteMonthlyDate(payload) {
   return {
     type: "DELETE_MONTHLY_DATE",
     payload
+  }
+}
+
+export function reorderMealTypes(oldIndex, newIndex) {
+  return {
+    type: "REORDER_MEAL_TYPES",
+    payload: {
+      oldIndex,
+      newIndex
+    }
   }
 }

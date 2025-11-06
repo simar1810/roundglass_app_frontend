@@ -35,6 +35,7 @@ import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
 import { _throwError } from "@/lib/formatter";
+import { extractNumber } from "@/lib/utils";
 
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
@@ -77,7 +78,7 @@ function Stage1({ clientData }) {
 
   const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix
     .at(clientData?.healthMatrix?.healthMatrix.length - 1);
-  const latestOldWeight = `${latesthealthMatrix?.weight} ${latesthealthMatrix?.weightUnit}`
+  const latestOldWeight = `${extractNumber(latesthealthMatrix?.weight)} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
     <FormControl

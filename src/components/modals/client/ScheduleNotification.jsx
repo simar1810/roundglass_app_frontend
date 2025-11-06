@@ -5,18 +5,20 @@ import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { retrieveCoachClientList, retrieveClientNudges } from "@/lib/fetchers/app";
 import Loader from "@/components/common/Loader";
 import TimePicker from "@/components/common/TimePicker";
 import { CircleMinus, CirclePlus, Clock, Calendar } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
+import { _throwError } from "@/lib/formatter";
+import { useParams } from "next/navigation";
 
 export default function ScheduleNotificationWrapper({
   children,
@@ -102,8 +104,9 @@ function ScheduleNotification({
   const subjectRef = useRef(null);
   const dropdownRef = useRef(null);
 
+  const { id: currentClientId } = useParams()
+
   const {
-    addNotificationToCache,
     getCachedNotificationsByContext,
     getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
@@ -123,6 +126,8 @@ function ScheduleNotification({
   const clientId = selectedClients?.[0];
   const isClientNudgesContext = !!clientId;
   const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
+
+  const closeRef = useRef()
 
   const cachedHistory = clientId
     ? getCachedNotificationsForClientByContext(clientId, context)
@@ -183,32 +188,27 @@ function ScheduleNotification({
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
-        defaultPayload._id || defaultPayload.id ? "PUT" : "POST"
+        defaultPayload._id ? "PUT" : "POST"
       );
-      if (response.status_code !== 200) throw new Error(response.message);
 
-      if (!defaultPayload._id) {
-        const clientNames = payload.clients.map(clientId => {
-          const client = clients.find(c => c.value === clientId);
-          return client ? client.name : `Client ${clientId}`;
-        });
-        addNotificationToCache({
-          _id: defaultPayload._id || response.data,
-          subject: payload.subject,
-          message: payload.message,
-          notificationType: payload.notificationType,
-          time: payload.time,
-          date: payload.date,
-          reocurrence: payload.reocurrence,
-          clients: payload.clients,
-          clientNames: clientNames
-        }, context);
+      if (response.status_code === 200 && !response.errors?.length) {
+        toast.success(response.message)
+        closeRef.current.click()
+        mutate(`client/nudges/${currentClientId}`)
+        return
       }
 
-      toast.success(response.message);
-      location.reload()
+      if (response.status_code !== 200) {
+        _throwError(response.message)
+      }
+
+      if (response.errors && response.errors.length) {
+        for (const error of response.errors) {
+          toast.error(error || "Something went wrong")
+        }
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong!");
       toast.dismiss(toastId);
     } finally {
       setLoading(false);
@@ -223,8 +223,9 @@ function ScheduleNotification({
         {children}
       </span>
     </DialogTrigger>
-    <DialogContent className="!max-w-[450px] max-h-[65vh] border-0 p-0 overflow-auto">
-      <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] ml-5">
+    <DialogContent className="!max-w-[500px] max-h-[65vh] border-0 p-0 gap-0 overflow-auto">
+      <DialogClose ref={closeRef} />
+      <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] p-4">
         {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
       <div className="px-4 pb-8">
