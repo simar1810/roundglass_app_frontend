@@ -21,7 +21,14 @@ import { endOfDay, endOfMonth, getMonth, getYear, startOfDay, startOfMonth } fro
 import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink, CalendarRange } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { sendData } from "@/lib/api";
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
+import { updateCoachField } from "@/providers/global/slices/coach";
 
 const tabItems = [
   {
@@ -114,6 +121,7 @@ export default function Page() {
     <div className="mb-8 flex items-center justify-between">
       <h4>Attendance Management System</h4>
       <QRCodeModal />
+      <AutoMarkAttendance />
     </div>
 
     <Tabs value={tab} onValueChange={setTab}>
@@ -234,4 +242,41 @@ function SelectDateRange({
       </div>
     </SheetContent>
   </Sheet>
+}
+
+
+function AutoMarkAttendance() {
+  const { physicalAttendanceAutoMark: status } = useAppSelector(state => state.coach.data)
+  const dispatch = useAppDispatch()
+
+  async function updatePhysicalServiceStatus(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/physical-club/attendance/coach",
+        { status: !status },
+        "POST"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      dispatch(updateCoachField({ "physicalAttendanceAutoMark": !status }))
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      closeBtnRef.current.click();
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure? Requested Attendance will be auto marked as present!"
+    action={updatePhysicalServiceStatus}
+  >
+    <AlertDialogTrigger asChild>
+      <div className="flex items-center space-x-2">
+        <Switch checked={status} id="active-status" />
+        <Label htmlFor="active-status">Active</Label>
+      </div>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }
