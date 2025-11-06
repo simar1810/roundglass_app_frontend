@@ -1,24 +1,70 @@
-import { Textarea } from "@/components/ui/textarea";
-import { sendData } from "@/lib/api";
-import { format, isValid, parse } from "date-fns";
-import FormControl from "@/components/FormControl";
-import SelectControl from "@/components/Select";
-import SelectMultiple from "@/components/SelectMultiple";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { RadioGroup } from "@/components/ui/radio-group";
-import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
-import { retrieveCoachClientList, retrieveClientNudges } from "@/lib/fetchers/app";
 import Loader from "@/components/common/Loader";
 import TimePicker from "@/components/common/TimePicker";
-import { CircleMinus, CirclePlus, Clock, Calendar } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import FormControl from "@/components/FormControl";
+import SelectMultiple from "@/components/SelectMultiple";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
+import { sendData } from "@/lib/api";
+import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
+import { format, isValid, parse } from "date-fns";
+import { Calendar, CircleMinus, CirclePlus, Clock } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
+
+// Helper function to convert 24-hour time format to 12-hour format for TimePicker
+function convertTimeTo12Hour(timeStr) {
+  if (!timeStr) return "";
+  
+  try {
+    const trimmed = timeStr.trim();
+    
+    // Already in 12-hour format (e.g., "08:00 PM" or "8:00 am")
+    if (/[ap]m$/i.test(trimmed)) {
+      // Normalize the format to ensure it's in "hh:mm a" format
+      try {
+        const parsed = parse(trimmed, "hh:mm a", new Date());
+        return format(parsed, "hh:mm a");
+      } catch {
+        return trimmed;
+      }
+    }
+    
+    // Handle 24-hour format with or without seconds (e.g., "21:37:00" or "21:37")
+    // Extract just hours and minutes
+    const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (timeMatch) {
+      const hours = parseInt(timeMatch[1], 10);
+      const minutes = parseInt(timeMatch[2], 10);
+      
+      // Validate hours and minutes
+      if (isNaN(hours) || hours < 0 || hours > 23) {
+        return "";
+      }
+      if (isNaN(minutes) || minutes < 0 || minutes > 59) {
+        return "";
+      }
+      
+      // Create a date object to use date-fns formatting
+      // Use a fixed date to avoid timezone issues
+      const date = new Date(2000, 0, 1, hours, minutes, 0);
+      
+      return format(date, "hh:mm a");
+    }
+    
+    return "";
+  } catch (error) {
+    console.error("Error converting time:", error, timeStr);
+    return "";
+  }
+}
 
 export default function ScheduleNotificationWrapper({
   children,
@@ -115,7 +161,7 @@ function ScheduleNotification({
     subject: defaultPayload.subject || "",
     message: defaultPayload.message || "",
     notificationType: defaultPayload.schedule_type || "schedule",
-    time: defaultPayload.time || "",
+    time: convertTimeTo12Hour(defaultPayload.time || ""),
     date: formatDate(defaultPayload.date),
     reocurrence: defaultPayload.reocurrence || [],
     clients: selectedClients || defaultPayload.clients || [],
@@ -169,7 +215,7 @@ function ScheduleNotification({
       subject: nudge.subject || "",
       message: nudge.message || "",
       notificationType: nudge.schedule_type || nudge.notificationType || "schedule",
-      time: nudge.time ? nudge.time.substring(0, 5) : "",
+      time: convertTimeTo12Hour(nudge.time || ""),
       date: nudge.date ? formatDate(nudge.date) : "",
       reocurrence: nudge.reocurrence || [],
       clients: nudge.clients || []
