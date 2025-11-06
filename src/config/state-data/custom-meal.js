@@ -9,6 +9,7 @@ export const customMealInitialState = {
   selectedPlan: "daily",
   selectedMealType: "Breakfast",
   plans: {},
+  noOfDays: 0,
   selectedPlans: {
     daily: [
       {
