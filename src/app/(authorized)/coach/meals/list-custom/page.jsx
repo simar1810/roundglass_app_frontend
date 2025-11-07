@@ -153,7 +153,7 @@ export default function Page() {
                   "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
                 )}
               >
-                {meal.admin ? "Admin" : "Manual"}
+              {meal.admin ? "Admin Generated" : (meal.aiGenerated ? "AI Generated" : "Manual")}
               </Badge>
               {!meal.admin && (
                 <button
