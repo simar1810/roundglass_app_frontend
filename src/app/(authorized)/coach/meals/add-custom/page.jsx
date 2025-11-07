@@ -53,7 +53,8 @@ function CustomWorkoutContainer() {
           thumbnail: mealPlan.image,
           title: mealPlan.title,
           description: mealPlan.description,
-          id: mealPlan._id
+          id: mealPlan._id,
+          noOfDays: mealPlan.noOfDays,
         }))
       } else if (["daily", "weekly", "monthly"].includes(mode)) {
         dispatch(selectWorkoutType(mode))

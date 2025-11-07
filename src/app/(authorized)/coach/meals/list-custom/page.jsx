@@ -52,135 +52,137 @@ export default function Page() {
     setShowDropdown(false);
   };
   const handleDeleteMeal = async (id) => {
-  try {
-    setLoading(true);
-    const response = await sendData(`app/meal-plan/custom?id=${id}`, {}, "DELETE");
-    if (response.status_code !== 200) throw new Error(response.message);
-    toast.success("Meal deleted successfully!");
-    await mutate("custom-meal-plans");
-  } catch (error) {
-    toast.error(error.message || "Something went wrong!");
-  } finally {
-    setLoading(false);
-  }};
+    try {
+      setLoading(true);
+      const response = await sendData(`app/meal-plan/custom?id=${id}`, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success("Meal deleted successfully!");
+      await mutate("custom-meal-plans");
+    } catch (error) {
+      toast.error(error.message || "Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-   <main className="content-container flex flex-col">
-    <div>
-      <div className="flex items-center justify-between py-3 border-b border-gray-200 relative">
-        <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={() => router.push("/coach/meals/ai")}
-            className="px-3 py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-xs"
-          >
-            <PiSparkleFill size={14} className="text-white" />
-            Create AI Meal Plan
-          </button>
-          <div className="relative" ref={dropdownRef}>
+    <main className="content-container flex flex-col">
+      <div>
+        <div className="flex items-center justify-between py-3 border-b border-gray-200 relative">
+          <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
+          <div className="flex gap-3 items-center">
             <button
-              onClick={() => setShowDropdown((prev) => !prev)}
+              onClick={() => router.push("/coach/meals/ai")}
               className="px-3 py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-xs"
             >
-              <IoMdAddCircle size={14} className="text-white" />
-              Create Manual Plan
-              <IoIosArrowDropdown
-                size={16}
-                className={cn(
-                  "text-white ml-1 transition-transform",
-                  showDropdown ? "rotate-180" : ""
-                )}
-              />
+              <PiSparkleFill size={14} className="text-white" />
+              Create AI Meal Plan
             </button>
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg border border-gray-200 rounded-md z-20">
-                {["daily", "weekly", "monthly"].map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => handleNavigate(item)}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
-                  >
-                    {item.charAt(0).toUpperCase() + item.slice(1)} Plan
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-6 mt-5 border-b border-gray-200">
-        {["daily", "weekly", "monthly"].map((tab) => (
-          <Link
-            key={tab}
-            href={`?mode=${tab}`}
-            className={cn(
-              "pb-2 font-medium text-gray-600 hover:text-black transition",
-              mode === tab
-                ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
-                : ""
-            )}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
-          </Link>
-        ))}
-      </div>
-    </div>
-    <div className="flex-1  no-scrollbar mt-4 pb-20">
-      <h3 className="text-lg font-semibold mb-4 text-gray-700">
-        {mode.charAt(0).toUpperCase() + mode.slice(1)} Meal Plans{" "}
-        <span className="text-green-600 bg-green-50 p-[5px] rounded-xl text-sm">
-          {filteredMealPlans.length}
-        </span>
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {filteredMealPlans.map((meal) => (
-          <div
-            key={meal._id}
-            className="relative rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition"
-          >
-            <Link href={`/coach/meals/list-custom/${meal._id}`}>
-              <Image
-                src={meal.image || "/healthy-diet-food.webp"}
-                alt={meal.title}
-                width={400}
-                height={200}
-                className="w-full h-40 object-cover"
-                onError={(e) => (e.currentTarget.src = "/not-found.png")}
-              />
-            </Link>
-            <Badge
-              className={cn(
-                "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
-              )}
-            >
-              {meal.admin ? "Admin" : "Manual"}
-            </Badge>
-            {!meal.admin && (
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => handleDeleteMeal(meal._id)}
-                className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
+                onClick={() => setShowDropdown((prev) => !prev)}
+                className="px-3 py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-xs"
               >
-                <LuTrash size={14} />
+                <IoMdAddCircle size={14} className="text-white" />
+                Create Manual Plan
+                <IoIosArrowDropdown
+                  size={16}
+                  className={cn(
+                    "text-white ml-1 transition-transform",
+                    showDropdown ? "rotate-180" : ""
+                  )}
+                />
               </button>
-            )}
-            <div className="p-4 flex items-center justify-between gap-5">
-              <Link href={`/coach/meals/list-custom/${meal._id}`}>
-                <p className="text-sm font-semibold text-gray-800 line-clamp-2">
-                  {meal.description}
-                </p>
-              </Link>
-              <AssignMealModal planId={meal._id} type="custom" />
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg border border-gray-200 rounded-md z-20">
+                  {["daily", "weekly", "monthly"].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => handleNavigate(item)}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                    >
+                      {item.charAt(0).toUpperCase() + item.slice(1)} Plan
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        ))}
+        </div>
+        <div className="flex gap-6 mt-5 border-b border-gray-200">
+          {["daily", "weekly", "monthly"].map((tab) => (
+            <Link
+              key={tab}
+              href={`?mode=${tab}`}
+              className={cn(
+                "pb-2 font-medium text-gray-600 hover:text-black transition",
+                mode === tab
+                  ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
+                  : ""
+              )}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
+            </Link>
+          ))}
+        </div>
       </div>
-      {filteredMealPlans.length === 0 && (
-        <ContentError
-          title="No Meal Plans Found!"
-          className="font-bold mt-10 border-0"
-        />
+      <div className="flex-1  no-scrollbar mt-4 pb-20">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700">
+          {mode.charAt(0).toUpperCase() + mode.slice(1)} Meal Plans{" "}
+          <span className="text-green-600 bg-green-50 p-[5px] rounded-xl text-sm">
+            {filteredMealPlans.length}
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {filteredMealPlans.map((meal) => (
+            <div
+              key={meal._id}
+              className="relative rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition"
+            >
+              <Link href={`/coach/meals/list-custom/${meal._id}`}>
+                <Image
+                  src={meal.image || "/healthy-diet-food.webp"}
+                  alt={meal.title}
+                  width={400}
+                  height={200}
+                  className="w-full h-40 object-cover"
+                  onError={(e) => (e.currentTarget.src = "/not-found.png")}
+                />
+              </Link>
+              <Badge
+                className={cn(
+                  "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
+                )}
+              >
+                {meal.admin ? "Admin" : "Manual"}
+              </Badge>
+              {!meal.admin && (
+                <button
+                  onClick={() => handleDeleteMeal(meal._id)}
+                  className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
+                >
+                  <LuTrash size={14} />
+                </button>
+              )}
+              <p className="font-bold px-4 pt-2">{meal.title}</p>
+              <div className="p-4 pt-0 flex items-center justify-between gap-5">
+                <Link href={`/coach/meals/list-custom/${meal._id}`}>
+                  <p className="text-sm font-semibold text-gray-800 line-clamp-2">
+                    {meal.description}
+                  </p>
+                </Link>
+                <AssignMealModal planId={meal._id} type="custom" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {filteredMealPlans.length === 0 && (
+          <ContentError
+            title="No Meal Plans Found!"
+            className="font-bold mt-10 border-0"
+          />
         )}
-    </div>    
-  </main>
+      </div>
+    </main>
 
   );
 }

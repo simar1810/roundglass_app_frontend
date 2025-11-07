@@ -579,7 +579,8 @@ export function dailyMealRP(state) {
     title: state.title,
     description: state.description,
     mode: state.mode,
-    image: state.image
+    image: state.image,
+    ...(state.mode === "monthly" && { noOfDays: state.noOfDays })
   }
 }
 
