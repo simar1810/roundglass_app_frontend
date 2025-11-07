@@ -70,8 +70,8 @@ function Container({ Component, pdfData }) {
 
   const primaryBrand = brands[0] || {};
   const latestBrand = brands.length > 0 ? brands[brands.length - 1] : {};
-  const primaryColor = latestBrand?.primaryColor ? `#${latestBrand.primaryColor.slice(-6)}` : "#000000";
-  const textColor = latestBrand?.textColor ? `#${latestBrand.textColor.slice(-6)}` : "#000000";
+  const primaryColor = latestBrand?.primaryColor ? `#${latestBrand.primaryColor.slice(-6)}` : "#67BC2A";
+  const textColor = latestBrand?.textColor ? `#${latestBrand.textColor.slice(-6)}` : "#ffffff";
 
   return <Component
     data={pdfData}

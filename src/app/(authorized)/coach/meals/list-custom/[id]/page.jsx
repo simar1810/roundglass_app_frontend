@@ -132,7 +132,6 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
 
   const pdfDisabled = !pdfData || !pdfData?.plans?.some(plan => Array.isArray(plan?.meals) && plan.meals.length > 0);
   const pdfTemplateKey = pdfTemplateMap[selectedPdfVariant] || "PDFDailyMealSchedule";
-  console.log(customPlan)
   return <div className="p-4 pr-8">
     <h4 className="mr-auto mb-4">{customPlan.title}</h4>
     <div className="flex items-center gap-2">

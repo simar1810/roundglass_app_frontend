@@ -44,9 +44,6 @@ function Container() {
   } = data.data || {}
 
   return <div className="p-4">
-    <button onClick={() => mutate()}>
-      <RefreshCcw />
-    </button>
     <div className="grid grid-cols-2 gap-4">
       <UpcomingBirthdays birthdays={birthdays} />
       <ClubSubscriptions subscriptions={subscriptions} />
