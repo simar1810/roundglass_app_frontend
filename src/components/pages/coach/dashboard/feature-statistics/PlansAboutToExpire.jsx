@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { format, isBefore, parse } from "date-fns"
+import { addDays, format, isBefore, parse } from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 
 export default function PlansAboutToExpire({ plans = [] }) {
@@ -25,6 +28,7 @@ export default function PlansAboutToExpire({ plans = [] }) {
             <TableHead>Sr No</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Last Date</TableHead>
+            <TableHead>Missing</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -34,6 +38,30 @@ export default function PlansAboutToExpire({ plans = [] }) {
             <TableCell>{index + 1 + (pagination.current - 1) * pagination.limit}</TableCell>
             <TableCell>{plan.title}</TableCell>
             <TableCell>{format(plan.endDate, 'dd-MM-yyyy')}</TableCell>
+            <TableCell>
+              {plan.missingDates.length === 0 ? (
+                <Badge variant="secondary" className="text-xs">0</Badge>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Badge variant="outline" className="cursor-pointer text-xs">
+                      {plan.missingDates.length}
+                    </Badge>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2">
+                    <ScrollArea className="max-h-56">
+                      <div className="flex flex-wrap gap-1">
+                        {plan.missingDates.map((date) => (
+                          <Badge key={date} variant="secondary" className="text-[10px]">
+                            {date}
+                          </Badge>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </TableCell>
           </TableRow>)}
         </TableBody>
       </Table>
@@ -73,13 +101,32 @@ export default function PlansAboutToExpire({ plans = [] }) {
 function sortPlans(plans) {
   return plans
     .map(plan => {
-      const endDate = Object
+      const allDates = Object
         ?.keys(plan?.plans || {})
         ?.map(plan => parse(plan, 'dd-MM-yyyy', new Date()))
         ?.sort((a, b) => isBefore(b, a) ? -1 : 1)
-        ?.at(0)
-      plan.endDate = endDate
+      const endDate = allDates?.at(0);
+      const startDate = allDates?.at(allDates.length - 1);
+      plan.missingDates = findPendingDates(startDate, allDates, plan.noOfDays);
+      plan.endDate = endDate;
       return plan
     })
     .sort((a, b) => isBefore(a.endDate, b.endDate) ? 1 : -1)
+}
+
+function findPendingDates(startDate, dates, noOfDates = 30) {
+  if (!startDate || !Array.isArray(dates) || noOfDates <= 0) return [];
+  const availableDatesSet = new Set(
+    dates.map(date => format(date, "dd-MM-yyyy"))
+  );
+
+  const missingDates = [];
+  for (let index = 0; index < noOfDates; index++) {
+    const expectedDate = addDays(startDate, index);
+    const key = format(expectedDate, "dd-MM-yyyy");
+    if (!availableDatesSet.has(key)) {
+      missingDates.push(expectedDate);
+    }
+  }
+  return missingDates.map(date => format(date, "dd-MM-yyyy"));
 }

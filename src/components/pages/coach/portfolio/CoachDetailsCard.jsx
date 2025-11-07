@@ -21,11 +21,20 @@ import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { toast } from "sonner";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useRef, useState } from "react";
+import { sendData } from "@/lib/api";
+import { mutate } from "swr";
+import FormControl from "@/components/FormControl";
+import { _throwError } from "@/lib/formatter";
+import { format, parse } from "date-fns";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
 export default function CoachDetailsCard({ coachData }) {
   const { coachId } = useAppSelector(state => state.coach.data);
+
+  const messageTimings = coachData.messageTimings ?? {};
 
   function copyInviteLink() {
     copyText(`Hey! 👋
@@ -82,6 +91,21 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
         </div>)}
       </div>
       <div className="mt-4 flex items-center justify-between">
+        <h4>Coach Timings</h4>
+        <UpdateCoachTimingsModal messageTimings={coachData.messageTimings} />
+      </div>
+
+      <div className="mt-4 pl-4 pb-4 border-b-1">
+        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Opening Time</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{messageTimings.openingTime || "—"}</p>
+        </div>
+        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Closing Time</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{messageTimings.closingTime || "—"}</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
         <h4>Personal Portfolio</h4>
         <Link
           target="_blank"
@@ -105,4 +129,90 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
       </div>
     </CardContent>
   </Card>
+}
+
+function to24HourFormat(timeStr) {
+  if (!timeStr?.trim()) return ""
+  try {
+    const parsedTime = parse(timeStr.trim(), "hh:mm a", new Date())
+    return format(parsedTime, "HH:mm")
+  } catch (error) {
+    return ""
+  }
+}
+
+function to12HourFormat(timeStr) {
+  if (!timeStr?.trim()) return ""
+  try {
+    const parsedTime = parse(timeStr.trim(), "HH:mm", new Date())
+    return format(parsedTime, "hh:mm a")
+  } catch {
+    return ""
+  }
+}
+
+function UpdateCoachTimingsModal({ messageTimings = {} }) {
+  const [loading, setLoading] = useState(false)
+  const [payload, setPayload] = useState({
+    openingTime: to24HourFormat(messageTimings.openingTime),
+    closingTime: to24HourFormat(messageTimings.closingTime)
+  })
+
+  const closeBtnRef = useRef()
+
+  async function udpateTimings() {
+    try {
+      setLoading(true);
+      const response = await sendData("app/chat-timings", {
+        openingTime: to12HourFormat(payload.openingTime),
+        closingTime: to12HourFormat(payload.closingTime),
+      });
+      if (response.status_code !== 200) _throwError(response.message);
+      toast.success(response.message);
+      mutate("coachProfile");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger asChild>
+      <Button
+        size="sm"
+        variant="wz"
+      >Edit</Button>
+    </DialogTrigger>
+    <DialogContent className="p-0 max-h-[70vh] overflow-y-auto">
+      <DialogClose ref={closeBtnRef} />
+      <DialogTitle className="border-b-1 p-4">Coach Timings</DialogTitle>
+      <div className="p-4 pt-0">
+        <FormControl
+          type="time"
+          value={payload.openingTime}
+          className="mb-4 block"
+          onChange={e => setPayload(prev => ({
+            ...prev,
+            openingTime: e.target.value
+          }))}
+        />
+        <FormControl
+          type="time"
+          value={payload.closingTime}
+          onChange={e => setPayload(prev => ({
+            ...prev,
+            closingTime: e.target.value
+          }))}
+        />
+        <Button
+          className="mt-4"
+          variant="wz"
+          disabled={loading}
+          onClick={udpateTimings}
+        >Save</Button>
+      </div>
+    </DialogContent>
+  </Dialog>
 }
