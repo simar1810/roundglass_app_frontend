@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -25,13 +25,41 @@ export default function Page() {
   const [subOption, setSubOption] = useState(null);
   const [selectedHealthCondition, setSelectedHealthCondition] = useState([]);
   const [selectedExclusions, setSelectedExclusions] = useState([]);
+  const [creditsMap, setCreditsMap] = useState({});
   const query = { page: 1, limit: 540 };
 
   const { isLoading, error, data } = useSWR(
     `getAppClients?page=${query.page}&limit=${query.limit}`,
     () => getAppClients(query)
   );
-
+  const fetchCredits = async(clientId) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/meal-plan/ai/requests?clientId=${clientId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      const left = data?.data?.requestsLeft ?? 0;
+      setCreditsMap((prev) => ({ ...prev, [clientId]: left }));
+    } catch (error) {
+      console.log("Failed to retrieve", error);
+      setCreditsMap((prev) => ({ ...prev, [clientId]: 0 }));
+    }
+  }
+  useEffect(() => {
+    const clients = data?.data || [];
+    if (clients.length > 0) {
+      clients.forEach((c) => {
+        if (!creditsMap[c._id]) fetchCredits(c._id);
+      });
+    }
+  }, [data]);
   const handleAiGeneration = async (clientId, mode) => {
     try {
       const selectedhealthCondString = selectedHealthCondition.join(", ");
@@ -71,6 +99,7 @@ export default function Page() {
         setSearchExclusionTerm("");
         setSelectedExclusions([]);
         setSelectedHealthCondition([]);
+        fetchCredits(clientId);
       } else {
         throw new Error(resData.message || "Failed to generate AI plan");
       }
@@ -440,7 +469,7 @@ const foodExclusionOptions = [
                   <div className="flex items-center gap-1 bg-gray-100 px-2 pl-4 py-2 rounded-md">
                     <PiSparkleFill size={14} className="text-[#67BC2A]" />
                     <p className="text-[10px] text-[#67BC2A] font-medium ">
-                      {client.creditsLeft || 3} Credits Left
+                      {creditsMap[client._id]!==undefined ? `${creditsMap[client._id]} Credits Left` : "Loading.."} 
                     </p>
                   </div>
                 </div>
