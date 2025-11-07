@@ -363,7 +363,8 @@ function SelectedSlotMealTypeOptions({ plan }) {
   const options = plan
     ? selectedPlans?.[plan] ?? selectedPlans?.[selectedPlan] ?? defaultMealTypes
     : selectedPlans?.[selectedPlan] ?? defaultMealTypes
-  const uniqueMealTypes = Array.from(new Set(options?.map((meal) => typeof meal === "string"
+  const updatedOptions = Array.isArray(options) ? options : options.meals;
+  const uniqueMealTypes = Array.from(new Set(updatedOptions?.map((meal) => typeof meal === "string"
     ? meal
     : meal?.mealType ?? meal?.fromMealType ?? ""
   ))).filter(Boolean)
