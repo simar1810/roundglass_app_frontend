@@ -147,7 +147,49 @@ export default function Page() {
             {filteredMealPlans.length}
           </span>
         </h3>
-        <MealsListing filteredMealPlans={filteredMealPlans} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {filteredMealPlans.map((meal) => (
+            <div
+              key={meal._id}
+              className="relative rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition"
+            >
+              <Link href={`/coach/meals/list-custom/${meal._id}`}>
+                <Image
+                  src={meal.image || "/healthy-diet-food.webp"}
+                  alt={meal.title}
+                  width={400}
+                  height={200}
+                  className="w-full h-40 object-cover"
+                  onError={(e) => (e.currentTarget.src = "/not-found.png")}
+                />
+              </Link>
+              <Badge
+                className={cn(
+                  "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
+                )}
+              >
+                {meal.admin ? "Admin" : "Manual"}
+              </Badge>
+              {!meal.admin && (
+                <button
+                  onClick={() => handleDeleteMeal(meal._id)}
+                  className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
+                >
+                  <LuTrash size={14} />
+                </button>
+              )}
+              <p className="font-bold px-4 pt-2">{meal.title}</p>
+              <div className="p-4 pt-0 flex items-center justify-between gap-5">
+                <Link href={`/coach/meals/list-custom/${meal._id}`}>
+                  <p className="text-sm font-semibold text-gray-800 line-clamp-2">
+                    {meal.description}
+                  </p>
+                </Link>
+                <AssignMealModal planId={meal._id} type="custom" />
+              </div>
+            </div>
+          ))}
+        </div>
         {filteredMealPlans.length === 0 && (
           <ContentError
             title="No Meal Plans Found!"
@@ -158,58 +200,4 @@ export default function Page() {
     </main>
 
   );
-}
-
-function SearchFormControl({ query, setQuery }) {
-  return <FormControl
-    placeholder="search by title..."
-    value={query}
-    onChange={e => setQuery(e.target.value)}
-  />
-}
-
-function MealsListing({ filteredMealPlans }) {
-  return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-    {filteredMealPlans.map((meal) => (
-      <div
-        key={meal._id}
-        className="relative rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition"
-      >
-        <Link href={`/coach/meals/list-custom/${meal._id}`}>
-          <Image
-            src={meal.image || "/healthy-diet-food.webp"}
-            alt={meal.title}
-            width={400}
-            height={200}
-            className="w-full h-40 object-cover"
-            onError={(e) => (e.currentTarget.src = "/not-found.png")}
-          />
-        </Link>
-        <Badge
-          className={cn(
-            "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
-          )}
-        >
-          {meal.admin ? "Admin" : "Manual"}
-        </Badge>
-        {!meal.admin && (
-          <button
-            onClick={() => handleDeleteMeal(meal._id)}
-            className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
-          >
-            <LuTrash size={14} />
-          </button>
-        )}
-        <p className="font-bold px-4 pt-2">{meal.title}</p>
-        <div className="p-4 pt-0 flex items-center justify-between gap-5">
-          <Link href={`/coach/meals/list-custom/${meal._id}`}>
-            <p className="text-sm font-semibold text-gray-800 line-clamp-2">
-              {meal.description}
-            </p>
-          </Link>
-          <AssignMealModal planId={meal._id} type="custom" />
-        </div>
-      </div>
-    ))}
-  </div>
 }

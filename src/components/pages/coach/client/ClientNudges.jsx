@@ -6,16 +6,16 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache"
 import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
 import { cn } from "@/lib/utils"
-import { Pen, Trash2, Calendar, Clock } from "lucide-react"
+import { format, getDay, parse } from "date-fns"
+import { Calendar, Clock, Pen, Trash2 } from "lucide-react"
 import { useParams } from "next/navigation"
+import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
-import { format, parse, getDay, isAfter, isToday, isTomorrow, isYesterday, subDays } from "date-fns"
-import { useState } from "react"
-import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache"
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -56,8 +56,16 @@ function groupNudgesByDay(notifications) {
 }
 
 function getRecentNudges(notifications) {
+  // Ensure notifications is an array
+  if (!Array.isArray(notifications) || notifications.length === 0) {
+    return [];
+  }
+
+  // Create a copy to avoid mutating the original array
+  const notificationsCopy = [...notifications];
+  
   // Sort all notifications by date (most recent first)
-  const sortedNotifications = notifications.sort((a, b) => {
+  const sortedNotifications = notificationsCopy.sort((a, b) => {
     if (a.schedule_type === "schedule" && b.schedule_type === "schedule") {
       try {
         const dateA = parse(a.date, "dd-MM-yyyy", new Date());
