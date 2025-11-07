@@ -139,8 +139,11 @@ export default function Page() {
                       {client.name || "Unknown Client"}
                     </h3>
                     <p className="text-xs text-gray-500">
-                      Last Meal Assigned on{" "}
-                      {client.lastMealAssigned || "10-10-25"}
+                      Joined on{" "}
+                      {client.joiningDate || "NA"}
+                    </p>
+                    <p className="text-xs text-green-500">
+                      {client.isActive && "Active" }
                     </p>
                   </div>
                   <div className="flex items-center gap-1 bg-gray-100 px-2 pl-4 py-2 rounded-md">
