@@ -67,10 +67,9 @@ export default function Page() {
 
   const clients = data?.data || [];
 
-  const filteredClients = clients.filter((client) =>
-    client.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredClients = clients.filter((client) => (
+    client.name?.toLowerCase().includes(searchTerm.toLowerCase()) && client.isActive && client.isVerified && client.joiningDate
+  ));
   return (
     <main className="content-container content-height-screen relative">
       {isGenerating && (
