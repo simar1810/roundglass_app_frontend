@@ -111,7 +111,7 @@ function Container() {
     && (slot.toMealType || slot.fromMealType),
   );
 
-  return <div className="space-y-6 px-6 py-5">
+  return <div className="px-6 pt-0 py-5">
     <DialogClose ref={closeRef} />
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="grid gap-2">
