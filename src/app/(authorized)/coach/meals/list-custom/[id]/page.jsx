@@ -7,8 +7,8 @@ import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
@@ -35,7 +35,41 @@ function MealPlanDetailsContainer({ id }) {
   const responseData = data?.data;
   const hasNoPlan = Array.isArray(responseData) ? responseData.length === 0 : !responseData;
   const customPlan = Array.isArray(responseData) ? responseData[0] : responseData;
-  const planKeys = useMemo(() => Object.keys(customPlan?.plans || {}), [customPlan?.plans]);
+  const planKeys = useMemo(() => {
+    const plans = customPlan?.plans || {};
+    const keys = Object.keys(plans);
+
+    if (keys.length === 0) return keys;
+
+    if (customPlan?.mode === "monthly") {
+      const toTime = (value) => {
+        if (!value) return Number.MAX_SAFE_INTEGER;
+        const [day, month, year] = value.split("-").map(Number);
+        if ([day, month, year].every(Number.isFinite)) {
+          const time = new Date(year, month - 1, day).getTime();
+          if (Number.isFinite(time)) return time;
+        }
+        const fallback = new Date(value).getTime();
+        return Number.isFinite(fallback) ? fallback : Number.MAX_SAFE_INTEGER;
+      };
+
+      return [...keys].sort((a, b) => toTime(a) - toTime(b));
+    }
+
+    if (customPlan?.mode === "weekly") {
+      const weekOrder = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+      return [...keys].sort((a, b) => {
+        const ia = weekOrder.indexOf(String(a).toLowerCase());
+        const ib = weekOrder.indexOf(String(b).toLowerCase());
+        if (ia === -1 || ib === -1 || ia === ib) {
+          return String(a).localeCompare(String(b));
+        }
+        return ia - ib;
+      });
+    }
+
+    return keys;
+  }, [customPlan?.mode, customPlan?.plans]);
 
   const [selectedPlan, setSelectedPlan] = useState(() => planKeys.at(0) || "");
   const [selectedMealType, setSelectedMealType] = useState("");
