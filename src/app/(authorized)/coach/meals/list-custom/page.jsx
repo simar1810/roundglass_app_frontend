@@ -201,3 +201,12 @@ export default function Page() {
 
   );
 }
+
+
+function SearchFormControl({ query, setQuery }) {
+  return <FormControl
+    query={query}
+    onChange={e => setQuery(e.target.value)}
+    placeholder="search by title"
+  />
+}
