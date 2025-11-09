@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import FormControl from "@/components/FormControl";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import { Badge } from "@/components/ui/badge";
 import { sendData } from "@/lib/api";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
+  const [query, setQuery] = useState("")
   const { isLoading, error, data } = useSWR("custom-meal-plans", () =>
     getCustomMealPlans("coach")
   );
@@ -41,9 +43,16 @@ export default function Page() {
   if (error || data?.status_code !== 200)
     return <ContentError title={error || data?.message} />;
 
+  const mealRegex = new RegExp(query)
+
   const filteredMealPlans = ["daily", "weekly", "monthly"].includes(mode)
-    ? data.data.filter((meal) => meal.mode === mode)
-    : data.data;
+    ? data
+      .data
+      .filter((meal) => meal.mode === mode)
+      .filter(meal => mealRegex.test(meal.title))
+    : data
+      .data
+      .filter(meal => mealRegex.test(meal.title));
   const handleNavigate = (planMode) => {
     if (localStorage.getItem("aiMealPlan")) {
       localStorage.removeItem('aiMealPlan')
@@ -108,21 +117,27 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="flex gap-6 mt-5 border-b border-gray-200">
-          {["daily", "weekly", "monthly"].map((tab) => (
-            <Link
-              key={tab}
-              href={`?mode=${tab}`}
-              className={cn(
-                "pb-2 font-medium text-gray-600 hover:text-black transition",
-                mode === tab
-                  ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
-                  : ""
-              )}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
-            </Link>
-          ))}
+        <div className="flex items-center justify-between ">
+          <div className="flex gap-6 mt-5">
+            {["daily", "weekly", "monthly"].map((tab) => (
+              <Link
+                key={tab}
+                href={`?mode=${tab}`}
+                className={cn(
+                  "pb-2 font-medium text-gray-600 hover:text-black transition",
+                  mode === tab
+                    ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
+                    : ""
+                )}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
+              </Link>
+            ))}
+          </div>
+          <SearchFormControl
+            query={query}
+            setQuery={setQuery}
+          />
         </div>
       </div>
       <div className="flex-1  no-scrollbar mt-4 pb-20">
@@ -153,7 +168,7 @@ export default function Page() {
                   "absolute top-3 left-3 text-xs font-normal bg-[#00000081] text-white px-3"
                 )}
               >
-              {meal.admin ? "Admin Generated" : (meal.aiGenerated ? "AI Generated" : "Manual")}
+                {meal.admin ? "Admin" : "Manual"}
               </Badge>
               {!meal.admin && (
                 <button
@@ -185,4 +200,13 @@ export default function Page() {
     </main>
 
   );
+}
+
+
+function SearchFormControl({ query, setQuery }) {
+  return <FormControl
+    query={query}
+    onChange={e => setQuery(e.target.value)}
+    placeholder="search by title"
+  />
 }
