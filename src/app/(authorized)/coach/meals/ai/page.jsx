@@ -48,7 +48,6 @@ export default function Page() {
       const left = data?.data?.requestsLeft ?? 0;
       setCreditsMap((prev) => ({ ...prev, [clientId]: left }));
     } catch (error) {
-      console.log("Failed to retrieve", error);
       setCreditsMap((prev) => ({ ...prev, [clientId]: 0 }));
     }
   }
@@ -469,7 +468,7 @@ const foodExclusionOptions = [
                   <div className="flex items-center gap-1 bg-gray-100 px-2 pl-4 py-2 rounded-md">
                     <PiSparkleFill size={14} className="text-[#67BC2A]" />
                     <p className="text-[10px] text-[#67BC2A] font-medium ">
-                      {creditsMap[client._id]!==undefined ? `${creditsMap[client._id]} Credits Left` : "Loading.."} 
+                      {creditsMap[client._id]!==undefined ? `${creditsMap[client._id]} Credits Left` : "Loading..."} 
                     </p>
                   </div>
                 </div>
