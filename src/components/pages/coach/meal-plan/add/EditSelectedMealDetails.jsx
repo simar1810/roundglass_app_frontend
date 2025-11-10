@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import FormControl from "@/components/FormControl";
 import { useRef, useState } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import { recipeKey, saveRecipe } from "@/config/state-reducers/custom-meal";
 import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -50,8 +50,11 @@ export default function EditSelectedMealDetails({
   index
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const [formData, setFormData] = useState(recipe);
-  const { dispatch } = useCurrentStateContext();
+  const { recipeCaloriesMap, dispatch } = useCurrentStateContext();
+  const [formData, setFormData] = useState({
+    ...recipe,
+    ...recipeCaloriesMap.get(recipeKey(recipe._id))
+  });
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
   const closeBtnRef = useRef()
 

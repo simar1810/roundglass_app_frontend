@@ -1,4 +1,4 @@
-import { changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate } from "@/config/state-reducers/custom-meal";
+import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 import AddDayModal from "./AddDayModal";
@@ -7,8 +7,8 @@ import { Pen } from "lucide-react";
 import { Dialog } from "@radix-ui/react-dialog";
 import { DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useRef, useState } from "react";
-import { format, isBefore, parse } from "date-fns";
+import { useMemo, useRef, useState } from "react";
+import { addDays, format, isBefore, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import CopyMealPlanDays from "./CopyMealPlanDays";
 
@@ -18,16 +18,17 @@ export default function MonthlyMealCreation() {
   const days = Object
     .keys(selectedPlans)
     .sort((dateA, dateB) => {
-      console.log(isBefore(
-        parse(dateA, "dd-MM-yyyy", new Date()),
-        parse(dateB, "dd-MM-yyyy", new Date()),
-      ))
       return isBefore(
         parse(dateA, "dd-MM-yyyy", new Date()),
         parse(dateB, "dd-MM-yyyy", new Date()),
       ) ? -1 : 1
     });
-  console.log(days)
+
+  const nextDate = useMemo(
+    () => findNextDate(Object.keys(selectedPlans)),
+    [Object.keys(selectedPlans)]
+  )
+
   return <>
     <div className="flex items-center justify-between gap-4">
       <h3 className="mt-4 mr-auto">Days</h3>
@@ -57,7 +58,12 @@ export default function MonthlyMealCreation() {
           defaultValue={day}
         />
       </div>)}
-      <AddDayModal />
+      <Button
+        onClick={() => dispatch(addNewPlanType(nextDate))}
+        variant="wz">
+        Add
+      </Button>
+      {/* <AddDayModal /> */}
     </div>
   </>
 }
@@ -113,4 +119,17 @@ function UpdateDate({ defaultValue = "" }) {
       <DialogClose ref={closeRef} />
     </DialogContent>
   </Dialog>
+}
+
+function findNextDate(keys) {
+  return format(
+    addDays(
+      keys
+        .map(date => parse(date, "dd-MM-yyyy", new Date()))
+        .sort((dateA, dateB) => isBefore(dateB, dateA) ? -1 : 1)
+        ?.at(0),
+      1
+    ),
+    "yyyy-MM-dd"
+  )
 }

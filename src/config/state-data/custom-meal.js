@@ -34,4 +34,5 @@ export const customMealInitialState = {
       },
     ]
   }, // { daily: [{ mealType: "Breakfast", meals: [] }
+  recipeCaloriesMap: new Map(), // string: { carbs, proteins, fats, proteins, }
 }
