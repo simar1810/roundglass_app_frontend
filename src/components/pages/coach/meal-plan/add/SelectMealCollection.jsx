@@ -76,7 +76,7 @@ function RecipeesContainer({ index }) {
     </div>
     {selected && <Button
       onClick={() => {
-        dispatch(saveRecipe(selected, index, false, true))
+        dispatch(saveRecipe(selected, index))
         closeRef.current.click()
       }}
       variant="wz"
