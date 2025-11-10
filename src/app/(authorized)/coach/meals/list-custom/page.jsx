@@ -43,7 +43,7 @@ export default function Page() {
   if (error || data?.status_code !== 200)
     return <ContentError title={error || data?.message} />;
 
-  const mealRegex = new RegExp(query)
+  const mealRegex = new RegExp(query, "i") 
 
   const filteredMealPlans = ["daily", "weekly", "monthly"].includes(mode)
     ? data
