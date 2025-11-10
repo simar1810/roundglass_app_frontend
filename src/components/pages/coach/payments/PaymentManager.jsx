@@ -27,6 +27,7 @@ import {
   sendPaymentReminder,
   regeneratePaymentLink,
 } from "@/lib/paymentService";
+import { getAppClients } from "@/lib/fetchers/app";
 import {
   Search,
   Filter,
@@ -70,7 +71,7 @@ export default function PaymentManager() {
         search: filters.search,
         dateRange: filters.dateRange,
       });
-   
+
       if (response.success === true) {
         setPaymentLinks(response.data?.payments || response.payments || []);
         setTotalPages(
@@ -86,13 +87,11 @@ export default function PaymentManager() {
 
   const fetchClients = async () => {
     try {
-      const response = await fetchData("app/allClient?limit=100");
+      const response = await getAppClients({ limit: 100 });
       if (response.status_code === 200) {
         setClients(response.data || []);
       }
-    } catch (error) {
-      console.error("Failed to fetch clients:", error);
-    }
+    } catch (error) { }
   };
 
   const sendReminder = async (paymentLinkId) => {
@@ -290,7 +289,7 @@ export default function PaymentManager() {
                                 link.clientName ||
                                 getClientName(link.clientId || link.client)}
                             </div>
-                           
+
                           </div>
                         </TableCell>
                         <TableCell>

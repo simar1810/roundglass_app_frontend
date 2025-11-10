@@ -58,9 +58,9 @@ export default function Paginate({
   }
 
   return (
-    <div className="flex flex-col gap-2 p-4 border rounded-xl">
+    <div className="flex items-end justify-between gap-2 p-4 border rounded-xl">
       <Pagination>
-        <PaginationContent>
+        <PaginationContent className="mr-auto">
           <PaginationItem>
             <PaginationPrevious
               onClick={() => handlePageChange(page - 1)}
@@ -96,7 +96,11 @@ export default function Paginate({
         </PaginationContent>
       </Pagination>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="w-full flex flex-col items-end justify-between gap-4">
+        <div className="text-sm text-muted-foreground">
+          {(page - 1) * limit + 1}-
+          {Math.min(page * limit, totalResults)} of {totalResults}
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm">Rows per page:</span>
           <Select
@@ -114,11 +118,6 @@ export default function Paginate({
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          Showing {(page - 1) * limit + 1}-
-          {Math.min(page * limit, totalResults)} of {totalResults}
         </div>
       </div>
     </div>

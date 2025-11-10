@@ -89,7 +89,7 @@ export default function AIAgentHistory() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const { data, isLoading, error } = useSWR(
-    `client/ai-history/${format(selectedDate, "dd-MM-yyyy")}`,
+    `client/ai-history/${id}/${format(selectedDate, "dd-MM-yyyy")}`,
     () => retrieveAIAgentHistory(id, format(selectedDate, "dd-MM-yyyy"))
   )
 

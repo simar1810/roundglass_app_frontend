@@ -16,6 +16,7 @@ export const meetingEditFormControls = [
     placeholder: "Scheduled Date",
     type: "date",
     name: "date",
+    inputtype: 1,
     getvalue: (obj) => obj.scheduleDate ? format(parseISO(obj.scheduleDate), "yyyy-MM-dd") : ""
   },
   {
@@ -24,6 +25,7 @@ export const meetingEditFormControls = [
     placeholder: "Scheduled Time",
     type: "time",
     name: "time",
+    inputtype: 8,
     getvalue: (obj) =>
       obj.scheduleDate ? format(parseISO(obj.scheduleDate), "HH:mm") : ""
   },
@@ -95,6 +97,15 @@ export const meetingEditFormControls = [
     inputtype: 1,
     getvalue: (obj) => obj.baseLink || ""
   },
+  {
+    id: 13,
+    label: "Allowed Client Roll Nos Series",
+    type: "text",
+    inputtype: 9,
+    placeholder: "Enter roll no series",
+    name: "allowed_client_rollnos",
+    getvalue: (obj) => obj.allowed_client_rollnos || []
+  }
 ];
 
 export function selectMeetingEditFields(meetingType) {

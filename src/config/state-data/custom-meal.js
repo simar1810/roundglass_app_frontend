@@ -9,12 +9,29 @@ export const customMealInitialState = {
   selectedPlan: "daily",
   selectedMealType: "Breakfast",
   plans: {},
+  noOfDays: 0,
   selectedPlans: {
     daily: [
       {
         mealType: "Breakfast",
         meals: []
-      }
+      },
+      {
+        mealType: "Morning Snacks",
+        meals: []
+      },
+      {
+        mealType: "Lunch",
+        meals: []
+      },
+      {
+        mealType: "Evening Snacks",
+        meals: []
+      },
+      {
+        mealType: "Dinner",
+        meals: []
+      },
     ]
   }, // { daily: [{ mealType: "Breakfast", meals: [] }
 }

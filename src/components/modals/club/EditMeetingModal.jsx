@@ -1,5 +1,6 @@
 import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
+import TimePicker from "@/components/common/TimePicker";
 import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
@@ -18,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { selectMeetingEditFields } from "@/config/data/forms";
 import { sendData, uploadImage } from "@/lib/api";
 import { getMeetingClientList } from "@/lib/fetchers/club";
+import { _throwError, setDateWithNewTime } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format, parseISO } from "date-fns";
@@ -26,6 +28,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import { UpdateAllowedRollnos } from "./LinkGenerator";
 
 export default function EditMeetingModal({ meeting }) {
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,12 @@ export default function EditMeetingModal({ meeting }) {
       for (const field in formData) {
         if (formData[field]) data[field] = formData[field];
       }
+
+      if (formData.date && formData.time) data.scheduleDate = setDateWithNewTime(
+        new Date(formData.date),
+        formData.time
+      )
+
       const response = await sendData(`edit-meetingLink?meetingId=${meeting._id}`, data, "PUT");
       if (!response.success) throw new Error(response.message);
       toast.success(response.message);
@@ -89,6 +98,7 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
   if (field.inputtype === 1) return <FormControl
     key={field.id}
     className="text-[14px] [&_.label]:font-[400] block mb-4"
+    type={field.type || "text"}
     value={formData[field.name]}
     onChange={e => dispatch(prev => ({ ...prev, [field.name]: e.target.value }))}
     label={field.label}
@@ -130,6 +140,18 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
     key={field.id}
     field={field}
   />
+  else if (field.inputtype === 8) return <div>
+    <label className="text-[14px]">{field.label}</label>
+    <TimePicker
+      selectedTime={formData.time}
+      setSelectedTime={value => dispatch(prev => ({ ...prev, "time": value }))}
+    />
+  </div>
+  else if (field.inputtype === 9) return <UpdateAllowedRollnos
+    field={field}
+    formData={formData}
+    onChange={(value) => dispatch(prev => ({ ...prev, "allowed_client_rollnos": value }))}
+  />;
 }
 
 
@@ -139,17 +161,18 @@ function generatePayload(meeting) {
     baseLink: meeting?.baseLink || "",
     date: meeting?.scheduleDate
       ? format(parseISO(meeting.scheduleDate), "yyyy-MM-dd")
-      : "",
+      : format(new Date(), "yyyy-MM-dd"),
     time: meeting?.scheduleDate
-      ? format(parseISO(meeting.scheduleDate), "HH:mm")
-      : "",
+      ? format(parseISO(meeting.scheduleDate), "hh:mm a")
+      : format(new Date(), "hh:mm a"),
     reOcurred: meeting?.reOcurred || false,
     description: meeting?.description || "",
     duration: meeting?.duration || "",
     eventVolumePointAmount: meeting?.eventVolumePointAmount || "",
     banner: meeting?.banner || "/",
     allowed_client_type: meeting?.allowed_client_type || "",
-    one_to_one_client_id: meeting?.one_to_one_client_id || ""
+    one_to_one_client_id: meeting?.one_to_one_client_id || "",
+    allowed_client_rollnos: meeting?.allowed_client_rollnos || []
   };
 }
 
@@ -180,7 +203,7 @@ export function MeetingRepeat({
 }
 
 export function MeetingDescription({ field, formData, dispatch }) {
-  return <div className="mb-4">
+  return <div className="my-4">
     <Label className="mb-2">Meeting Description</Label>
     <Textarea
       placeholder={field.placeholder}
@@ -229,7 +252,7 @@ export function MeetingBanner({
   return <div className="mb-4">
     <label className="text-[14px]" htmlFor="meeting-banner">{field.label}</label>
     <Image
-      src={formData.banner && formData.banner instanceof File ? getObjectUrl(formData.banner) : "/not-found.png"}
+      src={formData.banner && formData.banner instanceof File ? getObjectUrl(formData.banner) : formData.banner || "/not-found.png"}
       height={540}
       width={540}
       alt=""

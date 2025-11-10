@@ -70,7 +70,7 @@ export default function ClientListItemStatus({
     </div>
 
     {client.isVerified
-      ? <Badge className="text-white font-semibold bg-[var(--accent-1)] border-[var(--accent-1)]">Active</Badge>
+      ? <Badge className={`text-white font-semibold ${client.isActive ? "bg-[var(--accent-1)] border-[var(--accent-1)]" : "bg-red-600 border-red-600"}`}>{client.isActive?"Active":"In active"}</Badge>
       : <Badge
         variant="outline"
         className="text-[var(--accent-2)] font-semibold border-[var(--accent-2)]"

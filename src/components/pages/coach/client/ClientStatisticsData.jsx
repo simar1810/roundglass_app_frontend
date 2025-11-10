@@ -8,21 +8,26 @@ import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { sendData } from "@/lib/api";
+import { validStatistics } from "@/lib/client/statistics";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
+import { _throwError } from "@/lib/formatter";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen, X } from "lucide-react"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import useSWR, { mutate, useSWRConfig } from "swr";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function ClientStatisticsData({ clientData }) {
   try {
     const { dob, clientId, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
 
-    const { isLoading, error, data, mutate } = useSWR(`app/clientStatsCoach?clientId=${clientId}`, () => getClientStatsForCoach(clientId));
+    const { isLoading, error, data, mutate } = useSWR(
+      `app/clientStatsCoach?clientId=${clientId}`,
+      () => getClientStatsForCoach(clientId)
+    );
     const clientStats = data?.data.sort((a, b) => {
       const dateA = parse(a.createdDate, "dd-MM-yyyy", new Date());
       const dateB = parse(b.createdDate, "dd-MM-yyyy", new Date());
@@ -37,6 +42,7 @@ export default function ClientStatisticsData({ clientData }) {
         const other = ["weightInKgs", "weightInPounds"].includes(name)
           ? { weight: formData[name] }
           : { [name]: formData[name] }
+
         const response = await sendData(
           `app/updateHealthMatrix?id=${matrixId}&clientId=${clientId}`,
           {
@@ -46,7 +52,7 @@ export default function ClientStatisticsData({ clientData }) {
             }
           }, "PUT"
         );
-        if (!response.updatedEntry) throw new Error(response.message);
+        if (!response.updatedEntry) _throwError(response.message);
         closeBtnRef.current.click();
         toast.success(response.message);
         mutate();
@@ -56,6 +62,14 @@ export default function ClientStatisticsData({ clientData }) {
         toast.dismiss(toastId);
       }
     }
+    // useEffect(function () {
+    //   ; (async function () {
+    //     if (data && !validStatistics(data.data)) {
+    //       await sendData("app/health-marices/recover", { clientId: clientData._id })
+    //       mutate()
+    //     }
+    //   })()
+    // }, [isLoading])
 
     if (isLoading) return <ContentLoader />
 
@@ -112,7 +126,7 @@ export default function ClientStatisticsData({ clientData }) {
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
-      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
+      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {parseInt(weightDifference)} KG</h5>}
       <div className="mt-8 grid grid-cols-3 gap-5">
         <HealthMetrics
           onUpdate={onUpdateHealthMatrix}

@@ -1,11 +1,13 @@
 import { format } from "date-fns";
-import { fetchData } from "../api";
+import { fetchData, sendData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
+import { toast } from "sonner";
+import { withClientFilter } from "../middleware/clientFilter";
 
 async function logoutUser(response, router, cache) {
   if (
     (response?.status_code === 411,
-    response?.message?.toLowerCase() === "something went wrong")
+      response?.message?.toLowerCase() === "something went wrong")
   ) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await fetch("/api/logout", { method: "DELETE" });
@@ -21,21 +23,21 @@ export function getCoachProfile(_id) {
   return fetchData(`app/coachProfile?id=${_id}&portal=web`);
 }
 
-export async function getCoachHome(router, cache) {
+export const getCoachHome = withClientFilter(async (router, cache) => {
   const response = await fetchData("app/coachHomeTrial");
   await logoutUser(response, router, cache);
   return response;
-}
+});
 
 export function coachMatricesData() {
   return fetchData("app/activity/get?person=coach");
 }
 
-export async function dashboardStatistics(router, cache) {
+export const dashboardStatistics = withClientFilter(async (router, cache) => {
   const response = await fetchData("app/coach-statistics");
   logoutUser(response, router, cache);
   return response;
-}
+});
 
 export function getCoachNotifications() {
   return fetchData("app/notification?person=coach");
@@ -61,13 +63,13 @@ export function getOrganisation() {
   return fetchData("app/getOrganisation");
 }
 
-export function getAppClients(query) {
+export const getAppClients = withClientFilter((query) => {
   let queries = "";
   if (query?.page) queries += "page=" + query.page + "&";
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
   return fetchData(`app/allClient?${queries}`);
-}
+});
 
 export function getAppClientPortfolioDetails(_id) {
   return fetchData(`app/clientProfile?id=` + _id);
@@ -116,33 +118,37 @@ export function getNotes(person = "coach") {
   return fetchData(`app/notes?person=${person}`);
 }
 
-export function getReminders(person = "coach") {
+export const getReminders = withClientFilter((person = "coach") => {
   return fetchData(`app/getAllReminder?person=${person}`);
-}
+});
 
 export function getRecipesCalorieCounter(query) {
+  if (query.length <= 3) {
+    toast.error("At least enter 3 characters.")
+    return;
+  }
   return fetchData(`app/recipees?query=${query}`);
 }
 
-export function getAllChatClients() {
+export const getAllChatClients = withClientFilter(() => {
   return fetchData("app/getAllChatClients");
-}
+});
 
 export function getPersonalBranding() {
   return fetchData("app/list?person=coach");
 }
 
-export function getClientForMeals(planId) {
+export const getClientForMeals = withClientFilter((planId) => {
   return fetchData(`app/getClientForMeals?planId=${planId}`);
-}
+});
 
 export function getCustomMealPlanDetails(planId) {
   return fetchData(`app/meal-plan/client/${planId}`);
 }
 
-export function getClientsForCustomMeals(planId) {
+export const getClientsForCustomMeals = withClientFilter((planId) => {
   return fetchData(`app/meal-plan/custom/assign?id=${planId}`);
-}
+});
 
 export function getProductByBrand(brandId) {
   return fetchData(`app/getProductByBrand/${brandId}`);
@@ -189,17 +195,17 @@ export function getMarathonTaskOptions() {
   return fetchData("app/marathon/coach/task-options");
 }
 
-export function getClientsForMarathon(marathonId) {
+export const getClientsForMarathon = withClientFilter((marathonId) => {
   return fetchData(
     `app/marathon/coach/getClientsForMarathon?marathonId=${marathonId}`
   );
-}
+});
 
-export function getClientsForWorkout(workoutId) {
+export const getClientsForWorkout = withClientFilter((workoutId) => {
   return fetchData(
     `app/workout/coach/getClientForWorkouts?workoutCollectionId=${workoutId}`
   );
-}
+});
 
 export function getAllWorkoutItems() {
   return fetchData("app/workout/coach/getAllWorkoutsItems");
@@ -277,17 +283,17 @@ export function getCustomWorkoutPlans(person = "coach", workoutId) {
   return fetchData(endpoint);
 }
 
-export function getClientsForCustomWorkout(workoutId) {
+export const getClientsForCustomWorkout = withClientFilter((workoutId) => {
   return fetchData(`app/workout/workout-plan/custom/assign?id=${workoutId}`);
-}
+});
 
 export async function onboardingQuestionaire() {
-  return fetchData("app/onboarding/questionaire");
+  return fetchData("app/onboarding/questionaire?person=coach");
 }
 
-export function retrieveSessions(person) {
+export const retrieveSessions = withClientFilter((person) => {
   return fetchData(`app/workout/sessions?person=${person}`);
-}
+});
 
 export function retrieveAIAgentHistory(clientId, date) {
   let endpoint = `app/ai/analyze?person=coach&client=${clientId}`
@@ -295,17 +301,17 @@ export function retrieveAIAgentHistory(clientId, date) {
   return fetchData(endpoint)
 }
 
-export function retrieveReports(person = "coach", clientId) {
+export const retrieveReports = withClientFilter(function (person = "coach", clientId) {
   let query = `person=${person}`
   if (clientId) query += `&clientId=${clientId}`
   return fetchData(`app/reports/client?${query}`)
-}
+})
 
-export function retrieveCoachClientList() {
+export const retrieveCoachClientList = withClientFilter(() => {
   return fetchData("app/coach-client-list")
-}
+});
 
-export function retrieveClientNudges(id, options) {
+export const retrieveClientNudges = withClientFilter((id, options) => {
   const endpoint = buildUrlWithQueryParams(
     "app/notifications-schedule",
     Boolean(id)
@@ -313,7 +319,7 @@ export function retrieveClientNudges(id, options) {
       : options
   )
   return fetchData(endpoint)
-}
+});
 
 export function retrieveDownlineRequests() {
   return fetchData("app/downline/requests")
@@ -337,4 +343,158 @@ export function retrieveDownlineClientInformation(query) {
     query
   )
   return fetchData(endpoint)
+}
+
+export function getPhysicalAttendance(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/attendance",
+    query
+  )
+  return fetchData(endpoint)
+}
+
+export function getPhysicalMemberships(query) {
+  const endpoint = buildUrlWithQueryParams(
+    "app/physical-club/memberships",
+    query
+  )
+  return fetchData(endpoint)
+}
+
+export async function retrieveQuestionaire(query) {
+  const endpoint = buildUrlWithQueryParams("app/onboarding/questionaire", query)
+  return fetchData(endpoint);
+}
+
+export async function retrieveBankDetails(query) {
+  const endpoint = buildUrlWithQueryParams("app/bank", query);
+  return fetchData(endpoint)
+}
+
+// Users management functions
+export function getUsers(coachId = null) {
+  const endpoint = coachId
+    ? `app/users?person=coach&coachId=${coachId}`
+    : "app/users?person=coach";
+  return fetchData(endpoint);
+}
+
+
+export async function createUser(userData) {
+  try {
+    const { permissions, ...userDataWithoutPermissions } = userData;
+
+    const createResponse = await sendData("app/users", userData, "POST");
+
+    if (createResponse.status_code === 200 && permissions && permissions.length > 0) {
+      try {
+        const userId = createResponse.data?._id;
+
+        if (userId) {
+          const permissionsData = {
+            id: userId,
+            permissions: permissions
+          };
+
+          await sendData("app/users/permissions", permissionsData, "PUT");
+        }
+      } catch (permissionsError) {
+        // Don't fail the entire request if permissions update fails
+      }
+    }
+
+    return createResponse;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export function updateUser(userData) {
+  return sendData("app/users", userData, "PUT");
+}
+
+export function deleteUser(userId) {
+  return sendData("app/users", { id: userId }, "DELETE");
+}
+
+// Client assignment functions
+export function addClientToUser(userId, clientId) {
+  return sendData("app/users/clients/add", { userId, clientId }, "POST");
+}
+
+export function removeClientFromUser(userId, clientId) {
+  return sendData("app/users/clients/remove", { userId, clientId }, "POST");
+}
+
+export function assignClientsToUser(userId, clientIds) {
+  return sendData("app/users/clients/assign", { userId, clientIds }, "PUT");
+}
+
+export function getUserClients(userId, page = 1, limit = 10) {
+  return fetchData(`app/users/assignments/${userId}/clients?page=${page}&limit=${limit}`);
+}
+
+export const getAvailableClients = withClientFilter((page = 1, limit = 1000, search = "") => {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+  return fetchData(`app/users/clients/available?page=${page}&limit=${limit}${searchParam}`);
+});
+
+export const fetchClubSubscription = function (coachId) {
+  const endpoint = "app/clubSubscription/coach/" + coachId
+  return fetchData(endpoint)
+}
+
+export async function retrieveClientList() {
+  return fetchData("app/downline/client-list")
+}
+
+// User login function
+export async function loginUser(userData) {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/users/actions?person=user`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+      cache: "no-store",
+    });
+
+    const responseData = await response.json();
+
+    if (responseData.status_code === 200) {
+      const authHeaderResponse = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
+          _id: responseData.data.createdBy._id,
+          userType: "user",
+          userData: responseData.data
+        })
+      });
+
+      const authHeaderData = await authHeaderResponse.json();
+
+      if (authHeaderData.status_code !== 200) {
+        throw new Error(authHeaderData.message || "Failed to set authentication token");
+      }
+
+      return {
+        success: true,
+        data: responseData.data,
+        message: "Login successful"
+      };
+    } else {
+      throw new Error(responseData.message || "Login failed");
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Login failed. Please try again."
+    };
+  }
 }

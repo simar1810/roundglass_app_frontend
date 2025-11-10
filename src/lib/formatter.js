@@ -5,7 +5,13 @@ import {
   differenceInHours,
   differenceInDays,
   parseISO,
-  parse
+  parse,
+  setHours,
+  setMinutes,
+  setSeconds,
+  eachDayOfInterval,
+  startOfDay,
+  endOfDay
 } from 'date-fns';
 
 export function ISO__getTime(timestamp) {
@@ -41,8 +47,26 @@ export function getRelativeTime(dateString) {
   return format(date, 'dd-MM');
 }
 
-export function format24hr_12hr(time24) {
-  return format(parse(time24, 'HH:mm', new Date()), 'hh:mm a');
+export function format24hr_12hr(timeStr) {
+  if (!timeStr) return "";
+
+  // Already in 12-hour format (e.g., "8:00 AM" or "08:00 pm")
+  if (/[ap]m$/i.test(timeStr.trim())) {
+    try {
+      const date = parse(timeStr.trim().toUpperCase(), "hh:mm a", new Date());
+      return format(date, "hh:mm a");
+    } catch {
+      return timeStr;
+    }
+  }
+
+  // 24-hour format (e.g., "08:00" or "18:30")
+  try {
+    const date = parse(timeStr.trim(), "HH:mm", new Date());
+    return format(date, "hh:mm a");
+  } catch {
+    return timeStr;
+  }
 }
 
 export function trimString(str, max = 20) {
@@ -84,3 +108,92 @@ export function tabChange(value, router, params, pathname) {
   newParams.set("tab", value);
   router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 };
+
+export function getMembershipType(membership) {
+  switch (membership.membershipType) {
+    case 1:
+      return { type: "Monthly", end: format(membership.endDate, "dd/MM/yyyy") }
+    case 2:
+      return {
+        type: "Servings", end: membership.servings
+      }
+    default:
+      return { type: "Unknown", end: "Unknown" };
+  }
+}
+
+export function _throwError(message = "checking payload") {
+  throw new Error(message)
+}
+
+export function setDateWithNewTime(date, timeString) {
+  const parsedTime = parse(timeString, "hh:mm a", new Date())
+  let updatedDate = new Date(date)
+  updatedDate = setHours(updatedDate, parsedTime.getHours())
+  updatedDate = setMinutes(updatedDate, parsedTime.getMinutes())
+  updatedDate = setSeconds(updatedDate, 0)
+
+  return new Date(updatedDate).toISOString()
+}
+
+export function buildClickableUrl(urlString) {
+  if (!urlString || urlString.trim() === "") {
+    return ""
+  }
+  if (!/^https?:\/\//i.test(urlString)) {
+    urlString = "https://" + urlString
+  }
+  return urlString
+}
+
+export function formatMessage(text) {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
+  return text.replace(urlRegex, (url) => {
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:blue; text-decoration:underline;">${url}</a>`;
+  });
+}
+
+export function getDaysInMonth(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, i) => {
+    const dayNum = i + 1;
+    const dateObj = new Date(year, month, dayNum);
+    return {
+      date: dayNum,
+      day: format(dateObj, "EEE")
+    };
+  });
+}
+
+export function datesInRange(range) {
+  if (!range?.from || !range?.to) return [];
+
+  return eachDayOfInterval({
+    start: startOfDay(range.from),
+    end: endOfDay(range.to)
+  }).map(dateObj => ({
+    date: dateObj.getDate(),
+    month: dateObj.getMonth(),
+    year: dateObj.getFullYear(),
+    day: format(dateObj, "EEE"),
+  }));
+}
+
+
+export function validLink(link) {
+  return /^https?:\/\/.*$/.test(link);
+}
+
+export function ensureHttps(url = "") {
+  if (typeof url !== "string") return "";
+  url = url.trim();
+  url = url.replace(/^.*?:\/\/.*?:\/\/|^.*?:\/\/|:\/\/.*?:\/\/|:\/\/+|:.*?:\/\/+/gi, "https://");
+  url = url.replace(/^(?:https?:\/\/)+/i, "https://");
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+  return url;
+}

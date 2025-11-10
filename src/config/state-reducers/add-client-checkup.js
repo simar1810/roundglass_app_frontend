@@ -1,5 +1,6 @@
 import { addDays, differenceInYears, format, parse } from "date-fns";
 import { addClientCheckupInitialState } from "../state-data/add-client-checkup";
+import { ddMMyyyy } from "../data/regex";
 
 export function addClientCheckupReducer(state, action) {
   switch (action.type) {
@@ -54,6 +55,11 @@ export function addClientCheckupReducer(state, action) {
         ...state,
         nextFollowupType: "8-day",
         nextFollowup: format(addDays(new Date(), 8), 'yyyy-MM-dd')
+      }
+    case "CLIENT_ONBOARDING_COMPLETED":
+      return {
+        ...state,
+        stage: 5
       }
     default:
       return state;
@@ -114,16 +120,17 @@ export function updateMatrices(matrices, values) {
 }
 
 const fields = {
-  stage1: ["name", "dob", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
+  stage1: ["name", "gender", "joiningDate", "heightUnit", "weightUnit", "bodyComposition"],
   requestFields: [
     "name", "email", "mobileNumber", "notes", "gender",
     "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
     "visceral_fat", "activeType", "rm", "muscle",
-    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID"
+    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "sub_fat"
   ],
 }
 
 export function stage1Completed(state, stage) {
+  if (!state.age && !state.dob) return { success: false, field: "Either select dob or age" };
   for (const field of fields[stage]) {
     if (!state[field]) return { success: false, field };
   }
@@ -158,12 +165,15 @@ export function generateRequestPayload(state, coachId, existingClientID) {
   } else {
     formData.append("height", `${state["heightFeet"]}.${state["heightInches"]}`);
   }
-  for (const field of ["followUpDate", "joiningDate", "dob"]) {
+  if (state.dob) {
+    formData.append("dob", format(parse(state.dob, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
+  }
+  for (const field of ["followUpDate", "joiningDate"]) {
     formData.append(field, format(parse(state[field], 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy'));
   }
   formData.append("coachId", coachId);
   formData.append("existingClientID", existingClientID);
-  formData.append("age", differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date())))
+  formData.append("age", state.age)
   return formData;
 }
 
@@ -173,7 +183,19 @@ export function init(type, data) {
   for (const field of ["mobileNumber", "name", "clientId"]) {
     payload[field] = data[field] || "";
   }
+  if (ddMMyyyy.test(data.dob)) {
+    payload.dob = format(
+      parse(data.dob, "dd-MM-yyyy", new Date()),
+      "yyyy-MM-dd"
+    )
+  }
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;
   return payload;
+}
+
+export function clientOnboardingCompleted() {
+  return {
+    type: "CLIENT_ONBOARDING_COMPLETED"
+  }
 }

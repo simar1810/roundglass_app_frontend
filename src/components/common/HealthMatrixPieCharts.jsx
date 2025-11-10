@@ -7,8 +7,9 @@ import {
   calculateBodyFatFinal,
   calculateIdealWeightFinal,
   calculateSMPFinal,
+  calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
-import { cn } from "@/lib/utils";
+import { cn, extractNumber } from "@/lib/utils";
 import Image from "next/image";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Pencil } from "lucide-react";
@@ -69,8 +70,8 @@ const healtMetrics = [
     icon: "/svgs/weight.svg",
     name: "idealWeight",
     id: 5,
-    getMaxValue: (value) => value + 5,
-    getMinValue: (value) => value - 5,
+    getMaxValue: ({ value }) => value + 5,
+    getMinValue: ({ value }) => value - 5,
   },
   {
     title: "Body Age",
@@ -113,6 +114,16 @@ const healtMetrics = [
     getMaxValue: () => 260,
     getMinValue: () => 1,
   },
+  {
+    title: "Subcutaneous Fat",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "sub_fat",
+    id: 9,
+    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
+    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+  },
 
 ];
 
@@ -125,20 +136,22 @@ const weightDabba = {
 
 export default function HealthMetrics({ data, onUpdate }) {
   const payload = {
-    bmi: data.bmi || calculateBMIFinal(data),
-    muscle: data.muscle || calculateSMPFinal(data),
-    fat: data.fat || calculateBodyFatFinal(data),
-    rm: data.rm || calculateBMRFinal(data),
-    idealWeight: data.idealWeight || calculateIdealWeightFinal(data),
-    bodyAge: data.bodyAge || calculateBodyAgeFinal(data),
-    visceral_fat: data.visceral_fat,
+    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
+    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
+    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
+    rm: extractNumber(data.rm) || calculateBMRFinal(data),
+    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
+    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
+    visceral_fat: extractNumber(data.visceral_fat),
     weightInKgs: updateWeightField() === "weightInKgs"
-      ? data.weightInKgs
+      ? extractNumber(data.weightInKgs)
       : undefined,
     weightInPounds: updateWeightField() === "weightInPounds"
-      ? data.weightInPounds
+      ? extractNumber(data.weightInPounds)
       : undefined,
+    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
   };
+
   function updateWeightField() {
     if (["kgs", "kg"].includes(data?.weightUnit?.toLowerCase())) {
       return "weightInKgs"
@@ -149,15 +162,28 @@ export default function HealthMetrics({ data, onUpdate }) {
     return (
       <>
         {healtMetrics
-          .filter((metric) => !isNaN(payload[metric.name]) && payload[metric.name] !== 0)
+          .filter((metric) =>
+            !isNaN(payload[metric.name]) &&
+            payload[metric.name] !== 0 &&
+            payload[metric.name] !== ""
+          )
           .map((metric) => (
             <MetricProgress
               key={metric.id}
               {...metric}
               value={payload[metric.name]}
-              maxPossibleValue={metric.getMaxValue(payload[metric.name])}
-              maxThreshold={metric.getMaxValue(payload[metric.name])}
-              minThreshold={metric.getMinValue(payload[metric.name])}
+              maxPossibleValue={metric.getMaxValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
+              maxThreshold={metric.getMaxValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
+              minThreshold={metric.getMinValue({
+                value: payload[metric.name],
+                gender: data.gender
+              })}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -278,7 +304,7 @@ function EditHealthMatric({
           value={formData[name]}
           onChange={(e) => setFormData(prev => ({
             ...prev,
-            [matrix.name]: Number(e.target.value)
+            [matrix.name]: String(e.target.value)
           }))}
           className="block mb-4"
         />

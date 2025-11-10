@@ -19,6 +19,7 @@ import {
 } from "@/config/state-reducers/personal-branding";
 import { sendDataWithFormData } from "@/lib/api";
 import { getPersonalBranding } from "@/lib/fetchers/app";
+import { _throwError } from "@/lib/formatter";
 import { getObjectUrl, normalizeHexColor } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { Pen, X } from "lucide-react";

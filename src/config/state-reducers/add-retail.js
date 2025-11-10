@@ -57,6 +57,12 @@ export function addRetailReducer(state, action) {
         ...state,
         stage: 4
       }
+    case "PREVIOUS_STAGE":
+      if (![2, 3].includes(state.stage)) return state
+      return {
+        ...state,
+        stage: state.stage - 1
+      }
     default:
       return state;
   }
@@ -130,6 +136,12 @@ export function orderRequested() {
   }
 }
 
+export function previousStage() {
+  return {
+    type: "PREVIOUS_STAGE"
+  }
+}
+
 export function init(payload) {
   return {
     ...addRetailInitialState,
@@ -140,7 +152,12 @@ export function init(payload) {
     brand: {
       margins: payload.margins,
       _id: payload.selectedBrandId
-    }
+    },
+    clientId: payload.clientId && payload.clientId._id ? payload.clientId._id : null,
+    productModule: payload.productModule,
+    status: payload.status,
+    clientName: payload?.clientId?.name || "",
+    orderId: payload.orderId || ""
   }
 }
 

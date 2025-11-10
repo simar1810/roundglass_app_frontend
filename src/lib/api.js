@@ -16,6 +16,11 @@ export async function fetchData(endpoint, expireUserSession) {
       },
       cache: "no-store",
     });
+
+    if (response.status === 502) {
+      redirect("/maintenance");
+    }
+
     const data = await response.json();
     if (
       [408].includes(data.status_code)
@@ -26,6 +31,10 @@ export async function fetchData(endpoint, expireUserSession) {
     }
     return data;
   } catch (error) {
+    // Rethrow Next.js navigation errors (redirect, notFound, etc.)
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     return error;
   }
 }
@@ -54,6 +63,11 @@ export async function sendData(
       body: JSON.stringify(data),
       cache: "no-store",
     });
+
+    if (response.status === 502) {
+      redirect("/maintenance");
+    }
+
     const retrievedData = await response.json();
     if (response.status === 401) {
       if (expireUserSession) await expireUserSession();
@@ -61,6 +75,10 @@ export async function sendData(
     }
     return retrievedData;
   } catch (error) {
+    // Rethrow Next.js navigation errors (redirect, notFound, etc.)
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     return error;
   }
 }
@@ -88,13 +106,22 @@ export async function sendDataWithFormData(
       body: formData,
       cache: "no-store",
     });
+
+    if (response.status === 502) {
+      redirect("/maintenance");
+    }
+
     const retrievedData = await response.json();
     if (response.status === 401) {
       if (expireUserSession) await expireUserSession();
-      return null;
+      return retrievedData;
     }
     return retrievedData;
   } catch (error) {
+    // Rethrow Next.js navigation errors (redirect, notFound, etc.)
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     return error;
   }
 }
@@ -122,4 +149,11 @@ export async function streamResponse(endpoint, data) {
   } catch (error) {
     return error;
   }
+}
+
+export async function sendUserInsight(userId, payload) {
+  try {
+    if (!userId) return
+    await sendData(`app/users/actions?person=coach`, { userId, payload }, "PUT")
+  } catch (error) { }
 }

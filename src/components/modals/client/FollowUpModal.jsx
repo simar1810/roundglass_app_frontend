@@ -25,6 +25,7 @@ import {
   calculateBodyFatFinal,
   calculateIdealWeightFinal,
   calculateSMPFinal,
+  calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
@@ -33,6 +34,8 @@ import { sendData } from "@/lib/api";
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
+import { _throwError } from "@/lib/formatter";
+import { extractNumber } from "@/lib/utils";
 
 export default function FollowUpModal({ clientData }) {
   return <Dialog>
@@ -75,7 +78,7 @@ function Stage1({ clientData }) {
 
   const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix
     .at(clientData?.healthMatrix?.healthMatrix.length - 1);
-  const latestOldWeight = `${latesthealthMatrix?.weight} ${latesthealthMatrix?.weightUnit}`
+  const latestOldWeight = `${extractNumber(latesthealthMatrix?.weight)} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
     <FormControl
@@ -189,6 +192,7 @@ function Stage2({
       heightUnit,
       heightCms: height
     }
+
   const clienthealthStats = {
     bmi: calculateBMIFinal({ ...payload, ...statObj }),
     muscle: calculateSMPFinal({ ...payload, ...statObj }),
@@ -196,13 +200,14 @@ function Stage2({
     rm: calculateBMRFinal({ ...payload, ...statObj }),
     idealWeight: calculateIdealWeightFinal({ ...payload, ...statObj }),
     bodyAge: calculateBodyAgeFinal({ ...payload, ...statObj }),
+    sub_fat: calculateSubcutaneousFat(payload)?.subcutaneousPercent
   }
 
   async function createFollowUp() {
     try {
-      const data = generateRequestPayload({ healthMatrix, ...state })
+      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj })
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
-      if (response.status_code !== 200) throw new Error(response.message || response.error);
+      if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
       mutate(`app/clientStatsCoach?clientId=${clientId}`)
       closeBtnRef.current.click();
@@ -229,13 +234,18 @@ function Stage2({
             data={payload}
           />
         </div>
-        <Button
-          onClick={createFollowUp}
-          variant="wz"
-          className="block mx-auto mt-10 px-24"
-        >
-          Done
-        </Button>
+        <div className="grid grid-cols-2 gap-4 mt-10">
+          <Button
+            onClick={() => dispatch(setCurrentStage(1))}
+          >Previous</Button>
+          <Button
+            onClick={createFollowUp}
+            variant="wz"
+            className=""
+          >
+            Done
+          </Button>
+        </div>
         <DialogClose ref={closeBtnRef} />
       </div>
     </div>

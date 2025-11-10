@@ -112,9 +112,7 @@ export default function RewardsDashboard() {
       if (response.status_code === 200) {
         setClients(response.data || []);
       }
-    } catch (error) {
-      console.error("Failed to fetch clients:", error);
-    }
+    } catch (error) { }
   };
 
   const createReward = async () => {
@@ -132,9 +130,7 @@ export default function RewardsDashboard() {
         category: rewardFormData.category,
         isActive: rewardFormData.isActive,
       };
-
-      const response = await sendData("app/rewards/catalog", payload);
-
+      const response = await sendData("app/rewards/catalog", payload);  
       if (response.status_code === 200) {
         toast.success("Reward created successfully");
         setIsRewardDialogOpen(false);
@@ -392,8 +388,8 @@ export default function RewardsDashboard() {
                     {loading
                       ? "Saving..."
                       : editingReward
-                      ? "Update Reward"
-                      : "Add Reward"}
+                        ? "Update Reward"
+                        : "Add Reward"}
                   </Button>
                   <Button
                     variant="outline"

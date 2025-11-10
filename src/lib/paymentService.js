@@ -41,7 +41,6 @@ export async function createPaymentLink(paymentData) {
 
     return data;
   } catch (error) {
-    console.error("Payment creation error:", error);
     return {
       success: false,
       message: error.message || "Failed to create payment link",
@@ -89,7 +88,6 @@ export async function getPayments(filters = {}) {
 
     return data;
   } catch (error) {
-    console.error("Get payments error:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch payments",
@@ -124,7 +122,6 @@ export async function sendPaymentReminder(paymentId, tone = "friendly") {
 
     return data;
   } catch (error) {
-    console.error("Send reminder error:", error);
     return {
       success: false,
       message: error.message || "Failed to send reminder",
@@ -159,7 +156,6 @@ export async function regeneratePaymentLink(paymentId) {
 
     return data;
   } catch (error) {
-    console.error("Regenerate link error:", error);
     return {
       success: false,
       message: error.message || "Failed to regenerate payment link",
@@ -181,7 +177,6 @@ export async function getVouchers() {
 
     // Check if response is ok before trying to parse JSON
     if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
       return {
         success: false,
         status_code: response.status,
@@ -199,7 +194,6 @@ export async function getVouchers() {
 
     return data;
   } catch (error) {
-    console.error("Get vouchers error:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch vouchers",
@@ -231,7 +225,6 @@ export async function createVoucher(voucherData) {
 
     return data;
   } catch (error) {
-    console.error("Create voucher error:", error);
     return {
       success: false,
       message: error.message || "Failed to create voucher",
@@ -263,7 +256,6 @@ export async function updateVoucher(voucherId, voucherData) {
 
     return data;
   } catch (error) {
-    console.error("Update voucher error:", error);
     return {
       success: false,
       message: error.message || "Failed to update voucher",
@@ -293,7 +285,6 @@ export async function deleteVoucher(voucherId) {
 
     return data;
   } catch (error) {
-    console.error("Delete voucher error:", error);
     return {
       success: false,
       message: error.message || "Failed to delete voucher",
@@ -323,7 +314,6 @@ export async function getVoucherAnalytics() {
 
     return data;
   } catch (error) {
-    console.error("Get voucher analytics error:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch voucher analytics",

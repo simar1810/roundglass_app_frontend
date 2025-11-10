@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { sendData } from "@/lib/api";
 import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
-import { Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
+import { VideoPlayer } from "../../list/[id]/page";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import AssignWorkoutModal from "@/components/modals/AssignModal";
 
 export default function Page() {
   const { id } = useParams();
@@ -40,7 +43,7 @@ function WorkoutDetailsContainer({ id }) {
 
 function WorkoutMetaData({ customPlan }) {
   return <div className="p-4 pr-8">
-    <div className="flex items-center gap-2">
+    <div className="mb-2 flex items-center gap-2">
       <h4 className="mr-auto">{customPlan.title}</h4>
       <Link
         href={`/coach/workouts/add?creationType=copy_edit&mode=${customPlan.mode}&workoutId=${customPlan._id}`}
@@ -60,12 +63,16 @@ function WorkoutMetaData({ customPlan }) {
         <DeleteCustomWorkoutPlan id={customPlan._id} />
       </>}
     </div>
+    <AssignWorkoutModal
+      type="custom"
+      workoutId={customPlan._id}
+    />
     <Image
       alt=""
       src={customPlan.image?.trim() || "/not-found.png"}
       height={500}
       width={500}
-      className="w-full max-h-[200px] my-4 rounded-[10px] object-cover"
+      className="w-full max-h-[200px] my-4 rounded-[10px] object-cover border-1"
       onError={e => e.target.src = "/not-found.png"}
     />
     <p>{customPlan.description}</p>
@@ -100,13 +107,16 @@ function WorkoutsListing({ customPlan }) {
 
 function WorkoutExercise({ exercise }) {
   return <div className="border-1 rounded-[10px] overflow-clip">
-    <Image
-      alt=""
-      src={exercise.thumbnail?.trim() || "/not-found.png"}
-      height={200}
-      width={200}
-      className="w-full max-h-[180px] object-cover border-b-1"
-    />
+    <div className="relative">
+      <Image
+        alt=""
+        src={exercise.thumbnail?.trim() || "/not-found.png"}
+        height={200}
+        width={200}
+        className="w-full max-h-[180px] object-cover border-b-1"
+      />
+      <WorkoutVideo name={exercise.title} src={exercise.video_link} />
+    </div>
     <div className="p-3 text-md">
       <h3>{exercise.title}</h3>
       <p className="text-black/60 text-xs mt-1">{exercise.description}</p>
@@ -116,6 +126,23 @@ function WorkoutExercise({ exercise }) {
       </div>
     </div>
   </div>
+}
+
+function WorkoutVideo({ src, name }) {
+  return <Dialog>
+    <DialogTrigger className="absolute bottom-2 right-2">
+      <Play
+        className="w-[28px] h-[28px] bg-[var(--accent-1)] text-white p-[4px] rounded-full
+                   opacity-80 cursor-pointer hover:scale-[1.05] hover:opacity-100"
+      />
+    </DialogTrigger>
+    <DialogContent className="p-0">
+      <DialogTitle className="p-4 border-b-1">{name}</DialogTitle>
+      <div className="p-4">
+        <VideoPlayer src={src} />
+      </div>
+    </DialogContent>
+  </Dialog>
 }
 
 function DeleteCustomWorkoutPlan({ id }) {

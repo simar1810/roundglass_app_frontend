@@ -2,6 +2,29 @@ import { format, parse } from "date-fns";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
 
+export const defaultMealTypes = [
+  {
+    mealType: "Breakfast",
+    meals: []
+  },
+  {
+    mealType: "Morning Snacks",
+    meals: []
+  },
+  {
+    mealType: "Lunch",
+    meals: []
+  },
+  {
+    mealType: "Evening Snacks",
+    meals: []
+  },
+  {
+    mealType: "Dinner",
+    meals: []
+  },
+]
+
 export function customMealReducer(state, action) {
   switch (action.type) {
     case "SELECT_MEAL_TYPE":
@@ -13,7 +36,7 @@ export function customMealReducer(state, action) {
         selectedPlan: "daily",
         selectedMealType: "Breakfast",
         selectedPlans: {
-          daily: [{ mealType: "Breakfast", meals: [] }]
+          daily: defaultMealTypes
         },
       }
       else if (action.payload === "weekly") return {
@@ -24,7 +47,7 @@ export function customMealReducer(state, action) {
         selectedPlan: "sun",
         selectedMealType: "Breakfast",
         selectedPlans: DAYS.reduce((acc, curr) => {
-          acc[curr] = [{ mealType: "Breakfast", meals: [] }];
+          acc[curr] = defaultMealTypes;
           return acc;
         }, {})
       }
@@ -36,7 +59,7 @@ export function customMealReducer(state, action) {
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedMealType: "Breakfast",
         selectedPlans: {
-          [format(new Date(), 'dd-MM-yyyy')]: [{ mealType: "Breakfast", meals: [] }]
+          [format(new Date(), 'dd-MM-yyyy')]: defaultMealTypes
         }
       }
 
@@ -85,118 +108,171 @@ export function customMealReducer(state, action) {
         selectedMealType: action.payload,
       }
     case "CHANGE_SELECTED_PLAN":
+      const plan = state.selectedPlans[action.payload];
+      const selectMeal = Array.isArray(plan) ? plan.at(0)?.mealType : plan?.meals?.at(0)?.mealType;
       return {
         ...state,
         selectedPlan: action.payload,
-        selectedMealType: state.selectedPlans[action.payload]?.at(0).mealType
+        selectedMealType: selectMeal
       }
-    case "SAVE_MEAL_TYPE":
+    case "SAVE_MEAL_TYPE": {
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
       if (action.payload.type === "new") {
+        const updatedMeals = [
+          ...currentMeals,
+          { mealType: action.payload.mealType, meals: [] },
+        ];
+
         return {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: [
-              ...state.selectedPlans[state.selectedPlan],
-              {
-                mealType: action.payload.mealType,
-                meals: []
-              }
-            ]
-          },
-          selectedMealType: action.payload.mealType
-        }
-      } else if (action.payload.type === "edit") {
-        return {
-          ...state,
-          selectedPlans: {
-            ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealPlan, index) => index === action.payload.index
-              ? { ...mealPlan, mealType: action.payload.mealType }
-              : mealPlan),
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
           },
           selectedMealType: action.payload.mealType,
-        }
-      } else {
+        };
+      }
+
+      if (action.payload.type === "edit") {
+        const updatedMeals = currentMeals.map((mealPlan, index) =>
+          index === action.payload.index
+            ? { ...mealPlan, mealType: action.payload.mealType }
+            : mealPlan
+        );
+
         return {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan].filter((_, index) => index !== action.payload.index),
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
           },
-          selectedMealType: state.selectedPlans[state.selectedPlan]?.at(state.selectedPlans[state.selectedPlan].length - 2)?.mealType || "",
-        }
+          selectedMealType: action.payload.mealType,
+        };
       }
-    case "SAVE_RECIPE":
-      if (action.payload.index || action.payload.index === 0) {
-        const dishesPayload = !action.payload.isNew
-          ? {
-            ...action.payload.recipe,
-            dish_name: action.payload.recipe.dish_name || action.payload.recipe.title,
-            image: action.payload.recipe.image || action.payload.recipe.image,
-            fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
-            calories: action.payload.recipe?.calories?.total || action.payload.recipe.calories,
-            protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
-            carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
-            isNew: !action.payload.recipe.time || false
-          }
-          : {
-            isNew: false
-          }
-        return {
-          ...state,
-          selectedPlans: {
-            ...state.selectedPlans,
-            [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-              .map((mealType => mealType.mealType === state.selectedMealType
-                ? {
-                  ...mealType,
-                  meals: mealType.meals.map((meal, index) => index === action.payload.index
-                    ? {
-                      ...meal,
-                      ...dishesPayload
-                    }
-                    : meal)
-                } : mealType
-              ))
-          }
-        }
-      }
+      const updatedMeals = currentMeals.filter(
+        (_, index) => index !== action.payload.index
+      );
+      const newSelectedMealType =
+        updatedMeals.at(updatedMeals.length - 1)?.mealType || "";
+
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan].map((mealType => mealType.mealType === state.selectedMealType
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+        selectedMealType: newSelectedMealType,
+      };
+    }
+    case "SAVE_RECIPE": {
+      const { recipe, index, isNew } = action.payload;
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      const dishesPayload = !isNew
+        ? {
+          ...recipe,
+          dish_name: recipe.dish_name || recipe.title,
+          image: recipe.image || recipe.image,
+          fats: recipe.fats || recipe?.calories?.fats,
+          calories: recipe?.calories?.total || recipe.calories,
+          protein: recipe.protein || recipe?.calories?.proteins,
+          carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+          measure: recipe.measure,
+          isNew: !recipe.time || false,
+        }
+        : {
+          isNew: false,
+        };
+
+      if (index || index === 0) {
+        const updatedMeals = currentMeals.map((mealType) =>
+          mealType.mealType === state.selectedMealType
             ? {
               ...mealType,
-              meals: [...mealType.meals, {
-                ...action.payload.recipe,
-                dish_name: action.payload.recipe.dish_name || action.payload.recipe.name,
-                fats: action.payload.recipe.fats || action.payload.recipe?.calories?.fats,
-                calories: action.payload.recipe.calories || action.payload.recipe?.calories?.total,
-                protein: action.payload.recipe.protein || action.payload.recipe?.calories?.proteins,
-                carbohydrates: action.payload.recipe.carbohydrates || action.payload.recipe?.calories?.carbs,
-                isNew: true
-              }]
+              meals: mealType.meals.map((meal, i) =>
+                i === index ? { ...meal, ...dishesPayload } : meal
+              ),
             }
             : mealType
-          ))
-        }
+        );
+
+        return {
+          ...state,
+          selectedPlans: {
+            ...state.selectedPlans,
+            [state.selectedPlan]: isArray
+              ? updatedMeals
+              : { ...currentPlan, meals: updatedMeals },
+          },
+        };
       }
-    case "DELETE_RECIPE":
+
+      const updatedMeals = currentMeals.map((mealType) =>
+        mealType.mealType === state.selectedMealType
+          ? {
+            ...mealType,
+            meals: [
+              ...(mealType.meals || []),
+              {
+                ...recipe,
+                dish_name: recipe.dish_name || recipe.name,
+                fats: recipe.fats || recipe?.calories?.fats,
+                calories: recipe.calories || recipe?.calories?.total,
+                protein: recipe.protein || recipe?.calories?.proteins,
+                carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
+                measure: recipe.measure,
+                isNew: true,
+              },
+            ],
+          }
+          : mealType
+      );
+
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: state.selectedPlans[state.selectedPlan]
-            .map((mealType => mealType.mealType === state.selectedMealType
-              ? {
-                ...mealType,
-                meals: mealType.meals.filter((_, index) => index !== action.payload)
-              } : mealType
-            ))
-        }
-      }
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+      };
+    }
+    case "DELETE_RECIPE": {
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      const updatedMeals = currentMeals.map((mealType) =>
+        mealType.mealType === state.selectedMealType
+          ? {
+            ...mealType,
+            meals: mealType.meals.filter((_, index) => index !== action.payload),
+          }
+          : mealType
+      );
+
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: isArray
+            ? updatedMeals
+            : { ...currentPlan, meals: updatedMeals },
+        },
+      };
+    }
     case "MEAL_PLAN_CREATED":
       return {
         ...state,
@@ -211,7 +287,7 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [formatted]: [{ mealType: "Breakfast", meals: [] }]
+          [formatted]: defaultMealTypes
         },
         selectedPlan: formatted,
         selectedMealType: "Breakfast"
@@ -225,6 +301,133 @@ export function customMealReducer(state, action) {
           [action.payload.to]: state.selectedPlans[action.payload.from]
         }
       }
+
+    case "COPY_MEAL_REPLACE_DESTINATIONS": {
+      const { replacements = [] } = action.payload || {};
+      if (!Array.isArray(replacements) || replacements.length === 0) return state;
+
+      const updatedPlans = { ...state.selectedPlans };
+
+      replacements.forEach(({ fromPlan, fromMealIndex, toPlan, toMealType }) => {
+        if (!fromPlan || typeof fromMealIndex !== "number" || !toPlan) return;
+
+        const sourcePlan = state.selectedPlans[fromPlan];
+        const sourceMealsArray = Array.isArray(sourcePlan)
+          ? sourcePlan
+          : sourcePlan?.meals || [];
+
+        const sourceMealEntry = sourceMealsArray[fromMealIndex];
+        if (!sourceMealEntry) return;
+
+        const normalizedMealType = toMealType || sourceMealEntry?.mealType || sourceMealEntry?.fromMealType;
+        if (!normalizedMealType) return;
+
+        const mealsToCopy = Array.isArray(sourceMealEntry?.meals)
+          ? sourceMealEntry.meals.map((meal) => ({ ...meal }))
+          : [];
+
+        const targetPlan = updatedPlans[toPlan] || [];
+        const targetIsArray = Array.isArray(targetPlan);
+        const targetMealsArray = targetIsArray ? targetPlan : targetPlan?.meals || [];
+
+        const targetIndex = targetMealsArray.findIndex((meal) => meal.mealType === normalizedMealType);
+
+        const nextMealsArray = targetIndex >= 0
+          ? targetMealsArray.map((meal, index) =>
+            index === targetIndex
+              ? { ...meal, mealType: normalizedMealType, meals: mealsToCopy }
+              : meal,
+          )
+          : [...targetMealsArray, { mealType: normalizedMealType, meals: mealsToCopy }];
+
+        updatedPlans[toPlan] = targetIsArray
+          ? nextMealsArray
+          : {
+            ...targetPlan,
+            meals: nextMealsArray,
+          };
+        console.log(updatedPlans)
+      });
+      // return state
+      return {
+        ...state,
+        selectedPlans: updatedPlans,
+      }
+    }
+
+    case "DELETE_MONTHLY_DATE":
+      delete state.selectedPlans[action.payload]
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+        }
+      }
+    case "CHANGE_MONTHLY_DATE":
+      const {
+        selectedPlans: {
+          [action.payload.prev]: previous,
+          ...selectedPlans
+        },
+        ...rest
+      } = state;
+      return {
+        ...rest,
+        selectedPlans: {
+          ...selectedPlans,
+          [action.payload.new]: previous
+        },
+        selectedPlan: action.payload.new,
+      };
+    case "LOAD_AI_MEAL_PLAN": {
+      const ai = action.payload.mealPlan;
+
+      return {
+        ...state,
+        title: ai.title,
+        description: ai.description,
+        mode: ai.mode || "daily",
+        creationType: "new",
+        stage: 2,
+        selectedPlan: "daily",
+        selectedMealType:
+          ai.plan?.day_1?.meals?.[0]?.mealType || "Breakfast",
+        selectedPlans: Object.fromEntries(
+          Object.entries(ai.plan || {}).map(([day, data]) => [
+            day,
+            {
+              ...data,
+              meals: Array.isArray(data.meals) ? data.meals : [],
+            },
+          ])
+        ),
+        isAiGenerated: true,
+      };
+    }
+    case "REORDER_MEAL_TYPES": {
+      const { oldIndex, newIndex } = action.payload;
+      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const isArray = Array.isArray(currentPlan);
+      const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+
+      if (oldIndex === newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= currentMeals.length || newIndex >= currentMeals.length) {
+        return state;
+      }
+
+      const reorderedMeals = [...currentMeals];
+      const [movedMeal] = reorderedMeals.splice(oldIndex, 1);
+      reorderedMeals.splice(newIndex, 0, movedMeal);
+
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [state.selectedPlan]: isArray
+            ? reorderedMeals
+            : { ...currentPlan, meals: reorderedMeals },
+        },
+      };
+    }
     default:
       return state;
   }
@@ -350,6 +553,15 @@ export function copyAllMealPlans(from, to) {
   }
 }
 
+export function replaceMealPlanSelections(replacements) {
+  return {
+    type: "COPY_MEAL_REPLACE_DESTINATIONS",
+    payload: {
+      replacements,
+    },
+  }
+}
+
 export function mealPlanCreationRP(state) {
   return {
     name: undefined,
@@ -358,7 +570,7 @@ export function mealPlanCreationRP(state) {
     // _id: undefined,
     notes: undefined,
     image: undefined,
-    meals: state
+    meals: state.map(item => ({ mealType: item.mealType, meals: item.meals }))
   }
 }
 
@@ -367,7 +579,8 @@ export function dailyMealRP(state) {
     title: state.title,
     description: state.description,
     mode: state.mode,
-    image: state.image
+    image: state.image,
+    ...(state.mode === "monthly" && { noOfDays: state.noOfDays })
   }
 }
 
@@ -386,5 +599,29 @@ export function monthlyMealRP(state) {
     description: state.description,
     mode: state.mode,
     plans: payload
+  }
+}
+
+export function changeMonthlyDate(payload) {
+  return {
+    type: "CHANGE_MONTHLY_DATE",
+    payload
+  }
+}
+
+export function deleteMonthlyDate(payload) {
+  return {
+    type: "DELETE_MONTHLY_DATE",
+    payload
+  }
+}
+
+export function reorderMealTypes(oldIndex, newIndex) {
+  return {
+    type: "REORDER_MEAL_TYPES",
+    payload: {
+      oldIndex,
+      newIndex
+    }
   }
 }

@@ -45,5 +45,18 @@ export default function CustomMealMetaData() {
         className="min-h-[120px]"
       />
     </div>
+    {state.mode === "monthly" && <div>
+      <Label className="font-bold mb-2">Number Of Days</Label>
+      <FormControl
+        value={state.noOfDays}
+        onChange={e => (parseInt(e.target.value) >= 0 || e.target.value === "") &&
+          dispatch(customWorkoutUpdateField("noOfDays", e.target.value))
+        }
+        placeholder="Enter Number of days"
+        type="number"
+        min={0}
+        className="min-h-[120px]"
+      />
+    </div>}
   </div>
 }

@@ -8,26 +8,35 @@ import { copyText } from "@/lib/utils";
 import { toast } from "sonner";
 import ClientListVolumePoint from "./ClientListVolumePoint";
 import RequestedVPModal from "@/components/modals/club/RequestedVPModal";
+import FormControl from "@/components/FormControl";
+import { useState } from "react";
+
+function sortClients(clients = [], query) {
+  return clients
+    .sort((clientA, clientB) => Number(clientA.activePoints) - Number(clientB.activePoints))
+    .filter(client => !!client.clientId)
+    .filter(client => new RegExp(query, "i").test(client?.clientId?.name));
+}
 
 export default function VolumePointModeClientsList() {
+  const [query, setQuery] = useState("")
   const { isLoading, error, data } = useSWR(`membership`, getClubClientVolumePoints);
 
   if (isLoading) return <ContentLoader />
 
   if (data.status_code !== 200 || error) return <ContentError title={error || data.message} />
 
-  const clients = data.data
-    .filter(client => !!client.clientId || !!client.name);
+  const clients = sortClients(data.data, query)
 
   if (clients.length === 0) return <div className="content-container">
-    <Header />
+    <Header query={query} setQuery={setQuery} />
     <ContentError
       title="0 clients found!"
       className="mt-0 border-0"
     />
   </div>
   return <div className="content-container">
-    <Header />
+    <Header query={query} setQuery={setQuery} />
     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-4 divide-y-1">
       {clients.map((client, index) => <ClientListVolumePoint
         key={index}
@@ -38,7 +47,7 @@ export default function VolumePointModeClientsList() {
   </div>
 }
 
-function Header() {
+function Header({ query, setQuery }) {
   function copyLink() {
     copyText(process.env.NEXT_PUBLIC_CLIENT_ENDPOINT + "/request-volume-point")
     toast.success("Link Copied")
@@ -46,8 +55,13 @@ function Header() {
 
   return <div className="pb-4 flex items-center gap-2 border-b-1">
     <h4>Volume Point</h4>
-    <Button
+    <FormControl
       className="ml-auto"
+      placeholder="Search by name.."
+      query={query}
+      onChange={e => setQuery(e.target.value)}
+    />
+    <Button
       size="sm"
       variant="wz_outline"
       onClick={copyLink}

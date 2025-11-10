@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { changeFieldvalue, changeHeightUnit, changeWeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { format } from "date-fns";
+import { differenceInYears, format, parse } from "date-fns";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -45,7 +45,13 @@ export default function CheckupStage1() {
         placeholder="DD/MM/YYYY"
         className="w-full"
         value={state.dob}
-        onChange={e => dispatch(changeFieldvalue("dob", e.target.value))}
+        onChange={e => {
+          dispatch(changeFieldvalue("dob", e.target.value))
+          dispatch(changeFieldvalue(
+            "age",
+            differenceInYears(new Date(), parse(e.target.value, "yyyy-MM-dd", new Date()))
+          ))
+        }}
       />
       <div>
         <span className="label font-[600] block mb-1">Gender</span>
@@ -125,15 +131,20 @@ export default function CheckupStage1() {
         </div>
         <SelectWeightUnit />
       </div>
-      <div className="mr-[-10px]">
-        <FormControl
-          label="Visceral Fat (optional)"
-          type="text"
-          placeholder="Enter Visceral Fat"
-          value={state.visceral_fat}
-          onChange={e => dispatch(changeFieldvalue("visceral_fat", e.target.value))}
-        />
-      </div>
+      <FormControl
+        label="Visceral Fat (optional)"
+        type="text"
+        placeholder="Enter Visceral Fat"
+        value={state.visceral_fat}
+        onChange={e => dispatch(changeFieldvalue("visceral_fat", e.target.value))}
+      />
+      <FormControl
+        label="Age"
+        type="number"
+        placeholder="Enter Age"
+        value={state.age}
+        onChange={e => dispatch(changeFieldvalue("age", e.target.value))}
+      />
       <div className="col-span-2">
         <span className="label font-[600] block mb-2">
           Body Composition

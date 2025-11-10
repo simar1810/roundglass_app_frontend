@@ -9,15 +9,24 @@ export function personalBrandingReducer(state, action) {
         }
       }
     case "SELECT_PERSONAL_BRAND_EDIT":
-      const lastIndex = action.payload.length - 1
+      // const lastIndex = action.payload.length - 1
+      const lastIndex = 0
       return {
         ...state,
-        selectedBrand: action.payload.length >= 1 ? action.payload.at(lastIndex) : null,
+        selectedBrand: action.payload.length >= 1
+          ? {
+            ...action.payload.at(lastIndex),
+            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(-6) || "",
+            textColor: action.payload.at(lastIndex)?.textColor?.slice(-6) || ""
+          }
+          : null,
         formData: action.payload.length >= 1
           ? {
             ...action.payload.at(lastIndex),
             brandLogo: "",
-            file: action.payload.length >= 1 ? action.payload.at(lastIndex).brandLogo : undefined
+            file: action.payload.length >= 1 ? action.payload.at(lastIndex).brandLogo : undefined,
+            primaryColor: action.payload.at(lastIndex)?.primaryColor?.slice(-6) || "",
+            textColor: action.payload.at(lastIndex)?.textColor?.slice(-6) || ""
           }
           : { ...state.formData },
         type: action.payload.length >= 1 ? "edit" : "new",
@@ -75,11 +84,19 @@ export function personalBrandCreated(payload) {
   }
 }
 
-const fields = ["file", "brandName", "primaryColor", "textColor", "brandLogo"];
+const fields = ["file", "brandName"];
 export function generateRequestPayload(state, id) {
   const payload = new FormData();
   for (const field of fields) {
     if (state[field]) payload.append(field, state[field]);
+  }
+  for (const field of ["primaryColor", "textColor"]) {
+    if (state[field]) payload.append(field, `ff${state[field]}`)
+  }
+  if (state.brandLogo && Boolean(id)) {
+    payload.append("file", state.brandLogo)
+  } else if (state.brandLogo) {
+    payload.append("brandLogo", state.brandLogo)
   }
   if (Boolean(id)) payload.append("id", id)
   return payload;

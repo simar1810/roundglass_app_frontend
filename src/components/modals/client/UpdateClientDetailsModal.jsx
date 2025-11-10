@@ -12,8 +12,10 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { CookingPot, Image as ImageIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
+import { _throwError } from "@/lib/formatter";
+import { calculateBMIFinal, calculateIdealWeightFinal } from "@/lib/client/statistics";
 
-const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit", "weightUnit"];
+const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit"];
 
 function getHeight(formData) {
   if (formData.heightUnit.toLowerCase() === "cm") {
@@ -72,7 +74,6 @@ function generateDefaultPayload(obj) {
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => generateDefaultPayload(clientData));
-
   const closeBtnRef = useRef();
   const fileRef = useRef();
 
@@ -84,12 +85,17 @@ export default function UpdateClientDetailsModal({ clientData }) {
       } else {
         data.append("height", `${formData.heightFeet}.${formData.heightInches}`)
       }
-      data.append("weight", getWeight(formData))
+      // data.append("weight", getWeight(formData))
       for (const field of formFields) {
         data.append(field, formData[field])
       }
       data.append("dob", format(parse(formData.dob, 'yyyy-MM-dd', new Date()), "dd-MM-yyyy"));
-      data.append("bmi", clientData?.healthMatrix?.healthMatrix?.at(0)?.bmi || 0)
+      data.append(
+        "bmi",
+        calculateBMIFinal(formData) ||
+        clientData?.healthMatrix?.healthMatrix?.at(0)?.bmi || 0
+      )
+      data.append("idealWeight", calculateIdealWeightFinal(formData))
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
       toast.success(response.message);
@@ -292,18 +298,18 @@ function SelectWeightUnit({ formData, setFormData }) {
     setFormData(prev => ({
       ...prev,
       weightUnit: formData.weightUnit === "kg" ? "pounds" : "kg",
-      weightInKgs: formData.weightUnit?.toLowerCase() === "kg"
-        ? formData.weightInKgs
-        : Math.floor(formData.weightInPounds * 2.20462),
-      weightInPounds: formData.weightUnit?.toLowerCase() === "pounds"
-        ? formData.weightInPounds
-        : Math.floor(formData.weightInKgs / 2.20462),
+      weightInKgs: formData.weightUnit?.toLowerCase() === "pounds"
+        ? Math.round(formData.weightInPounds / 2.20462)
+        : formData.weightInKgs,
+      weightInPounds: formData.weightUnit?.toLowerCase() === "kg"
+        ? Math.round(formData.weightInKgs * 2.20462)
+        : formData.weightInPounds,
     }))
   }
 
   if (formData.weightUnit?.toLowerCase() === "kg") return <div className="mt-1">
     <div className="flex items-center gap-2">
-      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
+      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Kg/Lbs)"}</span></h5>
       <p>Pound</p>
       <Switch
         checked={["kg", "kgs"].includes(formData.weightUnit?.toLowerCase())}
@@ -321,7 +327,7 @@ function SelectWeightUnit({ formData, setFormData }) {
   </div>
   return <div className="mt-1">
     <div className="flex items-center gap-2">
-      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Ft/In)"}</span></h5>
+      <h5 className="mr-auto">Weight <span className="!font-[300]">{"(Kg/Lbs)"}</span></h5>
       <p>Pound</p>
       <Switch
         checked={["kg", "kgs"].includes(formData.weightUnit?.toLowerCase())}

@@ -1,29 +1,95 @@
-import { isAfter, isBefore, parse } from "date-fns";
+import { isAfter, isBefore, parse, isValid } from "date-fns";
 import * as XLSX from "xlsx";
 
-export function excelRetailOrdersData(orders, dates) {
-  const startDate = parse(dates.startDate, 'yyyy-MM-dd', new Date());
-  const endDate = parse(dates.endDate, 'yyyy-MM-dd', new Date());
+// Helper function to safely parse dates with multiple format attempts
+function safeParseDate(dateString, formats = ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy"]) {
+  if (!dateString) return null;
+  
+  for (const format of formats) {
+    const parsed = parse(dateString, format, new Date());
+    if (isValid(parsed)) {
+      // Set time to start of day to avoid timezone issues
+      parsed.setHours(0, 0, 0, 0);
+      return parsed;
+    }
+  }
+  
+  // If all formats fail, try native Date parsing as fallback
+  const nativeDate = new Date(dateString);
+  if (isValid(nativeDate)) {
+    nativeDate.setHours(0, 0, 0, 0);
+    return nativeDate;
+  }
+  return null;
+}
 
-  const exporting = (orders.myOrder || [])
+export function excelRetailOrdersData(orders, dates) {
+  try {
+    const startDate = safeParseDate(dates.startDate, ['yyyy-MM-dd']);
+    const endDate = safeParseDate(dates.endDate, ['yyyy-MM-dd']);
+
+    if (!startDate || !endDate) {
+      return [];
+    }
+
+    endDate.setHours(23, 59, 59, 999);
+
+  const exporting = (orders || [])
     .filter(order => {
-      const parsedDate = parse(order.createdAt, "dd-MM-yyyy", new Date())
-      return isAfter(parsedDate, startDate) && isBefore(parsedDate, endDate)
+      if (!order.createdAt) {
+        return false;
+      }
+
+      const parsedDate = safeParseDate(order.createdAt, ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd/yyyy"]);
+      
+      if (!parsedDate) {
+        return false;
+      }
+
+      return (parsedDate >= startDate) && (parsedDate <= endDate);
     })
-    .map(order => ({
-      "Client Name": order?.clientId?.name || "",
-      "Phone Number": order?.clientId?.mobileNumber || "",
-      "Coach Margin": order?.coachMargin || 0,
-      "Cost Price": order?.costPrice || 0,
-      "Customer Margin": order?.customerMargin || 0,
-      "Invoice Number": order?.invoiceNumber || 0,
-      "Selling Price": order?.sellingPrice || 0,
-      "Status": order?.status || 0,
-      "Paid Amount": order?.paidAmount || 0,
-      "Pending Amount": Number(order?.costPrice || 0) - Number(order?.paidAmount || 0),
-    }))
+    .map(order => {
+      const sellingPrice = Number(order?.sellingPrice || 0);
+      const costPrice = Number(order?.costPrice || 0);
+      const paidAmount = Number(order?.paidAmount || 0);
+      const profit = Math.max(sellingPrice - costPrice, 0);
+
+      const clientName = order?.clientId?.name || 
+                        order?.clientName || 
+                        order?.client?.name || 
+                        order?.clientId?.clientName ||
+                        order?.clientId?.firstName + " " + order?.clientId?.lastName ||
+                        "";
+      
+      const clientPhone = order?.clientId?.mobileNumber || 
+                         order?.clientPhone || 
+                         order?.client?.mobileNumber || 
+                         order?.clientId?.phone ||
+                         order?.clientId?.phoneNumber ||
+                         order?.clientId?.contactNumber ||
+                         "";
+
+      return {
+        "Client Name": clientName,
+        "Phone Number": clientPhone,
+        "Date": order.createdAt,
+        "Coach Margin": order?.coachMargin || 0,
+        "Cost Price": costPrice,
+        "Customer Margin": order?.customerMargin || 0,
+        "Invoice Number": order?.invoiceNumber || order?.orderId || order?._id || "",
+        "Selling Price": sellingPrice,
+        "Status": order?.status || "",
+        "Paid Amount": paidAmount,
+        "Pending Amount": Math.max(sellingPrice - paidAmount, 0),
+        "Profit": profit
+      };
+    })
 
   return exporting;
+  
+  } catch (error) {
+    return [];
+  }
 }
 
 export function exportToExcel(

@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { differenceInCalendarDays, format, isValid, parse } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs) {
@@ -170,3 +171,13 @@ export async function getBase64ImageFromUrl(imageUrl) {
     reader.readAsDataURL(blob);
   });
 };
+
+export function nowIST(utcDate = new Date()) {
+  return toZonedTime(utcDate);
+}
+
+export function extractNumber(input) {
+  if (!input) return null;
+  const match = String(input).match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}

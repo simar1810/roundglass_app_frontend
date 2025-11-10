@@ -9,6 +9,7 @@ import ContentError from "./ContentError";
 import { TriangleAlert } from "lucide-react";
 import { subscriptionDaysRemaining } from "@/lib/utils";
 import Link from "next/link";
+import { Button } from "../ui/button";
 
 async function logout() {
   await fetch("/api/logout", { method: "DELETE" });
@@ -65,14 +66,24 @@ export default function Guardian({
         className="max-w-[40ch] min-h-auto border-0 mt-0 p-0"
         title={subscriptionStatus?.message}
       />
-      <Link
-        href={`https://www.wellnessz.in/plans/${data.data._id}`}
-        className="bg-[var(--accent-1)] mt-2 px-4 py-2 rounded-[8px] text-white font-bold text-[14px]"
-        target="_blank"
-      >
-        Upgrade
-      </Link>
-    </div>
+      <div className="mt-4 flex items-center justify-center gap-4">
+        <Link
+          href={`https://www.wellnessz.in/plans/${data.data._id}`}
+          className="bg-[var(--accent-1)] px-4 py-3 rounded-[8px] text-white font-bold text-[14px]"
+          target="_blank"
+        >
+          Upgrade
+        </Link>
+        <Button
+          variant="destructive"
+          onClick={() => {
+            logout()
+            location.reload()
+          }}
+        >
+          Logout</Button>
+      </div>
+    </div >
   }
   return children;
 }

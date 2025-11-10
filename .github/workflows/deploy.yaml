@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main  # Trigger deployment only on push to the main branch
-
+      - stage
 jobs:
   deploy_to_production:
     if: github.ref == 'refs/heads/main'  # Ensure job runs only on push to main
@@ -30,3 +30,28 @@ jobs:
         npm run build && \
         sudo systemctl restart app-front.service && \
         echo 'Deployment successful'" || echo 'Deployment failed'
+
+  deploy_to_staging:
+    if: github.ref == 'refs/heads/stage'  # Ensure job runs only on push to staging
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install SSH Pass
+      run: sudo apt-get install sshpass -y
+
+    - name: SSH and Deploy to Staging
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD_STAGING }}
+        SERVER_IP: ${{ secrets.SERVER_IP_STAGING }}
+        SSH_USER: ${{ secrets.SSH_USER_STAGING }}
+      run: |
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP "
+        cd /home/Wellnessz_stage/wellnessz_web_app && \
+        git pull origin stage && \
+        npm install && \
+        npm run build && \
+        pm2 reload stageapp.wellnessz.in && \
+        echo 'Staging deployment successful'" || echo 'Staging deployment failed'

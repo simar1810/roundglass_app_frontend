@@ -5,19 +5,26 @@ import SelectControl from "@/components/Select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
+import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, previousStage, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
-import { nameInitials } from "@/lib/formatter";
+import { _throwError, buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
-export default function AddRetailModal({ open, payload, setOpen }) {
-  return <Dialog open={open} onOpenChange={() => setOpen(false)}>
+export default function AddRetailModal({
+  open,
+  payload,
+  setOpen
+}) {
+  return <Dialog
+    open={open}
+    onOpenChange={() => setOpen(false)}
+  >
     <DialogContent className="max-w-[650px] max-h-[70vh] w-full gap-0 p-0 overflow-y-auto">
       <CurrentStateProvider
         state={init(payload)}
@@ -37,11 +44,17 @@ const stageTitles = {
 }
 
 function AddRetailContainer() {
-  const { stage } = useCurrentStateContext();
+  const { stage, dispatch } = useCurrentStateContext();
   const Component = selectComponent(stage);
   return <div>
     <DialogHeader className="p-4 border-b-1">
-      <DialogTitle>{stageTitles[stage]}</DialogTitle>
+      <DialogTitle className="flex items-center gap-2">
+        {[2, 3].includes(stage) && <ArrowLeft
+          className="cursor-pointer"
+          onClick={() => dispatch(previousStage())}
+        />}
+        <p>{stageTitles[stage]}</p>
+      </DialogTitle>
     </DialogHeader>
     <Component />
   </div>
@@ -64,9 +77,8 @@ function selectComponent(stage) {
 
 function Stage1() {
   const { isLoading, error, data } = useSWR("app/clients?isActive=true", () => getAppClients({ isActive: true }));
-  const { clientId, dispatch } = useCurrentStateContext();
+  const { clientId, dispatch, clientName } = useCurrentStateContext();
   const [query, setQuery] = useState("");
-
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
@@ -83,6 +95,11 @@ function Stage1() {
       placeholder="Search Client here"
       className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
     />
+    {clientName && <p className="mt-4 text-xs">
+      <span className="text-[#808080]">Selected Client</span>
+      &nbsp;<>-</>&nbsp;
+      <span className="font-bold">{clientName}</span>
+    </p>}
     <div className="mt-8 grid grid-cols-2 gap-6">
       {clients.map(client => <SelectClient
         key={client._id}
@@ -132,17 +149,34 @@ function generateMarginsPayload__select(margins) {
 }
 
 function Stage2() {
+  const [query, setQuery] = useState("")
+
   const { selectedBrandId, margins, coachMargin, dispatch, productModule } = useCurrentStateContext();
-  const { isLoading, error, data } = useSWR(`getProductByBrand/${selectedBrandId}`, () => getProductByBrand(selectedBrandId));
+  const { isLoading, error, data } = useSWR(
+    `getProductByBrand/${selectedBrandId}`,
+    () => getProductByBrand(selectedBrandId)
+  );
 
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const products = data.data
+
+  const products = (data.data || [])
+    .filter(item => new RegExp(query, "i").test(item.productName))
 
   return <div>
+    <div className="px-4 mt-4">
+      <FormControl
+        type="text"
+        name="search"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search By Product Name"
+        className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
+      />
+    </div>
     <div className="mt-2 px-4 flex items-center justify-between">
       <h3>Select Margin</h3>
       <SelectControl
@@ -216,13 +250,26 @@ function Stage3() {
         coachMargin,
         customerMargin
       })
-      const response = await sendData("app/addClientOrder", payload);
 
-      if (response.status_code !== 200) throw new Error(response.message || response.error);
-      toast.success(response.message);
-      dispatch(orderCreated(response.data))
+      const promises = [sendData("app/addClientOrder", payload)]
+
+      if (state.status === "Pending") {
+        const endpoint = buildUrlWithQueryParams(
+          "app/accept-order",
+          { id: state.orderId, status: "Pending" }
+        )
+        promises.push(sendData(endpoint, {}, "PUT"))
+      }
+      const response = await Promise.all(promises);
+      for (const item of response) {
+        if (item.status_code !== 200) throw new Error(item.message)
+        toast.message(item.message || "Successfull");
+      }
+      dispatch(orderCreated(response[0].data))
+      mutate("app/coach-retail");
+      mutate("app/order-history");
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }

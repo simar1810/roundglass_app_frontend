@@ -2,7 +2,7 @@ import DeleteMeetingModal from "@/components/modals/club/DeleteMeetingModal";
 import EditMeetingModal from "@/components/modals/club/EditMeetingModal";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { copyText } from "@/lib/utils";
-import { format, parse, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Clipboard, Eye } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ export default function MeetingDetailRow({
     </TableCell>
     <TableCell>
       {meeting.scheduleDate
-        ? format(parseISO(meeting.scheduleDate), 'HH:mm')
+        ? format(meeting.scheduleDate, 'hh:mm a')
         : <>-</>}
     </TableCell>
     <TableCell>

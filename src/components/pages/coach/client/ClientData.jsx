@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
-import { BarChart2, Bot, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { useState } from "react";
 import ClientClubDataComponent from "./ClientClubDataComponent";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -26,16 +26,20 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import FormControl from "@/components/FormControl";
 import { sendData } from "@/lib/api";
 import { toast } from "sonner";
+import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
+import PhysicalClub from "./PhysicalClub";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
   { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
   { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
-  { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: (organisation) => organisation.toLowerCase() === "herbalife" },
+  { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: ({ organisation }) => organisation.toLowerCase() === "herbalife" },
   { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
+  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
 ]
 
 export default function ClientData({ clientData }) {
@@ -64,6 +68,8 @@ export default function ClientData({ clientData }) {
       <WorkoutContainer id={clientData._id} />
       <AIAgentHistory />
       <ClientReports />
+      <CaseFile sections={clientData.onboarding_questionaire || []} />
+      <PhysicalClub />
     </Tabs>
   </div>
 }
@@ -316,14 +322,14 @@ function MarathonData({ clientData }) {
 }
 
 function Header() {
-  const { organisation } = useAppSelector(state => state.coach.data);
+  const { organisation, features } = useAppSelector(state => state.coach.data);
   return <TabsList className="w-full h-auto bg-transparent p-0 mb-10 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
     {tabItems.map(({ icon, value, label, showIf }) => {
-      if (showIf && !showIf(organisation)) return null;
+      if (showIf && !showIf({ organisation, features })) return null;
       return (
         <TabsTrigger
           key={value}
-          className="min-w-[100px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+          className="min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
              data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
              data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
           value={value}
@@ -417,4 +423,16 @@ export function WorkoutDetails({ workout }) {
       <p className="text-sm leading-tight">{trimString(routineWorkout.instructions, 80)}</p>
     </div>
   </Link>
+}
+
+function CaseFile({ sections }) {
+  if (sections?.length === 0) return <TabsContent
+    className="h-[200px] leading-[200px] text-center bg-[var(--comp-1)] border-1 rounded-[10px]"
+    value="case-file"
+  >
+    No Questions Answered
+  </TabsContent>
+  return <TabsContent value="case-file">
+    <DisplayClientQuestionaire data={sections} />
+  </TabsContent>
 }

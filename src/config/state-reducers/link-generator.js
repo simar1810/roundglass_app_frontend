@@ -6,6 +6,7 @@ import { linkGeneratorInitialState } from "../state-data/link-generator";
 import SelectControl from "@/components/Select";
 import SelectMultiple from "@/components/SelectMultiple";
 import { useAppSelector } from "@/providers/global/hooks";
+import { _throwError } from "@/lib/formatter";
 
 export function linkGeneratorReducer(state, action) {
   switch (action.type) {
@@ -67,10 +68,10 @@ export function resetCurrentState() {
 }
 
 export const meetingTypeFieldsMap = {
-  quick: [1, 2, 6, 7, 9, 10, 12],
-  scheduled: [1, 2, 3, 4, 6, 7, 9, 10, 12],
-  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12],
-  event: [1, 2, 3, 4, 6, 7, 8, 9, 10, 12],
+  quick: [1, 2, 6, 7, 9, 10, 12, 13],
+  scheduled: [1, 2, 3, 4, 6, 7, 9, 10, 12, 13],
+  reocurr: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13],
+  event: [1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13],
   one_to_one: [1, 2, 3, 4, 6, 7, 9, 11, 12],
 }
 
@@ -88,6 +89,9 @@ export function init(withZoom) {
 }
 
 export function generateRequestPayload(state) {
+  if (state.meetingType === "one_to_one" && !state.one_to_one_client_id) {
+    _throwError("Please select a client");
+  }
   const formControls = selectFields(state.meetingType)
 
   const payload = new FormData;
@@ -99,7 +103,7 @@ export function generateRequestPayload(state) {
     payload.append("reOcurred", JSON.stringify(state["reOcurred"]));
   }
   if (state.date && state.time) {
-    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd HH:mm', new Date()));
+    const scheduleDate = formatISO(parse(`${state.date} ${state.time}`, 'yyyy-MM-dd hh:mm a', new Date()));
     payload.append("scheduleDate", scheduleDate);
   } else {
     payload.append("scheduleDate", new Date().toISOString());
@@ -107,6 +111,10 @@ export function generateRequestPayload(state) {
   payload.delete("allowed_client_type");
   for (const type of state.allowed_client_type) {
     payload.append("allowed_client_type", type);
+  }
+  payload.delete("allowed_client_rollnos");
+  for (const type of state.allowed_client_rollnos) {
+    payload.append("allowed_client_rollnos", type);
   }
   return payload;
 }

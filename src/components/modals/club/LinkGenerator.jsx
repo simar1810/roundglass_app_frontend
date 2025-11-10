@@ -25,12 +25,12 @@ import {
 import { sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
-import { CircleMinus, CirclePlus, Copy } from "lucide-react";
+import { CircleMinus, CirclePlus, Copy, Minus } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import ZoomConnectNowModal from "./ZoomConnectNowModal";
 import { copyText, getObjectUrl } from "@/lib/utils";
-import useSWR, { mutate } from "swr";
+import useSWR, { mutate, useSWRConfig } from "swr";
 import Image from "next/image";
 import { getMeetingClientList } from "@/lib/fetchers/club";
 import ContentError from "@/components/common/ContentError";
@@ -38,6 +38,8 @@ import Loader from "@/components/common/Loader";
 import SelectControl from "@/components/Select";
 import imageCompression from "browser-image-compression";
 import SelectMultiple from "@/components/SelectMultiple";
+import TimePicker from "@/components/common/TimePicker";
+import { _throwError, ensureHttps, validLink } from "@/lib/formatter";
 
 export default function LinkGenerator({ withZoom, children }) {
   const zoom_doc_id = useAppSelector(state => state.coach.data.zoom_doc_id);
@@ -49,7 +51,7 @@ export default function LinkGenerator({ withZoom, children }) {
       state={init(withZoom)}
       reducer={linkGeneratorReducer}
     >
-      <DialogContent className="!max-w-[450px] max-h-[70vh] text-center px-0 border-0 overflow-auto gap-0">
+      <DialogContent className="!max-w-[450px] max-h-[70vh] text-center p-0 border-0 overflow-auto gap-0">
         <MeetingGeneratorContainer withZoom={withZoom} />
       </DialogContent>
     </CurrentStateProvider>
@@ -94,15 +96,15 @@ function MeetingLink() {
   const { baseLink, view, wellnessZLink, copyToClipboard, dispatch } = useCurrentStateContext();
 
   return <>
-    <DialogHeader className="mb-4 pb-4 border-b-1">
-      <DialogTitle className="px-4">Meeting Link</DialogTitle>
+    <DialogHeader className="mb-4 border-b-1">
+      <DialogTitle className="p-4">Meeting Link</DialogTitle>
     </DialogHeader>
-    <div className="text-left px-4">
+    <div className="text-left p-4">
       <p className="text-[14px] leading-[1.6] text-left">Say goodbye to loong, complicated links and Say hello to custom WellnessZ integerated meeting links </p>
       <FormControl
         label="Meeting Link"
         value={baseLink}
-        onChange={e => dispatch(changeFieldvalue("baseLink", e.target.value))}
+        onChange={e => dispatch(changeFieldvalue("baseLink", ensureHttps(e.target.value)))}
         placeholder="Type or paste your link here"
         className="block mt-4"
       />
@@ -110,7 +112,9 @@ function MeetingLink() {
         <Button
           variant="wz"
           className="block mt-4 mx-auto"
-          onClick={() => dispatch(setCurrentView(1))}
+          onClick={() => {
+            dispatch(setCurrentView(1))
+          }}
         >
           Convert
         </Button>
@@ -157,6 +161,7 @@ async function generateMeeting(withZoom, data, baseLink) {
 }
 
 function MeetingForm({ withZoom }) {
+  const { cache } = useSWRConfig();
   const [loading, setLoading] = useState(false);
   const closeBtnRef = useRef();
 
@@ -171,8 +176,8 @@ function MeetingForm({ withZoom }) {
       const response = await generateMeeting(withZoom, data, state.baseLink);
       if (!response.status && !response.success) throw new Error(response.message || response.error);
       toast.success(response.message || "Meeting created successfully!");
-      mutate("getMeetings")
       dispatch(setWellnessZLink(response?.data?.wellnessZLink || response?.data?.newMeeting?.wellnessZLink));
+      cache.delete('getMeetings');
       if (state.copyToClipboard) {
         copyText(response?.data?.wellnessZLink);
         toast.success("Link copied");
@@ -185,8 +190,8 @@ function MeetingForm({ withZoom }) {
   }
 
   return <>
-    <DialogHeader className="mb-4 pb-4 border-b-1">
-      <DialogTitle className="px-4">Meeting Details</DialogTitle>
+    <DialogHeader className="mb-4 border-b-1">
+      <DialogTitle className="p-4">Meeting Details</DialogTitle>
     </DialogHeader>
     <div className="text-left px-4">
       {fieldsToBeDisplayed.map(field => <SelectMeetingFormField
@@ -195,19 +200,19 @@ function MeetingForm({ withZoom }) {
         formData={state}
         dispatch={dispatch}
       />)}
-      <div className="flex gap-4">
-        <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
-        <Button
-          onClick={createMeeting}
-          variant="wz"
-          className="grow block mx-auto"
-          disabled={loading}
-        >
-          Create Meeting
-        </Button>
-      </div>
       <DialogClose ref={closeBtnRef} />
-    </div >
+    </div>
+    <div className="flex gap-4 p-4 sticky bottom-0 bg-white border-t-1">
+      <Button onClick={() => dispatch(changeFieldvalue("view", 2))} className="grow">Previous</Button>
+      <Button
+        onClick={createMeeting}
+        variant="wz"
+        className="grow block mx-auto"
+        disabled={loading}
+      >
+        Create Meeting
+      </Button>
+    </div>
   </>
 }
 
@@ -327,7 +332,8 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
   const { client_categories } = useAppSelector(state => state.coach.data)
   if (field.inputtype === 1) return <FormControl
     key={field.id}
-    className="text-[14px] [&_.label]:font-[400] block mb-4"
+    className="text-[14px] [&_.label]:font-[400] block mb-4 [&_.input]:focus:cursor-text [&_.input]:foc us:pointer-events-none
+                hover:cursor-text [&_.input]:hover:pointer-events-none"
     value={formData[field.name]}
     onChange={e => dispatch(changeFieldvalue(field.name, e.target.value))}
     {...field}
@@ -363,4 +369,65 @@ function SelectMeetingFormField({ field, formData, dispatch }) {
     key={field.id}
     field={field}
   />
+  else if (field.inputtype === 8) return <>
+    <label className="text-[14px]">{field.label}</label>
+    <TimePicker
+      selectedTime={formData.time}
+      setSelectedTime={value => dispatch(changeFieldvalue(field.name, value))}
+    />
+  </>
+  else if (field.inputtype === 9) return <UpdateAllowedRollnos
+    field={field}
+    formData={formData}
+    dispatch={dispatch}
+    onChange={value => dispatch(changeFieldvalue("allowed_client_rollnos", value))}
+  />
+}
+
+export function UpdateAllowedRollnos({ field, formData, onChange }) {
+  const [newRollnos, setNewRollnos] = useState("")
+  const allSeries = formData.allowed_client_rollnos || []
+  return <div>
+    <div className="mb-4 flex items-end gap-4">
+      <FormControl
+        key={field.id}
+        className="text-[14px] [&_.label]:font-[400] block grow"
+        value={newRollnos}
+        onChange={e => setNewRollnos(e.target.value)}
+        label={field.label}
+        placeholder={field.placeholder}
+      />
+      {newRollnos && <Button
+        variant="wz"
+        onClick={() => {
+          if (allSeries.includes(newRollnos.trim())) {
+            toast.error("Roll no series already added");
+            return
+          }
+          onChange([...allSeries, newRollnos.trim().toLocaleLowerCase()]);
+          setNewRollnos("")
+        }}
+      >
+        Save
+      </Button>}
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {allSeries.map(roll => <div
+        key={roll}
+        className="relative"
+      >
+        <Badge>
+          {roll}
+
+        </Badge>
+        <Minus
+          className="text-white bg-[var(--accent-2)] absolute top-0 right-[-8px] translate-y-[-20%]
+                      w-[16px] h-[16px] cursor-pointer z-[100] rounded-full"
+          strokeWidth={3}
+          onClick={() => onChange(allSeries.filter(item => item !== roll)
+          )}
+        />
+      </div>)}
+    </div>
+  </div>
 }

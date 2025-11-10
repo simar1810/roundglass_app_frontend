@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 * {
-  user-select: none;
+  /* user-select: none; */
 }
 
 :root {
@@ -257,19 +257,20 @@ a {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0);
   }
+
   20% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   80% {
     opacity: 1;
-    transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)))
-      scale(0.8);
+    transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px))) scale(0.8);
   }
+
   100% {
     opacity: 0;
-    transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)))
-      scale(0);
+    transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px))) scale(0);
   }
 }
 
@@ -304,6 +305,7 @@ a {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -314,6 +316,7 @@ a {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -324,6 +327,7 @@ a {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -335,6 +339,7 @@ a {
     opacity: 0;
     transform: translateY(-0.5rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -355,4 +360,13 @@ a {
 
 .slide-in-from-top-2 {
   animation-name: slide-in-from-top-2;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
 }

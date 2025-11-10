@@ -66,9 +66,8 @@ function AnimatedMetricCard({
 
   return (
     <Card
-      className={`group border-0 bg-white/90 backdrop-blur-sm shadow-lg wallet-card-hover transition-all duration-700 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      }`}
+      className={`group border-0 bg-white/90 backdrop-blur-sm shadow-lg wallet-card-hover transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
     >
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
@@ -87,17 +86,15 @@ function AnimatedMetricCard({
             {trend && (
               <div className="flex items-center gap-2 mt-2">
                 <span
-                  className={`text-xs font-medium ${
-                    trend > 0 ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`text-xs font-medium ${trend > 0 ? "text-green-600" : "text-red-600"
+                    }`}
                 >
                   {trend > 0 ? "+" : ""}
                   {trend}%
                 </span>
                 <TrendingUp
-                  className={`h-3 w-3 ${
-                    trend > 0 ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`h-3 w-3 ${trend > 0 ? "text-green-600" : "text-red-600"
+                    }`}
                 />
               </div>
             )}
@@ -175,11 +172,10 @@ function AIInsightsCard({ insights, loading }) {
           </div>
         ) : insights ? (
           <div
-            className={`space-y-6 transition-all duration-1000 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
-            }`}
+            className={`space-y-6 transition-all duration-1000 ${isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+              }`}
           >
             <div className="p-6 bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-200">
               <h4 className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
@@ -241,33 +237,30 @@ function AIInsightsCard({ insights, loading }) {
                 </p>
               </div>
               <div
-                className={`p-4 rounded-xl border ${
-                  insights.riskAssessment.riskLevel === "low"
-                    ? "bg-gradient-to-br from-green-50 to-green-100 border-green-200"
-                    : insights.riskAssessment.riskLevel === "medium"
+                className={`p-4 rounded-xl border ${insights.riskAssessment.riskLevel === "low"
+                  ? "bg-gradient-to-br from-green-50 to-green-100 border-green-200"
+                  : insights.riskAssessment.riskLevel === "medium"
                     ? "bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200"
                     : "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
-                }`}
+                  }`}
               >
                 <p
-                  className={`text-sm font-medium mb-1 ${
-                    insights.riskAssessment.riskLevel === "low"
-                      ? "text-green-600"
-                      : insights.riskAssessment.riskLevel === "medium"
+                  className={`text-sm font-medium mb-1 ${insights.riskAssessment.riskLevel === "low"
+                    ? "text-green-600"
+                    : insights.riskAssessment.riskLevel === "medium"
                       ? "text-yellow-600"
                       : "text-red-600"
-                  }`}
+                    }`}
                 >
                   Risk Level
                 </p>
                 <p
-                  className={`text-xl font-bold ${
-                    insights.riskAssessment.riskLevel === "low"
-                      ? "text-green-900"
-                      : insights.riskAssessment.riskLevel === "medium"
+                  className={`text-xl font-bold ${insights.riskAssessment.riskLevel === "low"
+                    ? "text-green-900"
+                    : insights.riskAssessment.riskLevel === "medium"
                       ? "text-yellow-900"
                       : "text-red-900"
-                  }`}
+                    }`}
                 >
                   {insights.riskAssessment.riskLevel.charAt(0).toUpperCase() +
                     insights.riskAssessment.riskLevel.slice(1)}
@@ -375,9 +368,7 @@ export default function WalletAnalytics() {
         `app/analytics/dashboard?period=${period}&coachId=${coachId}`
       );
       setAnalyticsData(response.data);
-    } catch (error) {
-      console.error("Failed to fetch analytics:", error);
-    } finally {
+    } catch (error) { } finally {
       setAnalyticsLoading(false);
     }
   };
@@ -388,9 +379,7 @@ export default function WalletAnalytics() {
         `app/analytics/fraud-detection?period=${period}&coachId=${coachId}`
       );
       setFraudData(response.data);
-    } catch (error) {
-      console.error("Failed to fetch fraud data:", error);
-    }
+    } catch (error) { }
   };
 
   const fetchPredictions = async () => {
@@ -399,9 +388,7 @@ export default function WalletAnalytics() {
         `app/analytics/predictions?period=${period}&horizon=30d&coachId=${coachId}`
       );
       setPredictions(response.data);
-    } catch (error) {
-      console.error("Failed to fetch predictions:", error);
-    }
+    } catch (error) { }
   };
 
   const generateAIInsights = async () => {
@@ -414,9 +401,7 @@ export default function WalletAnalytics() {
         riskAssessment: generateRiskAssessment(),
       };
       setAiInsights(insights);
-    } catch (error) {
-      console.error("Failed to generate insights:", error);
-    } finally {
+    } catch (error) { } finally {
       setInsightsLoading(false);
     }
   };
@@ -428,21 +413,17 @@ export default function WalletAnalytics() {
       const totalDebited = analyticsData.totalDebited || 0;
       const transactionCount = analyticsData.transactionCount || 0;
 
-      return `Your wallet shows a ${
-        growth >= 0 ? "positive" : "negative"
-      } trend with ${Math.abs(growth).toFixed(1)}% ${
-        growth >= 0 ? "growth" : "decline"
-      } this ${period}. You've processed ${transactionCount} transactions totaling ₹${totalCredited.toLocaleString()} in credits and ₹${totalDebited.toLocaleString()} in debits.`;
+      return `Your wallet shows a ${growth >= 0 ? "positive" : "negative"
+        } trend with ${Math.abs(growth).toFixed(1)}% ${growth >= 0 ? "growth" : "decline"
+        } this ${period}. You've processed ${transactionCount} transactions totaling ₹${totalCredited.toLocaleString()} in credits and ₹${totalDebited.toLocaleString()} in debits.`;
     }
 
     const growth = ((netFlow / (totalCredited + totalDebited)) * 100).toFixed(
       1
     );
-    return `Your wallet shows a ${
-      netFlow >= 0 ? "positive" : "negative"
-    } trend with ${Math.abs(growth)}% ${
-      netFlow >= 0 ? "growth" : "decline"
-    } this ${period}. Most transactions are from ${getTopTransactionType()}.`;
+    return `Your wallet shows a ${netFlow >= 0 ? "positive" : "negative"
+      } trend with ${Math.abs(growth)}% ${netFlow >= 0 ? "growth" : "decline"
+      } this ${period}. Most transactions are from ${getTopTransactionType()}.`;
   };
 
   const generateRecommendations = () => {
@@ -486,7 +467,7 @@ export default function WalletAnalytics() {
           getTopTransactionType(),
         transactionFrequency: Math.round(
           (analyticsData.transactionCount || 0) /
-            (period === "7d" ? 7 : period === "30d" ? 30 : 90)
+          (period === "7d" ? 7 : period === "30d" ? 30 : 90)
         ),
       };
     }
@@ -631,8 +612,8 @@ export default function WalletAnalytics() {
         type === "credit"
           ? "#10B981"
           : type === "debit"
-          ? "#EF4444"
-          : "#3B82F6",
+            ? "#EF4444"
+            : "#3B82F6",
     }));
   };
 
@@ -730,7 +711,7 @@ export default function WalletAnalytics() {
           isLoading={loading}
           delay={400}
         />
-   
+
       </div>
 
       {/* Enhanced Charts and Analytics */}
@@ -749,8 +730,8 @@ export default function WalletAnalytics() {
                       name === "credit"
                         ? "Credits"
                         : name === "debit"
-                        ? "Debits"
-                        : "Net Flow",
+                          ? "Debits"
+                          : "Net Flow",
                     ]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -904,39 +885,36 @@ export default function WalletAnalytics() {
             {fraudData ? (
               <>
                 <div
-                  className={`p-4 rounded-xl ${
-                    (fraudData.overallRiskLevel || fraudData.riskLevel) ===
+                  className={`p-4 rounded-xl ${(fraudData.overallRiskLevel || fraudData.riskLevel) ===
                     "low"
-                      ? "bg-green-100 border border-green-200"
-                      : (fraudData.overallRiskLevel || fraudData.riskLevel) ===
-                        "medium"
+                    ? "bg-green-100 border border-green-200"
+                    : (fraudData.overallRiskLevel || fraudData.riskLevel) ===
+                      "medium"
                       ? "bg-yellow-100 border border-yellow-200"
                       : "bg-red-100 border border-red-200"
-                  }`}
+                    }`}
                 >
                   <p
-                    className={`text-sm font-medium mb-2 ${
-                      (fraudData.overallRiskLevel || fraudData.riskLevel) ===
+                    className={`text-sm font-medium mb-2 ${(fraudData.overallRiskLevel || fraudData.riskLevel) ===
                       "low"
-                        ? "text-green-600"
-                        : (fraudData.overallRiskLevel ||
-                            fraudData.riskLevel) === "medium"
+                      ? "text-green-600"
+                      : (fraudData.overallRiskLevel ||
+                        fraudData.riskLevel) === "medium"
                         ? "text-yellow-600"
                         : "text-red-600"
-                    }`}
+                      }`}
                   >
                     Overall Risk Level
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
-                      (fraudData.overallRiskLevel || fraudData.riskLevel) ===
+                    className={`text-2xl font-bold ${(fraudData.overallRiskLevel || fraudData.riskLevel) ===
                       "low"
-                        ? "text-green-900"
-                        : (fraudData.overallRiskLevel ||
-                            fraudData.riskLevel) === "medium"
+                      ? "text-green-900"
+                      : (fraudData.overallRiskLevel ||
+                        fraudData.riskLevel) === "medium"
                         ? "text-yellow-900"
                         : "text-red-900"
-                    }`}
+                      }`}
                   >
                     {(
                       fraudData.overallRiskLevel ||
@@ -1081,7 +1059,7 @@ export default function WalletAnalytics() {
                 {aiInsights?.trends?.transactionFrequency ||
                   Math.round(
                     (analyticsData?.transactionCount || transactionCount) /
-                      (period === "7d" ? 7 : period === "30d" ? 30 : 90)
+                    (period === "7d" ? 7 : period === "30d" ? 30 : 90)
                   )}{" "}
                 per day
               </span>
@@ -1095,11 +1073,10 @@ export default function WalletAnalytics() {
             <div className="flex justify-between items-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl">
               <span className="text-gray-700 font-medium">Growth Rate</span>
               <span
-                className={`font-bold ${
-                  (analyticsData?.growthRate || 0) >= 0
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
+                className={`font-bold ${(analyticsData?.growthRate || 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+                  }`}
               >
                 {(analyticsData?.growthRate || 0).toFixed(1)}%
               </span>
@@ -1122,23 +1099,23 @@ export default function WalletAnalytics() {
                 </span>
               </div>
             )) || (
-              <>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl">
-                  <span className="text-gray-700 font-medium">
-                    Client Payments
-                  </span>
-                  <span className="font-bold text-indigo-900">75%</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-                  <span className="text-gray-700 font-medium">Commission</span>
-                  <span className="font-bold text-purple-900">15%</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-                  <span className="text-gray-700 font-medium">Referrals</span>
-                  <span className="font-bold text-blue-900">10%</span>
-                </div>
-              </>
-            )}
+                <>
+                  <div className="flex justify-between items-center p-3 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl">
+                    <span className="text-gray-700 font-medium">
+                      Client Payments
+                    </span>
+                    <span className="font-bold text-indigo-900">75%</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                    <span className="text-gray-700 font-medium">Commission</span>
+                    <span className="font-bold text-purple-900">15%</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                    <span className="text-gray-700 font-medium">Referrals</span>
+                    <span className="font-bold text-blue-900">10%</span>
+                  </div>
+                </>
+              )}
           </div>
         </EnhancedChartCard>
       </div>

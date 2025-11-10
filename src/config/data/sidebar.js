@@ -5,7 +5,7 @@ import {
   CalendarDays,
   CalendarRange,
   CircleDollarSign,
-  CirclePlus,
+  ClipboardCheck,
   ClipboardPlus,
   Clock,
   Clock12,
@@ -22,12 +22,14 @@ import {
   Headset,
   Home,
   Hourglass,
+  BadgeCheck,
   LayoutDashboard,
   Library,
   Link,
   List,
   ListTodo,
   Logs,
+  MapPin,
   MessageCircle,
   Newspaper,
   PersonStanding,
@@ -45,6 +47,8 @@ import {
   UserPlus,
   Users,
   Video,
+  QrCode,
+  Salad
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
@@ -55,18 +59,21 @@ export const sidebar__coachContent = [
     title: "Home",
     icon: <Home className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/dashboard",
+    permission: null, // Always visible
   },
   {
     id: 2,
     title: "Portfolio",
     icon: <User className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/portfolio",
+    permission: 100, // Always visible
   },
   {
     id: 3,
     title: "Clients",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
+    permission: null, // Always visible
     items: [
       {
         id: 1,
@@ -97,88 +104,122 @@ export const sidebar__coachContent = [
     ],
   },
   {
+    id: 3.5,
+    title: "Users",
+    icon: <Users className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/users",
+    permission: "coach", // Only coaches can see this
+  },
+  {
     id: 4,
     title: "Meals & Recipes",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/meals",
+    permission: 1, // Permission 1 = Meal Plan
     items: [
-      {
-        id: 1,
-        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Meal Plan",
-        url: "/coach/meals/add-custom",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/meals/add-custom/daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/meals/add-custom/weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/meals/add-custom/monthly",
-          },
-        ],
-      },
+      // {
+      //   id: 1,
+      //   icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Add Meal Plan",
+      //   url: "/coach/meals/add-custom",
+      //   items: [
+      //     {
+      //       id: 1,
+      //       icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Daily",
+      //       url: "/coach/meals/add-custom/daily",
+      //     },
+      //     {
+      //       id: 2,
+      //       icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Weekly",
+      //       url: "/coach/meals/add-custom/weekly",
+      //     },
+      //     {
+      //       id: 3,
+      //       icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Monthly",
+      //       url: "/coach/meals/add-custom/monthly",
+      //     },
+      //   ],
+      // },
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Meal Plan",
+        title: "Meal Plan",
         url: "/coach/meals/list-custom",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/meals/list-custom/?mode=daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/meals/list-custom/?mode=weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/meals/list-custom/?mode=monthly",
-          },
-        ],
+        // items: [
+        //   {
+        //     id: 1,
+        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Daily",
+        //     url: "/coach/meals/list-custom/?mode=daily",
+        //   },
+        //   {
+        //     id: 2,
+        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Weekly",
+        //     url: "/coach/meals/list-custom/?mode=weekly",
+        //   },
+        //   {
+        //     id: 3,
+        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Monthly",
+        //     url: "/coach/meals/list-custom/?mode=monthly",
+        //   },
+        // ],
       },
-      {
-        id: 3,
-        icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Routine Meal Plan",
-        url: "/coach/meals/list/",
-        items: [
-          {
-            id: 1,
-            icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
-            title: "All Plans",
-            url: "/coach/meals/list/",
-          },
-          {
-            id: 2,
-            icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Add",
-            url: "/coach/meals/add-plan",
-          },
-        ],
-      },
+      // {
+      //   id: 3,
+      //   icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Routine Meal Plan",
+      //   url: "/coach/meals/list/",
+      //   items: [
+      //     {
+      //       id: 1,
+      //       icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "All Plans",
+      //       url: "/coach/meals/list/",
+      //     },
+      //     {
+      //       id: 2,
+      //       icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Add",
+      //       url: "/coach/meals/add-plan",
+      //     },
+      //   ],
+      // },
       {
         id: 4,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
         title: "Recipes",
         url: "/coach/meals/recipes",
+      },
+      {
+        id: 5,
+        icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,
+        title: "AI Generation",
+        url: "/coach/meals/ai",
+        // items: [
+        //   {
+        //     id: 1,
+        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Daily",
+        //     url: "/coach/meals/ai/daily",
+        //   },
+        //   {
+        //     id: 2,
+        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Weekly",
+        //     url: "/coach/meals/ai/weekly",
+        //   },
+        //   {
+        //     id: 3,
+        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+        //     title: "Monthly",
+        //     url: "/coach/meals/ai/monthly",
+        //   },
+        // ]
       },
     ],
   },
@@ -187,12 +228,14 @@ export const sidebar__coachContent = [
     title: "Feed",
     icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/feed",
+    permission: 2, // Permission 2 = Feed
   },
   {
     id: 6,
     title: "Wallet",
     icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/wallet",
+    permission: 3, // Permission 3 = Wallet
     items: [
       {
         id: 1,
@@ -250,18 +293,21 @@ export const sidebar__coachContent = [
     title: "Retail",
     icon: <Store className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/retail",
+    permission: 4, // Permission 4 = Retail
   },
   {
     id: 8,
     title: "Chats",
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats",
+    permission: 5, // Permission 5 = Chats
   },
   {
     id: 9,
     title: "Workout",
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/workouts",
+    permission: 6, // Permission 6 = Workout
     items: [
       {
         id: 1,
@@ -363,12 +409,14 @@ export const sidebar__coachContent = [
     title: "Marathon",
     icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/marathons",
+    permission: 7, // Permission 7 = Marathon
   },
   {
     id: 11,
     title: "Club",
     icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/club",
+    permission: 8, // Permission 8 = Club
     items: [
       {
         id: 1,
@@ -450,50 +498,47 @@ export const sidebar__coachContent = [
         title: "Categories",
         url: "/coach/tools/categories",
       },
-      // {
-      //   id: 10,
-      //   icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Questionaire",
-      //   url: "/coach/tools/questionaire"
-      // },
+      {
+        id: 10,
+        icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Questionaire",
+        url: "/coach/tools/questionaire"
+      },
     ],
   },
-<<<<<<< HEAD
   {
-    id: 12,
-    title: "Courses",
-    icon: <Library className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/courses",
-    items: [
-      {
-        id: 1,
-        title: "Dashboard",
-        icon: <LayoutDashboard />,
-        url: "/coach/courses/dashboard",
-      },
-      {
-        id: 2,
-        title: "Courses",
-        icon: <List />,
-        url: "/coach/courses/list",
-      },
-      {
-        id: 3,
-        title: "Create New",
-        icon: <CirclePlus />,
-        url: "/coach/courses/create",
-      },
-    ]
+    id: 13,
+    title: "Physical Club",
+    icon: <MapPin className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/physical-club",
+    // items: [
+    //   {
+    //     id: 1,
+    //     icon: <BadgeCheck className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Memberships",
+    //     url: "/coach/physical-club/memberships",
+    //   },
+    //   {
+    //     id: 2,
+    //     icon: <ClipboardCheck className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Attendance",
+    //     url: "/coach/physical-club/attendance",
+    //   },
+    //   {
+    //     id: 3,
+    //     icon: <QrCode className="icon min-w-[20px] min-h-[20px]" />,
+    //     title: "Generate QR",
+    //     url: "/coach/physical-club/qr-generate",
+    //   }
+    // ]
+  },
+  {
+    id: 14,
+    icon: <Clock12 />,
+    title: "Downline",
+    url: "/coach/downline",
+    permission: null
   }
-]
-=======
-  // {
-  //   id: 12,
-  //   title: "Programs",
-  //   icon: <CalendarRange className="min-w-[20px] min-h-[20px]" />,
-  //   url: "/coach/tools",
-  //   items: []
-  // }
 ];
 >>>>>>> 40493fabd52d6c4e008e771267fe180cbb8a860e
 
