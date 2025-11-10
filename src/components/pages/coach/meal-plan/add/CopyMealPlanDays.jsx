@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import useCopyMealPlan, { CopyMealPlansContext } from "@/providers/copy-meal-plan/CopyMealPlansProvider";
 import {
@@ -26,6 +34,8 @@ import {
 } from "@/providers/copy-meal-plan/reducer";
 import { defaultMealTypes, replaceMealPlanSelections } from "@/config/state-reducers/custom-meal";
 import { format, getDaysInMonth, parse } from "date-fns";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CopyMealPlanDays() {
   const { selectedPlans, selectedPlan, mode } = useCurrentStateContext();
@@ -54,6 +64,7 @@ export default function CopyMealPlanDays() {
   </Dialog>
 }
 
+
 function Container() {
   const {
     dispatch: copyDispatch,
@@ -81,22 +92,28 @@ function Container() {
 
   const handleReplaceMeals = () => {
     const replacements = selectedMealsToDisplay
-      .map((slot) => {
-        if (!slot.sourcePlan) return null;
-        if (typeof slot.sourceMealIndex !== "number" || Number.isNaN(slot.sourceMealIndex)) return null;
-        if (!slot.toDate) return null;
+      .flatMap((slot) => {
+        if (!slot.sourcePlan) return [];
+        if (typeof slot.sourceMealIndex !== "number" || Number.isNaN(slot.sourceMealIndex)) return [];
+
+        const targetDates = Array.isArray(slot.toDate)
+          ? slot.toDate.filter(Boolean)
+          : typeof slot.toDate === "string" && slot.toDate
+            ? [slot.toDate]
+            : [];
+
+        if (!targetDates.length) return [];
 
         const mealType = slot.toMealType || slot.fromMealType;
-        if (!mealType) return null;
+        if (!mealType) return [];
 
-        return {
+        return targetDates.map((toPlan) => ({
           fromPlan: slot.sourcePlan,
           fromMealIndex: slot.sourceMealIndex,
-          toPlan: slot.toDate,
+          toPlan,
           toMealType: mealType,
-        };
-      })
-      .filter(Boolean);
+        }));
+      });
 
     if (!replacements.length) return;
 
@@ -104,12 +121,21 @@ function Container() {
     closeRef.current.click();
   }
 
-  const isReplaceDisabled = !selectedMealsToDisplay.some((slot) =>
-    slot.sourcePlan
-    && typeof slot.sourceMealIndex === "number"
-    && slot.toDate
-    && (slot.toMealType || slot.fromMealType),
-  );
+  const isReplaceDisabled = !selectedMealsToDisplay.some((slot) => {
+    const hasValidMealIndex = typeof slot.sourceMealIndex === "number" && !Number.isNaN(slot.sourceMealIndex);
+    const selectedDates = Array.isArray(slot.toDate)
+      ? slot.toDate.filter(Boolean)
+      : typeof slot.toDate === "string" && slot.toDate
+        ? [slot.toDate]
+        : [];
+
+    return (
+      slot.sourcePlan
+      && hasValidMealIndex
+      && selectedDates.length > 0
+      && (slot.toMealType || slot.fromMealType)
+    );
+  });
 
   return <div className="px-6 pt-0 py-5">
     <DialogClose ref={closeRef} />
@@ -203,7 +229,10 @@ function Container() {
 function CopyMealPlanSlot({ slot, dispatch }) {
   const { selectedPlans, mode, selectedPlan } = useCurrentStateContext();
 
-  const possibleModeDays = useMemo(() => possiblePlayDaysForCustomMeal(mode, selectedPlan), [mode])
+  const possibleModeDays = useMemo(
+    () => possiblePlayDaysForCustomMeal(mode, selectedPlan) ?? [],
+    [mode, selectedPlan],
+  );
 
   const planDays = Object.keys(selectedPlans ?? {});
   const planMeals = Array.isArray(selectedPlans?.[slot.sourcePlan])
@@ -214,6 +243,11 @@ function CopyMealPlanSlot({ slot, dispatch }) {
     : -1;
   const currentSourceMeal = boundedMealIndex >= 0 ? planMeals[boundedMealIndex] : null;
   const canAddDestination = Boolean(slot.sourcePlan && boundedMealIndex >= 0);
+  const selectedDestinationDates = Array.isArray(slot.toDate)
+    ? slot.toDate
+    : typeof slot.toDate === "string" && slot.toDate
+      ? [slot.toDate]
+      : [];
 
   const formatDayLabel = (value) => typeof value === "string"
     ? value.at(0)?.toUpperCase() + value.slice(1)
@@ -255,6 +289,8 @@ function CopyMealPlanSlot({ slot, dispatch }) {
       sourcePlan: slot.sourcePlan,
       sourceMealIndex: boundedMealIndex,
       meal: currentSourceMeal,
+      toDate: selectedDestinationDates,
+      toMealType: slot.toMealType,
     }));
   }
 
@@ -324,63 +360,216 @@ function CopyMealPlanSlot({ slot, dispatch }) {
     <Select
       value={slot.toMealType || undefined}
       onValueChange={(value) => dispatch(updateSlotMealType(slot.id, value))}
-      disabled={!slot.toDate}
+      disabled={!selectedDestinationDates.length}
     >
       <SelectTrigger className="w-full justify-between">
-        <SelectValue placeholder={slot.toDate ? "Select meal" : "Select date first"} />
+        <SelectValue placeholder={selectedDestinationDates.length ? "Select meal" : "Select date first"} />
       </SelectTrigger>
-      <SelectedSlotMealTypeOptions plan={slot.toDate} />
+      <SelectedSlotMealTypeOptions
+        plans={selectedDestinationDates}
+        sourceMealType={slot.fromMealType}
+      />
     </Select>
-    <Select
-      value={slot.toDate || undefined}
-      onValueChange={(value) => dispatch(updateSlotDate(slot.id, value))}
+    <DestinationMultiSelect
+      value={selectedDestinationDates}
+      options={possibleModeDays}
+      onChange={(dates) => dispatch(updateSlotDate(slot.id, dates))}
+      formatLabel={formatDayLabel}
+      placeholder="Nothing selected"
       disabled={!possibleModeDays.length}
-    >
-      <SelectTrigger className="w-full justify-between text-muted-foreground">
-        <SelectValue placeholder="Nothing selected" />
-      </SelectTrigger>
-      <SelectContent>
-        {!possibleModeDays.length && (
-          <SelectItem disabled value="__no-days">No days available</SelectItem>
-        )}
-        {possibleModeDays.map((day) => (
-          <SelectItem
-            key={day}
-            value={day}
-          >
-            {typeof day === "string"
-              ? day.at(0)?.toUpperCase() + day.slice(1)
-              : day}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    />
   </div>
 }
 
-function SelectedSlotMealTypeOptions({ plan }) {
+function SelectedSlotMealTypeOptions({ plans, sourceMealType }) {
   const { selectedPlans, selectedPlan } = useCurrentStateContext();
-  const options = plan
-    ? selectedPlans?.[plan] ?? selectedPlans?.[selectedPlan] ?? defaultMealTypes
-    : selectedPlans?.[selectedPlan] ?? defaultMealTypes
-  const updatedOptions = Array.isArray(options) ? options : options.meals;
-  const uniqueMealTypes = Array.from(new Set(updatedOptions?.map((meal) => typeof meal === "string"
+  const resolvedPlanKeys = Array.isArray(plans)
+    ? plans.filter(Boolean)
+    : typeof plans === "string" && plans
+      ? [plans]
+      : [];
+
+  const extractMeals = (plan) => {
+    if (!plan) return [];
+    if (Array.isArray(plan)) return plan;
+    if (Array.isArray(plan?.meals)) return plan.meals;
+    return [];
+  };
+
+  const aggregatedMeals = resolvedPlanKeys.length > 0
+    ? resolvedPlanKeys.flatMap((planKey) => extractMeals(selectedPlans?.[planKey]))
+    : extractMeals(selectedPlans?.[selectedPlan]);
+
+  const mealsSource = aggregatedMeals.length > 0 ? aggregatedMeals : defaultMealTypes;
+
+  const uniqueMealTypes = Array.from(new Set(mealsSource.map((meal) => (typeof meal === "string"
     ? meal
-    : meal?.mealType ?? meal?.fromMealType ?? ""
-  ))).filter(Boolean)
+    : meal?.mealType ?? meal?.fromMealType ?? "")))).filter(Boolean);
+
+  if (sourceMealType && !uniqueMealTypes.includes(sourceMealType)) {
+    uniqueMealTypes.unshift(sourceMealType);
+  }
 
   return <SelectContent>
     {uniqueMealTypes.length === 0 && (
       <SelectItem disabled value="__no-meals">No meals available</SelectItem>
     )}
     {uniqueMealTypes.map((mealType) => (
-      <SelectItem key={`${plan}-${mealType}`} value={mealType}>
+      <SelectItem key={`${resolvedPlanKeys.join(",") || "default"}-${mealType}`} value={mealType}>
         {typeof mealType === "string"
           ? mealType.at(0)?.toUpperCase() + mealType.slice(1)
           : mealType}
       </SelectItem>
     ))}
   </SelectContent>
+}
+
+function DestinationMultiSelect({
+  value,
+  options,
+  onChange,
+  formatLabel,
+  placeholder = "Select options",
+  disabled = false,
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = Array.isArray(value)
+    ? value.filter(Boolean)
+    : typeof value === "string" && value
+      ? [value]
+      : [];
+
+  const resolvedOptions = Array.isArray(options)
+    ? options.filter(Boolean)
+    : [];
+
+  const renderLabel = (option) => {
+    if (typeof formatLabel === "function") return formatLabel(option);
+    return typeof option === "string"
+      ? option.at(0)?.toUpperCase() + option.slice(1)
+      : option;
+  };
+
+  const displayLabel = (() => {
+    if (!selected.length) return placeholder;
+    if (selected.length === 1) return renderLabel(selected[0]);
+    return `${selected.length} selected`;
+  })();
+
+  const triggerClassName = cn(
+    "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-left text-sm outline-none transition-[color,box-shadow,border-color] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+    !selected.length && "text-muted-foreground",
+    selected.length && "text-foreground",
+  );
+
+  const applyChange = (nextValues) => {
+    if (!onChange) return;
+    const unique = Array.from(new Set(nextValues.filter(Boolean)));
+    // Ensure order follows options array when available
+    const ordered = resolvedOptions.length
+      ? [
+        ...resolvedOptions.filter((option) => unique.includes(option)),
+        ...unique.filter((option) => !resolvedOptions.includes(option)),
+      ]
+      : unique;
+    onChange(ordered);
+  };
+
+  const toggleOption = (option, checked) => {
+    const isChecked = checked === true || checked === "indeterminate";
+    if (isChecked) {
+      applyChange([...selected, option]);
+    } else {
+      applyChange(selected.filter((item) => item !== option));
+    }
+  };
+
+  const handleSelectAll = () => applyChange(resolvedOptions);
+  const handleClear = () => applyChange([]);
+  const handleSelectAllClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleSelectAll();
+  };
+  const handleClearClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleClear();
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={triggerClassName}
+          disabled={disabled}
+        >
+          <span className="truncate">{displayLabel}</span>
+          <ChevronDown className="size-4 shrink-0 opacity-50" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-60 max-h-64 overflow-y-auto"
+        align="end"
+      >
+        {resolvedOptions.length === 0
+          ? <DropdownMenuLabel className="text-xs text-muted-foreground">
+            No days available
+          </DropdownMenuLabel>
+          : <>
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+              Select destination days
+            </DropdownMenuLabel>
+            <div className="flex gap-1 p-1 pt-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs flex-1"
+                onClick={handleSelectAllClick}
+              >
+                Select All
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs flex-1"
+                onClick={handleClearClick}
+              >
+                Clear
+              </Button>
+            </div>
+            <DropdownMenuSeparator />
+            {resolvedOptions.map((option) => (
+              <DropdownMenuCheckboxItem
+                key={option}
+                checked={selected.includes(option)}
+                onSelect={(event) => event.preventDefault()}
+                onCheckedChange={(checked) => toggleOption(option, checked)}
+                className="capitalize"
+              >
+                {renderLabel(option)}
+              </DropdownMenuCheckboxItem>
+            ))}
+            <DropdownMenuSeparator />
+            <div className="p-1 pt-0">
+              <Button
+                variant="wz"
+                size="sm"
+                className="h-8 w-full text-xs"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpen(false);
+                }}
+              >
+                Done
+              </Button>
+            </div>
+          </>}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 const possiblePlayDaysForCustomMeal = function (mode, ddMMyyyy) {
@@ -391,7 +580,9 @@ const possiblePlayDaysForCustomMeal = function (mode, ddMMyyyy) {
         "thu", "fri", "sat", "sun",
       ]
     case "monthly":
+      if (!ddMMyyyy) return [];
       const date = parse(ddMMyyyy, "dd-MM-yyyy", new Date());
+      if (Number.isNaN(date?.getTime?.())) return [];
       const daysInMonth = getDaysInMonth(date);
       const year = date.getFullYear();
       const month = date.getMonth();
@@ -403,6 +594,6 @@ const possiblePlayDaysForCustomMeal = function (mode, ddMMyyyy) {
 
 
     default:
-      break;
+      return [];
   }
 }

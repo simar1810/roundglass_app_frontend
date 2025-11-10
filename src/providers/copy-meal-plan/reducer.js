@@ -56,6 +56,11 @@ function resolveMealMeta(planMeals = [], mealIndex = 0, mealOverride) {
 
 function createSlot({ planKey = "", planMeals = [], mealIndex = 0, overrides = {} }) {
   const meta = resolveMealMeta(planMeals, overrides.sourceMealIndex ?? mealIndex, overrides.meal);
+  const normalizedToDate = Array.isArray(overrides.toDate)
+    ? overrides.toDate.filter(Boolean)
+    : typeof overrides.toDate === "string" && overrides.toDate
+      ? [overrides.toDate]
+      : [];
 
   return {
     id: overrides.id ?? generateSlotId(planKey),
@@ -63,7 +68,7 @@ function createSlot({ planKey = "", planMeals = [], mealIndex = 0, overrides = {
     sourceMealIndex: overrides.sourceMealIndex ?? meta.mealIndex,
     fromMealType: overrides.fromMealType ?? meta.mealType,
     toMealType: overrides.toMealType ?? "",
-    toDate: overrides.toDate ?? "",
+    toDate: Array.from(new Set(normalizedToDate)),
     isDerived: overrides.isDerived ?? false,
   }
 }
@@ -141,15 +146,42 @@ export default function reducer(state, action) {
     }
 
     case ACTIONS.UPDATE_SLOT_DATE: {
-      const { id, date } = action.payload;
+      const { id, dates } = action.payload;
       return {
         ...state,
         selectedMeals: state.selectedMeals.map((slot) =>
           slot.id === id
             ? {
               ...slot,
-              toDate: date,
-              toMealType: "",
+              ...(function normalizeDates() {
+                const incoming = Array.isArray(dates)
+                  ? dates.filter(Boolean)
+                  : typeof dates === "string" && dates
+                    ? [dates]
+                    : [];
+
+                const unique = Array.from(new Set(incoming));
+                const previous = Array.isArray(slot.toDate)
+                  ? slot.toDate
+                  : typeof slot.toDate === "string" && slot.toDate
+                    ? [slot.toDate]
+                    : [];
+
+                const normalizedPrevious = [...previous].sort();
+                const normalizedIncoming = [...unique].sort();
+
+                const isSameSelection = normalizedPrevious.length === normalizedIncoming.length
+                  && normalizedPrevious.every((value, index) => value === normalizedIncoming[index]);
+
+                if (isSameSelection) {
+                  return { toDate: unique };
+                }
+
+                return {
+                  toDate: unique,
+                  toMealType: "",
+                };
+              })(),
             }
             : slot,
         ),
@@ -157,7 +189,7 @@ export default function reducer(state, action) {
     }
 
     case ACTIONS.ADD_DUPLICATE_SLOT: {
-      const { afterId, sourcePlan, sourceMealIndex, meal } = action.payload;
+      const { afterId, sourcePlan, sourceMealIndex, meal, toDate, toMealType } = action.payload;
       const baseIndex = state.selectedMeals.findIndex((slot) => slot.id === afterId);
       if (baseIndex === -1) return state;
 
@@ -169,6 +201,8 @@ export default function reducer(state, action) {
           sourcePlan,
           sourceMealIndex,
           fromMealType: state.selectedMeals[baseIndex]?.fromMealType ?? "",
+          toDate,
+          toMealType,
           isDerived: true,
         },
       });
@@ -246,14 +280,14 @@ export const updateSlotMealType = (id, mealType) => ({
   payload: { id, mealType },
 })
 
-export const updateSlotDate = (id, date) => ({
+export const updateSlotDate = (id, dates) => ({
   key: ACTIONS.UPDATE_SLOT_DATE,
-  payload: { id, date },
+  payload: { id, dates },
 })
 
-export const duplicateCopySlot = ({ afterId, sourcePlan, sourceMealIndex, meal }) => ({
+export const duplicateCopySlot = ({ afterId, sourcePlan, sourceMealIndex, meal, toDate, toMealType }) => ({
   key: ACTIONS.ADD_DUPLICATE_SLOT,
-  payload: { afterId, sourcePlan, sourceMealIndex, meal },
+  payload: { afterId, sourcePlan, sourceMealIndex, meal, toDate, toMealType },
 })
 
 export const addCopySourceSlot = ({ plan, planMeals }) => ({

@@ -59,8 +59,8 @@ function createStyles(brand) {
     },
     tableHeader: {
       flexDirection: "row",
-      backgroundColor: primaryColor,
-      color: bannerTextColor
+      backgroundColor: "#ffffff",
+      color: "#000000"
     },
     headerCell: {
       paddingVertical: 8,
