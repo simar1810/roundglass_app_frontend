@@ -40,7 +40,7 @@ export default function SelectMeals() {
   function onSortMeals(event) {
     const { active, over } = event;
     setActiveId(null);
-    
+
     if (!over || active.id === over.id) return;
 
     const oldIndex = currentMeals.findIndex(m => m.mealType === active.id);
@@ -61,8 +61,8 @@ export default function SelectMeals() {
       >
         {errorMessage}
       </div>}
-      <DndContext 
-        collisionDetection={closestCenter} 
+      <DndContext
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={onSortMeals}
       >

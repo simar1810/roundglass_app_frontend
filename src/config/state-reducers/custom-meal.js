@@ -132,7 +132,10 @@ export function customMealReducer(state, action) {
             ...state.selectedPlans,
             [state.selectedPlan]: isArray
               ? updatedMeals
-              : { ...currentPlan, meals: updatedMeals },
+              : {
+                ...currentPlan,
+                meals: updatedMeals
+              },
           },
           selectedMealType: action.payload.mealType,
         };
@@ -174,10 +177,18 @@ export function customMealReducer(state, action) {
       };
     }
     case "SAVE_RECIPE": {
-      const { recipe, index, isNew } = action.payload;
+      const { recipe, index, isNew, firstTime } = action.payload;
       const currentPlan = state.selectedPlans[state.selectedPlan];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
+      const calories = createCaloriesPayload(
+        state.recipeCaloriesMap,
+        action.payload.recipe,
+        isNew,
+        firstTime
+      )
+
+      const currentRecipeKeyId = recipeKey(action.payload.recipe._id)
 
       const dishesPayload = !isNew
         ? {
@@ -204,7 +215,15 @@ export function customMealReducer(state, action) {
                 i === index ? { ...meal, ...dishesPayload } : meal
               ),
             }
-            : mealType
+            : {
+              ...mealType,
+              meals: mealType
+                .meals
+                .map(meal => currentRecipeKeyId === recipeKey(meal._id)
+                  ? { ...meal, ...calories }
+                  : meal
+                )
+            }
         );
 
         return {
@@ -236,7 +255,15 @@ export function customMealReducer(state, action) {
               },
             ],
           }
-          : mealType
+          : {
+            ...mealType,
+            meals: mealType
+              .meals
+              .map(meal => currentRecipeKeyId === recipeKey(meal._id)
+                ? { ...meal, ...calories }
+                : meal
+              )
+          }
       );
 
       return {
@@ -492,13 +519,14 @@ export function saveMealType(mealType, type, index) {
   }
 }
 
-export function saveRecipe(recipe, index, isNew) {
+export function saveRecipe(recipe, index, isNew, firstTime) {
   return {
     type: "SAVE_RECIPE",
     payload: {
       recipe,
       index,
-      isNew
+      isNew,
+      firstTime
     }
   }
 }
@@ -624,4 +652,25 @@ export function reorderMealTypes(oldIndex, newIndex) {
       newIndex
     }
   }
+}
+
+function createCaloriesPayload(caloriesMap, recipe = {}, isNew, isFirstTime) {
+  const keyId = recipeKey(recipe._id);
+  if ((isFirstTime || isNew) && caloriesMap.has(keyId)) {
+    return caloriesMap.get(keyId);
+  }
+  caloriesMap.set(keyId, {
+    calories: recipe.calories,
+    protein: recipe.protein,
+    fats: recipe.fats,
+    carbohydrates: recipe.carbohydrates,
+  });
+  return caloriesMap.get(keyId);
+}
+
+export function recipeKey(key) {
+  if (typeof key === "object") {
+    return key.$oid;
+  }
+  return key;
 }
