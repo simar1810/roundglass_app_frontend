@@ -50,11 +50,8 @@ export default function EditSelectedMealDetails({
   index
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const { recipeCaloriesMap, dispatch } = useCurrentStateContext();
-  const [formData, setFormData] = useState({
-    ...recipe,
-    ...recipeCaloriesMap.get(recipeKey(recipe._id))
-  });
+  const { dispatch } = useCurrentStateContext();
+  const [formData, setFormData] = useState(recipe);
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
   const closeBtnRef = useRef()
 
