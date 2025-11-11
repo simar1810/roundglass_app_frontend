@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/menubar";
 import {
   ChevronDown,
+  Copy,
   EllipsisVertical,
   Plus,
 } from "lucide-react";
@@ -183,6 +184,18 @@ function Header({ clientData }) {
     }
   }
 
+  function copyLoginLink() {
+    const loginLink = `https://wellnessz.in/app/loginClient?clientID=${clientData.clientId}`;
+    navigator.clipboard.writeText(loginLink)
+      .then(() => {
+        toast.success("Login link copied to clipboard!");
+        setModalOpened(false);
+      })
+      .catch(() => {
+        toast.error("Failed to copy login link");
+      });
+  }
+
   return <CardHeader className="relative flex items-center gap-4 md:gap-8">
     <Avatar className="w-[100px] h-[100px]">
       <AvatarImage src={clientData.profilePhoto} />
@@ -214,6 +227,12 @@ function Header({ clientData }) {
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent ref={dropdownRef} className="text-[14px] font-semibold">
+        <DropdownMenuItem onClick={copyLoginLink} className="cursor-pointer">
+          <div className="px-2 flex items-center gap-2">
+            <Copy strokeWidth="3" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
+            <span>Copy Login Link</span>
+          </div>
+        </DropdownMenuItem>
         <DropdownMenuItem>
           <DeleteClientModal
             onClose={() => setModalOpened(false)}

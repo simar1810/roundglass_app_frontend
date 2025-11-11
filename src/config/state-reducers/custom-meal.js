@@ -178,7 +178,11 @@ export function customMealReducer(state, action) {
       const currentPlan = state.selectedPlans[state.selectedPlan];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
-
+      const defaultMealTiming = currentMeals
+        ?.find(mealType => mealType.mealType === state.selectedMealType)
+        ?.meals
+        ?.at(0)
+        ?.time || ""
       const dishesPayload = !isNew
         ? {
           ...recipe,
@@ -192,6 +196,7 @@ export function customMealReducer(state, action) {
           isNew: !recipe.time || false,
         }
         : {
+          time: recipe.time || defaultMealTiming,
           isNew: false,
         };
 
