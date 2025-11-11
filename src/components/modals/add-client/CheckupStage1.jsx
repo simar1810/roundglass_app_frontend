@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { changeFieldvalue, changeHeightUnit, changeWeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { differenceInYears, format, parse } from "date-fns";
+import { differenceInYears, format, isAfter, parse } from "date-fns";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -46,11 +46,24 @@ export default function CheckupStage1() {
         className="w-full"
         value={state.dob}
         onChange={e => {
-          dispatch(changeFieldvalue("dob", e.target.value))
+          const value = e.target.value;
+          const parsedDate = value ? parse(value, "yyyy-MM-dd", new Date()) : null;
+
+          if (parsedDate && isNaN(parsedDate)) {
+            toast.error("Please enter a valid date of birth");
+            return;
+          }
+
+          if (parsedDate && isAfter(parsedDate, new Date())) {
+            toast.error("Date of birth cannot be in the future");
+            return;
+          }
+
+          dispatch(changeFieldvalue("dob", value));
           dispatch(changeFieldvalue(
             "age",
-            differenceInYears(new Date(), parse(e.target.value, "yyyy-MM-dd", new Date()))
-          ))
+            value ? differenceInYears(new Date(), parsedDate) : ""
+          ));
         }}
       />
       <div>
