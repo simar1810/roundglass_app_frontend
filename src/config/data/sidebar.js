@@ -540,7 +540,7 @@ export const sidebar__coachContent = [
     permission: null
   }
 ];
->>>>>>> 40493fabd52d6c4e008e771267fe180cbb8a860e
+
 
 export const sidebar__coachFooter = [
   {
