@@ -19,9 +19,9 @@ export default function SubscriptionHistory({ _id }) {
   </div>
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const subscriptions = data.data?.at(0)?.history || [];
+  const subscriptions = data.data?.at(0)?.history.filter(subscription => subscription.amount!==0) || [];
 
-  if (subscriptions.length === 0) return <div className="mb-8">
+  if (subscriptions.length === 0) return <div className="mb-8"> 
     <div className="flex items-center justify-between">
       <h5>Membership History</h5>
       <AddSubscriptionModal _id={_id} />
