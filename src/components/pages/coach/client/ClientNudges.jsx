@@ -63,7 +63,7 @@ function getRecentNudges(notifications) {
 
   // Create a copy to avoid mutating the original array
   const notificationsCopy = [...notifications];
-  
+
   // Sort all notifications by date (most recent first)
   const sortedNotifications = notificationsCopy.sort((a, b) => {
     if (a.schedule_type === "schedule" && b.schedule_type === "schedule") {
@@ -85,7 +85,7 @@ function getRecentNudges(notifications) {
   });
 
   // Return only the 4 most recent
-  return sortedNotifications.slice(0, 4);
+  return sortedNotifications
 }
 
 function RecentSection({ nudges }) {

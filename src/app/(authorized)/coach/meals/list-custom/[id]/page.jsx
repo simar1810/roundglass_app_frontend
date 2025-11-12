@@ -164,6 +164,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
     portrait: "PDFCustomMealPortrait",
     landscape: "PDFCustomMealLandscape",
     compact: "PDFCustomMealCompactLandscape",
+    compactPortrait: "PDFCustomMealCompactPortrait",
   };
 
   const pdfDisabled = !pdfData || !pdfData?.plans?.some(plan => Array.isArray(plan?.meals) && plan.meals.length > 0);
@@ -230,6 +231,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
             <SelectItem value="portrait">Portrait Overview</SelectItem>
             <SelectItem value="landscape">Landscape Matrix</SelectItem>
             <SelectItem value="compact">Compact Landscape</SelectItem>
+            <SelectItem value="compactPortrait">Compact Portrait</SelectItem>
           </SelectContent>
         </Select>
       </div>
