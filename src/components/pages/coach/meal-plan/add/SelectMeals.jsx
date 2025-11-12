@@ -86,7 +86,7 @@ export default function SelectMeals() {
     <div>
       {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-center gap-4">
         <EditSelectedMealDetails
-          key={recipe?._id || index}
+          key={`${recipe?._id}-${recipe.time}` || `${index}-${recipe.time}`}
           index={index}
           recipe={recipe}
           defaultOpen={recipe.isNew || false}

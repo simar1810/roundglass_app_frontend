@@ -36,6 +36,7 @@ import { defaultMealTypes, replaceMealPlanSelections } from "@/config/state-redu
 import { format, getDaysInMonth, parse } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SaveMealType from "./SaveMealType";
 
 export default function CopyMealPlanDays() {
   const { selectedPlans, selectedPlan, mode } = useCurrentStateContext();
@@ -63,6 +64,8 @@ export default function CopyMealPlanDays() {
     </DialogContent>
   </Dialog>
 }
+
+const ADD_NEW_MEAL_TYPE_VALUE = "__add_new_meal_type__";
 
 
 function Container() {
@@ -238,6 +241,8 @@ function CopyMealPlanSlot({ slot, dispatch }) {
   const planMeals = Array.isArray(selectedPlans?.[slot.sourcePlan])
     ? selectedPlans[slot.sourcePlan]
     : [];
+  const [isAddMealTypeOpen, setIsAddMealTypeOpen] = useState(false);
+  const [customMealTypes, setCustomMealTypes] = useState([]);
   const boundedMealIndex = planMeals.length
     ? Math.min(Math.max(slot.sourceMealIndex ?? 0, 0), planMeals.length - 1)
     : -1;
@@ -280,6 +285,15 @@ function CopyMealPlanSlot({ slot, dispatch }) {
       planMeals,
     }));
   }
+
+  const handleSlotMealTypeChange = (value) => {
+    if (value === ADD_NEW_MEAL_TYPE_VALUE) {
+      setIsAddMealTypeOpen(true);
+      return;
+    }
+
+    dispatch(updateSlotMealType(slot.id, value));
+  };
 
   const handleAddDestination = () => {
     if (!canAddDestination) return;
@@ -359,7 +373,7 @@ function CopyMealPlanSlot({ slot, dispatch }) {
     </div>
     <Select
       value={slot.toMealType || undefined}
-      onValueChange={(value) => dispatch(updateSlotMealType(slot.id, value))}
+      onValueChange={handleSlotMealTypeChange}
       disabled={!selectedDestinationDates.length}
     >
       <SelectTrigger className="w-full justify-between">
@@ -368,6 +382,7 @@ function CopyMealPlanSlot({ slot, dispatch }) {
       <SelectedSlotMealTypeOptions
         plans={selectedDestinationDates}
         sourceMealType={slot.fromMealType}
+        extraMealTypes={customMealTypes}
       />
     </Select>
     <DestinationMultiSelect
@@ -378,10 +393,23 @@ function CopyMealPlanSlot({ slot, dispatch }) {
       placeholder="Nothing selected"
       disabled={!possibleModeDays.length}
     />
+    <SaveMealType
+      type="new"
+      showTrigger={false}
+      open={isAddMealTypeOpen}
+      onOpenChange={setIsAddMealTypeOpen}
+      onSave={(newMealType) => {
+        const trimmed = typeof newMealType === "string" ? newMealType.trim() : newMealType;
+        if (trimmed) {
+          setCustomMealTypes((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+          dispatch(updateSlotMealType(slot.id, trimmed));
+        }
+      }}
+    />
   </div>
 }
 
-function SelectedSlotMealTypeOptions({ plans, sourceMealType }) {
+function SelectedSlotMealTypeOptions({ plans, sourceMealType, extraMealTypes = [] }) {
   const { selectedPlans, selectedPlan } = useCurrentStateContext();
   const resolvedPlanKeys = Array.isArray(plans)
     ? plans.filter(Boolean)
@@ -410,17 +438,22 @@ function SelectedSlotMealTypeOptions({ plans, sourceMealType }) {
     uniqueMealTypes.unshift(sourceMealType);
   }
 
+  const combinedMealTypes = Array.from(new Set([...uniqueMealTypes, ...extraMealTypes.filter(Boolean)]));
+
   return <SelectContent>
-    {uniqueMealTypes.length === 0 && (
+    {combinedMealTypes.length === 0 && (
       <SelectItem disabled value="__no-meals">No meals available</SelectItem>
     )}
-    {uniqueMealTypes.map((mealType) => (
+    {combinedMealTypes.map((mealType) => (
       <SelectItem key={`${resolvedPlanKeys.join(",") || "default"}-${mealType}`} value={mealType}>
         {typeof mealType === "string"
           ? mealType.at(0)?.toUpperCase() + mealType.slice(1)
           : mealType}
       </SelectItem>
     ))}
+    <SelectItem value={ADD_NEW_MEAL_TYPE_VALUE} className="text-primary">
+      Add new meal type
+    </SelectItem>
   </SelectContent>
 }
 

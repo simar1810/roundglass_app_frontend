@@ -5,31 +5,52 @@ import { Input } from "@/components/ui/input";
 import { saveMealType } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function SaveMealType({
   children,
   defaulValue = "",
   type,
-  index
+  index,
+  showTrigger = true,
+  open: controlledOpen,
+  onOpenChange,
+  onSave,
 }) {
-  const [value, setValue] = useState(defaulValue)
-  const { dispatch } = useCurrentStateContext()
+  const [value, setValue] = useState(defaulValue);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const { dispatch } = useCurrentStateContext();
 
   const dialogCloseRef = useRef();
+  const isControlled = typeof controlledOpen === "boolean";
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const handleOpenChange = (nextOpen) => {
+    if (!isControlled) {
+      setInternalOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  };
+
+  useEffect(() => {
+    if (open) {
+      setValue(defaulValue);
+    }
+  }, [open, defaulValue]);
 
   function saveMealTypeHandler() {
-    dispatch(saveMealType(value, type, index))
-    dialogCloseRef.current.click();
+    dispatch(saveMealType(value, type, index));
+    if (onSave) onSave(value);
+    dialogCloseRef.current?.click();
   }
 
   function deleteMealTypeHandler() {
-    dispatch(saveMealType(value, "delete", index))
-    dialogCloseRef.current.click();
+    dispatch(saveMealType(value, "delete", index));
+    dialogCloseRef.current?.click();
   }
 
-  return <Dialog>
-    {!children && <DialogTrigger asChild>
+  return <Dialog open={open} onOpenChange={handleOpenChange}>
+    {showTrigger && !children && <DialogTrigger asChild>
       <Button variant="wz" className="ml-auto">
         <Plus />
         Add
