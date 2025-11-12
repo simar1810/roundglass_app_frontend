@@ -164,7 +164,7 @@ function ClientActivities({ activities }) {
 
 function Header({ clientData }) {
   const [modalOpened, setModalOpened] = useState(false);
-  const { roles } = useAppSelector(state => state.coach.data)
+  const { roles, coachRefUrl } = useAppSelector(state => state.coach.data)
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setModalOpened(false));
@@ -185,7 +185,7 @@ function Header({ clientData }) {
   }
 
   function copyLoginLink() {
-    const loginLink = `https://wellnessz.in/app/loginClient?clientID=${clientData.clientId}`;
+    const loginLink = `${coachRefUrl}/loginClient?clientID=${clientData.clientId}`;
     navigator.clipboard.writeText(loginLink)
       .then(() => {
         toast.success("Login link copied to clipboard!");
@@ -205,6 +205,9 @@ function Header({ clientData }) {
       <h3 className="mb-2">{clientData.name}</h3>
       <div className="mb-2 flex items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
+        <div className="px-2 flex items-center gap-2 cursor-pointer" onClick={copyLoginLink}>
+          <Copy strokeWidth="3" className="w-[14px] h-[14px] text-[var(--accent-1)]" />
+        </div>
         <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
         {clientData.rollno && permit("club", roles) && <EditClientRollnoModal
           defaultValue={clientData.rollno}
@@ -227,12 +230,6 @@ function Header({ clientData }) {
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent ref={dropdownRef} className="text-[14px] font-semibold">
-        <DropdownMenuItem onClick={copyLoginLink} className="cursor-pointer">
-          <div className="px-2 flex items-center gap-2">
-            <Copy strokeWidth="3" className="w-[20px] h-[20px] text-[var(--accent-1)]" />
-            <span>Copy Login Link</span>
-          </div>
-        </DropdownMenuItem>
         <DropdownMenuItem>
           <DeleteClientModal
             onClose={() => setModalOpened(false)}

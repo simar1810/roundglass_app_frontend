@@ -8,6 +8,7 @@ import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
 import PDFCustomMealPortrait from "../pages/coach/meals/PDFCustomMealPortrait";
 import PDFCustomMealLandscape from "../pages/coach/meals/PDFCustomMealLandscape";
 import PDFCustomMealCompactLandscape from "../pages/coach/meals/PDFCustomMealCompactLandscape";
+import PDFCustomMealCompactPortrait from "../pages/coach/meals/PDFCustomMealCompactPortrait";
 import useSWR from "swr";
 import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
@@ -24,7 +25,8 @@ const Templates = {
   PDFDailyMealSchedule,
   PDFCustomMealPortrait,
   PDFCustomMealLandscape,
-  PDFCustomMealCompactLandscape
+  PDFCustomMealCompactLandscape,
+  PDFCustomMealCompactPortrait
 }
 
 export default function PDFRenderer({ children, pdfTemplate, data }) {
