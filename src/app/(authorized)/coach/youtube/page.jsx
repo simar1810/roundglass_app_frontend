@@ -6,7 +6,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 const YT_REDIRECTION_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const YT_OAUTH_CLIENT_ID = "92110669040-tjdv1tdl21qs0d1dk5epe4lhrb7cjqqi.apps.googleusercontent.com"
 const YT_RESPONSE_TYPE = "code"
-const YT_REDIRECT_URL = "https://dc7c9e958d69.ngrok-free.app/api/app/youtube/oauth"
+const YT_REDIRECT_URL = "https://e408eb24d1ea.ngrok-free.app/api/app/youtube/oauth"
 const YT_SCOPES = [
   "https://www.googleapis.com/auth/youtube.upload"
 ]
