@@ -129,6 +129,12 @@ export const quickAddClientFormFields = [
 
 export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
+export const DAYS_EEEE = [
+  "Sunday", "Monday", "Tuesday",
+  "Wednesday", "Thursday", "Friday",
+  "Saturday"
+];
+
 export const marathonTaskFields = [
   {
     id: 1,

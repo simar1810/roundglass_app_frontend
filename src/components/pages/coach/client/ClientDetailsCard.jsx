@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/menubar";
 import {
   ChevronDown,
+  Copy,
   EllipsisVertical,
   Plus,
 } from "lucide-react";
@@ -163,7 +164,7 @@ function ClientActivities({ activities }) {
 
 function Header({ clientData }) {
   const [modalOpened, setModalOpened] = useState(false);
-  const { roles } = useAppSelector(state => state.coach.data)
+  const { roles, coachRefUrl } = useAppSelector(state => state.coach.data)
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setModalOpened(false));
@@ -183,6 +184,18 @@ function Header({ clientData }) {
     }
   }
 
+  function copyLoginLink() {
+    const loginLink = `${coachRefUrl}/loginClient?clientID=${clientData.clientId}`;
+    navigator.clipboard.writeText(loginLink)
+      .then(() => {
+        toast.success("Login link copied to clipboard!");
+        setModalOpened(false);
+      })
+      .catch(() => {
+        toast.error("Failed to copy login link");
+      });
+  }
+
   return <CardHeader className="relative flex items-center gap-4 md:gap-8">
     <Avatar className="w-[100px] h-[100px]">
       <AvatarImage src={clientData.profilePhoto} />
@@ -192,6 +205,9 @@ function Header({ clientData }) {
       <h3 className="mb-2">{clientData.name}</h3>
       <div className="mb-2 flex items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
+        <div className="px-2 flex items-center gap-2 cursor-pointer" onClick={copyLoginLink}>
+          <Copy strokeWidth="3" className="w-[14px] h-[14px] text-[var(--accent-1)]" />
+        </div>
         <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
         {clientData.rollno && permit("club", roles) && <EditClientRollnoModal
           defaultValue={clientData.rollno}

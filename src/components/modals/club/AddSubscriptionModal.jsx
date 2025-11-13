@@ -9,6 +9,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { sendData } from "@/lib/api";
+import { addDays, format, parse } from "date-fns";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -21,7 +22,8 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
     invoice: "",
     paymentMode: "cash",
     startDate: "",
-    description: ""
+    description: "",
+    noOfDays: 30
   });
   const closeBtnRef = useRef(null);
 
@@ -58,9 +60,37 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
         />
         <FormControl
           value={formData.startDate}
-          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+          onChange={(e) => setFormData({
+            ...formData,
+            startDate: e.target.value,
+            endDate: format(
+              addDays(
+                parse(e.target.value, "yyyy-MM-dd", new Date()),
+                formData.noOfDays
+              ),
+              "yyyy-MM-dd"
+            )
+          })}
           label="Start Date"
           type="date"
+          className="block mb-4"
+        />
+        <FormControl
+          value={formData.noOfDays}
+          onChange={e => setFormData({
+            ...formData,
+            noOfDays: parseInt(e.target.value),
+            endDate: format(
+              addDays(
+                parse(formData.startDate, "yyyy-MM-dd", new Date()),
+                parseInt(e.target.value)
+              ),
+              "yyyy-MM-dd"
+            )
+          })}
+          label="No Of Membership Dates"
+          type="number"
+          min={0}
           className="block mb-4"
         />
         <FormControl

@@ -564,12 +564,11 @@ function DownlineClientList() {
 	if (isLoading) return <ContentLoader />
 
 	if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
-
 	const clients = data.data || [];
 
 	return <div className="bg-[var(--comp-1)] p-4 rounded-[10px] border-1">
 		{/* <h2>Client List</h2> */}
-		<Table className="border-1">
+		<Table className="border-1 mt-4">
 			<TableHeader>
 				<TableRow className="bg-white [&_th]:font-bold">
 					<TableHead>Name</TableHead>

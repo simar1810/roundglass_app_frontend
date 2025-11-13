@@ -106,7 +106,61 @@ function normalizeMealEntries(planForDay) {
   return [];
 }
 
-function buildMealItemsForPDF(mealEntry) {
+function formatMacroValue(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return null;
+    const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+    const stringified = `${rounded}`;
+    if (!stringified.includes(".")) return stringified;
+    return stringified.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) return formatMacroValue(numeric);
+    return trimmed;
+  }
+  return null;
+}
+
+function resolveMacroValue(dish, key) {
+  if (!dish || typeof dish !== "object") return null;
+
+  const direct = dish[key];
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const caloriesField = dish.calories;
+  if (key === "calories") {
+    if (typeof caloriesField === "number" && Number.isFinite(caloriesField)) return caloriesField;
+    if (typeof caloriesField === "string" && caloriesField.trim()) return caloriesField.trim();
+    if (caloriesField && typeof caloriesField === "object") {
+      const nested = caloriesField.total ?? caloriesField.calories ?? caloriesField.value;
+      if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+      if (typeof nested === "string" && nested.trim()) return nested.trim();
+    }
+    return null;
+  }
+
+  if (caloriesField && typeof caloriesField === "object") {
+    const nestedKeys = [key];
+    if (key === "protein") nestedKeys.push("proteins");
+    if (key === "carbohydrates") nestedKeys.push("carbs");
+    if (key === "fats") nestedKeys.push("fat");
+
+    for (const nestedKey of nestedKeys) {
+      const nested = caloriesField[nestedKey];
+      if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+      if (typeof nested === "string" && nested.trim()) return nested.trim();
+    }
+  }
+
+  return null;
+}
+
+function buildMealItemsForPDF(mealEntry, { includeMacros = true } = {}) {
   if (!mealEntry) return [];
   const dishes = Array.isArray(mealEntry.meals) ? mealEntry.meals : [];
 
@@ -118,12 +172,44 @@ function buildMealItemsForPDF(mealEntry) {
     if (dish?.quantity) detailsParts.push(dish.quantity);
     if (dish?.description) detailsParts.push(dish.description);
 
-    const macroParts = [];
-    if (dish?.calories) macroParts.push(`${dish.calories} kcal`);
-    if (dish?.protein) macroParts.push(`Protein ${dish.protein}g`);
-    if (dish?.carbohydrates) macroParts.push(`Carbs ${dish.carbohydrates}g`);
-    if (dish?.fats) macroParts.push(`Fats ${dish.fats}g`);
-    if (macroParts.length) detailsParts.push(macroParts.join(", "));
+    if (includeMacros) {
+      const macroParts = [];
+
+      const caloriesValue = formatMacroValue(resolveMacroValue(dish, "calories"));
+      const proteinValue = formatMacroValue(resolveMacroValue(dish, "protein"));
+      const carbsValue = formatMacroValue(resolveMacroValue(dish, "carbohydrates"));
+      const fatsValue = formatMacroValue(resolveMacroValue(dish, "fats"));
+
+      if (caloriesValue !== null) {
+        const label = typeof caloriesValue === "string" && /cal/i.test(caloriesValue)
+          ? caloriesValue
+          : `${caloriesValue} kcal`;
+        macroParts.push(label);
+      }
+
+      if (proteinValue !== null) {
+        const label = typeof proteinValue === "string" && /g\b/i.test(proteinValue)
+          ? proteinValue
+          : `${proteinValue}g`;
+        macroParts.push(`Protein ${label}`);
+      }
+
+      if (carbsValue !== null) {
+        const label = typeof carbsValue === "string" && /g\b/i.test(carbsValue)
+          ? carbsValue
+          : `${carbsValue}g`;
+        macroParts.push(`Carbs ${label}`);
+      }
+
+      if (fatsValue !== null) {
+        const label = typeof fatsValue === "string" && /g\b/i.test(fatsValue)
+          ? fatsValue
+          : `${fatsValue}g`;
+        macroParts.push(`Fats ${label}`);
+      }
+
+      if (macroParts.length) detailsParts.push(macroParts.join(", "));
+    }
 
     return {
       title,
@@ -132,7 +218,9 @@ function buildMealItemsForPDF(mealEntry) {
   });
 }
 
-export function customMealDailyPDFData(customPlan, planKey, coach) {
+export function customMealDailyPDFData(customPlan, planKey, coach, options = {}) {
+  const { includeMacros = true } = options;
+
   if (!customPlan || typeof customPlan !== "object") return null;
 
   const plansRecord = customPlan?.plans || {};
@@ -161,7 +249,7 @@ export function customMealDailyPDFData(customPlan, planKey, coach) {
       return {
         mealType,
         timeWindow: mealEntry?.time || mealEntry?.meal_time || firstTimedDish?.meal_time || "",
-        items: buildMealItemsForPDF(mealEntry),
+        items: buildMealItemsForPDF(mealEntry, { includeMacros }),
         dishes,
       };
     });

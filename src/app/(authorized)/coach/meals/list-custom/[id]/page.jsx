@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { customMealDailyPDFData } from "@/lib/pdf";
@@ -148,6 +149,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
   }, [customPlan?.mode]);
 
   const [selectedPdfVariant, setSelectedPdfVariant] = useState(defaultVariant);
+  const [includeMacros, setIncludeMacros] = useState(true);
 
   useEffect(() => {
     setSelectedPdfVariant(defaultVariant);
@@ -155,13 +157,14 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
 
   const pdfData = useMemo(() => {
     if (!hasPlanData || !selectedPlan) return null;
-    return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName });
-  }, [coachName, customPlan, hasPlanData, selectedPlan]);
+    return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName }, { includeMacros });
+  }, [coachName, customPlan, hasPlanData, includeMacros, selectedPlan]);
 
   const pdfTemplateMap = {
     portrait: "PDFCustomMealPortrait",
     landscape: "PDFCustomMealLandscape",
     compact: "PDFCustomMealCompactLandscape",
+    compactPortrait: "PDFCustomMealCompactPortrait",
   };
 
   const pdfDisabled = !pdfData || !pdfData?.plans?.some(plan => Array.isArray(plan?.meals) && plan.meals.length > 0);
@@ -191,7 +194,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
         <DeleteCustomMealPlan id={customPlan._id} />
       </>}
     </div>
-    <div className="flex items-center justify-between gap-4 mt-4">
+    <div className="flex flex-wrap items-center gap-4 mt-4">
       <PDFRenderer pdfTemplate={pdfTemplateKey} data={pdfData || {}}>
         <DialogTrigger
           className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -201,20 +204,37 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
           Plan PDF
         </DialogTrigger>
       </PDFRenderer>
-      <Select
-        value={selectedPdfVariant}
-        onValueChange={setSelectedPdfVariant}
-        disabled={pdfDisabled}
-      >
-        <SelectTrigger className="min-w-[200px]">
-          <SelectValue placeholder="Select PDF Layout" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="portrait">Portrait Overview</SelectItem>
-          <SelectItem value="landscape">Landscape Matrix</SelectItem>
-          <SelectItem value="compact">Compact Landscape</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Switch
+          id="custom-plan-macros-toggle"
+          checked={includeMacros}
+          onCheckedChange={setIncludeMacros}
+          disabled={pdfDisabled}
+        />
+        <label
+          htmlFor="custom-plan-macros-toggle"
+          className="cursor-pointer select-none text-sm text-muted-foreground"
+        >
+          Show macro nutrients
+        </label>
+      </div>
+      <div className="ml-auto">
+        <Select
+          value={selectedPdfVariant}
+          onValueChange={setSelectedPdfVariant}
+          disabled={pdfDisabled}
+        >
+          <SelectTrigger className="min-w-[200px]">
+            <SelectValue placeholder="Select PDF Layout" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="portrait">Portrait Overview</SelectItem>
+            <SelectItem value="landscape">Landscape Matrix</SelectItem>
+            <SelectItem value="compact">Compact Landscape</SelectItem>
+            <SelectItem value="compactPortrait">Compact Portrait</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
     <Image
       alt=""
