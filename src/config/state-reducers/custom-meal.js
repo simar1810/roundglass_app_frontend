@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { addDays, format, isBefore, parse } from "date-fns";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
 
@@ -433,6 +433,36 @@ export function customMealReducer(state, action) {
         },
       };
     }
+
+    case "START_FROM_TODAY": {
+      if (state.mode !== "monthly") return state
+
+      const totalAddedDays = Object
+        .keys(state.selectedPlans)
+
+      const sortedDateKeys = sortDatesByKeys(totalAddedDays)
+
+      const newPlans = {}
+      let current = 0;
+      const now = new Date();
+
+      for (const date of sortedDateKeys) {
+        newPlans[format(
+          addDays(now, current),
+          "dd-MM-yyyy"
+        )] = state.selectedPlans[date]
+        current++;
+      }
+      return {
+        ...state,
+        selectedPlans: newPlans,
+        selectedPlan: format(now, "dd-MM-yyyy"),
+        selectedMealType: newPlans[
+          format(now, "dd-MM-yyyy")
+        ][0].mealType
+      }
+    }
+
     default:
       return state;
   }
@@ -629,4 +659,17 @@ export function reorderMealTypes(oldIndex, newIndex) {
       newIndex
     }
   }
+}
+
+export function startFromToday() {
+  return {
+    type: "START_FROM_TODAY"
+  }
+}
+
+function sortDatesByKeys(dates) {
+  return dates
+    .map(date => parse(date, "dd-MM-yyyy", new Date()))
+    .sort((dateA, dateB) => isBefore(dateA, dateB) ? -1 : 1)
+    .map(date => format(date, "dd-MM-yyyy"))
 }

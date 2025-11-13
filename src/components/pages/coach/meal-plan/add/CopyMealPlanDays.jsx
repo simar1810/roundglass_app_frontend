@@ -38,17 +38,22 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SaveMealType from "./SaveMealType";
 
-export default function CopyMealPlanDays() {
+export default function CopyMealPlanDays({ trigger, open, onOpenChange }) {
   const { selectedPlans, selectedPlan, mode } = useCurrentStateContext();
   const planKeys = Object.keys(selectedPlans ?? {});
   const safeSelectedPlan = selectedPlans?.[selectedPlan] ? selectedPlan : planKeys[0] ?? "";
+  const triggerNode = trigger ?? (
+    <Button
+      variant="wz"
+    >Copy Recipes</Button>
+  );
 
-  return <Dialog>
-    <DialogTrigger asChild>
-      <Button
-        variant="wz"
-      >Copy Recipes</Button>
-    </DialogTrigger>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
+    {triggerNode && (
+      <DialogTrigger asChild>
+        {triggerNode}
+      </DialogTrigger>
+    )}
     <DialogContent className="!max-w-4xl p-0 overflow-hidden max-h-[80vh] overflow-y-auto">
       <div className="border-b px-6 py-4">
         <DialogTitle className="text-lg font-semibold text-gray-900">Copy Meal</DialogTitle>
