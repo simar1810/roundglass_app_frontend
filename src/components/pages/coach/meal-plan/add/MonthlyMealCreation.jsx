@@ -1,8 +1,7 @@
-import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate } from "@/config/state-reducers/custom-meal";
+import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate, startFromToday } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 import AddDayModal from "./AddDayModal";
-import CopyMealPlanModal from "./CopyMealPlanModal";
 import { Pen } from "lucide-react";
 import { Dialog } from "@radix-ui/react-dialog";
 import { DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,10 +9,14 @@ import { Input } from "@/components/ui/input";
 import { useMemo, useRef, useState } from "react";
 import { addDays, format, isBefore, parse } from "date-fns";
 import { cn } from "@/lib/utils";
-import CopyMealPlanDays from "./CopyMealPlanDays";
+import { useSearchParams } from "next/navigation";
+import MealPlanActionsMenu from "./MealPlanActionsMenu";
 
 export default function MonthlyMealCreation() {
   const { dispatch, selectedPlans, selectedPlan } = useCurrentStateContext();
+  const searchParams = useSearchParams();
+  const creationType = searchParams.get("creationType");
+  const canStartFromToday = ["copy_edit", "edit"].includes(creationType);
 
   const days = Object
     .keys(selectedPlans)
@@ -30,10 +33,13 @@ export default function MonthlyMealCreation() {
   )
 
   return <>
-    <div className="flex items-center justify-between gap-4">
-      <h3 className="mt-4 mr-auto">Days</h3>
-      <CopyMealPlanModal to={selectedPlan} />
-      <CopyMealPlanDays />
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="mr-auto">Days</h3>
+      <MealPlanActionsMenu
+        toPlan={selectedPlan}
+        showStartFromToday={canStartFromToday}
+        onStartFromToday={() => dispatch(startFromToday())}
+      />
     </div>
     <div className="mt-4 flex gap-2 overflow-x-auto pb-4">
       {days.length === 0 && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
