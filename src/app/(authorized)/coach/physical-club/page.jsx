@@ -118,9 +118,11 @@ export default function Page() {
   }
 
   return <div className="content-container content-height-screen">
-    <div className="mb-8 flex items-center justify-between">
-      <h4>Attendance Management System</h4>
-      <QRCodeModal />
+    <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-2">
+      <div className="flex flex-wrap items-center justify-between md:justify-start gap-4 md:gap-10">
+        <h4 className="text-sm md:text-base">Attendance Management System</h4>
+        <QRCodeModal />
+      </div>
       <AutoMarkAttendance />
     </div>
 
@@ -228,7 +230,7 @@ function SelectDateRange({
         <CalendarRange strokeWidth={2.4} />
       </Button>
     </SheetTrigger>
-    <SheetContent align="start" className="!max-w-[600px] !w-[600px]">
+    <SheetContent align="start" className="!max-w-[600px] w-[380px] overflow-y-auto no-scrollbar md:!w-[600px]">
       <SheetTitle className="text-[28px] p-4 border-b-1">Date Range</SheetTitle>
       <div className="p-4">
         <CustomCalendar

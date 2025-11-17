@@ -23,7 +23,8 @@ export default function DashboardInfoCard({
     className="relative overflow-clip border-1 rounded-[10px] cursor-pointer"
   >
     <Card className="px-0 py-4 shadow-none gap-2 rounded-[10px] border-0">
-      <CardHeader className="flex flex-row items-center justify-between">
+     <div className="flex md:flex-col">
+      <CardHeader className="flex items-center justify-start">
         <Avatar className="w-[40px] h-[40px] rounded-none">
           <AvatarImage
             src={icon}
@@ -32,9 +33,10 @@ export default function DashboardInfoCard({
         </Avatar>
       </CardHeader>
       <CardContent>
-        <div className="text-[20px] font-bold">{quantity}</div>
-        <p className="text-[11px] font-[600] text-[var(--dark-2)]">{title}</p>
+        <div className="text-base md:text-[20px] font-bold">{quantity}</div>
+        <p className="text-[9.9px] md:text-[11px] font-[600] text-[var(--dark-2)]">{title}</p>
       </CardContent>
+     </div>
     </Card>
     {isSubscribed && <LockedFeature />}
   </div>

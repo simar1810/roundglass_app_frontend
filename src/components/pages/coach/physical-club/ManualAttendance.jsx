@@ -24,7 +24,7 @@ export default function ManualAttendance({
   const clients = manualAttendanceWithRangeMultiple(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
 
-  return (<TabsContent value="manual-attendance" className="flex gap-6">
+  return (<TabsContent value="manual-attendance" className="flex flex-wrap gap-6">
     <AttendanceClients clients={clients} originalData={data} range={range} />
     <div className="flex-1">
       <AttendanceCalendar
