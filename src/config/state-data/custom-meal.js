@@ -14,23 +14,28 @@ export const customMealInitialState = {
     daily: [
       {
         mealType: "Breakfast",
-        meals: []
+        meals: [],
+        defaultMealTiming: ""
       },
       {
         mealType: "Morning Snacks",
-        meals: []
+        meals: [],
+        defaultMealTiming: ""
       },
       {
         mealType: "Lunch",
-        meals: []
+        meals: [],
+        defaultMealTiming: ""
       },
       {
         mealType: "Evening Snacks",
-        meals: []
+        meals: [],
+        defaultMealTiming: ""
       },
       {
         mealType: "Dinner",
-        meals: []
+        meals: [],
+        defaultMealTiming: ""
       },
     ]
   }, // { daily: [{ mealType: "Breakfast", meals: [] }

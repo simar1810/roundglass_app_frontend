@@ -28,6 +28,8 @@ import { mutate } from "swr";
 import FormControl from "@/components/FormControl";
 import { _throwError } from "@/lib/formatter";
 import { format, parse } from "date-fns";
+import DeleteClientNudges from "../client/DeleteClientNudges";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
@@ -126,6 +128,15 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
           <Link2 size={48} className="!w-[24px] !h-[24px]" />
           Invite Link
         </Button>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <h4>Delete All Client Client Nudges</h4>
+        <DeleteClientNudges description="Are you sure you want to delete all notifications for all clients?">
+          <AlertDialogTrigger asChild>
+            {/* <Trash2 className="w-[32px] h-[32px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" /> */}
+            <Button variant="destructive">Delete</Button>
+          </AlertDialogTrigger>
+        </DeleteClientNudges>
       </div>
     </CardContent>
   </Card>

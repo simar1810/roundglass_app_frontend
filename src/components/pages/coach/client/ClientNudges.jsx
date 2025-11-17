@@ -18,6 +18,7 @@ import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
+import DeleteClientNudges from "./DeleteClientNudges"
 
 export default function ClientNudges() {
   const [selected, setSelected] = useState([])
@@ -34,11 +35,12 @@ export default function ClientNudges() {
   const notifications = data.data?.results || []
 
   return <div className="bg-white px-4 py-4 border-1 rounded-[10px] mt-4">
-    <div className="flex items-center justify-between">
-      <div>
+    <div className="flex items-center justify-between gap-4">
+      <div className="mr-auto">
         <h4>Client Nudges</h4>
         <p className="text-sm text-[#808080] mt-2">{notifications.length ?? <>0</>} Total</p>
       </div>
+      <DeleteClientNudges clientId={id} />
       <ScheduleNotificationWrapper
         selectedClients={id}
       />
@@ -301,9 +303,7 @@ function DeleteClientNotification({ id }) {
         variant="ghost"
         className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
       >
-        <Trash2
-          className="w-4 h-4 text-[var(--accent-2)]"
-          classNames="w-[24px] h-[24px] text-white bg-[var(--accent-2)] p-[4px] rounded-[4px] cursor-pointer hover:bg-[var(--accent-2)]/80" />
+        <Trash2 className="w-4 h-4 text-[var(--accent-2)]" />
       </Button>
     </AlertDialogTrigger>
   </DualOptionActionModal>
