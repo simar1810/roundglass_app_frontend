@@ -59,6 +59,51 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
   useEffect(() => {
     if (!open || !selectedPlans) return;
 
+    const mealTypeDefaults = {};
+
+    const getMealTypes = (planValue) => {
+      if (Array.isArray(planValue)) {
+        return planValue;
+      }
+
+      if (planValue && typeof planValue === "object" && Array.isArray(planValue.meals)) {
+        return planValue.meals;
+      }
+
+      return [];
+    };
+
+    const getFirstMealTime = (mealType) => {
+      if (!mealType || typeof mealType !== "object") return "";
+      if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return "";
+
+      const firstMealTime = mealType.meals[0]?.time;
+      return typeof firstMealTime === "string" ? firstMealTime : "";
+    };
+
+    Object.values(selectedPlans).forEach((planValue) => {
+      getMealTypes(planValue).forEach((mealType) => {
+        if (!mealType || typeof mealType !== "object") return;
+
+        const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
+        if (!mealName) return;
+
+        const existingDefault =
+          typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+
+        const fallbackTiming = existingDefault || getFirstMealTime(mealType);
+
+        if (!(mealName in mealTypeDefaults)) {
+          mealTypeDefaults[mealName] = fallbackTiming;
+          return;
+        }
+
+        if (!mealTypeDefaults[mealName] && fallbackTiming) {
+          mealTypeDefaults[mealName] = fallbackTiming;
+        }
+      });
+    });
+
     let updated = false;
 
     const plansWithDefaultTimings = Object.entries(selectedPlans).reduce(
@@ -69,23 +114,32 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
           const mealTypesWithDefaults = planValue.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
 
-            const firstMealTime =
-              Array.isArray(mealType.meals) && mealType.meals.length > 0
-                ? mealType.meals[0]?.time
-                : undefined;
+            const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
+            if (!mealName) return mealType;
 
-            const defaultTiming =
-              mealType.defaultMealTiming ??
-              (typeof firstMealTime === "string" ? firstMealTime : "");
+            const fallbackTiming =
+              mealName in mealTypeDefaults
+                ? mealTypeDefaults[mealName]
+                : typeof mealType.defaultMealTiming === "string"
+                  ? mealType.defaultMealTiming
+                  : getFirstMealTime(mealType);
 
-            if (mealType.defaultMealTiming === defaultTiming) {
+            const normalizedDefault = typeof fallbackTiming === "string" ? fallbackTiming : "";
+            const existingDefault =
+              typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+            const hasDefaultField = Object.prototype.hasOwnProperty.call(
+              mealType,
+              "defaultMealTiming"
+            );
+
+            if (existingDefault === normalizedDefault && (hasDefaultField || normalizedDefault === "")) {
               return mealType;
             }
 
             planUpdated = true;
             return {
               ...mealType,
-              defaultMealTiming: defaultTiming,
+              defaultMealTiming: normalizedDefault,
             };
           });
 
@@ -106,23 +160,32 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
           const mealTypesWithDefaults = mealTypes.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
 
-            const firstMealTime =
-              Array.isArray(mealType.meals) && mealType.meals.length > 0
-                ? mealType.meals[0]?.time
-                : undefined;
+            const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
+            if (!mealName) return mealType;
 
-            const defaultTiming =
-              mealType.defaultMealTiming ??
-              (typeof firstMealTime === "string" ? firstMealTime : "");
+            const fallbackTiming =
+              mealName in mealTypeDefaults
+                ? mealTypeDefaults[mealName]
+                : typeof mealType.defaultMealTiming === "string"
+                  ? mealType.defaultMealTiming
+                  : getFirstMealTime(mealType);
 
-            if (mealType.defaultMealTiming === defaultTiming) {
+            const normalizedDefault = typeof fallbackTiming === "string" ? fallbackTiming : "";
+            const existingDefault =
+              typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+            const hasDefaultField = Object.prototype.hasOwnProperty.call(
+              mealType,
+              "defaultMealTiming"
+            );
+
+            if (existingDefault === normalizedDefault && (hasDefaultField || normalizedDefault === "")) {
               return mealType;
             }
 
             planUpdated = true;
             return {
               ...mealType,
-              defaultMealTiming: defaultTiming,
+              defaultMealTiming: normalizedDefault,
             };
           });
 
@@ -171,77 +234,98 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
 
   const handleTimingChange = useCallback(
     (planKey, mealTypeName, value) => {
-      if (!selectedPlans || !planKey || !mealTypeName || typeof mealTypeName !== "string") {
+      if (!selectedPlans || !mealTypeName || typeof mealTypeName !== "string") {
         return;
       }
-
-      const planValue = selectedPlans[planKey];
-      if (!planValue) return;
 
       const sanitizedValue = typeof value === "string" ? value : "";
-
-      const updateMealType = (mealType) => {
-        if (!mealType || typeof mealType !== "object") return mealType;
-        if (mealType.mealType !== mealTypeName) return mealType;
-
-        const existingValue =
-          typeof mealType.defaultMealTiming === "string"
-            ? mealType.defaultMealTiming
-            : "";
-
-        if (existingValue === sanitizedValue) {
-          return mealType;
-        }
-
-        return {
-          ...mealType,
-          defaultMealTiming: sanitizedValue,
-        };
-      };
-
-      let nextPlanValue = planValue;
       let hasChanges = false;
 
-      if (Array.isArray(planValue)) {
-        const updatedMealTypes = planValue.map((mealType) => {
-          const updatedMealType = updateMealType(mealType);
-          if (updatedMealType !== mealType) {
+      const updatedPlans = Object.entries(selectedPlans).reduce((acc, [currentPlanKey, planValue]) => {
+        if (Array.isArray(planValue)) {
+          let planUpdated = false;
+
+          const updatedMealTypes = planValue.map((mealType) => {
+            if (!mealType || typeof mealType !== "object") return mealType;
+            if (mealType.mealType !== mealTypeName) return mealType;
+
+            const existingValue =
+              typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+            const hasDefaultField = Object.prototype.hasOwnProperty.call(
+              mealType,
+              "defaultMealTiming"
+            );
+
+            if (existingValue === sanitizedValue && (hasDefaultField || sanitizedValue === "")) {
+              return mealType;
+            }
+
+            planUpdated = true;
+            return {
+              ...mealType,
+              defaultMealTiming: sanitizedValue,
+            };
+          });
+
+          if (planUpdated) {
             hasChanges = true;
+            acc[currentPlanKey] = updatedMealTypes;
+            return acc;
           }
-          return updatedMealType;
-        });
 
-        if (!hasChanges) return;
-        nextPlanValue = updatedMealTypes;
-      } else if (planValue && typeof planValue === "object") {
-        if (!Array.isArray(planValue.meals)) return;
+          acc[currentPlanKey] = planValue;
+          return acc;
+        }
 
-        const updatedMealTypes = planValue.meals.map((mealType) => {
-          const updatedMealType = updateMealType(mealType);
-          if (updatedMealType !== mealType) {
+        if (planValue && typeof planValue === "object" && Array.isArray(planValue.meals)) {
+          let planUpdated = false;
+
+          const updatedMealTypes = planValue.meals.map((mealType) => {
+            if (!mealType || typeof mealType !== "object") return mealType;
+            if (mealType.mealType !== mealTypeName) return mealType;
+
+            const existingValue =
+              typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+            const hasDefaultField = Object.prototype.hasOwnProperty.call(
+              mealType,
+              "defaultMealTiming"
+            );
+
+            if (existingValue === sanitizedValue && (hasDefaultField || sanitizedValue === "")) {
+              return mealType;
+            }
+
+            planUpdated = true;
+            return {
+              ...mealType,
+              defaultMealTiming: sanitizedValue,
+            };
+          });
+
+          if (planUpdated) {
             hasChanges = true;
+            acc[currentPlanKey] = {
+              ...planValue,
+              meals: updatedMealTypes,
+            };
+            return acc;
           }
-          return updatedMealType;
-        });
 
-        if (!hasChanges) return;
+          acc[currentPlanKey] = planValue;
+          return acc;
+        }
 
-        nextPlanValue = {
-          ...planValue,
-          meals: updatedMealTypes,
-        };
-      } else {
-        return;
-      }
+        acc[currentPlanKey] = planValue;
+        return acc;
+      }, {});
+
+      if (!hasChanges) return;
 
       dispatch?.({
         type: "CUSTOM_MEAL_UPDATE_FIELD",
         payload: {
           name: "selectedPlans",
-          value: {
-            ...selectedPlans,
-            [planKey]: nextPlanValue,
-          },
+          value: updatedPlans,
         },
       });
     },
@@ -270,19 +354,19 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
           ) : (
             <Tabs value={resolvedActivePlan} onValueChange={setActivePlan} className="gap-5">
               {planEntries.length > 1 && (
-                <TabsList className="mb-2 w-full flex-wrap justify-start gap-2 bg-transparent p-0">
-                  {planEntries.map(({ key, label }) => (
+                <TabsList className="mb-2 w-full flex-wrap justify-start gap-2 bg-transparent p-0 h-0">
+                  {/* {planEntries.map(({ key, label }) => (
                     <TabsTrigger key={key} value={key} className="min-w-[120px]">
                       {label}
                     </TabsTrigger>
-                  ))}
+                  ))} */}
                 </TabsList>
               )}
               {planEntries.map(({ key, meals, label }) => (
                 <TabsContent key={key} value={key} className="mt-0">
-                  <div className="mb-4 text-sm font-semibold text-muted-foreground">
+                  {/* <div className="mb-4 text-sm font-semibold text-muted-foreground">
                     {label}
-                  </div>
+                  </div> */}
                   {meals.length === 0 ? (
                     <div className="flex min-h-[120px] items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
                       No meal types configured for this plan yet.
