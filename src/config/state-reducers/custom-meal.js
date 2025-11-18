@@ -300,11 +300,42 @@ export function customMealReducer(state, action) {
 
     case "ADD_NEW_PLAN_TYPE":
       const formatted = format(parse(action.payload, "yyyy-MM-dd", new Date()), "dd-MM-yyyy");
+      
+      // Find default timings from existing dates
+      // Collect all default timings for each meal type across all dates
+      const defaultTimingsMap = {};
+      const existingDates = Object.keys(state.selectedPlans);
+      
+      if (existingDates.length > 0) {
+        // Collect default timings from all existing dates
+        existingDates.forEach(date => {
+          const plan = state.selectedPlans[date];
+          const meals = Array.isArray(plan) ? plan : plan?.meals || [];
+          
+          meals.forEach(meal => {
+            if (meal?.mealType && typeof meal?.defaultMealTiming === "string" && meal.defaultMealTiming.length > 0) {
+              const mealType = meal.mealType;
+              // Use the first non-empty default timing found for each meal type
+              // This ensures we get the default timing that was set via SetMealTimingsDialog
+              if (!defaultTimingsMap[mealType]) {
+                defaultTimingsMap[mealType] = meal.defaultMealTiming;
+              }
+            }
+          });
+        });
+      }
+      
+      // Create meal types with default timings if available
+      const newMealTypes = createDefaultMealTypes().map(mealType => ({
+        ...mealType,
+        defaultMealTiming: defaultTimingsMap[mealType.mealType] || mealType.defaultMealTiming
+      }));
+      
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [formatted]: createDefaultMealTypes()
+          [formatted]: newMealTypes
         },
         selectedPlan: formatted,
         selectedMealType: "Breakfast"

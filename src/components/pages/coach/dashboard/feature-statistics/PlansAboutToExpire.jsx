@@ -14,13 +14,13 @@ export default function PlansAboutToExpire({ plans = [] }) {
     current: 1,
     limit: 10
   })
-  const sortedPlans = useMemo(() => sortPlans(plans), [plans])
+  const sortedPlans = useMemo(() => sortMealPlansByDates(plans), [plans])
   const toDisplay = sortedPlans.slice(
     (pagination.current - 1) *
     pagination.limit, pagination.current * pagination.limit
   )
   return <div>
-    <h5>Plans About to Expire</h5>
+    <h5>Incomplete Plans</h5>
     <div className="w-full bg-[var(--comp-1)] rounded-xl border-1 my-4 overflow-clip">
       <Table>
         <TableHeader>
@@ -98,7 +98,7 @@ export default function PlansAboutToExpire({ plans = [] }) {
   </div>
 }
 
-function sortPlans(plans) {
+export function sortMealPlansByDates(plans) {
   return plans
     .map(plan => {
       const allDates = Object

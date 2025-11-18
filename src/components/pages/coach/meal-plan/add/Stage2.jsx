@@ -27,12 +27,16 @@ export default function Stage2() {
 	const router = useRouter();
 
 	const mealsForSelectedType = useMemo(() => {
-		const plan = state.selectedPlans?.[state.selectedPlan];
-		const mealTypesArray = Array.isArray(plan)
-			? plan
-			: Array.isArray(plan?.meals)
-				? plan.meals
-				: [];
+		const plan = state.selectedPlans?.[state.selectedPlan] ?? {};
+		  const normalizedMeals = [
+			  { mealType: "breakfast", meals: plan.breakfast },
+    		  { mealType: "lunch", meals: plan.lunch },
+    		  { mealType: "dinner", meals: plan.dinner },
+    		  { mealType: "snacks", meals: plan.snacks },
+		].filter(item => Array.isArray(item.meals) && item.meals.length > 0);
+  		const mealTypesArray = Array.isArray(plan)
+    		? plan
+    		: normalizedMeals;
 		const selected = mealTypesArray.find(
 			(item) => item?.mealType === state.selectedMealType
 		);
@@ -82,10 +86,16 @@ export default function Stage2() {
 
 				for (const day in state.selectedPlans) {
 					const dayPlan = state.selectedPlans[day];
+					const normalizedMeals = [
+    					{ mealType: "breakfast", meals: dayPlan.breakfast },
+    					{ mealType: "lunch", meals: dayPlan.lunch },
+    					{ mealType: "dinner", meals: dayPlan.dinner },
+    					{ mealType: "snacks", meals: dayPlan.snacks },
+					].filter(item => Array.isArray(item.meals) && item.meals.length > 0);
 					const mealTypesArray = Array.isArray(dayPlan)
 						? dayPlan
-						: Array.isArray(dayPlan?.meals)
-							? dayPlan.meals
+						: Array.isArray(normalizedMeals)
+							? normalizedMeals
 							: [];
 					if (mealTypesArray.length === 0)
 						_throwError(`There are no plans assigned for the day - ${day}!`);

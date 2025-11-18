@@ -16,7 +16,7 @@ export default function AddNewServing({ clientId, date }) {
     clientId,
     status: "present",
     servingNumber: "",
-    date: date.toISOString()
+    date: date
   })
 
   const closeBtnRef = useRef();
