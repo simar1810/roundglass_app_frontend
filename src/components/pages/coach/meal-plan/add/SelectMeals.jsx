@@ -21,20 +21,42 @@ export default function SelectMeals() {
 
   const [activeId, setActiveId] = useState(null);
 
-  const plan = selectedPlans[selectedPlan];
+  const rawPlan = selectedPlans[selectedPlan];
+  console.log(selectedPlans)
+  const isWeekly = rawPlan &&
+  typeof rawPlan === "object" &&
+  !Array.isArray(rawPlan) &&
+  Object.keys(rawPlan)?.some(day =>
+    ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]
+      .includes(day.toLowerCase())
+    );
+  let plan;
+
+  if (isWeekly) {
+    const selectedDay = selectedMealType?.toLowerCase(); 
+    plan = rawPlan[selectedDay] || {};
+  } else {
+    plan = rawPlan || {};
+  }
   const isArray = Array.isArray(plan);
 
+  const normalizedMeals =  [
+    { mealType: "breakfast", meals: plan.breakfast },
+    { mealType: "lunch", meals: plan.lunch },
+    { mealType: "dinner", meals: plan.dinner },
+    { mealType: "snacks", meals: plan.snacks },
+  ].filter(item => Array.isArray(item.meals) && item.meals.length > 0)
   const mealTypes = isArray
     ? plan.map(m => m.mealType)
-    : plan?.meals?.map(m => m.mealType);
+    : normalizedMeals.map(m => m.mealType);
   const selectedMealTypeRecipee = isArray
     ? plan.find(m => m.mealType === selectedMealType)?.meals || []
-    : plan?.meals?.find(m => m.mealType === selectedMealType)?.meals || [];
+    : normalizedMeals.find(m => m.mealType === selectedMealType)?.meals || [];
   const errorMessage = !mealTypes ?
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
 
-  const currentMeals = isArray ? plan : plan?.meals || [];
+   const currentMeals = isArray ? plan : normalizedMeals || [];
   const activeMeal = activeId ? currentMeals.find(m => m.mealType === activeId) : null;
 
   function onSortMeals(event) {
@@ -67,7 +89,7 @@ export default function SelectMeals() {
         onDragEnd={onSortMeals}
       >
         <SortableContext items={mealTypes || []}>
-          {(isArray ? plan : plan?.meals || []).map((mealEntry, index) => (
+          {currentMeals.map((mealEntry, index) => (
             <SortableMealType
               key={mealEntry.mealType}
               index={index}
