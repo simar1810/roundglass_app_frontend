@@ -9,10 +9,12 @@ import { addProductToProductModule, addRetailReducer, changeFieldvalue, generate
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
 import { _throwError, buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
+import { sortByPriority } from "@/lib/retail";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
+import { useAppSelector } from "@/providers/global/hooks";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -150,6 +152,7 @@ function generateMarginsPayload__select(margins) {
 
 function Stage2() {
   const [query, setQuery] = useState("")
+  const { isWhitelabel } = useAppSelector(state => state.coach.data) || {}
 
   const { selectedBrandId, margins, coachMargin, dispatch, productModule } = useCurrentStateContext();
   const { isLoading, error, data } = useSWR(
@@ -163,8 +166,11 @@ function Stage2() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const products = (data.data || [])
+  const sortedProducts = useMemo(() => sortByPriority(data.data || [], isWhitelabel), [])
+
+  const products = sortedProducts
     .filter(item => new RegExp(query, "i").test(item.productName))
+  const button = products.map(item => ({ productName: item.productName }))
 
   return <div>
     <div className="px-4 mt-4">
@@ -177,6 +183,7 @@ function Stage2() {
         className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
       />
     </div>
+    {/* <button onClick={() => navigator.clipboard.writeText(JSON.stringify(button))}>Copy</button> */}
     <div className="mt-2 px-4 flex items-center justify-between">
       <h3>Select Margin</h3>
       <SelectControl
