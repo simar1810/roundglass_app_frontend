@@ -160,13 +160,15 @@ function Stage2() {
     () => getProductByBrand(selectedBrandId)
   );
 
+  const sortedProducts = useMemo(() => data?.data?.length > 0
+    ? sortByPriority(data.data || [], isWhitelabel)
+    : [], [data?.data?.length])
+
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
-  const sortedProducts = useMemo(() => sortByPriority(data.data || [], isWhitelabel), [])
 
   const products = sortedProducts
     .filter(item => new RegExp(query, "i").test(item.productName))
