@@ -1,14 +1,10 @@
 "use client"
-import { TabsContent } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
-import { getPhysicalAttendance, getPhysicalMemberships } from "@/lib/fetchers/app"
-import { _throwError, getMembershipType } from "@/lib/formatter"
-import useSWR, { mutate } from "swr"
-import { format } from "date-fns"
-import { useParams } from "next/navigation"
+import FormControl from "@/components/FormControl"
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,16 +14,20 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TabsContent } from "@/components/ui/tabs"
+import { sendData } from "@/lib/api"
+import { getPhysicalAttendance, getPhysicalMemberships } from "@/lib/fetchers/app"
+import { _throwError, getMembershipType } from "@/lib/formatter"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Trash2, X } from "lucide-react"
+import { useParams } from "next/navigation"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { sendData } from "@/lib/api"
-import { Trash2, X } from "lucide-react"
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import FormControl from "@/components/FormControl"
+import useSWR, { mutate } from "swr"
 
 export default function PhysicalClub() {
   return <TabsContent
@@ -605,15 +605,22 @@ function AutoMarkAttendance({ clientId, status }) {
 }
 
 function TogglePartialAmount({ isPartialAmount, onToggle }) {
-  return <div className={cn(
-    "font-bold text-sm flex items-center gap-2",
-    !isPartialAmount && "font-normal opacity-50"
-  )}>
+  return <div className="font-semibold text-sm flex items-center gap-3">
     <Switch
       checked={isPartialAmount}
       onCheckedChange={onToggle}
+      className={cn(
+        "data-[state=checked]:bg-[var(--accent-1)] data-[state=unchecked]:bg-[var(--comp-3)]",
+        "ring-2 ring-offset-2 ring-[var(--accent-1)]/20",
+        "h-6 w-11"
+      )}
     />
-    Partial Payment
+    <span className={cn(
+      "font-semibold",
+      isPartialAmount ? "text-[var(--accent-1)]" : "text-[var(--dark-1)]"
+    )}>
+      Partial Payment
+    </span>
   </div>
 }
 

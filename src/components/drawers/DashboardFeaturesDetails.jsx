@@ -72,7 +72,7 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
     () => fetchData("app/dashboard/statistics")
   );
 
-  const [tab, setTab] = useState("birthdays");
+  const [tab, setTab] = useState("plans");
   const [pagination, setPagination] = useState({
     birthdays: { page: 1, limit: 10 },
     subscriptions: { page: 1, limit: 10 },
@@ -86,10 +86,6 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
   const normalizedSubscriptions = useMemo(() => normalizeSubscriptions(subscriptions), [subscriptions]);
   const normalizedPlans = useMemo(() => normalizeMealPlans(plans), [plans]);
   const normalizedIncompletePlans = useMemo(() => normalizeIncompletePlans(plans), [plans])
-
-  if (isLoading) return <ContentLoader />;
-  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />;
-  ;
 
   const tabs = useMemo(
     () =>
@@ -132,6 +128,9 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
       },
     }));
   }, []);
+
+  if (isLoading) return <ContentLoader />;
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -574,6 +573,26 @@ function createTabsConfig({
   ];
   return [
     {
+      value: "plans",
+      label: "Expiring Meal Plans",
+      title: "Meal Plans About to Expire",
+      description: null,
+      columns: mealPlanColumns,
+      rows: normalizedPlans,
+      rawRows: plans,
+      exportFileName: "meal-plans-expiring",
+    },
+    {
+      value: "incomplete",
+      label: "Incomplete Meal Plans",
+      title: "Incomplete Meal Plans",
+      description: null,
+      columns: incompletePlanColumns,
+      rows: incompletePlans,
+      rawRows: incompletePlans,
+      exportFileName: "incomplete-plans",
+    },
+    {
       value: "birthdays",
       label: "Upcoming Birthdays",
       title: "Upcoming Birthdays",
@@ -592,26 +611,6 @@ function createTabsConfig({
       rows: normalizedSubscriptions,
       rawRows: subscriptions,
       exportFileName: "club-subscriptions",
-    },
-    {
-      value: "plans",
-      label: "Meal Plans",
-      title: "Meal Plans About to Expire",
-      description: null,
-      columns: mealPlanColumns,
-      rows: normalizedPlans,
-      rawRows: plans,
-      exportFileName: "meal-plans-expiring",
-    },
-    {
-      value: "incomplete",
-      label: "Incomplete Plans",
-      title: "Incomplete Plans",
-      description: null,
-      columns: incompletePlanColumns,
-      rows: incompletePlans,
-      rawRows: incompletePlans,
-      exportFileName: "incomplete-plans",
     },
   ];
 }
