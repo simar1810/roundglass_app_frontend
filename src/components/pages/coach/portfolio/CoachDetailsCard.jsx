@@ -130,7 +130,7 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
         </Button>
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <h4>Delete All Client Client Nudges</h4>
+        <h4>Delete All Client Nudges</h4>
         <DeleteClientNudges description="Are you sure you want to delete all notifications for all clients?">
           <AlertDialogTrigger asChild>
             {/* <Trash2 className="w-[32px] h-[32px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" /> */}
