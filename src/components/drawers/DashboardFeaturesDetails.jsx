@@ -449,7 +449,7 @@ function createTabsConfig({
     },
     {
       key: "dob",
-      label: "D.O.B",
+      label: "Birthday",
       render: (row) => format(row.dob, "dd-MM-yyyy") || <EmptyCell />,
       exportValue: (row) => format(row.dob, "dd-MM-yyyy") ?? "",
     },
