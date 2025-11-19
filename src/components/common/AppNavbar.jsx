@@ -1,6 +1,6 @@
 "use client"
 import { Input } from "../ui/input";
-import { ChevronDown, LogOut, Search } from "lucide-react";
+import { ChevronDown, LogOut, Search, Menu } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -20,25 +20,32 @@ import { permit } from "@/lib/permit";
 import { useSWRConfig } from "swr";
 import { ClientSearchBar } from "./AppSidebar";
 import useClickOutside from "@/hooks/useClickOutside";
+import { useSidebar } from "../ui/sidebar";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
 export default function AppNavbar() {
   const [Modal, setModal] = useState();
+  const {toggleSidebar} = useSidebar()
   const data = useAppSelector(state => state.coach.data)
   if (!data) return <></>
 
   const { profilePhoto, name } = data;
 
-  return <nav className="bg-white sticky top-0 py-4 px-10 flex items-center justify-end gap-4 border-b-1 z-[30]">
+  return <nav className="bg-white sticky top-0 py-4 px-4 md:px-10 flex items-center justify-between border-b-1 z-[30]">
+    <div>
+      <Menu onClick={toggleSidebar} size={30} className="text-gray-400 font-normal md:hidden"/>
+    </div>
     {/* <SearchBar /> */}
+    <div className="flex items-center justify-end gap-4 ">
     {Modal || <></>}
     <ClientSearchBar setModal={setModal} />
     <NotificationModal />
     <UserOptions
       profilePhoto={profilePhoto}
       name={name}
-    />
+      />
+      </div>
   </nav>
 }
 
@@ -200,7 +207,7 @@ function UserOptions({ profilePhoto, name }) {
             <AvatarImage src={profilePhoto} />
             <AvatarFallback className="bg-[#172A3A] text-white uppercase">{name.split(" ").map(letter => letter[0]).join("")}</AvatarFallback>
           </Avatar>
-          <p className="text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
+          <p className="hidden md:block text-[var(--dark-1)]/50 text-[14px] leading-[1] font-[500]">{name}</p>
           <ChevronDown className="w-[16px] h-[16px]" />
         </div>
       </DropdownMenuTrigger>

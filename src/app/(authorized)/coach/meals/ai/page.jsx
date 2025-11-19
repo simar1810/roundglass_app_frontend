@@ -416,8 +416,8 @@ const foodExclusionOptions = [
           </div>
          </div>
         </div>)}
-      <div className="flex items-center justify-between mt-4 mb-6 sticky top-0 bg-white z-20 pb-2">
-        <h4 className="text-2xl font-semibold">Clients Lists for Meal Plan</h4>
+      <div className="flex flex-wrap gap-4 md:gap-0 items-center justify-between mt-4 mb-6 sticky top-0 bg-white z-20 pb-2">
+        <h4 className="text-sm md:text-2xl font-semibold">Clients Lists for Meal Plan</h4>
 
         <div className="relative w-64">
           <FiSearch className="absolute left-3 top-2.5 text-gray-400" size={18} />
@@ -439,8 +439,9 @@ const foodExclusionOptions = [
           {filteredClients.map((client) => (
             <div
               key={client._id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4 pb-8 flex items-start gap-4 hover:shadow-md transition-shadow relative"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4 pb-8 flex flex-col items-start gap-4 hover:shadow-md transition-shadow relative"
             >
+              <div className="flex gap-4">
               <div className="w-16 h-16 flex-shrink-0">
                 <Image
                   src={client.image || "/profile1.jpg"}
@@ -452,9 +453,9 @@ const foodExclusionOptions = [
               </div>
 
               <div className="flex-1">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col md:flex-row items-start justify-start md:justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-800 mb-2">
+                    <h3 className="font-semibold text-lg text-gray-800 mb-1 md:mb-2">
                       {client.name || "Unknown Client"}
                     </h3>
                     <p className="text-xs text-gray-500">
@@ -465,7 +466,7 @@ const foodExclusionOptions = [
                       {client.isActive && "Active" }
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 bg-gray-100 px-2 pl-4 py-2 rounded-md">
+                  <div className="flex items-center gap-1 bg-gray-100 mt-1 md:mt-0 px-2 md:pl-4 py-1 md:py-2 rounded-md">
                     <PiSparkleFill size={14} className="text-[#67BC2A]" />
                     <p className="text-[10px] text-[#67BC2A] font-medium ">
                       {creditsMap[client._id]!==undefined ? `${creditsMap[client._id]} Credits Left` : "Loading..."} 
@@ -473,7 +474,7 @@ const foodExclusionOptions = [
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-3 relative">
+                <div className="hidden md:flex gap-2 mt-3 relative">
                   <Button
                     className="bg-white text-[#67BC2A] border border-green-200 hover:bg-[#67BC2A] hover:text-white text-xs px-3 py-1 rounded-md"
                     onClick={() =>
@@ -528,7 +529,63 @@ const foodExclusionOptions = [
                     )}
                   </div>
                 </div>
+                </div>
               </div>
+              <div className="flex md:hidden gap-2 mt-3 relative">
+                  <Button
+                    className="bg-white text-[#67BC2A] border border-green-200 hover:bg-[#67BC2A] hover:text-white md:text-xs px-3 py-1 rounded-md text-[10px]"
+                    onClick={() =>
+                      router.push(`/coach/meals/list-custom`)
+                    }
+                  >
+                    View Current Meal Plan
+                  </Button>
+                  <div className="relative">
+                    <Button
+                      onClick={() =>
+                        setDropdownOpen(
+                          dropdownOpen === client._id ? null : client._id
+                        )
+                      }
+                      disabled={isGenerating === client._id}
+                      className={`text-[10px] md:text-xs px-3 py-1 rounded-md ${
+                        isGenerating === client._id
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "bg-[#67BC2A] text-white hover:bg-green-600"
+                      }`}
+                    >
+                      {isGenerating === client._id
+                        ? "Generating..."
+                        : "Create AI Meal Plan"}
+                    </Button>
+                    {dropdownOpen === client._id && (
+                      <div className="absolute top-10 right-0 bg-green-50 border border-gray-200 shadow-md rounded-md w-32 z-10">
+                        <button
+                          className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
+                          onClick={() =>{
+                                setSelectedClient(client._id);
+                                setSelectedMode("daily");
+                                setShowPreferenceModal(true);
+                                setDropdownOpen(null);
+                          }}
+                        >
+                          Daily
+                        </button>
+                        <button
+                          className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
+                          onClick={() =>{
+                                setSelectedClient(client._id);
+                                setSelectedMode("weekly");
+                                setShowPreferenceModal(true);
+                                setDropdownOpen(null);
+                          }}
+                        >
+                          Weekly
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
             </div>
           ))}
 

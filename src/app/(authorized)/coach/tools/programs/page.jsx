@@ -41,7 +41,7 @@ export default function Page() {
 }
 
 function ProgramList({ programs }) {
-  return <div className="grid grid-cols-4 gap-4">
+  return <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
     {programs.map((program, index) => <div
       key={index}
       className="bg-[var(--comp-1)] rounded-[10px] border-1 overflow-clip hover:[&_.actions]:opacity-100"

@@ -139,7 +139,7 @@ function SectionList() {
       {/* Normal Sections */}
       <div>
         <h5 className="mb-4 text-gray-700">Main Sections</h5>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.keys(normalSections).map((section) => (
             <SectionDetails
               key={section}
@@ -157,7 +157,7 @@ function SectionList() {
             <span>Nested Sections</span>
             <span className="text-xs text-gray-500">(shown when specific options are selected)</span>
           </h5>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.keys(nestedSections).map((section) => (
               <SectionDetails
                 key={section}

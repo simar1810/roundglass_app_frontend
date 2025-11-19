@@ -80,7 +80,7 @@ export default function Page() {
   const currentClients = clients.slice(startIndex, endIndex);
 
   return <div className="mt-8 content-container">
-    <div className="flex items-start justify-between mb-6">
+    <div className="flex flex-col gap-4 md:gap-0 md:flex-row items-start justify-between mb-6">
       <StatusFilter 
         statusFilter={statusFilter}
         setStatusFilter={(filter) => {
@@ -95,7 +95,7 @@ export default function Page() {
       />
     </div>
     
-    <div className="grid grid-cols-2 gap-4 divide-y-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 divide-y-1">
       {currentClients.map((client, index) => <ClientListItemStatus
         key={index}
         categories={categories}
