@@ -228,7 +228,7 @@ function SubscriptionHistoryTable({ clientId, history }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto w-72 md:w-full rounded-lg border">
       <Table className="bg-white">
         <TableHeader>
           <TableRow>

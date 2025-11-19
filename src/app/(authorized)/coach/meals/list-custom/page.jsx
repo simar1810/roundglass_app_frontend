@@ -76,12 +76,12 @@ export default function Page() {
   return (
     <main className="content-container flex flex-col">
       <div>
-        <div className="flex items-center justify-between py-3 border-b border-gray-200 relative">
+        <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between py-3 border-b border-gray-200 relative gap-4">
           <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
           <div className="flex gap-3 items-center">
             <button
               onClick={() => router.push("/coach/meals/ai")}
-              className="px-3 py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-xs"
+              className="px-2 md:px-3 py-2 md:py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-[10px] md:text-xs"
             >
               <PiSparkleFill size={14} className="text-white" />
               Create AI Meal Plan
@@ -89,7 +89,7 @@ export default function Page() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown((prev) => !prev)}
-                className="px-3 py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-xs"
+                className="px-2 md:px-3 py-2 md:py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-[10px] md:text-xs"
               >
                 <IoMdAddCircle size={14} className="text-white" />
                 Create Manual Plan
@@ -117,14 +117,14 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between ">
+        <div className="flex flex-wrap gap-2 items-center justify-between ">
           <div className="flex gap-6 mt-5">
             {["daily", "weekly", "monthly"].map((tab) => (
               <Link
                 key={tab}
                 href={`?mode=${tab}`}
                 className={cn(
-                  "pb-2 font-medium text-gray-600 hover:text-black transition",
+                  "pb-2 text-sm md:text-base font-medium text-gray-600 hover:text-black transition",
                   mode === tab
                     ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
                     : ""
