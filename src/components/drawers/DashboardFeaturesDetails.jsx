@@ -20,7 +20,7 @@ import FollowUpList from "../pages/coach/dashboard/FollowUpList";
 import { fetchData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
-import { addDays, differenceInCalendarDays, format, isValid, parse, startOfDay } from "date-fns";
+import { addDays, addYears, differenceInCalendarDays, format, isBefore, isValid, parse, setDate, setMonth, startOfDay } from "date-fns";
 
 const DATE_FORMATS = ["dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd"];
 const TONE_CLASSES = {
@@ -425,15 +425,15 @@ function createTabsConfig({
     {
       key: "user",
       label: "User",
-      render: (row) => <UserCell user={row.user} />,
-      exportValue: (row) => row.user?.name ?? "",
+      render: (row) => <UserCell user={{ name: row.name, profilePhoto: row.profilePhoto }} />,
+      exportValue: (row) => row.name ?? "",
     },
-    {
-      key: "status",
-      label: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
-      exportValue: (row) => row.status?.label ?? "",
-    },
+    // {
+    //   key: "status",
+    //   label: "Status",
+    //   render: (row) => <StatusBadge status={row.status} />,
+    //   exportValue: (row) => row.status?.label ?? "",
+    // },
     {
       key: "clientId",
       label: "Client ID",
@@ -450,8 +450,8 @@ function createTabsConfig({
     {
       key: "dob",
       label: "D.O.B",
-      render: (row) => row.dob || <EmptyCell />,
-      exportValue: (row) => row.dob ?? "",
+      render: (row) => format(row.dob, "dd-MM-yyyy") || <EmptyCell />,
+      exportValue: (row) => format(row.dob, "dd-MM-yyyy") ?? "",
     },
   ];
   const subscriptionColumns = [
@@ -712,25 +712,23 @@ function getPaginationSequence(current, total, maxLength = 7) {
 }
 
 function normalizeBirthdays(birthdays = []) {
-  return birthdays.map((item, index) => {
-    const client = item?.client || item;
-    const statusValue =
-      item?.status ||
-      client?.status ||
-      (client?.isActive === true ? "OK" : client?.isActive === false ? "KO" : null);
-    return {
-      id: client?._id ?? item?._id ?? index,
-      user: {
-        name: client?.name ?? item?.name ?? "",
-        username: client?.username ?? client?.handle ?? item?.username ?? "",
-        avatar: client?.profilePhoto ?? item?.profilePhoto ?? "",
-      },
-      clientId: sanitizeClientId(client?.clientId ?? item?.clientId),
-      mobileNumber: client?.mobileNumber ?? item?.mobileNumber ?? "",
-      dob: formatDateDisplay(client?.dob ?? item?.dob),
-      status: statusValue ? createStatus(statusValue) : null,
-    };
-  });
+  const today = new Date();
+  return birthdays
+    .map(client => {
+      const [day, month] = (client.dob || "")?.split("-") || [];
+      const parsedDate = setMonth(
+        setDate(new Date(), day),
+        month - 1
+      )
+      const newDob = isBefore(parsedDate, today)
+        ? addYears(parsedDate, 1)
+        : parsedDate
+      return {
+        ...client,
+        dob: newDob
+      }
+    })
+    .sort((a, b) => isBefore(a.dob, b.dob) ? -1 : 1)
 }
 
 function normalizeSubscriptions(subscriptions = []) {
@@ -950,7 +948,7 @@ function exportRowsAsCSV(fileName, columns, rows) {
 function formatDateDisplay(value) {
   const parsed = parseDateFlexible(value);
   if (!parsed) return "";
-  return format(parsed, "dd-MMM-yyyy");
+  return format(parsed, "dd-MM-yyyy");
 }
 
 function parseDateFlexible(value) {

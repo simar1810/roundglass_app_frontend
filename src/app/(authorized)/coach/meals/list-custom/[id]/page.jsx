@@ -241,7 +241,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       src={customPlan.image || "/not-found.png"}
       height={500}
       width={500}
-      className="w-full max-h-[200px] my-4 rounded-[10px] object-cover"
+      className="w-full max-h-[200 px] my-4 rounded-[10px] object-cover aspect-video"
       onError={e => e.target.src = "/not-found.png"}
     />
     <p>{customPlan.description}</p>
@@ -349,35 +349,35 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
   const allMeals = useMemo(() => {
     const arr = []
     for (const plan in plans) {
-    const p = plans[plan];
+      const p = plans[plan];
       if (!p) continue;
-    if (p.daily && typeof p.daily === "object") {
-      const d = p.daily;
-      if (Array.isArray(d.breakfast)) arr.push(...d.breakfast);
-      if (Array.isArray(d.lunch)) arr.push(...d.lunch);
-      if (Array.isArray(d.dinner)) arr.push(...d.dinner);
-      if (Array.isArray(d.snacks)) arr.push(...d.snacks);
-      continue;
-    }
-      const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
-    const isWeekly = Object.keys(p).some(k => days.includes(k.toLowerCase()));
-
-    if (isWeekly) {
-      for (const day of days) {
-        const dayPlan = p[day];
-        if (!dayPlan) continue;
-
-        if (Array.isArray(dayPlan.breakfast)) arr.push(...dayPlan.breakfast);
-        if (Array.isArray(dayPlan.lunch)) arr.push(...dayPlan.lunch);
-        if (Array.isArray(dayPlan.dinner)) arr.push(...dayPlan.dinner);
-        if (Array.isArray(dayPlan.snacks)) arr.push(...dayPlan.snacks);
+      if (p.daily && typeof p.daily === "object") {
+        const d = p.daily;
+        if (Array.isArray(d.breakfast)) arr.push(...d.breakfast);
+        if (Array.isArray(d.lunch)) arr.push(...d.lunch);
+        if (Array.isArray(d.dinner)) arr.push(...d.dinner);
+        if (Array.isArray(d.snacks)) arr.push(...d.snacks);
+        continue;
       }
-      continue;
-    }
-        if (Array.isArray(p.breakfast)) arr.push(...p.breakfast);
-        if (Array.isArray(p.lunch)) arr.push(...p.lunch);
-        if (Array.isArray(p.dinner)) arr.push(...p.dinner);
-        if (Array.isArray(p.snacks)) arr.push(...p.snacks);
+      const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+      const isWeekly = Object.keys(p).some(k => days.includes(k.toLowerCase()));
+
+      if (isWeekly) {
+        for (const day of days) {
+          const dayPlan = p[day];
+          if (!dayPlan) continue;
+
+          if (Array.isArray(dayPlan.breakfast)) arr.push(...dayPlan.breakfast);
+          if (Array.isArray(dayPlan.lunch)) arr.push(...dayPlan.lunch);
+          if (Array.isArray(dayPlan.dinner)) arr.push(...dayPlan.dinner);
+          if (Array.isArray(dayPlan.snacks)) arr.push(...dayPlan.snacks);
+        }
+        continue;
+      }
+      if (Array.isArray(p.breakfast)) arr.push(...p.breakfast);
+      if (Array.isArray(p.lunch)) arr.push(...p.lunch);
+      if (Array.isArray(p.dinner)) arr.push(...p.dinner);
+      if (Array.isArray(p.snacks)) arr.push(...p.snacks);
     }
     return arr;
   }, [plans])

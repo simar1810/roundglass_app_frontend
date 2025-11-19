@@ -22,10 +22,10 @@ import useSWR, { mutate } from "swr";
 // Helper function to convert 24-hour time format to 12-hour format for TimePicker
 function convertTimeTo12Hour(timeStr) {
   if (!timeStr) return "";
-  
+
   try {
     const trimmed = timeStr.trim();
-    
+
     // Already in 12-hour format (e.g., "08:00 PM" or "8:00 am")
     if (/[ap]m$/i.test(trimmed)) {
       // Normalize the format to ensure it's in "hh:mm a" format
@@ -36,14 +36,14 @@ function convertTimeTo12Hour(timeStr) {
         return trimmed;
       }
     }
-    
+
     // Handle 24-hour format with or without seconds (e.g., "21:37:00" or "21:37")
     // Extract just hours and minutes
     const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
     if (timeMatch) {
       const hours = parseInt(timeMatch[1], 10);
       const minutes = parseInt(timeMatch[2], 10);
-      
+
       // Validate hours and minutes
       if (isNaN(hours) || hours < 0 || hours > 23) {
         return "";
@@ -51,14 +51,14 @@ function convertTimeTo12Hour(timeStr) {
       if (isNaN(minutes) || minutes < 0 || minutes > 59) {
         return "";
       }
-      
+
       // Create a date object to use date-fns formatting
       // Use a fixed date to avoid timezone issues
       const date = new Date(2000, 0, 1, hours, minutes, 0);
-      
+
       return format(date, "hh:mm a");
     }
-    
+
     return "";
   } catch (error) {
     console.error("Error converting time:", error, timeStr);
@@ -231,11 +231,13 @@ function ScheduleNotification({
         payload,
         defaultPayload._id,
       );
+      console.log(formData)
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
         defaultPayload._id ? "PUT" : "POST"
       );
+      console.log(response)
 
       if (response.status_code === 200 && !response.errors?.length) {
         toast.success(response.message)
@@ -269,7 +271,23 @@ function ScheduleNotification({
         {children}
       </span>
     </DialogTrigger>
-    <DialogContent className="!max-w-[500px] max-h-[65vh] border-0 p-0 gap-0 overflow-auto">
+    <DialogContent
+      onInteractOutside={(event) => {
+        const originalEvent = event.detail?.originalEvent;
+        const target = originalEvent?.target;
+
+        if (
+          target &&
+          typeof target.closest === "function" &&
+          (target.closest("[data-slot='popover-content']") ||
+            target.closest("[data-slot='popover-trigger']"))
+        ) {
+          // Allow interacting with the time picker popover without closing this dialog
+          event.preventDefault();
+        }
+      }}
+      className="!max-w-[500px] max-h-[65vh] border-0 p-0 gap-0 overflow-auto"
+    >
       <DialogClose ref={closeRef} />
       <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] p-4">
         {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
@@ -455,7 +473,7 @@ function generatePayload(payload, id) {
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
-
+  console.log(payload.clients, Array.isArray(payload.clients))
   if (payload.notificationType === "reocurr") {
     const result = {
       subject: payload.subject,
@@ -464,7 +482,9 @@ function generatePayload(payload, id) {
       schedule_type: "reocurr",
       time: formatTime(payload.time),
       reocurrence: payload.reocurrence,
-      clients: payload.clients
+      clients: Array.isArray(payload.clients)
+        ? payload.clients[0]
+        : payload.clients
     };
 
     // Only add actionType and id if they have values
@@ -488,7 +508,9 @@ function generatePayload(payload, id) {
         schedule_type: "schedule",
         date: format(parsedDate, "dd-MM-yyyy"),
         time: formatTime(payload.time),
-        clients: payload.clients
+        clients: Array.isArray(payload.clients)
+          ? payload.clients[0]
+          : payload.clients
       };
 
       // Only add actionType and id if they have values

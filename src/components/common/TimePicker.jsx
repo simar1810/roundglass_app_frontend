@@ -151,7 +151,14 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="bg-[white] p-0 w-auto [260px] gap-0 space-x-0 shadow-none border-gray-400">
+      <PopoverContent
+        // Keep the time picker open while interacting, even if the cursor moves,
+        // by preventing the default outside-click closing behavior.
+        onPointerDownOutside={(event) => {
+          event.preventDefault()
+        }}
+        className="bg-[white] p-0 w-auto [260px] gap-0 space-x-0 shadow-none border-gray-400"
+      >
         <div className="flex items-center justify-between !gap-0">
 
           <div className="py-4 flex flex-col items-center w-[86px] border-r border-gray-300">
