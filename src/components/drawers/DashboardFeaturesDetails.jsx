@@ -21,6 +21,7 @@ import { fetchData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { addDays, addYears, differenceInCalendarDays, format, isBefore, isValid, parse, setDate, setMonth, startOfDay } from "date-fns";
+import { normalizeMealPlansSorting } from "../pages/coach/dashboard/feature-statistics/ClientPlansExpiry";
 
 const DATE_FORMATS = ["dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd"];
 const TONE_CLASSES = {
@@ -513,12 +514,12 @@ function createTabsConfig({
       render: (row) => row.mobileNumber || <EmptyCell />,
       exportValue: (row) => row.mobileNumber ?? "",
     },
-    {
-      key: "assignedOn",
-      label: "Assigned On",
-      render: (row) => row.assignedOn || <EmptyCell />,
-      exportValue: (row) => row.assignedOn ?? "",
-    },
+    // {
+    //   key: "assignedOn",
+    //   label: "Assigned On",
+    //   render: (row) => row.assignedOn || <EmptyCell />,
+    //   exportValue: (row) => row.assignedOn ?? "",
+    // },
     {
       key: "lastDate",
       label: "Last Date",
@@ -752,14 +753,15 @@ function normalizeSubscriptions(subscriptions = []) {
 }
 
 function normalizeMealPlans(plans = []) {
-  const rows = [];
-  plans.forEach((plan, planIndex) => {
-    const planTimeline = getPlanTimeline(plan);
-    const clients = Array.isArray(plan?.clients) && plan.clients.length > 0 ? plan.clients : [null];
-    clients.forEach((client, clientIndex) => {
+  const planMap = new Map(plans.map(plan => [plan._id, plan]))
+  const result = normalizeMealPlansSorting(plans)
+  return result
+    .map(client => {
+      const plan = planMap.get(client.plan)
+      const planTimeline = getPlanTimeline(plan)
       const clientTimeline = getClientPlanTimeline(client, planTimeline);
-      rows.push({
-        id: `${plan?._id ?? planIndex}-${client?._id ?? clientIndex}`,
+      return {
+        id: plan._id,
         user: {
           name: client?.name ?? client?.clientName ?? plan?.title ?? plan?.name ?? "",
           username: client?.username ?? client?.handle ?? "",
@@ -772,10 +774,8 @@ function normalizeMealPlans(plans = []) {
         noOfDays: clientTimeline.days !== null ? createDaysBadge(clientTimeline.days) : null,
         remainingDays:
           typeof clientTimeline.remaining === "number" ? Math.max(clientTimeline.remaining, 0) : null,
-      });
-    });
-  });
-  return rows;
+      }
+    })
 }
 
 function normalizeIncompletePlans(plans = []) {
