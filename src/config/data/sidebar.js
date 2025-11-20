@@ -48,7 +48,8 @@ import {
   Users,
   Video,
   QrCode,
-  Salad
+  Salad,
+  Play
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
@@ -538,6 +539,13 @@ export const sidebar__coachContent = [
     title: "Downline",
     url: "/coach/downline",
     permission: null
+  },
+  {
+    id: 15,
+    icon: <Play />,
+    title: "Courses",
+    url: "/coach/courses",
+    permission: 15
   }
 ];
 
