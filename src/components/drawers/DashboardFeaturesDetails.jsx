@@ -39,14 +39,14 @@ export default function DashboardFeaturesDetails({
     <Drawer direction="right">
       <DrawerTrigger
         aria-label="Open dashboard statistics"
-        className="fixed right-0 top-1/2 z-30 -translate-y-1/2 translate-x-[-24px] rounded-l-full bg-[var(--primary-1)] px-4 py-2 font-semibold text-[var(--accent-1)] shadow-lg transition hover:translate-x-[-16px]"
+        className="fixed right-0 top-1/2 z-30 -translate-y-1/2 md:translate-x-[-24px] rounded-l-full bg-[var(--primary-1)] px-4 py-2 font-semibold text-[var(--accent-1)] shadow-lg transition hover:translate-x-[-16px]"
       >
         <div className="flex items-center gap-2">
           <ChevronLeft className="h-4 w-4" />
           Statistics
         </div>
       </DrawerTrigger>
-      <DrawerContent className="w-full min-w-[90vw] !max-w-[90vw] overflow-hidden p-0">
+      <DrawerContent className="w-full min-w-[100vw] md:min-w-[90vw] !max-w-[90vw] overflow-hidden p-0">
         <DialogTitle />
         <div className="relative flex h-full flex-col bg-[#f6f8fb]">
           <Container
@@ -135,16 +135,16 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
   return (
     <div className="flex min-h-full flex-col">
       <ActivitiesHeader onRefresh={() => mutate()} isRefreshing={isValidating} />
-      <div className="flex-1 overflow-y-auto px-8 pb-12 pt-6">
+      <div className="flex-1 overflow-y-auto md:px-8 pb-12 pt-6">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-6">
             <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-col gap-6">
-              <TabsList className="flex h-auto items-center gap-6 border-b border-slate-200 bg-transparent p-0">
+              <TabsList className="flex flex-wrap justify-center md:justify-start h-auto items-center gap-2 md:gap-6 border-b border-slate-200 bg-transparent px-2 md:p-0 w-[100vw] md:w-auto">
                 {tabs.map((tabItem) => (
                   <TabsTrigger
                     key={tabItem.value}
                     value={tabItem.value}
-                    className="relative flex-none rounded-none border-0 bg-transparent px-0 pb-3 text-base font-semibold text-slate-500 h-auto data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:h-[3px] data-[state=active]:after:w-full data-[state=active]:after:rounded-full data-[state=active]:after:bg-[var(--accent-1)]"
+                    className="relative flex-none rounded-none border-0 bg-transparent px-0 p-2 md:pb-3 text-sm md:text-base font-semibold text-slate-500 h-auto data-[state=active]:text-slate-900 data-[state=active]:shadow-none data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:h-[3px] data-[state=active]:after:w-full data-[state=active]:after:rounded-full data-[state=active]:after:bg-[var(--accent-1)]"
                   >
                     {tabItem.label}
                   </TabsTrigger>
@@ -159,7 +159,7 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
                 const rowsToRender = tableRows.slice((page - 1) * limit, page * limit);
 
                 return (
-                  <TabsContent key={tabItem.value} value={tabItem.value} className="mt-6">
+                  <TabsContent key={tabItem.value} value={tabItem.value} className="mt-6 mx-2 md:mx-0">
                     <DataCard
                       title={tabItem.title}
                       description={tabItem.description}
@@ -203,7 +203,7 @@ function ActivitiesHeader({ onRefresh, isRefreshing }) {
         <DrawerClose>
           <ArrowRight />
         </DrawerClose>
-        <h2 className="text-3xl font-semibold text-slate-900">Activities</h2>
+        <h2 className="text-lg md:text-3xl font-semibold text-slate-900">Activities</h2>
       </div>
       <Button
         variant="outline"
@@ -234,8 +234,8 @@ function DataCard({
   const hasData = rows.length > 0;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm w-[95vw] md:w-auto">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 md:px-6 py-4">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
           {description ? <p className="text-sm text-slate-500">{description}</p> : null}
@@ -320,7 +320,7 @@ function ClientsSidebar({
   const hasMissingFollowups = Array.isArray(missingFollowups) && missingFollowups.length > 0;
 
   return (
-    <aside className="flex min-w-0 flex-col gap-4">
+    <aside className="flex min-w-0 flex-col gap-4 px-2 md:px-0">
       <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900">Clients</h3>
         <Button
@@ -367,7 +367,7 @@ function PaginationFooter({ page, limit, totalRows, totalPages, onPageChange }) 
   const end = Math.min(page * limit, totalRows);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 px-6 py-4 text-sm text-slate-500">
+    <div className="flex flex-wrap items-center justify-between gap-2 md:gap-4 border-t border-slate-200 px-4 md:px-6 py-4 text-sm text-slate-500">
       <span>
         Showing {start}-{end} of {totalRows}
       </span>
@@ -376,7 +376,7 @@ function PaginationFooter({ page, limit, totalRows, totalPages, onPageChange }) 
           type="button"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-slate-200 md:px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Previous
         </button>
@@ -391,7 +391,7 @@ function PaginationFooter({ page, limit, totalRows, totalPages, onPageChange }) 
               type="button"
               onClick={() => onPageChange(item)}
               className={cn(
-                "rounded-lg px-3 py-1.5 font-semibold transition",
+                "rounded-lg px-2 md:px-3 py-1.5 font-semibold transition",
                 item === page ? "bg-[var(--accent-1)] text-white" : "text-slate-600 hover:bg-slate-100"
               )}
             >
@@ -403,7 +403,7 @@ function PaginationFooter({ page, limit, totalRows, totalPages, onPageChange }) 
           type="button"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-slate-200 md:px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Next
         </button>
