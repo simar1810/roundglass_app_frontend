@@ -97,7 +97,7 @@ function ShufflePrograms({ programs, setIsBeingShuffled }) {
 
   return <DndContext onDragEnd={handleDragEnd}>
     <SortableContext items={programOrder}>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {programOrder.map((id, index) => {
           const program = programs.find(p => p._id === id);
           return <SortableProgram key={id} program={program} index={index} />;
