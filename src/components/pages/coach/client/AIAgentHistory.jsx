@@ -1,19 +1,19 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, RotateCcw, Activity, Brain, Utensils, Lightbulb, X } from "lucide-react"
-import { format } from "date-fns"
-import { TabsContent } from "@/components/ui/tabs"
-import useSWR from "swr"
-import { retrieveAIAgentHistory } from "@/lib/fetchers/app"
-import { useParams } from "next/navigation"
+import CalenderModal from "@/components/common/CalenderModal"
 import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
-import CalenderModal from "@/components/common/CalenderModal"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TabsContent } from "@/components/ui/tabs"
+import { retrieveAIAgentHistory } from "@/lib/fetchers/app"
+import { format } from "date-fns"
+import { Activity, Brain, Lightbulb, Utensils, X } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useState } from "react"
+import useSWR from "swr"
 
 const sampleData = {
   _id: "68a4362b50cb8c4371a1c4b5",
@@ -82,6 +82,26 @@ const typeColors = {
   Guidance: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 }
 
+// Helper function to format numbers and remove floating point precision errors
+const formatNumber = (value, decimals = 0) => {
+  if (value == null || value === undefined || isNaN(value)) return '0'
+  
+  // Convert to number if it's a string
+  const numValue = typeof value === 'string' ? parseFloat(value) : value
+  
+  // Round to remove floating point errors
+  const multiplier = Math.pow(10, decimals)
+  const rounded = Math.round(numValue * multiplier) / multiplier
+  
+  // Format based on decimal places needed
+  if (decimals === 0) {
+    return Math.round(rounded).toString()
+  }
+  
+  // Format with decimals and remove trailing zeros
+  return rounded.toFixed(decimals).replace(/\.?0+$/, '')
+}
+
 export default function AIAgentHistory() {
   const { id } = useParams()
 
@@ -120,19 +140,19 @@ export default function AIAgentHistory() {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{data.calories}</div>
+                <div className="text-2xl font-bold text-primary">{formatNumber(data.calories, 0)}</div>
                 <div className="text-sm text-muted-foreground">Calories</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{data.protein}g</div>
+                <div className="text-2xl font-bold text-primary">{formatNumber(data.protein, 2)}g</div>
                 <div className="text-sm text-muted-foreground">Protein</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{data.carbohydrates}g</div>
+                <div className="text-2xl font-bold text-primary">{formatNumber(data.carbohydrates, 2)}g</div>
                 <div className="text-sm text-muted-foreground">Carbs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{data.fats}g</div>
+                <div className="text-2xl font-bold text-primary">{formatNumber(data.fats, 2)}g</div>
                 <div className="text-sm text-muted-foreground">Fats</div>
               </div>
             </div>
