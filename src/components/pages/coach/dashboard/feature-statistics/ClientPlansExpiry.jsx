@@ -11,7 +11,7 @@ export default function ClientPlansExpiry({ plans }) {
     current: 1,
     limit: 10
   })
-  const sortedPlans = useMemo(() => sortPlans(plans), [plans])
+  const sortedPlans = useMemo(() => normalizeMealPlansSorting(plans), [plans])
   const toDisplay = sortedPlans.slice(
     (pagination.current - 1) *
     pagination.limit, pagination.current * pagination.limit
@@ -73,7 +73,7 @@ export default function ClientPlansExpiry({ plans }) {
   </div>
 }
 
-function sortPlans(plans) {
+export function normalizeMealPlansSorting(plans) {
   const clients = plans
     .map(plan => plan.clients.map(client => ({ ...client, plan: plan._id })))
     .flatMap(plan => plan)
@@ -110,5 +110,8 @@ function sortPlans(plans) {
       clientFilterSet.add(client._id)
       return true
     })
-    .map(client => ({ ...client, expiry: clientPlanMap.get(client._id) }))
+    .map(client => ({
+      ...client,
+      expiry: clientPlanMap.get(client._id),
+    }))
 }

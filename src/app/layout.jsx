@@ -12,14 +12,14 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  const headersList = use(headers());
-  const userAgent = headersList.get('user-agent') || '';
+  // const headersList = use(headers());
+  // const userAgent = headersList.get('user-agent') || '';
 
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
+  // const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
 
-  if (isMobile) {
-    redirect('https://wellnessz.in/app');
-  }
+  // if (isMobile) {
+  //   redirect('https://wellnessz.in/app');
+  // }
   return (
     <html lang="en">
       <body className="antialiased">
