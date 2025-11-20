@@ -5,6 +5,7 @@ import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,7 @@ import { sendData } from "@/lib/api";
 import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { format, isValid, parse } from "date-fns";
-import { Calendar, CircleMinus, CirclePlus, Clock } from "lucide-react";
+import { Calendar, CircleMinus, CirclePlus, Clock, Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -166,7 +167,9 @@ function ScheduleNotification({
     reocurrence: defaultPayload.reocurrence || [],
     clients: selectedClients || defaultPayload.clients || [],
     actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
-    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined
+    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
+    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || [],
+    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || ""
   })
 
   const clientId = selectedClients?.[0];
@@ -264,7 +267,7 @@ function ScheduleNotification({
     }
   }
 
-  return <Dialog>
+  return <Dialog open={true}>
     <DialogTrigger asChild>
       <span>
         {!children && <Button className="font-bold">Schedule</Button>}
@@ -448,6 +451,10 @@ function ScheduleNotification({
             />
           </div>
         )}
+        <NotificationStatuses
+          payload={payload}
+          setPayload={setPayload}
+        />
         {payload.notificationType === "reocurr" && (
           <NotificationRepeat
             formData={{ reocurrence: payload.reocurrence }}
@@ -473,7 +480,7 @@ function generatePayload(payload, id) {
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
-  console.log(payload.clients, Array.isArray(payload.clients))
+
   if (payload.notificationType === "reocurr") {
     const result = {
       subject: payload.subject,
@@ -487,7 +494,6 @@ function generatePayload(payload, id) {
         : payload.clients
     };
 
-    // Only add actionType and id if they have values
     if (payload.actionType) result.actionType = payload.actionType;
     if (payload.id) result.id = payload.id;
 
@@ -553,5 +559,33 @@ export function NotificationRepeat({
           : <CirclePlus className="w-[12px] h-[12px]" />}
       </Badge>)}
     </div>
+  </div>
+}
+
+function NotificationStatuses({ payload, setPayload }) {
+  const [newStatus, setNewStatus] = useState("");
+  console.log(payload)
+  return <div>
+    <Input
+      value={newStatus}
+      onChange={e => setNewStatus(e.target.value)}
+    />
+    <Button onClick={() => {
+      setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
+      setNewStatus("")
+    }}>
+      <Plus />
+    </Button>
+    {payload.possibleStatus.length > 0 && <div className="border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
+      {payload.possibleStatus.map((status, index) => (
+        <div
+          className="px-2 py-1  rounded-full bg-white border-1 text-sm font-bold"
+          key={index}
+
+        >
+          {status}
+        </div>
+      ))}
+    </div>}
   </div>
 }
