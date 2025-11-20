@@ -1,32 +1,34 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import YouTubeEmbed from "@/components/common/YoutubeEmbed";
+import FormControl from "@/components/FormControl";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sendData } from "@/lib/api";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
+import { trimString } from "@/lib/formatter";
+import { youtubeVideoId } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { format } from "date-fns";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, Eye, FileText, Flag, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import useSWR from "swr";
-import { useState } from "react";
-import ClientClubDataComponent from "./ClientClubDataComponent";
-import { useAppSelector } from "@/providers/global/hooks";
-import ClientStatisticsData from "./ClientStatisticsData";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { trimString } from "@/lib/formatter";
-import AIAgentHistory from "./AIAgentHistory";
-import ClientReports from "./ClientReports";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import FormControl from "@/components/FormControl";
-import { sendData } from "@/lib/api";
+import { useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
+import AIAgentHistory from "./AIAgentHistory";
+import ClientClubDataComponent from "./ClientClubDataComponent";
+import ClientReports from "./ClientReports";
+import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
 
 const tabItems = [
@@ -265,6 +267,7 @@ function RetailPendingLabel() {
 
 function MarathonData({ clientData }) {
   const [date, setDate] = useState(format(new Date(), "dd-MM-yyyy"));
+  const [selectedMedia, setSelectedMedia] = useState(null); // { type: 'video' | 'photo', url: string, title: string }
   const { isLoading, error, data } = useSWR(
     `client/marathon?clientId=${clientData._id}&date=${date}`,
     () => getMarathonClientTask(clientData._id, date)
@@ -280,6 +283,16 @@ function MarathonData({ clientData }) {
   const marathons = data.data;
 
   const totalPoints = marathons.reduce((acc, marathon) => acc + marathon.totalPoints, 0)
+
+  // Helper function to get video URL from task (checking multiple possible field names)
+  const getVideoUrl = (task) => {
+    return task.video || task.videoUrl || task.submittedVideo || task.submittedVideoUrl || null;
+  };
+
+  // Helper function to get photo URL from task (checking multiple possible field names)
+  const getPhotoUrl = (task) => {
+    return task.photo || task.photoUrl || task.submittedPhoto || task.submittedPhotoUrl || null;
+  };
 
   return <TabsContent value="marathon">
     <div className="flex items-center justify-between">
@@ -297,27 +310,97 @@ function MarathonData({ clientData }) {
             <p className="px-4 py-2">{marathon.totalPoints} points</p>
             <AccordionContent>
               <div className="space-y-4 px-4 mt-2">
-                {marathon.tasks.map((task) => (
-                  <div
-                    key={task.taskId}
-                    className="bg-white p-4 border rounded-lg"
-                  >
-                    <h4 className="font-medium">{task.title}</h4>
-                    <p className="text-sm text-muted-foreground">{task.description}</p>
-                    <div className="text-sm mt-2 flex flex-wrap gap-3">
-                      <span>🎯 Points: {task.points}</span>
-                      <span>📽 Video: {task.videoSubmission ? 'Yes' : 'No'}</span>
-                      <span>📷 Photo: {task.photoSubmission ? 'Yes' : 'No'}</span>
-                      <span>{task.isCompleted ? '✅ Completed' : '❌ Incomplete'}</span>
+                {marathon.tasks.map((task) => {
+                  const videoUrl = getVideoUrl(task);
+                  const photoUrl = getPhotoUrl(task);
+                  const hasMedia = task.isCompleted && (videoUrl || photoUrl);
+                  
+                  return (
+                    <div
+                      key={task.taskId}
+                      className="bg-white p-4 border rounded-lg"
+                    >
+                      <h4 className="font-medium">{task.title}</h4>
+                      <p className="text-sm text-muted-foreground">{task.description}</p>
+                      <div className="text-sm mt-2 flex flex-wrap gap-3 items-center">
+                        <span>🎯 Points: {task.points}</span>
+                        <span>📽 Video: {task.videoSubmission ? 'Yes' : 'No'}</span>
+                        <span>📷 Photo: {task.photoSubmission ? 'Yes' : 'No'}</span>
+                        <span>{task.isCompleted ? '✅ Completed' : '❌ Incomplete'}</span>
+                      </div>
+                      {hasMedia && (
+                        <div className="mt-3 flex gap-2">
+                          {videoUrl && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedMedia({ type: 'video', url: videoUrl, title: task.title })}
+                              className="flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Video
+                            </Button>
+                          )}
+                          {photoUrl && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedMedia({ type: 'photo', url: photoUrl, title: task.title })}
+                              className="flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Photo
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
     </div>
+    
+    {/* Video/Photo View Modal */}
+    {selectedMedia && (
+      <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto p-0">
+          <DialogTitle className="p-4 border-b">{selectedMedia.title}</DialogTitle>
+          <div className="p-4">
+            {selectedMedia.type === 'video' ? (
+              <div className="aspect-video w-full">
+                {youtubeVideoId(selectedMedia.url) ? (
+                  <YouTubeEmbed link={selectedMedia.url} />
+                ) : (
+                  <video
+                    src={selectedMedia.url}
+                    controls
+                    className="w-full h-full rounded-lg"
+                    style={{ maxHeight: '70vh' }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+              </div>
+            ) : (
+              <div className="w-full flex justify-center">
+                <Image
+                  src={selectedMedia.url}
+                  alt={selectedMedia.title}
+                  width={1200}
+                  height={1200}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  unoptimized
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
   </TabsContent>
 }
 
