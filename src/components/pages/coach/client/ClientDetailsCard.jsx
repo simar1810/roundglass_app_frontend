@@ -364,7 +364,7 @@ function ClientCategoriesList({ clientData }) {
       <h4>Categories</h4>
       <ClientUpdateCategories clientData={clientData} />
     </div>
-    <div className="mt-2 flex items-center gap-1">
+    <div className="mt-2 flex flex-wrap items-center gap-1">
       {selectedCategories.map((category, index) => <Badge
         key={category._id}
         style={{

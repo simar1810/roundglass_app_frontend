@@ -232,7 +232,7 @@ function NotificationItem({ notif }) {
       <div className="flex-1">
         <div className="flex items-start justify-between gap-2 mb-1">
           <div className="flex-1">
-            <p className="font-bold text-gray-900 !text-lg">
+            <p className="font-bold text-gray-900 text-sm md:!text-lg">
               {notif.subject || "Untitled Notification"}
             </p>
             {/* <NotificationReadStatus isSeen={isSeen} /> */}

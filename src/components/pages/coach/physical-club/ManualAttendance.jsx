@@ -82,7 +82,7 @@ function ClientDetails({ client, date }) {
                 className="flex items-center gap-2 hover:bg-gray-100"
               >
                 <span className="text-sm text-gray-700 font-bold min-w-[2ch] md:min-w-[4ch]">{index + 1}</span>
-                <span className="text-sm text-gray-700 font-bold md:mr-auto">
+                <span className="text-sm text-gray-700 font-bold mr-auto">
                   {format(new Date(attendance.date), "dd-MM-yyyy")}&nbsp;
                   <span className="italic text-[12px] font-bold md:mr-auto">#{attendance.servingNumber}</span>
                 </span>
