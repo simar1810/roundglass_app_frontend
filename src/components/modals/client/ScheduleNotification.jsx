@@ -8,13 +8,14 @@ import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
 import { sendData } from "@/lib/api";
 import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { format, isValid, parse } from "date-fns";
-import { Calendar, CircleMinus, CirclePlus, Clock, Plus } from "lucide-react";
+import { Calendar, CircleMinus, CirclePlus, Clock, History, Plus, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -62,7 +63,6 @@ function convertTimeTo12Hour(timeStr) {
 
     return "";
   } catch (error) {
-    console.error("Error converting time:", error, timeStr);
     return "";
   }
 }
@@ -234,13 +234,11 @@ function ScheduleNotification({
         payload,
         defaultPayload._id,
       );
-      console.log(formData)
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
         defaultPayload._id ? "PUT" : "POST"
       );
-      console.log(response)
 
       if (response.status_code === 200 && !response.errors?.length) {
         toast.success(response.message)
@@ -267,7 +265,7 @@ function ScheduleNotification({
     }
   }
 
-  return <Dialog open={true}>
+  return <Dialog>
     <DialogTrigger asChild>
       <span>
         {!children && <Button className="font-bold">Schedule</Button>}
@@ -296,20 +294,34 @@ function ScheduleNotification({
         {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
       <div className="px-4 pb-8">
-        <div className="relative mb-4">
-          <Label className="text-[14px] mb-2 block">
-            Subject
+        <div className="relative mb-4" ref={subjectRef}>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-[14px]">
+              Subject
+              {uniqueHistoryNudges.length > 0 && (
+                <span className="text-xs text-gray-500 ml-2">
+                  ({uniqueHistoryNudges.length} history available)
+                </span>
+              )}
+            </Label>
             {uniqueHistoryNudges.length > 0 && (
-              <span className="text-xs text-gray-500 ml-2">({uniqueHistoryNudges.length} history available)</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1 text-gray-600 hover:text-gray-900"
+                onClick={() => setShowHistory(prev => !prev)}
+              >
+                <History className="w-3.5 h-3.5" />
+                History
+              </Button>
             )}
-          </Label>
+          </div>
           <input
-            ref={subjectRef}
             type="text"
             placeholder="Subject"
             value={payload.subject}
             onChange={e => setPayload(prev => ({ ...prev, subject: e.target.value }))}
-            onFocus={() => uniqueHistoryNudges.length > 0 && setShowHistory(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--comp-1)]"
           />
           {showHistory && uniqueHistoryNudges.length > 0 && (
@@ -451,16 +463,16 @@ function ScheduleNotification({
             />
           </div>
         )}
-        <NotificationStatuses
-          payload={payload}
-          setPayload={setPayload}
-        />
         {payload.notificationType === "reocurr" && (
           <NotificationRepeat
             formData={{ reocurrence: payload.reocurrence }}
             dispatch={setPayload}
           />
         )}
+        <NotificationStatuses
+          payload={payload}
+          setPayload={setPayload}
+        />
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -480,6 +492,7 @@ function generatePayload(payload, id) {
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
+  console.log(payload)
 
   if (payload.notificationType === "reocurr") {
     const result = {
@@ -492,6 +505,10 @@ function generatePayload(payload, id) {
       clients: Array.isArray(payload.clients)
         ? payload.clients[0]
         : payload.clients
+    };
+    result.notificationStatus = {
+      possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
+      clientMarkedStatus: payload.defaultStatus?.trim()
     };
 
     if (payload.actionType) result.actionType = payload.actionType;
@@ -527,6 +544,11 @@ function generatePayload(payload, id) {
         result.actionType = "UPDATE"
         result.id = id
       }
+
+      result.notificationStatus = {
+        possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
+        clientMarkedStatus: payload.defaultStatus?.trim()
+      };
 
       return result;
     } catch (error) {
@@ -564,28 +586,52 @@ export function NotificationRepeat({
 
 function NotificationStatuses({ payload, setPayload }) {
   const [newStatus, setNewStatus] = useState("");
-  console.log(payload)
   return <div>
-    <Input
-      value={newStatus}
-      onChange={e => setNewStatus(e.target.value)}
-    />
-    <Button onClick={() => {
-      setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
-      setNewStatus("")
-    }}>
-      <Plus />
-    </Button>
-    {payload.possibleStatus.length > 0 && <div className="border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
+    <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>
+    <div className="flex gap-4 items-center">
+      <Input
+        value={newStatus}
+        onChange={e => setNewStatus(e.target.value)}
+        placeholder="Enter status"
+        className="bg-[var(--comp-1)] rounded-[4px]"
+      />
+      <Button onClick={() => {
+        setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
+        setNewStatus("")
+      }}>
+        <Plus />
+      </Button>
+    </div>
+    {payload.possibleStatus.length > 0 && <div className="mt-4 border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
       {payload.possibleStatus.map((status, index) => (
         <div
-          className="px-2 py-1  rounded-full bg-white border-1 text-sm font-bold"
+          className="px-2 py-1 relative rounded-full bg-white border-1 text-sm font-bold"
           key={index}
 
         >
+          <X
+            className="w-4 h-4 cursor-pointer absolute top-0 right-0 translate-y-[-30%] translate-x-[30%] text-[var(--accent-2)]"
+            strokeWidth={2.5}
+            onClick={() => setPayload(prev => ({ ...prev, possibleStatus: prev.possibleStatus.filter(item => item !== status) }))}
+          />
           {status}
         </div>
       ))}
     </div>}
+
+    <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
+    <Select
+      value={payload.defaultStatus}
+      onValueChange={value => setPayload(prev => ({ ...prev, defaultStatus: value }))}
+    >
+      <SelectTrigger className="bg-[var(--comp-1)] w-full">
+        <SelectValue placeholder="Select default status" />
+      </SelectTrigger>
+      <SelectContent>
+        {payload.possibleStatus.map((status, index) => (
+          <SelectItem value={status} key={index}>{status}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   </div>
 }
