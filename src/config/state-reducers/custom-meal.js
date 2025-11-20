@@ -2,28 +2,26 @@ import { addDays, format, isBefore, parse } from "date-fns";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
 
-export const defaultMealTypes = [
-  {
-    mealType: "Breakfast",
-    meals: []
-  },
-  {
-    mealType: "Morning Snacks",
-    meals: []
-  },
-  {
-    mealType: "Lunch",
-    meals: []
-  },
-  {
-    mealType: "Evening Snacks",
-    meals: []
-  },
-  {
-    mealType: "Dinner",
-    meals: []
-  },
-]
+const BASE_MEAL_TYPES = [
+  "Breakfast",
+  "Morning Snacks",
+  "Lunch",
+  "Evening Snacks",
+  "Dinner",
+];
+
+export const defaultMealTypes = BASE_MEAL_TYPES.map((mealType) => ({
+  mealType,
+  meals: [],
+  defaultMealTiming: "",
+}));
+
+export const createDefaultMealTypes = () =>
+  defaultMealTypes.map(({ mealType, defaultMealTiming }) => ({
+    mealType,
+    meals: [],
+    defaultMealTiming: defaultMealTiming ?? "",
+  }));
 
 export function customMealReducer(state, action) {
   switch (action.type) {
@@ -36,7 +34,7 @@ export function customMealReducer(state, action) {
         selectedPlan: "daily",
         selectedMealType: "Breakfast",
         selectedPlans: {
-          daily: defaultMealTypes
+          daily: createDefaultMealTypes(),
         },
       }
       else if (action.payload === "weekly") return {
@@ -47,9 +45,9 @@ export function customMealReducer(state, action) {
         selectedPlan: "sun",
         selectedMealType: "Breakfast",
         selectedPlans: DAYS.reduce((acc, curr) => {
-          acc[curr] = defaultMealTypes;
+          acc[curr] = createDefaultMealTypes();
           return acc;
-        }, {})
+        }, {}),
       }
       return {
         ...state,
@@ -59,8 +57,8 @@ export function customMealReducer(state, action) {
         selectedPlan: format(new Date(), 'dd-MM-yyyy'),
         selectedMealType: "Breakfast",
         selectedPlans: {
-          [format(new Date(), 'dd-MM-yyyy')]: defaultMealTypes
-        }
+          [format(new Date(), 'dd-MM-yyyy')]: createDefaultMealTypes(),
+        },
       }
 
     case "INITIAL_STATE_DIFFERENT_CREATION":
@@ -123,7 +121,7 @@ export function customMealReducer(state, action) {
       if (action.payload.type === "new") {
         const updatedMeals = [
           ...currentMeals,
-          { mealType: action.payload.mealType, meals: [] },
+          { mealType: action.payload.mealType, meals: [], defaultMealTiming: "" },
         ];
 
         return {
@@ -178,11 +176,24 @@ export function customMealReducer(state, action) {
       const currentPlan = state.selectedPlans[state.selectedPlan];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
-      const defaultMealTiming = currentMeals
-        ?.find(mealType => mealType.mealType === state.selectedMealType)
-        ?.meals
-        ?.at(0)
-        ?.time || ""
+      const selectedMealTypeEntry = currentMeals?.find(
+        (mealType) => mealType?.mealType === state.selectedMealType
+      );
+
+      const mealTypeDefaultTiming =
+        typeof selectedMealTypeEntry?.defaultMealTiming === "string" &&
+          selectedMealTypeEntry.defaultMealTiming.length > 0
+          ? selectedMealTypeEntry.defaultMealTiming
+          : undefined;
+
+      const firstMealTiming =
+        Array.isArray(selectedMealTypeEntry?.meals) &&
+          selectedMealTypeEntry.meals.length > 0 &&
+          typeof selectedMealTypeEntry.meals[0]?.time === "string"
+          ? selectedMealTypeEntry.meals[0]?.time
+          : undefined;
+
+      const defaultMealTiming = mealTypeDefaultTiming ?? firstMealTiming ?? "";
       const dishesPayload = !isNew
         ? {
           ...recipe,
@@ -196,7 +207,7 @@ export function customMealReducer(state, action) {
           isNew: !recipe.time || false,
         }
         : {
-          time: recipe.time || defaultMealTiming,
+          time: recipe.time ?? defaultMealTiming,
           isNew: false,
         };
 
@@ -238,6 +249,7 @@ export function customMealReducer(state, action) {
                 carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
                 measure: recipe.measure,
                 isNew: true,
+                time: recipe.time ?? defaultMealTiming
               },
             ],
           }
@@ -288,11 +300,42 @@ export function customMealReducer(state, action) {
 
     case "ADD_NEW_PLAN_TYPE":
       const formatted = format(parse(action.payload, "yyyy-MM-dd", new Date()), "dd-MM-yyyy");
+      
+      // Find default timings from existing dates
+      // Collect all default timings for each meal type across all dates
+      const defaultTimingsMap = {};
+      const existingDates = Object.keys(state.selectedPlans);
+      
+      if (existingDates.length > 0) {
+        // Collect default timings from all existing dates
+        existingDates.forEach(date => {
+          const plan = state.selectedPlans[date];
+          const meals = Array.isArray(plan) ? plan : plan?.meals || [];
+          
+          meals.forEach(meal => {
+            if (meal?.mealType && typeof meal?.defaultMealTiming === "string" && meal.defaultMealTiming.length > 0) {
+              const mealType = meal.mealType;
+              // Use the first non-empty default timing found for each meal type
+              // This ensures we get the default timing that was set via SetMealTimingsDialog
+              if (!defaultTimingsMap[mealType]) {
+                defaultTimingsMap[mealType] = meal.defaultMealTiming;
+              }
+            }
+          });
+        });
+      }
+      
+      // Create meal types with default timings if available
+      const newMealTypes = createDefaultMealTypes().map(mealType => ({
+        ...mealType,
+        defaultMealTiming: defaultTimingsMap[mealType.mealType] || mealType.defaultMealTiming
+      }));
+      
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [formatted]: defaultMealTypes
+          [formatted]: newMealTypes
         },
         selectedPlan: formatted,
         selectedMealType: "Breakfast"
@@ -340,10 +383,25 @@ export function customMealReducer(state, action) {
         const nextMealsArray = targetIndex >= 0
           ? targetMealsArray.map((meal, index) =>
             index === targetIndex
-              ? { ...meal, mealType: normalizedMealType, meals: mealsToCopy }
+              ? {
+                ...meal,
+                mealType: normalizedMealType,
+                meals: mealsToCopy,
+              }
               : meal,
           )
-          : [...targetMealsArray, { mealType: normalizedMealType, meals: mealsToCopy }];
+          : [
+            ...targetMealsArray,
+            {
+              mealType: normalizedMealType,
+              meals: mealsToCopy,
+              defaultMealTiming:
+                (typeof sourceMealEntry?.defaultMealTiming === "string" &&
+                  sourceMealEntry.defaultMealTiming.length > 0
+                  ? sourceMealEntry.defaultMealTiming
+                  : undefined) ?? "",
+            },
+          ];
 
         updatedPlans[toPlan] = targetIsArray
           ? nextMealsArray
@@ -351,7 +409,6 @@ export function customMealReducer(state, action) {
             ...targetPlan,
             meals: nextMealsArray,
           };
-        console.log(updatedPlans)
       });
       // return state
       return {
@@ -672,4 +729,8 @@ function sortDatesByKeys(dates) {
     .map(date => parse(date, "dd-MM-yyyy", new Date()))
     .sort((dateA, dateB) => isBefore(dateA, dateB) ? -1 : 1)
     .map(date => format(date, "dd-MM-yyyy"))
+}
+
+export function getRecipeId(recipe) {
+  return recipe._id?.$oid ?? recipe._id
 }

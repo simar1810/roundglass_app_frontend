@@ -13,13 +13,14 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { getMeeting, getMeetingZoomEvents } from "@/lib/fetchers/club";
-import { addMinutes, format, parse, parseISO } from "date-fns";
+import { addMinutes, format, isBefore, parse, parseISO } from "date-fns";
 import { Upload } from "lucide-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 import MeetingZoomEvent from "@/components/pages/coach/club/meeting/MeetingZoomEvent";
 import { meetingAttendaceExcel } from "@/lib/formatter";
 import * as XLSX from "xlsx";
+import { ddMMyyyy } from "@/config/data/regex";
 
 export default function Page() {
   const { id } = useParams()
@@ -112,8 +113,9 @@ function MeetingAttendanceTable({ meetingType, attendenceList }) {
 }
 
 function ReocurringMeetingAttendanceTable({ attendenceList }) {
+  const meetings = sortMeetings(attendenceList)
   return <>
-    {attendenceList.map((attendance, index) => <TableRow key={index}>
+    {meetings.map((attendance, index) => <TableRow key={index}>
       <TableCell>{index + 1}</TableCell>
       <TableCell>
         {attendance.details.map((detail, index) => <p className="py-[2px]" key={index}>{detail.name}</p>)}</TableCell>
@@ -158,4 +160,13 @@ function MeetingEventsTable({ _id }) {
       />)}
     </TableBody>
   </Table>
+}
+
+function sortMeetings(meetings) {
+  return meetings
+    .filter(meeting => ddMMyyyy.test(meeting.commonDate))
+    .sort((dateA, dateB) => isBefore(
+      parse(dateA.commonDate, "dd-MM-yyyy", new Date),
+      parse(dateB.commonDate, "dd-MM-yyyy", new Date())
+    ) ? -1 : 1)
 }

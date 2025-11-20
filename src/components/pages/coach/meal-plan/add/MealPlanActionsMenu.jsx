@@ -11,15 +11,18 @@ import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import CopyMealPlanModal from "./CopyMealPlanModal";
 import CopyMealPlanDays from "./CopyMealPlanDays";
+import SetMealTimingsDialog from "./SetMealTimingsDialog";
 
 export default function MealPlanActionsMenu({
   toPlan,
   showStartFromToday = false,
   onStartFromToday,
+  onDefaultMealTimings,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [copyMealsOpen, setCopyMealsOpen] = useState(false);
   const [copyRecipesOpen, setCopyRecipesOpen] = useState(false);
+  const [setMealTimingsOpen, setSetMealTimingsOpen] = useState(false);
 
   const handleStartFromToday = () => {
     if (typeof onStartFromToday === "function") {
@@ -38,6 +41,15 @@ export default function MealPlanActionsMenu({
     event?.preventDefault?.();
     setMenuOpen(false);
     setCopyRecipesOpen(true);
+  };
+
+  const handleDefaultMealTimings = (event) => {
+    event?.preventDefault?.();
+    setMenuOpen(false);
+    setSetMealTimingsOpen(true);
+    if (typeof onDefaultMealTimings === "function") {
+      onDefaultMealTimings();
+    }
   };
 
   return (
@@ -68,6 +80,12 @@ export default function MealPlanActionsMenu({
           )}
           <DropdownMenuItem
             className="text-sm font-medium text-muted-foreground focus:text-foreground"
+            onSelect={handleDefaultMealTimings}
+          >
+            Set Meal Timings
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-sm font-medium text-muted-foreground focus:text-foreground"
             onSelect={handleCopyMealsOpen}
           >
             Copy Meals
@@ -90,6 +108,11 @@ export default function MealPlanActionsMenu({
         trigger={false}
         open={copyRecipesOpen}
         onOpenChange={setCopyRecipesOpen}
+      />
+      <SetMealTimingsDialog
+        trigger={false}
+        open={setMealTimingsOpen}
+        onOpenChange={setSetMealTimingsOpen}
       />
     </>
   );

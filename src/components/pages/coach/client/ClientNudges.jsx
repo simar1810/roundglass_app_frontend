@@ -8,16 +8,23 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 import { DAYS, DAYS_EEEE } from "@/config/data/ui"
 import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
 import { getRecentNotifications, getReocurrNotification } from "@/lib/nudges"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Pen, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, EllipsisVertical, Pen, Trash2 } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
+import DeleteClientNudges from "./DeleteClientNudges"
 
 export default function ClientNudges() {
   const [selected, setSelected] = useState([])
@@ -34,11 +41,12 @@ export default function ClientNudges() {
   const notifications = data.data?.results || []
 
   return <div className="bg-white px-4 py-4 border-1 rounded-[10px] mt-4">
-    <div className="flex items-center justify-between">
-      <div>
+    <div className="flex items-center justify-between gap-4">
+      <div className="mr-auto">
         <h4>Client Nudges</h4>
         <p className="text-sm text-[#808080] mt-2">{notifications.length ?? <>0</>} Total</p>
       </div>
+      <DeleteClientNudges clientId={id} />
       <ScheduleNotificationWrapper
         selectedClients={id}
       />
@@ -221,11 +229,81 @@ function NotificationItem({ notif }) {
       )}
     >
       <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <p className="font-bold text-gray-900 !text-lg">
-            {notif.subject || "Untitled Notification"}
-          </p>
-          {/* <NotificationReadStatus isSeen={isSeen} /> */}
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="flex-1">
+            <p className="font-bold text-gray-900 !text-lg">
+              {notif.subject || "Untitled Notification"}
+            </p>
+            {/* <NotificationReadStatus isSeen={isSeen} /> */}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 ml-2 shrink-0"
+              >
+                <EllipsisVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                <ScheduleNotificationWrapper
+                  selectedClients={[id]}
+                  defaultPayload={notif}
+                >
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                  >
+                    <Pen className="w-4 h-4 text-gray-600" />
+                    <span>Edit notification</span>
+                  </button>
+                </ScheduleNotificationWrapper>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                <ScheduleNotificationWrapper
+                  defaultPayload={{
+                    ...notif,
+                    _id: undefined
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                  >
+                    <Copy className="w-4 h-4 text-gray-600" />
+                    <span>Copy notification</span>
+                  </button>
+                </ScheduleNotificationWrapper>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                <DeleteClientNotification id={notif._id}>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-600" />
+                      <span>Delete notification</span>
+                    </button>
+                  </AlertDialogTrigger>
+                </DeleteClientNotification>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <p className="text-sm text-gray-600 line-clamp-2">
@@ -234,9 +312,11 @@ function NotificationItem({ notif }) {
 
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
           <Badge className="capitalize text-[10px] font-bold">{notif.schedule_type}</Badge>
-          {notif.schedule_type === "schedule" && <span>
-            📅 {formattedDate} •
-          </span>}
+          {notif.schedule_type === "schedule" && (
+            <span>
+              📅 {formattedDate} •
+            </span>
+          )}
           <span>🕒 {formattedTime}</span>
           {notif.notificationType && (
             <span className="px-2 py-0.5 bg-gray-100 rounded-full border text-gray-700">
@@ -245,20 +325,6 @@ function NotificationItem({ notif }) {
           )}
         </div>
       </div>
-
-      <ScheduleNotificationWrapper
-        selectedClients={[id]}
-        defaultPayload={notif}
-      >
-        <Button
-          size="icon"
-          variant="ghost"
-          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-        >
-          <Pen className="w-4 h-4" />
-        </Button>
-      </ScheduleNotificationWrapper>
-      <DeleteClientNotification id={notif._id} />
     </div>
   );
 }
@@ -275,7 +341,7 @@ function NotificationReadStatus({ isSeen }) {
   </Badge>
 }
 
-function DeleteClientNotification({ id }) {
+function DeleteClientNotification({ id, children }) {
   const { id: clientId } = useParams()
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
@@ -295,17 +361,16 @@ function DeleteClientNotification({ id }) {
     description="Are you sure of deleting this notification!"
     action={(setLoading, btnRef) => deleteNotification(setLoading, btnRef)}
   >
-    <AlertDialogTrigger asChild>
+    {!children && <AlertDialogTrigger asChild>
       <Button
         size="icon"
         variant="ghost"
         className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
       >
-        <Trash2
-          className="w-4 h-4 text-[var(--accent-2)]"
-          classNames="w-[24px] h-[24px] text-white bg-[var(--accent-2)] p-[4px] rounded-[4px] cursor-pointer hover:bg-[var(--accent-2)]/80" />
+        <Trash2 className="w-4 h-4 text-[var(--accent-2)]" />
       </Button>
-    </AlertDialogTrigger>
+    </AlertDialogTrigger>}
+    {children}
   </DualOptionActionModal>
 }
 

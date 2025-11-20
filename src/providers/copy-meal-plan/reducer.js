@@ -74,8 +74,19 @@ function createSlot({ planKey = "", planMeals = [], mealIndex = 0, overrides = {
 }
 
 function buildSlotsFromMeals(planKey, planMeals = []) {
-  const updatedPlanMeals = Array.isArray(planMeals) ? planMeals : planMeals.meals;
-  return updatedPlanMeals.map((_, index) => createSlot({ planKey, updatedPlanMeals, mealIndex: index }))
+  const normalizedMeals = Array.isArray(planMeals)
+    ? planMeals
+    : Array.isArray(planMeals?.meals)
+      ? planMeals.meals
+      : [];
+
+  return normalizedMeals.map((_, index) =>
+    createSlot({
+      planKey,
+      planMeals: normalizedMeals,
+      mealIndex: index,
+    }),
+  )
 }
 
 export default function reducer(state, action) {

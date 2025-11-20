@@ -211,11 +211,24 @@ function Container() {
       </div>
       {selectedMealsToDisplay.length > 0
         ? <div className="divide-y">
-          {selectedMealsToDisplay.map((slot) => <CopyMealPlanSlot
-            key={slot.id}
-            slot={slot}
-            dispatch={copyDispatch}
-          />)}
+          {selectedMealsToDisplay.map((slot, index) => {
+            const previousSlot = index > 0 ? selectedMealsToDisplay[index - 1] : null;
+            return (
+              <div key={slot.id}>
+                {previousSlot && (
+                  <CopyDatesFromPreviousRow
+                    fromSlot={previousSlot}
+                    toSlot={slot}
+                    dispatch={copyDispatch}
+                  />
+                )}
+                <CopyMealPlanSlot
+                  slot={slot}
+                  dispatch={copyDispatch}
+                />
+              </div>
+            );
+          })}
         </div>
         : <div className="px-4 py-6 text-sm text-muted-foreground">
           No copy slots yet. Use "Add copy from slot" to choose meal sources.
@@ -232,6 +245,43 @@ function Container() {
       </Button>
     </div>
   </div>
+}
+
+function CopyDatesFromPreviousRow({ fromSlot, toSlot, dispatch }) {
+  const normalizeDates = (slot) => {
+    if (!slot) return [];
+    if (Array.isArray(slot.toDate)) return slot.toDate.filter(Boolean);
+    if (typeof slot.toDate === "string" && slot.toDate) return [slot.toDate];
+    return [];
+  };
+
+  const sourceDates = normalizeDates(fromSlot);
+  const hasSourceDates = sourceDates.length > 0;
+
+  const formatMealTypeLabel = (mealType) => {
+    if (!mealType || typeof mealType !== "string") return "above meal";
+    return mealType.at(0)?.toUpperCase() + mealType.slice(1);
+  };
+
+  const handleCopyDates = () => {
+    if (!hasSourceDates) return;
+    dispatch(updateSlotDate(toSlot.id, sourceDates));
+  };
+
+  return (
+    <div className="flex justify-end bg-gray-50 px-4 pt-2 pb-1 text-xs">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 px-2 text-xs"
+        onClick={handleCopyDates}
+        disabled={!hasSourceDates}
+      >
+        Copy dates from {formatMealTypeLabel(fromSlot?.fromMealType)}
+      </Button>
+    </div>
+  );
 }
 
 function CopyMealPlanSlot({ slot, dispatch }) {

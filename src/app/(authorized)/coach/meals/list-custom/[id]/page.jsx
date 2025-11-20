@@ -120,7 +120,7 @@ function MealPlanDetailsContainer({ id }) {
 
   return <main>
     <DisplayMealStats meals={{ plans: { [selectedPlan]: customPlan.plans[selectedPlan] } }} />
-    <div className="content-container content-height-screen mt-4 grid grid-cols-2 divide-x-1">
+    <div className="content-container content-height-screen mt-4 grid grid-cols-1 md:grid-cols-2 md:divide-x-1">
       <CustomMealMetaData
         customPlan={customPlan}
         selectedPlan={selectedPlan}
@@ -170,14 +170,14 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
   const pdfDisabled = !pdfData || !pdfData?.plans?.some(plan => Array.isArray(plan?.meals) && plan.meals.length > 0);
   const pdfTemplateKey = pdfTemplateMap[selectedPdfVariant] || "PDFDailyMealSchedule";
   return <div className="p-4 pr-8">
-    <h4 className="mr-auto mb-4">{customPlan.title}</h4>
+    <h4 className="mr-auto text-base w-48 mb-4 md:mb-0">{customPlan.title}</h4>
     <div className="flex items-center gap-2">
       {!isNaN(customPlan.noOfDays) && <div className="font-bold">
         {customPlan.noOfDays} Days
       </div>}
       <Link
         href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
-        className="ml-auto px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
+        className="ml-auto hidden md:block px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px]"
         variant="wz"
       >
         Copy & Edit
@@ -186,7 +186,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       {!customPlan.admin && <>
         <Link
           href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
-          className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
+          className="hidden md:block px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px]"
           variant="wz_outline"
         >
           Edit
@@ -194,10 +194,28 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
         <DeleteCustomMealPlan id={customPlan._id} />
       </>}
     </div>
+        <div className="flex items-center justify-start gap-2 mt-4">
+    <Link
+        href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
+        className="md:hidden px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[12px]"
+        variant="wz"
+      >
+        Copy & Edit
+      </Link>
+      {!customPlan.admin && <>
+        <Link
+          href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
+          className="md:hidden px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[12px]"
+          variant="wz_outline"
+        >
+          Edit
+        </Link>
+      </>}
+    </div>
     <div className="flex flex-wrap items-center gap-4 mt-4">
       <PDFRenderer pdfTemplate={pdfTemplateKey} data={pdfData || {}}>
         <DialogTrigger
-          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[12px] md:text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={pdfDisabled}
         >
           <FileDown size={16} />
@@ -224,7 +242,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
           onValueChange={setSelectedPdfVariant}
           disabled={pdfDisabled}
         >
-          <SelectTrigger className="min-w-[200px]">
+          <SelectTrigger className="w-[130px] md:min-w-[200px]">
             <SelectValue placeholder="Select PDF Layout" />
           </SelectTrigger>
           <SelectContent>
@@ -241,7 +259,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       src={customPlan.image || "/not-found.png"}
       height={500}
       width={500}
-      className="w-full max-h-[200px] my-4 rounded-[10px] object-cover"
+      className="w-full max-h-[200 px] my-4 rounded-[10px] object-cover aspect-video"
       onError={e => e.target.src = "/not-found.png"}
     />
     <p>{customPlan.description}</p>
@@ -266,7 +284,7 @@ function CustomMealsListing({
   const selectedMealsForMealType = selectedMealTypes
     .find(type => type?.mealType === selectedMealType)?.meals || [];
 
-  return <div className="p-4 pl-8 relative">
+  return <div className="p-4 md:pl-8 relative">
     {customPlan.draft && <Badge className="absolute top-2 right-2">
       <SquarePen />
       Draft
@@ -290,7 +308,7 @@ function CustomMealsListing({
         {mealType.mealType}
       </Button>)}
     </div>
-    <div className="mt-8 grid grid-cols-2 gap-4">
+    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
       {selectedMealsForMealType.map((meal, index) => <MealDetails
         key={index}
         meal={meal}
@@ -349,12 +367,37 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
   const allMeals = useMemo(() => {
     const arr = []
     for (const plan in plans) {
-      arr.push(plans[plan]?.meals || plans[plan] || [])
+      const p = plans[plan];
+      if (!p) continue;
+      if (p.daily && typeof p.daily === "object") {
+        const d = p.daily;
+        if (Array.isArray(d.breakfast)) arr.push(...d.breakfast);
+        if (Array.isArray(d.lunch)) arr.push(...d.lunch);
+        if (Array.isArray(d.dinner)) arr.push(...d.dinner);
+        if (Array.isArray(d.snacks)) arr.push(...d.snacks);
+        continue;
+      }
+      const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+      const isWeekly = Object.keys(p).some(k => days.includes(k.toLowerCase()));
+
+      if (isWeekly) {
+        for (const day of days) {
+          const dayPlan = p[day];
+          if (!dayPlan) continue;
+
+          if (Array.isArray(dayPlan.breakfast)) arr.push(...dayPlan.breakfast);
+          if (Array.isArray(dayPlan.lunch)) arr.push(...dayPlan.lunch);
+          if (Array.isArray(dayPlan.dinner)) arr.push(...dayPlan.dinner);
+          if (Array.isArray(dayPlan.snacks)) arr.push(...dayPlan.snacks);
+        }
+        continue;
+      }
+      if (Array.isArray(p.breakfast)) arr.push(...p.breakfast);
+      if (Array.isArray(p.lunch)) arr.push(...p.lunch);
+      if (Array.isArray(p.dinner)) arr.push(...p.dinner);
+      if (Array.isArray(p.snacks)) arr.push(...p.snacks);
     }
-    return arr
-      .flat()
-      .map(meal => meal?.meals || [])
-      .flat()
+    return arr;
   }, [plans])
 
   const totals = useMemo(() => {

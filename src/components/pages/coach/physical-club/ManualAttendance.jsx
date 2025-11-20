@@ -20,11 +20,10 @@ export default function ManualAttendance({
   range,
   setRange
 }) {
-  console.log(data)
   const clients = manualAttendanceWithRangeMultiple(data, range)
     .filter(client => new RegExp(query, "i").test(client?.name))
 
-  return (<TabsContent value="manual-attendance" className="flex gap-6">
+  return (<TabsContent value="manual-attendance" className="flex flex-wrap gap-6">
     <AttendanceClients clients={clients} originalData={data} range={range} />
     <div className="flex-1">
       <AttendanceCalendar
@@ -82,8 +81,11 @@ function ClientDetails({ client, date }) {
                 key={index}
                 className="flex items-center gap-2 hover:bg-gray-100"
               >
-                <span className="text-sm text-gray-700 font-bold min-w-[10ch]">{index + 1}</span>
-                <span className="text-sm text-gray-700 font-bold mr-auto">{format(new Date(attendance.date), "dd-MM-yyyy")}</span>
+                <span className="text-sm text-gray-700 font-bold min-w-[2ch] md:min-w-[4ch]">{index + 1}</span>
+                <span className="text-sm text-gray-700 font-bold md:mr-auto">
+                  {format(new Date(attendance.date), "dd-MM-yyyy")}&nbsp;
+                  <span className="italic text-[12px] font-bold md:mr-auto">#{attendance.servingNumber}</span>
+                </span>
                 <ClientAttendanceActions
                   clientId={client.clientId}
                   attendance={attendance}
@@ -97,7 +99,7 @@ function ClientDetails({ client, date }) {
               No attendance found
             </div>}
         </div>
-        <AddNewServing date={new Date(date)} clientId={client.clientId} />
+        <AddNewServing key={`${client.clientId}-${date}`} date={date} clientId={client.clientId} />
       </CollapsibleContent>
     </Collapsible>
   </div>
@@ -105,7 +107,7 @@ function ClientDetails({ client, date }) {
 
 function ClientAttendanceActions({ clientId, attendance }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col md:flex-row items-center gap-2">
       <ChangeClientAttendanceStatus
         status="present"
         date={attendance.date}
