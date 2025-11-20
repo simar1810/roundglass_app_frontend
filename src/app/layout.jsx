@@ -17,9 +17,9 @@ export default function RootLayout({ children }) {
 
   // const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
 
-  // if (isMobile) {
-  //   redirect('https://wellnessz.in/app');
-  // }
+  if (isMobile) {
+    redirect('https://wellnessz.in/app');
+  }
   return (
     <html lang="en">
       <body className="antialiased">
