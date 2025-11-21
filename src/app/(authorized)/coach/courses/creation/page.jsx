@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { CheckCircle2, ChevronDown, CircleAlert, Plus, Trash2, UploadCloud } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, CircleAlert, Image as ImageIcon, Plus, Trash2, Upload, X } from 'lucide-react';
+import { cn, getObjectUrl } from '@/lib/utils';
 import { toast } from 'sonner';
-import { sendData } from '@/lib/api';
+import { sendData, uploadImage } from '@/lib/api';
 import { _throwError } from '@/lib/formatter';
+import AssetUploadPanel from '@/components/pages/course/AssetUploadPanel';
+import SectionCard from '@/components/pages/course/SectionCard';
+import EmptyState from '@/components/pages/course/EmptyState';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 const LANGUAGES = ['English', 'Hindi', 'Spanish', 'French', 'Other'];
 const LECTURE_TYPES = [
@@ -19,6 +24,7 @@ const createInitialMeta = () => ({
   categories: [],
   language: LANGUAGES[0],
   amount: '',
+  thumbnail: ""
 });
 
 const createEmptyLecture = () => ({
@@ -37,6 +43,7 @@ const sanitizeCoursePayload = (meta, lectures) => {
     categories: safeCategories,
     language: meta.language,
     amount: Number.isFinite(amountNumber) ? amountNumber : 0,
+    thumbnail: meta.thumbnail,
     lectures: lectures.map(({ title, description, lectureType }) => ({
       title: title.trim(),
       description: description.trim() || undefined,
@@ -112,49 +119,13 @@ export default function CourseCreationPage() {
     }
   };
 
-  const updateUploadRecord = (lectureId, updater) => {
-    setLectureUploads((prev) => {
-      const previous = prev[lectureId] || { status: 'idle', fileName: '' };
-      return {
-        ...prev,
-        [lectureId]: typeof updater === 'function' ? updater(previous) : updater,
-      };
-    });
-  };
-
-  const handleUploadSelect = (lectureId, file) => {
-    updateUploadRecord(lectureId, (previous) => ({
-      ...previous,
-      status: file ? 'selected' : 'idle',
-      fileName: file?.name || '',
-    }));
-  };
-
-  const handleUploadComplete = (lectureId) => {
-    try {
-      const lecture = (createdCourseMeta
-        ?.lectures || [])
-        ?.find(lecture => lecture._id === lectureId)
-      console.log(lectureId, lecture)
-      if (!lecture) return;
-
-      _throwError()
-
-      updateUploadRecord(lectureId, (previous) => ({
-        ...previous,
-        status: 'uploaded',
-      }));
-    } catch (error) {
-      toast.error(error.message || "Please try again later!")
-    }
-  };
-
   return (
     <div className="content-container content-height-screen py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <CourseHeader stage={stage} onReset={handleResetFlow} />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-6">
+            <UploadThumbnail onUpload={(image) => setMeta(prev => ({ ...prev, thumbnail: image }))} />
             <SectionCard
               title="Course Meta"
               description="Capture the essential details that define this course."
@@ -192,17 +163,14 @@ export default function CourseCreationPage() {
           <div className="flex flex-col gap-6">
             <AssetUploadPanel
               visible={isUploadStage}
-              lectures={lectures}
               uploads={lectureUploads}
-              onFileSelect={handleUploadSelect}
-              onMarkUploaded={handleUploadComplete}
               uploadsComplete={uploadsComplete}
               createdCourseMeta={createdCourseMeta}
             />
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -228,18 +196,6 @@ function CourseHeader({ stage, onReset }) {
         </button>
       ) : null}
     </div>
-  );
-}
-
-function SectionCard({ title, description, children }) {
-  return (
-    <section className="rounded-[6px] border border-slate-200 bg-white p-5 shadow-[0px_14px_32px_rgba(15,23,42,0.08)]">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        {description ? <p className="text-sm text-slate-500">{description}</p> : null}
-      </div>
-      {children}
-    </section>
   );
 }
 
@@ -564,192 +520,112 @@ function CourseCreationActions({ stage, onCreate, onReset, disabled }) {
   );
 }
 
-function AssetUploadPanel({
-  visible,
-  lecturess,
-  uploads,
-  onFileSelect,
-  onMarkUploaded,
-  uploadsComplete,
-  createdCourseMeta,
-}) {
-  const lectures = createdCourseMeta?.lectures || [];
-  // console.log('createdCourseMeta', createdCourseMeta)
-  if (!visible) {
-    return (
-      <SectionCard
-        title="Upload Assets"
-        description="Uploads unlock after the course is created."
+function UploadThumbnail({ onUpload }) {
+  const [file, setFile] = useState()
+  const inputRef = useRef()
+  const [uploaded, setUploaded] = useState(false)
+
+  async function uploadImageToBackend() {
+    const toastId = toast.loading("Uploading Thumbnail")
+    try {
+      const resopnse = await uploadImage(file);
+      onUpload(resopnse.img)
+      toast.success("Thumbnail Uploaded")
+      setUploaded(true)
+    } catch (error) {
+      toast.error(error.message);
+    }
+    toast.dismiss(toastId)
+  }
+
+  const hasSelection = file instanceof File
+
+  return (
+    <SectionCard title="Thumbnail">
+      <div
+        className={cn(
+          "rounded-[14px] border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 shadow-[0px_14px_32px_rgba(15,23,42,0.08)] transition-all",
+          uploaded ? "cursor-not-allowed select-none opacity-60" : "hover:border-[var(--accent-1)] hover:shadow-[0px_20px_45px_rgba(15,23,42,0.12)]"
+        )}
       >
-        <EmptyState message="Create the course to start uploading lecture files." />
-      </SectionCard>
-    );
-  }
-
-  const uploadedCount = lectures.filter(
-    (lecture) => uploads[lecture._id]?.status === 'uploaded'
-  ).length;
-
-  return (
-    <SectionCard
-      title="Upload Assets"
-      description="Attach the required files for every lecture."
-    >
-      <div className="mb-4 rounded-[6px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        {uploadedCount}/{lectures.length} lectures uploaded
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {lectures.map((lecture) => {
-          const upload = uploads[lecture._id] || { status: 'idle', fileName: '' };
-          const accept = lecture.lectureType === 'video' ? 'video/*' : '.pdf';
-          return (
-            <div
-              key={lecture._id}
-              className="rounded-[6px] border border-slate-200 p-4 shadow-[0px_10px_26px_rgba(15,23,42,0.08)]"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-slate-800">{lecture.title || 'Untitled lecture'}</p>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    {lecture.lectureType === 'video' ? 'Video' : 'PDF'} upload
-                  </p>
-                </div>
-                <UploadStatusBadge status={upload.status} />
-              </div>
-
-              <label className="mt-4 flex flex-col gap-2 text-sm font-medium text-slate-600">
-                Select file
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    type="file"
-                    accept={accept}
-                    onChange={(event) =>
-                      onFileSelect(lecture._id, event.target.files?.[0] || null)
-                    }
-                    className="flex-1 rounded-[6px] border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-[6px] file:border-0 file:bg-[var(--accent-1)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Marking uploaded', lecture)
-                      onMarkUploaded(lecture._id)
-                    }}
-                    disabled={!upload.fileName}
-                    className="inline-flex items-center gap-2 rounded-[6px] bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-                  >
-                    <UploadCloud className="h-4 w-4" />
-                    Mark uploaded
-                  </button>
-                </div>
-                {upload.fileName ? (
-                  <span className="text-xs text-slate-500">{upload.fileName}</span>
-                ) : (
-                  <span className="text-xs text-slate-400">
-                    Accepted formats: {lecture.lectureType === 'video' ? 'video/*' : '.pdf'}
-                  </span>
-                )}
-              </label>
+        <input
+          type="file"
+          accept="image/*"
+          hidden
+          ref={inputRef}
+          onChange={e => setFile(e.target.files[0])}
+          disabled={uploaded}
+        />
+        <div
+          onClick={() => {
+            if (uploaded) return
+            inputRef.current?.click()
+          }}
+          className={cn(
+            "relative aspect-video w-full overflow-hidden rounded-[12px] border border-dashed border-slate-300 bg-white/80 text-center transition-all",
+            uploaded ? "cursor-default" : "cursor-pointer hover:border-[var(--accent-1)] hover:bg-white"
+          )}
+        >
+          <span className="pointer-events-none absolute -left-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent-1)]/10 blur-2xl" />
+          <span className="pointer-events-none absolute -right-4 bottom-6 h-16 w-16 rounded-full bg-[var(--accent-2)]/10 blur-3xl" />
+          {hasSelection ? (
+            <>
+              <Image
+                src={getObjectUrl(file)}
+                alt=""
+                fill
+                className="object-cover"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/25 via-transparent to-transparent" />
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-slate-600">
+              <span className="rounded-full border border-white/60 bg-white/80 p-3 shadow-sm">
+                <ImageIcon className="h-6 w-6 text-[var(--accent-1)]" />
+              </span>
+              <p className="text-sm font-semibold text-slate-700">Upload Thumbnail</p>
+              <p className="text-xs text-slate-500">
+                Clean composition, rich focal point, minimal text. Works best with a 16:9 frame.
+              </p>
             </div>
-          );
-        })}
-      </div>
-
-      {uploadsComplete ? (
-        <div className="mt-4 inline-flex w-full items-center gap-2 rounded-[6px] bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-          <CheckCircle2 className="h-4 w-4" />
-          All lectures are uploaded. You can now notify the backend service.
+          )}
+          {!uploaded ? (
+            <span className="pointer-events-none absolute right-4 top-4 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
+              16:9 recommended
+            </span>
+          ) : (
+            <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 shadow-sm">
+              Uploaded
+            </span>
+          )}
         </div>
-      ) : (
-        <p className="mt-4 text-xs text-slate-400">
-          Upload every lecture to finish. Videos typically take longer to process.
-        </p>
-      )}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <p className="text-xs text-slate-500">
+            {uploaded
+              ? 'Thumbnail saved. Reset the course form if you want to start over.'
+              : 'Aim for 1920×1080px JPG/PNG under 5 MB to keep things crisp.'}
+          </p>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              className={cn("gap-2", !hasSelection && "hidden")}
+              onClick={() => uploadImageToBackend()}
+            >
+              <Upload className="h-4 w-4" />
+              Upload
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className={cn("gap-1 text-slate-600 hover:text-slate-900", !hasSelection && "hidden")}
+              onClick={() => setFile()}
+            >
+              <X strokeWidth={2.5} className="h-4 w-4" />
+              Clear
+            </Button>
+          </div>
+        </div>
+      </div>
     </SectionCard>
-  );
-}
-
-function UploadStatusBadge({ status }) {
-  const toneMap = {
-    idle: 'bg-slate-100 text-slate-600',
-    selected: 'bg-amber-100 text-amber-700',
-    uploaded: 'bg-emerald-100 text-emerald-700',
-  };
-  const labelMap = {
-    idle: 'Pending',
-    selected: 'Ready to upload',
-    uploaded: 'Uploaded',
-  };
-
-  return (
-    <span className={`rounded-[6px] px-3 py-1 text-xs font-semibold ${toneMap[status] || toneMap.idle}`}>
-      {labelMap[status] || labelMap.idle}
-    </span>
-  );
-}
-
-function EmptyState({ message }) {
-  return (
-    <div className="rounded-[6px] border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-      {message}
-    </div>
-  );
-}
-
-async function uploadLectureFile(lecture, courseId, file, options) {
-  if (lecture.lectureType === 'video') {
-    return await uploadVideo(lecture, courseId, file, options);
-  }
-  return await uploadPDF(lecture, courseId, file)
-}
-
-async function uploadPDF(lecture, courseId, file) {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('lectureId', lecture._id);
-    formData.append('courseId', courseId);
-    const response = await sendData("app/courses/lectures/pdf", formData);
-    if (response.status_code !== 200) throw new Error(response.message);
-    return {
-      success: true,
-      data: response.data
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: error.message || "Please try again later!"
-    }
-  }
-}
-
-async function uploadVideo(lecture, courseId, file, { onChunkUploaded = Function } = {}) {
-  try {
-    const chunks = splitFileIntoChunks(file, 5);
-    for (const chunk of chunks) {
-      const formData = new FormData();
-      formData.append('chunk', chunk);
-      formData.append('lectureRef', lecture._id);
-      const response = await sendData("app/courses/lectures/video", formData);
-      if (response.status_code !== 200) throw new Error(response.message);
-      onChunkUploaded(prev => prev + 1)
-    }
-    return {
-      success: true,
-      data: response.data
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: error.message || "Please try again later!"
-    }
-  }
-}
-
-function splitFileIntoChunks(file, chunkSize) {
-  const chunks = [];
-  for (let i = 0; i < file.size; i += chunkSize) {
-    chunks.push(file.slice(i, i + chunkSize));
-  }
-  return chunks;
+  )
 }

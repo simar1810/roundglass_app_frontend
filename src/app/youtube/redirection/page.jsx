@@ -4,8 +4,7 @@ import { useParams, useSearchParams } from "next/navigation";
 
 export default function Page() {
   const params = parseHashFragment()
-  const searchParams = useSearchParams()
-  console.log(searchParams.get("code"))
+
   const {
     token,
     state,
