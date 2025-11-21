@@ -12,7 +12,7 @@ export default function YouTubeEmbed({ link }) {
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       referrerPolicy="strict-origin-when-cross-origin"
       allowFullScreen
-      className="w-full h-full bg-red-300 aspect-video"
+      className="w-full h-full aspect-video"
     />
   );
 };
