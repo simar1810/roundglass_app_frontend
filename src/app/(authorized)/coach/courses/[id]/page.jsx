@@ -2,20 +2,25 @@
 
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { Eye, FileText, Trash2 } from "lucide-react";
+import { Eye, FileText, Pen, Plus, Trash2, Upload, X } from "lucide-react";
 import useSWR, { mutate } from "swr";
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import { fetchData, sendData } from "@/lib/api";
-import { youtubeVideoId } from "@/lib/utils";
+import { fetchData, sendData, uploadImage } from "@/lib/api";
+import { getObjectUrl, youtubeVideoId } from "@/lib/utils";
 import YouTubeEmbed from "@/components/common/YoutubeEmbed";
 import PDFPreview from "@/components/common/PDFPreview";
-import { DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { _throwError } from "@/lib/formatter";
 
 const FALLBACK_THUMBNAIL = "/not-found.png";
 
@@ -38,8 +43,8 @@ export default function Page() {
   return (
     <div className="content-container content-height-screen py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <header className="flex items-center justify-between gap-1">
-          <div className="flex flex-col gap-1">
+        <header className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-1 mr-auto">
             <h1 className="text-2xl font-semibold text-slate-900">
               {course.title || "Course details"}
             </h1>
@@ -48,12 +53,13 @@ export default function Page() {
               {formatDateTime(course.createdAt)}
             </p>
           </div>
+          <EditCourse courseMeta={course} />
           <DeleteCourse courseId={course._id} />
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
           <div className="flex flex-col gap-6">
-            <CourseThumbnail thumbnail={course.thumbnail} title={course.title} />
+            <CourseThumbnail courseId={course._id} thumbnail={course.thumbnail} title={course.title} />
             <CourseMeta course={course} />
           </div>
           <LecturesPanel lectures={lectures} />
@@ -63,12 +69,13 @@ export default function Page() {
   );
 }
 
-function CourseThumbnail({ thumbnail, title }) {
+function CourseThumbnail({ courseId, thumbnail, title }) {
   const heroSrc = thumbnail || FALLBACK_THUMBNAIL;
 
   return (
-    <div className="rounded-[16px] border border-slate-200 bg-slate-900/80 p-0.5 shadow-[0px_18px_48px_rgba(15,23,42,0.12)]">
+    <div className="relative rounded-[16px] border border-slate-200 bg-slate-900/80 p-0.5 shadow-[0px_18px_48px_rgba(15,23,42,0.12)]">
       <div className="relative aspect-video w-full max-h-[400px] overflow-hidden rounded-[15px] bg-slate-900">
+        <UpdateCourseThumbnail courseId={courseId} thumbnailLink={thumbnail} />
         {heroSrc ? (
           <>
             <Image
@@ -310,4 +317,360 @@ function DeleteCourse({ courseId }) {
       </Button>
     </AlertDialogTrigger>
   </DualOptionActionModal>
+}
+
+function EditCourse({ courseMeta }) {
+  const [open, setOpen] = useState(false);
+  const [payload, setPayload] = useState(generateDefaultPayload(courseMeta));
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [validationMap, setValidationMap] = useState(createValidationState);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setPayload(generateDefaultPayload(courseMeta));
+      setCategoryDraft("");
+      setValidationMap(createValidationState());
+    }
+  }, [courseMeta, open]);
+
+  const handleFieldChange = (field) => (event) => {
+    const { value } = event.target;
+    setPayload((previous) => ({ ...previous, [field]: value }));
+    setValidationMap((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const handleCategoryAdd = () => {
+    const nextCategory = categoryDraft.trim();
+    if (!nextCategory) return;
+    setPayload((previous) =>
+      previous.categories.includes(nextCategory)
+        ? previous
+        : { ...previous, categories: [...previous.categories, nextCategory] }
+    );
+    setCategoryDraft("");
+    setValidationMap((prev) => ({ ...prev, categories: false }));
+  };
+
+  const handleCategoryRemove = (category) => {
+    setPayload((previous) => ({
+      ...previous,
+      categories: previous.categories.filter((item) => item !== category),
+    }));
+  };
+
+  const handleCategoryKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleCategoryAdd();
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const preparedPayload = sanitizeCoursePayload(payload);
+    const errors = {
+      title: !preparedPayload.title,
+      description: !preparedPayload.description,
+      categories: preparedPayload.categories.length === 0,
+      amount: preparedPayload.amount <= 0,
+    };
+    setValidationMap(errors);
+    if (Object.values(errors).some(Boolean)) {
+      return;
+    }
+
+    const courseId = courseMeta?._id?.$oid ?? courseMeta?._id;
+    if (!courseId) {
+      toast.error("Unable to identify the course.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await sendData(`app/courses/details/${courseId}`, {
+        ...preparedPayload,
+        courseId,
+      },
+        "POST"
+      );
+      if (response?.status_code !== 200) {
+        throw new Error(response?.message || "Failed to update course");
+      }
+      toast.success(response.message || "Course updated successfully");
+      mutate(`app/courses/details/${courseId}`);
+      mutate("app/courses/all");
+      setOpen(false);
+    } catch (error) {
+      toast.error(error?.message || "Unable to update course");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="wz">
+          <Pen className="w-[28px] h-[28px] text-white rounded-[4px]" />
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[70vh] p-0 overflow-y-auto">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <DialogTitle className="text-lg font-semibold">Edit Course</DialogTitle>
+          <p className="text-sm text-slate-500">Update the course meta details.</p>
+        </div>
+        <form className="flex flex-col gap-6 p-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="course-title">Course title</Label>
+            <Input
+              id="course-title"
+              value={payload.title}
+              onChange={handleFieldChange("title")}
+              placeholder="Course title"
+              disabled={loading}
+              aria-invalid={validationMap.title || undefined}
+            />
+            {validationMap.title ? (
+              <p className="text-xs text-destructive">Title is required.</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="course-description">Description</Label>
+            <Textarea
+              id="course-description"
+              rows={4}
+              value={payload.description}
+              onChange={handleFieldChange("description")}
+              placeholder="Describe the course"
+              disabled={loading}
+              aria-invalid={validationMap.description || undefined}
+            />
+            {validationMap.description ? (
+              <p className="text-xs text-destructive">Description is required.</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="course-amount">Amount (₹)</Label>
+            <Input
+              id="course-amount"
+              type="number"
+              min="0"
+              step="1"
+              inputMode="numeric"
+              value={payload.amount}
+              onChange={handleFieldChange("amount")}
+              placeholder="5000"
+              disabled={loading}
+              aria-invalid={validationMap.amount || undefined}
+            />
+            {validationMap.amount ? (
+              <p className="text-xs text-destructive">Enter a valid amount.</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="course-category-input">Categories</Label>
+            {payload.categories.length ? (
+              <div className="flex flex-wrap gap-2">
+                {payload.categories.map((category) => (
+                  <span
+                    key={category}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
+                  >
+                    {category}
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryRemove(category)}
+                      className="text-slate-400 transition hover:text-rose-500"
+                      aria-label={`Remove ${category}`}
+                      disabled={loading}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Add at least one category.</p>
+            )}
+            <div className="flex gap-2">
+              <Input
+                id="course-category-input"
+                value={categoryDraft}
+                onChange={(event) => setCategoryDraft(event.target.value)}
+                onKeyDown={handleCategoryKeyDown}
+                placeholder="e.g. Strength"
+                disabled={loading}
+                aria-invalid={validationMap.categories || undefined}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCategoryAdd}
+                disabled={loading || !categoryDraft.trim()}
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
+            {validationMap.categories ? (
+              <p className="text-xs text-destructive">Add at least one category.</p>
+            ) : null}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save changes"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function generateDefaultPayload(data) {
+  const safeCategories = Array.isArray(data?.categories)
+    ? data.categories
+      .map((category) => (typeof category === "string" ? category.trim() : String(category || "")).trim())
+      .filter(Boolean)
+    : [];
+
+  const amount =
+    typeof data?.amount === "number" && Number.isFinite(data.amount)
+      ? String(data.amount)
+      : data?.amount
+        ? String(data.amount)
+        : "";
+
+  return {
+    title: data?.title ?? "",
+    description: data?.description ?? "",
+    categories: safeCategories,
+    amount,
+  };
+}
+
+function sanitizeCoursePayload(payload) {
+  const amountNumber = Number(payload.amount);
+  return {
+    title: payload.title.trim(),
+    description: payload.description.trim(),
+    categories: payload.categories.map((category) => category.trim()).filter(Boolean),
+    amount: Number.isFinite(amountNumber) ? amountNumber : 0,
+  };
+}
+
+function createValidationState() {
+  return {
+    title: false,
+    description: false,
+    categories: false,
+    amount: false,
+  };
+}
+
+function UpdateCourseThumbnail({ courseId, thumbnailLink }) {
+  const [file, setFile] = useState()
+  const [loading, setLoading] = useState(false)
+  const inputRef = useRef()
+  const closeRef = useRef()
+
+  const imageLink = useMemo(() => getImageLink(file, thumbnailLink), [file]);
+  const selectedImageFile = file instanceof File
+
+  async function updateImage() {
+    const toastId = toast.loading("Uploading Image...");
+    try {
+      if (!selectedImageFile) return
+      setLoading(true);
+      const response = await uploadImage(file);
+      const payload = {
+        thumbnail: response.img,
+        courseId
+      }
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      const updateResponse = await sendData(
+        `app/courses/details/${courseId}`,
+        payload,
+        "POST"
+      );
+      if (updateResponse?.status_code !== 200) {
+        _throwError(updateResponse?.message || "Failed to update course");
+      }
+      toast.success(updateResponse.message || "Course updated successfully");
+      mutate(`app/courses/details/${courseId}`);
+      mutate("app/courses/all");
+      closeRef.current.close();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      toast.dismiss(toastId)
+    }
+  }
+
+  return <Dialog>
+    <DialogClose ref={closeRef} />
+    <DialogTrigger asChild className="absolute bottom-4 right-4 z-[10]">
+      <button className="w-[40px] h-[40px] text-center leading-[40px] bg-[var(--accent-1)] rounded-full opacity-40 hover:opacity-100">
+        <Upload strokeWidth={2.5} className="text-white w-[16px] h-[16px] mx-auto" />
+      </button>
+    </DialogTrigger>
+    <DialogContent className="p-0">
+      <input
+        hidden
+        type="file"
+        accept="image/*"
+        onChange={e => setFile(e.target.files[0])}
+        ref={inputRef}
+      />
+      <DialogTitle className="p-4 border-b-1">Upload Thumbnail</DialogTitle>
+      <div className="p-4 relative">
+        {selectedImageFile && <X
+          className="text-[var(--accent-2)] absolute top-6 right-6 cursor-pointer"
+          onClick={() => setFile()}
+        />}
+        <Image
+          src={imageLink}
+          height={400}
+          width={225}
+          alt=""
+          className="w-full aspect-video object-contain p-2 rounded-[2px] border-1 border-dashed cursor-pointer"
+          onError={e => e.target.src = "/not-found.png"}
+          onClick={() => inputRef.current.click()}
+        />
+        {selectedImageFile && <div onClick={() => inputRef.current.click()}>
+        </div>}
+        <Button
+          className="w-full mt-4"
+          variant="wz"
+          onClick={updateImage}
+          disabled={loading || !selectedImageFile}
+        >
+          Upload
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function getImageLink(file, thumbnailLink) {
+  const isFileSelected = file instanceof File;
+  if (isFileSelected) return getObjectUrl(file) || "/not-found.png";
+  if (thumbnailLink) return thumbnailLink;
+  return "/";
 }
