@@ -456,7 +456,7 @@ export function UpdateDetails({
     <DialogTrigger className=" self-start">
       <Pen className="w-[14px] h-[14px] mt-2 text-[var(--accent-1)]" />
     </DialogTrigger>
-    <DialogContent className="max-w-[100px] w-full gap-0 p-0">
+    <DialogContent className="max-w-[100vw] md:max-w-[100px] w-full gap-0 p-0">
       <DialogTitle className="p-4 border-b-1">{title}</DialogTitle>
       <div className="p-4">
         <FormControl

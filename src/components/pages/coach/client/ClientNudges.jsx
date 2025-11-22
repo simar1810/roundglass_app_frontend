@@ -40,7 +40,7 @@ export default function ClientNudges() {
 
   const notifications = data.data?.results || []
 
-  return <div className="bg-white px-4 py-4 border-1 rounded-[10px] mt-4">
+  return <div className="bg-white px-4 py-4 border-1 rounded-[10px] mt-4  w-[90vw] md:w-auto">
     <div className="flex items-center justify-between gap-4">
       <div className="mr-auto">
         <h4>Client Nudges</h4>
@@ -54,7 +54,7 @@ export default function ClientNudges() {
     {notifications.length === 0
       ? <CreateFirstNotification />
       :
-      <Tabs defaultValue="recent">
+      <Tabs defaultValue="recent" className="">
         <Header
           selected={selected}
           setSelected={setSelected}
@@ -91,12 +91,12 @@ function Header({
   selected,
   setSelected
 }) {
-  return <div className="my-4 flex items-center gap-4 select-none">
+  return <div className="my-4 flex flex-wrap items-center gap-4 select-none">
     <TabsList className="mr-auto bg-transpatent gap-2">
       {tabOptions.map(tab =>
         <TabsTrigger
           key={tab.id}
-          className="min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+          className="md:min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
              data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
              data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
           value={tab.value}
@@ -114,6 +114,7 @@ function Header({
       }))}
       value={selected}
       onChange={value => setSelected(value)}
+      
     />
   </div>
 }
@@ -231,7 +232,7 @@ function NotificationItem({ notif }) {
       <div className="flex-1">
         <div className="flex items-start justify-between gap-2 mb-1">
           <div className="flex-1">
-            <p className="font-bold text-gray-900 !text-lg">
+            <p className="font-bold text-gray-900 text-sm md:!text-lg">
               {notif.subject || "Untitled Notification"}
             </p>
             {/* <NotificationReadStatus isSeen={isSeen} /> */}

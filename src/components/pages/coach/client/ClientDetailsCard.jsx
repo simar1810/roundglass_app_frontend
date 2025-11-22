@@ -84,7 +84,7 @@ function ClientDetails({ clientData }) {
 
   const latestWeight = findClientLatestWeight(clienthealthMatrix)
 
-  return <Card className="bg-white rounded-[18px] shadow-none">
+  return <Card className="bg-white rounded-[18px] shadow-none w-[90vw] md:w-auto">
     <Header clientData={clientData} />
     <CardContent>
       <div className="flex items-center justify-between">
@@ -197,11 +197,11 @@ function Header({ clientData }) {
   }
 
   return <CardHeader className="relative flex items-center gap-4 md:gap-8">
-    <Avatar className="w-[100px] h-[100px]">
+    <Avatar className="w-[80px] h-[80px] md:w-[100px] md:h-[100px]">
       <AvatarImage src={clientData.profilePhoto} />
       <AvatarFallback>{nameInitials(clientData.name)}</AvatarFallback>
     </Avatar>
-    <div>
+    <div className="">
       <h3 className="mb-2">{clientData.name}</h3>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
@@ -364,7 +364,7 @@ function ClientCategoriesList({ clientData }) {
       <h4>Categories</h4>
       <ClientUpdateCategories clientData={clientData} />
     </div>
-    <div className="mt-2 flex items-center gap-1">
+    <div className="mt-2 flex flex-wrap items-center gap-1">
       {selectedCategories.map((category, index) => <Badge
         key={category._id}
         style={{
