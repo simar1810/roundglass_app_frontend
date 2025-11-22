@@ -25,7 +25,10 @@ function Header({ value, setValue }) {
       value={value}
       onChange={e => setValue(e.target.value)}
     />
-    <Link href="/coach/courses/creation">Create</Link>
+    <Link
+      href="/coach/courses/creation"
+      className="bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
+    >Create</Link>
   </div>
 }
 
@@ -38,8 +41,11 @@ function CourseLintings() {
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  console.log(data.data)
+
   const courses = data.data ?? []
+
+
+
   return <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     {courses.map(course => <CourseDetails
       key={course._id}
