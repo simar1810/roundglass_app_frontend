@@ -1,7 +1,7 @@
 "use client"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useState } from "react"
 import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
@@ -37,13 +37,16 @@ function Header({ value, setValue }) {
     />
     <Link
       href="/coach/courses/creation"
-      className="bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
+      className="w-[12ch] text-center bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
     >Create</Link>
+    <Link
+      href="/coach/courses/analytics"
+      className="w-[12ch] text-center bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
+    >Analytics</Link>
   </div>
 }
 
 function CourseLintings({ isFirstTime }) {
-  const router = useRouter()
   const { isLoading, error, data } = useSWR(
     "app/courses/all",
     () => fetchData("app/courses/details")
@@ -55,12 +58,14 @@ function CourseLintings({ isFirstTime }) {
 
   const courses = data.data ?? []
 
-  useEffect(function () {
-    if (isFirstTime) router.replace("/coach/courses")
-  }, [isFirstTime])
-
-  if (courses.length === 0) return <div className="min-h-[400px] bg-[var(--comp-1)] flex items-center justify-center">
-    No courses Created.
+  if (courses.length === 0) return <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center">
+    <div className="text-5xl mb-4">📕</div>
+    <h2 className="text-2xl font-semibold text-gray-800">No Courses Yet</h2>
+    <p className="text-gray-500 mt-1">Create your first course to get started.</p>
+    <Link
+      href="/coach/courses/creation"
+      className="w-[12ch] text-center bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
+    >Create</Link>
   </div>
 
   return <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -91,6 +96,7 @@ function CourseDetails({ course }) {
 }
 
 function WarningModalToVerifyYTAccount() {
+  const router = useRouter()
   function copyLink() {
     {
       copyText("https://www.youtube.com/verify")
@@ -118,6 +124,9 @@ function WarningModalToVerifyYTAccount() {
           <Button
             variant="wz"
             className="mt-4"
+            onClick={() => {
+              router.replace("/coach/courses")
+            }}
           >
             Verified
           </Button>
