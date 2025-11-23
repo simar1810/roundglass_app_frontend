@@ -8,20 +8,17 @@ import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { sendData } from "@/lib/api";
-import { validStatistics } from "@/lib/client/statistics";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { FilePen, X } from "lucide-react"
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
 export default function ClientStatisticsData({ clientData }) {
-  const { coachId } = useAppSelector(state => state.coach.data)
   try {
     const { dob, clientId, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
@@ -129,27 +126,13 @@ export default function ClientStatisticsData({ clientData }) {
       </div>
     </TabsContent>
   } catch (error) {
-    const isCoachNale = coachId === "nal100"
-    const message = isCoachNale
-      ? "Please check the statistics on your admin panel!"
-      : error.message
+    const message = error.message
     return <TabsContent value="statistics">
       <div className="h-[400px] bg-[var(--comp-1)] flex flex-col gap-2 items-center justify-center">
-        {isCoachNale && <RedirectToNale />}
         <p className="font-bold">{message}</p>
       </div>
     </TabsContent>
   }
-}
-
-function RedirectToNale() {
-  return <Link
-    href="https://drnaleayurveda.com/admin/followups"
-    target="_blank"
-    className="bg-[var(--accent-1)] px-4 py-2 rounded-full text-white font-bold"
-  >
-    Admin Dashboard
-  </Link>
 }
 
 function StatisticsExportingOptions({
