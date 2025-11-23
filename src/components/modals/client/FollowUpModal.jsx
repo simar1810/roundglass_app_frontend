@@ -38,6 +38,7 @@ import { _throwError } from "@/lib/formatter";
 import { extractNumber } from "@/lib/utils";
 
 export default function FollowUpModal({ clientData }) {
+  if (!clientData.healthMatrix) return <></>
   return <Dialog>
     <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange className="w-[18px] h-[18px]" />
