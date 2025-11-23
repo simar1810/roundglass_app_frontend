@@ -469,10 +469,10 @@ function ScheduleNotification({
             dispatch={setPayload}
           />
         )}
-        <NotificationStatuses
+        {/* <NotificationStatuses
           payload={payload}
           setPayload={setPayload}
-        />
+        /> */}
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
