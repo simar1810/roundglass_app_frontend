@@ -17,14 +17,14 @@ import UpdateClientDetailsOwnModal from "@/components/modals/client/UpdateClient
 export default function ClientDetailsCardProfile({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
 
-  return <Card className="bg-[var(--comp-1)] rounded-[18px] shadow-none">
+  return <Card className="bg-[var(--comp-1)] rounded-[18px] shadow-none w-[90vw] md:w-auto">
     <Header clientData={clientData} />
     <CardContent>
       <div className="flex items-center justify-between">
         <h4>Goal</h4>
         <UpdateClientGoalModal
           id={clientData._id}
-          defaultValue={clientData.goal}
+          clientData={clientData}
         />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>

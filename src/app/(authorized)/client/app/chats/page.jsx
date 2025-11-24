@@ -44,7 +44,7 @@ function SelectedChat() {
 
 function CurrentChatHeader() {
   const { coachName, coachProfilePhoto } = useAppSelector(state => state.client.data)
-  return <div className="bg-[var(--primary-1)] px-4 py-4 flex items-center gap-4 sticky top-0 z-[100] border-b-1">
+  return <div className="bg-[var(--primary-1)] px-4 py-4 flex items-center gap-4 sticky top-0 z-[10] border-b-1">
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
       <AvatarImage src={coachProfilePhoto || "/"} className="rounded-[8px]" />
       <AvatarFallback className="bg-gray-200 rounded-[8px]">{nameInitials(coachName)}</AvatarFallback>
