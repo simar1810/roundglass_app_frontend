@@ -11,7 +11,7 @@ import { getRecipesCalorieCounter } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Flame, PlusCircle } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 
 export default function SelectMealCollection({ children, index }) {
@@ -23,7 +23,7 @@ export default function SelectMealCollection({ children, index }) {
         <PlusCircle size={32} className="text-[var(--accent-1)]" />
       </div>
     </DialogTrigger>}
-    <DialogContent className="min-w-[850px] p-0 gap-0">
+    <DialogContent className="w-full md:min-w-[850px] p-0 gap-0">
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Add Meals</DialogTitle>
       </DialogHeader>
@@ -35,55 +35,70 @@ export default function SelectMealCollection({ children, index }) {
 function RecipeesContainer({ index }) {
   const [query, setQuery] = useState("rajma");
   const debouncedSearchQuery = useDebounce(query, 1000);
-  const { isLoading, error, data } = useSWR(
+  const { isLoading, isValidating, error, data } = useSWR(
     `recipees/${debouncedSearchQuery}`,
     () => getRecipesCalorieCounter(debouncedSearchQuery)
   );
   const [selected, setSelected] = useState();
   const closeRef = useRef();
+  const searchInputRef = useRef(null);
   const { dispatch } = useCurrentStateContext();
-  if (isLoading) return <ContentLoader />
-  if (error || data?.status_code !== 200) return <div className="p-4">
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
+  const recipees = data?.data ?? [];
+  const hasError = Boolean(error) || (data && data?.status_code !== 200);
+  const showInitialLoader = isLoading && !data;
+
+  if (recipees.length === 0) return <div className="p-4">
     <Input
+      ref={searchInputRef}
+      autoFocus
       placeholder="Enter Meal Plan"
       value={query}
       onChange={e => setQuery(e.target.value)}
     />
-    <ContentError title={error || data?.message || "No recipes found!"} />
+    <ContentError title="No recipes found!" />
   </div>
-  const recipees = data.data;
+
   return <div className="p-4">
     <div className="flex items-center gap-4 pb-2">
       <Input
+        ref={searchInputRef}
+        autoFocus
         placeholder="Enter Meal Plan"
         value={query}
         onChange={e => setQuery(e.target.value)}
       />
-      {isLoading && <Loader />}
+      {(isLoading || isValidating) && <Loader />}
     </div>
-    <div className="mb-4 flex items-center justify-between gap-4">
-      {/* <strong>{recipees.length} Results found</strong> */}
-      <p className="ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
-      <RecipeModal type="new" />
-    </div>
-    <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-2 gap-4 no-scrollbar">
-      {recipees.map((recipe, index) => <RecipeDeatils
-        key={index}
-        recipe={recipe}
-        selected={selected}
-        setSelected={setSelected}
-      />)}
-    </div>
-    {selected && <Button
-      onClick={() => {
-        dispatch(saveRecipe(selected, index))
-        closeRef.current.click()
-      }}
-      variant="wz"
-      className="w-full"
-    >
-      Add
-    </Button>}
+    {showInitialLoader && <ContentLoader />}
+    {hasError && !showInitialLoader && <ContentError title={error || data?.message || "No recipes found!"} />}
+    {!hasError && !showInitialLoader && <>
+      <div className="mb-4 flex flex-col items-start md:flex-row md:items-center justify-between gap-2 md:gap-4">
+        <p className="md:ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
+        <RecipeModal type="new" />
+      </div>
+      <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 no-scrollbar">
+        {recipees.map((recipe, index) => <RecipeDeatils
+          key={index}
+          recipe={recipe}
+          selected={selected}
+          setSelected={setSelected}
+        />)}
+      </div>
+      {selected && <Button
+        onClick={() => {
+          dispatch(saveRecipe(selected, index))
+          closeRef.current.click()
+        }}
+        variant="wz"
+        className="w-full"
+      >
+        Add
+      </Button>}
+    </>}
     <DialogClose ref={closeRef} />
   </div>
 }

@@ -2,11 +2,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import {
+  fetchData as fetchDataServer,
+  sendData as sendDataServer
+} from "@/lib/api";
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 // Client-side API functions
 const fetchData = async (endpoint) => {
+  return fetchDataServer(endpoint)
   try {
     const TOKEN = Cookies.get("token");
 
@@ -31,7 +36,8 @@ const fetchData = async (endpoint) => {
   }
 };
 
-const sendData = async (endpoint, data, method = "POST") => {
+const sendData = async (...args) => { // ...args = {endpoint, data, method = "POST"}
+  return sendDataServer(...args)
   try {
     const TOKEN = Cookies.get("token");
 
@@ -88,8 +94,8 @@ export const useWallet = () => {
       const transactionsArray = Array.isArray(transactionsData.data)
         ? transactionsData.data
         : Array.isArray(transactionsData.data?.transactions)
-        ? transactionsData.data.transactions
-        : [];
+          ? transactionsData.data.transactions
+          : [];
 
       setTransactions(transactionsArray);
     } catch (err) {

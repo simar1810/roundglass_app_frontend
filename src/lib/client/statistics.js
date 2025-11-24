@@ -1,3 +1,5 @@
+import { extractNumber } from "../utils";
+
 export function calculateBMI({ height, heightUnit, weight, weightUnit }) {
   let heightInMeters;
   // if (height == null) throw new Error("Height in cms is required.");
@@ -98,9 +100,9 @@ export function generateWeightStandard({
 }) {
   try {
     if (["kg", "kgs"].includes(weightUnit?.toLowerCase())) {
-      return Number(weightInKgs) || Number(weight)
+      return extractNumber(weightInKgs) || extractNumber(weight)
     } else if (["pounds", "pound"].includes(weightUnit?.toLowerCase())) {
-      return (Number(weightInPounds) * 0.453592).toFixed(2) || Number(weight)
+      return (extractNumber(weightInPounds) * 0.453592).toFixed(2) || extractNumber(weight)
     } else {
       throw new Error("Please provide correct height unit");
     }
@@ -500,4 +502,92 @@ export function calculateBodyAge({
       }
     }
   }
+}
+
+export function calculateSubcutaneousFat(data) {
+  const { age = 1, gender = "male", bodyComposition = "Medium" } = data
+  const bmi = calculateBMIFinal(data)
+  const g = gender.toLowerCase();
+  if (g !== "male" && g !== "female") {
+    throw new Error('gender must be "male" or "female"');
+  }
+
+  const bc = bodyComposition.toLowerCase();
+  if (bc !== "slim" && bc !== "medium" && bc !== "fat") {
+    throw new Error('bodyComposition must be "slim", "medium", or "fat"');
+  }
+
+  if (bmi < 0 || age < 0 || age > 120) {
+    throw new Error("Invalid bmi/age values.");
+  }
+
+  const sexInt = g === "male" ? 1 : 0;
+  let totalBodyFat = 1.20 * bmi + 0.23 * age - 10.8 * sexInt - 5.4;
+
+  totalBodyFat += bc === "slim" ? -1.5 : bc === "fat" ? 1.5 : 0.0;
+
+  const minBF = g === "male" ? 3.0 : 8.0;
+  const maxBF = g === "male" ? 45.0 : 55.0;
+  totalBodyFat = Math.min(Math.max(totalBodyFat, minBF), maxBF);
+
+  let subQFrac = g === "male" ? 0.74 : 0.86;
+
+  const ageOver20 = age > 20 ? age - 20 : 0;
+  subQFrac -= g === "male" ? 0.002 * ageOver20 : 0.001 * ageOver20;
+
+  if (bmi > 25) {
+    subQFrac += Math.min(0.003 * (bmi - 25), 0.06);
+  } else if (bmi < 20) {
+    subQFrac -= Math.min(0.003 * (20 - bmi), 0.03);
+  }
+
+  subQFrac += bc === "slim" ? 0.005 : bc === "fat" ? 0.015 : 0.0;
+  subQFrac = Math.min(Math.max(subQFrac, 0.55), 0.95);
+
+  const subcutaneous = totalBodyFat * subQFrac;
+  const visceral = totalBodyFat * (1.0 - subQFrac);
+
+  const r1 = (v) => parseFloat(v.toFixed(1));
+
+  return {
+    subcutaneousPercent: r1(subcutaneous),
+    visceralPercent: r1(visceral),
+    totalBodyFatPercent: r1(totalBodyFat),
+  };
+}
+
+const healthMatrixFields = [
+  "visceral_fat", "rm", "muscle", "fat",
+  "ideal_weight", "sub_fat", "bodyAge",
+  "weight", "height", "bmi", "body_composition",
+]
+
+function isInvalidField(value) {
+  if (value === "") return true;
+
+  const num = Number(value);
+  if (!Number.isFinite(num)) return true;
+
+  const parts = value?.toString().split(".") || [];
+  if (parts.length === 2 && parts[1].length > 1) return true;
+
+  return false;
+}
+
+export function validStatistics(matrices) {
+  let index = 0
+  for (const matrix of matrices) {
+    index++
+    for (const field of healthMatrixFields) {
+      if (isInvalidField(matrix[field])) {
+        return false
+      }
+    }
+  }
+
+  // for (const field of healthMatrixFields) {
+  //   if (isInvalidField(matrices[field])) return false
+  // }
+
+  return true
 }

@@ -14,6 +14,12 @@ import {
 // Create styles
 const getStyles = function (brand) {
   return StyleSheet.create({
+    coachLogo: {
+      width: 100,
+      height: 100,
+      alignSelf: "left",
+      objectFit: "contain"
+    },
     page: {
       flexDirection: "column",
       justifyContent: "start",
@@ -494,7 +500,7 @@ function Comparison3({ brand, styles, data }) {
       size="A4"
       style={styles.page}
     >
-      <Text style={styles.sectionTitle}>Body Weight</Text>
+      <Text style={styles.sectionTitle}>BMI</Text>
       <View style={{ height: 1, backgroundColor: brand.primaryColor }} />
       <View style={styles.bodyWeightCircle}>
         <Text style={styles.bodyWeightText}>{bmi}</Text>
@@ -626,7 +632,14 @@ function Comparison4({ brand, styles, data }) {
           {/* Left Column: Normal Range (Light Green Box) */}
           <View style={styles.normalBox}>
             <Text style={styles.whyHeader}>If Within Normal Range?</Text>
-            <Text style={styles.whyText}>muscle_8</Text>
+            <Text style={styles.whyText}>
+              Maintaining a healthy muscle mass supports optimal strength, mobility,
+              and metabolism. It helps stabilize joints, improve posture, and enhance
+              physical performance in daily activities. Balanced muscle levels also
+              contribute to better glucose control and reduced risk of injury. Continue
+              regular exercise, a protein-rich diet, and active habits to sustain this
+              healthy balance.
+            </Text>
           </View>
 
           {/* Right Column: Overweight Risk (Red Box) */}
@@ -861,6 +874,7 @@ function Comparison7({ brand, styles, data }) {
     coachProfileImage,
     coachWeightLoss
   } = data;
+  const { coachLogo } = brand
   return (
     <Page
       size="A4"
@@ -937,6 +951,11 @@ function Comparison7({ brand, styles, data }) {
           <Text style={styles.coachName}>{coachName}</Text>
           <Text style={styles.goalText}>{coachDescription}</Text>
         </View>
+        <Image
+          style={styles.coachLogo}
+          source={coachLogo}
+          src={coachLogo}
+        />
       </View>
       <Text style={{ ...styles.disclaimer, marginTop: "auto", marginBottom: 32, lineHeight: 1.2 }}>
         Disclaimer: This report does not provide any medical advice & is not a

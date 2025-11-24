@@ -9,13 +9,14 @@ import {
 import WeeklyMealCreation from "./WeeklyMealCreation";
 import CustomMealMetaData from "./CustomMealMetaData";
 import SelectMeals from "./SelectMeals";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
 import { useRouter } from "next/navigation";
 import { _throwError, format24hr_12hr } from "@/lib/formatter";
 import { SquarePen } from "lucide-react";
+import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 
 export default function Stage2() {
 	const [loading, setLoading] = useState(false);
@@ -24,6 +25,53 @@ export default function Stage2() {
 	const { cache } = useSWRConfig();
 
 	const router = useRouter();
+
+	const mealsForSelectedType = useMemo(() => {
+		const plan = state.selectedPlans?.[state.selectedPlan] ?? {};
+		  const normalizedMeals = [
+			  { mealType: "breakfast", meals: plan.breakfast },
+    		  { mealType: "lunch", meals: plan.lunch },
+    		  { mealType: "dinner", meals: plan.dinner },
+    		  { mealType: "snacks", meals: plan.snacks },
+		].filter(item => Array.isArray(item.meals) && item.meals.length > 0);
+  		const mealTypesArray = Array.isArray(plan)
+    		? plan
+    		: normalizedMeals;
+		const selected = mealTypesArray.find(
+			(item) => item?.mealType === state.selectedMealType
+		);
+		return Array.isArray(selected?.meals) ? selected.meals : [];
+	}, [state.selectedPlans, state.selectedPlan, state.selectedMealType]);
+
+	const totals = useMemo(() => {
+		const parseNum = (val) => {
+			if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+			if (typeof val === "string") {
+				const n = parseFloat(val.replace(/,/g, ""));
+				return Number.isFinite(n) ? n : 0;
+			}
+			return 0;
+		};
+
+		return mealsForSelectedType.reduce(
+			(acc, meal) => {
+				const caloriesVal =
+					typeof meal?.calories === "object"
+						? meal?.calories?.total
+						: meal?.calories;
+				const proteinVal = meal?.protein ?? meal?.calories?.proteins;
+				const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
+				const fatsVal = meal?.fats ?? meal?.calories?.fats;
+
+				acc.calories += parseNum(caloriesVal);
+				acc.protein += parseNum(proteinVal);
+				acc.carbohydrates += parseNum(carbsVal);
+				acc.fats += parseNum(fatsVal);
+				return acc;
+			},
+			{ calories: 0, protein: 0, carbohydrates: 0, fats: 0 }
+		);
+	}, [mealsForSelectedType]);
 
 	async function saveCustomWorkout({
 		draft
@@ -37,9 +85,21 @@ export default function Stage2() {
 				}
 
 				for (const day in state.selectedPlans) {
-					if (state.selectedPlans[day]?.length === 0)
+					const dayPlan = state.selectedPlans[day];
+					const normalizedMeals = [
+    					{ mealType: "breakfast", meals: dayPlan.breakfast },
+    					{ mealType: "lunch", meals: dayPlan.lunch },
+    					{ mealType: "dinner", meals: dayPlan.dinner },
+    					{ mealType: "snacks", meals: dayPlan.snacks },
+					].filter(item => Array.isArray(item.meals) && item.meals.length > 0);
+					const mealTypesArray = Array.isArray(dayPlan)
+						? dayPlan
+						: Array.isArray(normalizedMeals)
+							? normalizedMeals
+							: [];
+					if (mealTypesArray.length === 0)
 						_throwError(`There are no plans assigned for the day - ${day}!`);
-					for (const mealType of state.selectedPlans[day]) {
+					for (const mealType of mealTypesArray) {
 						if (!mealType.meals || mealType.meals?.length === 0)
 							_throwError(
 								`On ${day}, for ${mealType.mealType || "First Meal Type"
@@ -47,14 +107,19 @@ export default function Stage2() {
 							);
 						for (const meal of mealType.meals) {
 							delete meal.isNew;
-							for (const field of ["time", "dish_name"]) {
-								if (!meal[field])
-									_throwError(
-										`${field} should be selected for all the meals. Not provided for ${mealType.mealType}`
-									);
-							}
+							// for (const field of ["time", "dish_name", "meal_time"]) {
+							if (!meal.time && !meal.meal_time)
+								_throwError(
+									`Time should be selected for all the meals. Not provided for ${mealType.mealType}`
+								);
+							if (!meal.dish_name)
+								_throwError(
+									`Dish should be selected for all the meals. Not provided for ${mealType.mealType}`
+								);
+							// }
 							// if (!meal._id && !meal.mealId) _throwError(`Please select a dish from the options`);
-							meal.meal_time = format24hr_12hr(meal.time);
+							meal.meal_time = format24hr_12hr(meal.time || meal.meal_time);
+
 						}
 					}
 				}
@@ -183,13 +248,20 @@ export default function Stage2() {
 	return (
 		<div>
 			<div className="flex flex-col gap-y-4">
-				<div className="grid grid-cols-2 divide-x-2">
+				<DisplayMealStats meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }} />
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0 md:divide-x-2">
 					<CustomMealMetaData />
-					<div className="pl-8">
+					<div className="md:pl-8">
 						{component}
 						<SelectMeals
 							key={`${state.selectedPlan}${state.selectedMealType}`}
 						/>
+						<div className="mt-4 rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
+							<div>{totals.calories.toFixed(2)} Calories</div>
+							<div>{totals.protein.toFixed(2)} Protein</div>
+							<div>{totals.fats.toFixed(2)} Fats</div>
+							<div>{totals.carbohydrates.toFixed(2)} Carbs</div>
+						</div>
 						<div className="mt-10 grid grid-cols-2 gap-4">
 							<Button
 								disabled={loading}

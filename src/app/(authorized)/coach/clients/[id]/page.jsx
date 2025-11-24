@@ -11,7 +11,7 @@ export default function Page() {
   const { id } = useParams();
   const { isLoading, error, data } = useSWR(`clientDetails/${id}`, () => getAppClientPortfolioDetails(id));
   if (isLoading) return <ContentLoader />
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
   const clientData = data.data;
   clientData.weightLoss = data.weightLost;
   return <div className="mt-4 grid md:grid-cols-2 items-start gap-4">

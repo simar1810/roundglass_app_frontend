@@ -2,368 +2,356 @@ import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
 import ScheduleNotificationWrapper from "@/components/modals/client/ScheduleNotification"
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
+import SelectMultiple from "@/components/SelectMultiple"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { DAYS, DAYS_EEEE } from "@/config/data/ui"
 import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
+import { getRecentNotifications, getReocurrNotification } from "@/lib/nudges"
 import { cn } from "@/lib/utils"
-import { Pen, Trash2, Calendar, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, EllipsisVertical, Pen, Trash2 } from "lucide-react"
 import { useParams } from "next/navigation"
+import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
-import { format, parse, getDay, isAfter, isToday, isTomorrow, isYesterday, subDays } from "date-fns"
-import { useState } from "react"
-import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache"
-
-const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-function groupNudgesByDay(notifications) {
-  const groupedNudges = {
-    Sunday: [],
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-    Saturday: []
-  };
-
-  notifications.forEach(notification => {
-    if (notification.schedule_type === "reocurr" && notification.reocurrence) {
-      // For recurring nudges, add to each selected day
-      notification.reocurrence.forEach(dayIndex => {
-        const dayName = days[dayIndex];
-        if (dayName) {
-          groupedNudges[dayName].push(notification);
-        }
-      });
-    } else if (notification.schedule_type === "schedule" && notification.date) {
-      // For scheduled nudges, determine the day from the date
-      try {
-        const parsedDate = parse(notification.date, "dd-MM-yyyy", new Date());
-        const dayIndex = getDay(parsedDate);
-        const dayName = days[dayIndex];
-        if (dayName) {
-          groupedNudges[dayName].push(notification);
-        }
-      } catch (error) { }
-    }
-  });
-
-  return groupedNudges;
-}
-
-function getRecentNudges(notifications) {
-  // Sort all notifications by date (most recent first)
-  const sortedNotifications = notifications.sort((a, b) => {
-    if (a.schedule_type === "schedule" && b.schedule_type === "schedule") {
-      try {
-        const dateA = parse(a.date, "dd-MM-yyyy", new Date());
-        const dateB = parse(b.date, "dd-MM-yyyy", new Date());
-        return dateB - dateA; // Most recent first
-      } catch {
-        return 0;
-      }
-    } else if (a.schedule_type === "reocurr" && b.schedule_type === "reocurr") {
-      // For recurring nudges, sort by creation time or keep original order
-      return 0;
-    } else if (a.schedule_type === "reocurr") {
-      return -1; // Recurring nudges first
-    } else {
-      return 1;
-    }
-  });
-
-  // Return only the 4 most recent
-  return sortedNotifications.slice(0, 4);
-}
-
-function RecentSection({ nudges }) {
-  return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-4 h-4 text-green-600" />
-        <h3 className="font-semibold text-lg text-gray-800">Recent Nudges</h3>
-        <Badge variant="secondary" className="text-xs">
-          {nudges.length} {nudges.length === 1 ? 'nudge' : 'nudges'}
-        </Badge>
-      </div>
-      <div className="space-y-2">
-        {nudges.map(notification => (
-          <NotificationItem key={notification._id || notification.id} item={notification} />
-        ))}
-      </div>
-    </div>
-  );
-}
+import DeleteClientNudges from "./DeleteClientNudges"
 
 export default function ClientNudges() {
+  const [selected, setSelected] = useState([])
   const { id } = useParams()
-  const { isLoading, data, error } = useSWR(`client/nudges/${id}`, () => retrieveClientNudges(id, { limit: Infinity }))
-  const [selectedDays, setSelectedDays] = useState([])
-
-  const { getCachedNotificationsForClientByContext } = useNotificationSchedulerCache()
-  const cachedNotifications = getCachedNotificationsForClientByContext(id, 'client_nudges')
+  const { isLoading, data, error } = useSWR(
+    `client/nudges/${id}`,
+    () => retrieveClientNudges(id, { limit: 10000000000 })
+  )
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error.message || data.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
 
-  const apiNotifications = data?.data?.results || []
-  const allNotifications = [...cachedNotifications, ...apiNotifications]
+  const notifications = data.data?.results || []
 
-  const notifications = allNotifications
-    .filter((notification, index, self) =>
-      index === self.findIndex(n =>
-        n.subject === notification.subject && n.message === notification.message
-      )
-    )
-    .sort((a, b) => {
-      const timeA = a.createdAt || a.createdDate || 0
-      const timeB = b.createdAt || b.createdDate || 0
-      return timeB - timeA
-    })
-  const groupedNudges = groupNudgesByDay(notifications)
-  const recentNudges = getRecentNudges(notifications)
-
-  const toggleDay = (day) => {
-    setSelectedDays(prev =>
-      prev.includes(day)
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    )
-  }
-
-  const selectAllDays = () => {
-    setSelectedDays(days)
-  }
-
-  const clearAllDays = () => {
-    setSelectedDays([])
-  }
-
-  // Determine what to show based on selection
-  const showRecentView = selectedDays.length === 0
-  const daysToShow = selectedDays.length === 0 ? [] : selectedDays
-
-  return <div className="bg-white border-1 p-4 mt-8 rounded-[16px]">
-    <div className="mb-4 flex items-center justify-between">
-      <div>
+  return <div className="bg-white px-4 py-4 border-1 rounded-[10px] mt-4  w-[90vw] md:w-auto">
+    <div className="flex items-center justify-between gap-4">
+      <div className="mr-auto">
         <h4>Client Nudges</h4>
-        <p className="text-sm text-[#808080]">{notifications.length} total</p>
+        <p className="text-sm text-[#808080] mt-2">{notifications.length ?? <>0</>} Total</p>
       </div>
-      <ScheduleNotificationWrapper selectedClients={[id]}>
-        <Button variant="wz">
-          Add
-        </Button>
-      </ScheduleNotificationWrapper>
+      <DeleteClientNudges clientId={id} />
+      <ScheduleNotificationWrapper
+        selectedClients={id}
+      />
     </div>
-
-    {/* Day Filter Buttons */}
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm font-medium text-gray-700">Filter by day:</span>
-        <Button
-          variant={showRecentView ? "wz" : "outline"}
-          size="sm"
-          onClick={clearAllDays}
-          className="text-xs"
-        >
-          Recent
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={selectAllDays}
-          className="text-xs"
-        >
-          All Days
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {days.map(day => (
-          <Button
-            key={day}
-            variant={selectedDays.includes(day) ? "wz" : "outline"}
-            size="sm"
-            onClick={() => toggleDay(day)}
-            className={cn(
-              "text-xs font-medium transition-colors",
-              selectedDays.includes(day)
-                ? "bg-[var(--accent-1)] text-white hover:bg-[var(--accent-1)]/80"
-                : "hover:bg-gray-50"
-            )}
-          >
-            {day}
-            {groupedNudges[day]?.length > 0 && (
-              <Badge
-                variant="secondary"
-                className="ml-2 text-[10px] px-1 py-0"
-              >
-                {groupedNudges[day].length}
-              </Badge>
-            )}
-          </Button>
-        ))}
-      </div>
-    </div>
-
-    <div className="space-y-6">
-      {showRecentView ? (
-        // Show recent nudges grouped by day
-        <>
-          {recentNudges.length > 0 ? (
-            <RecentSection nudges={recentNudges} />
-          ) : (
-            <Card className="p-6 text-center text-muted-foreground">
-              No recent nudges found.
-            </Card>
-          )}
-        </>
-      ) : (
-        // Show selected days
-        <>
-          {daysToShow.map(day => {
-            const dayNudges = groupedNudges[day];
-            if (dayNudges.length === 0) return null;
-
-            return (
-              <DaySection key={day} dayName={day} nudges={dayNudges} />
-            );
-          })}
-          {daysToShow.every(day => groupedNudges[day]?.length === 0) && (
-            <Card className="p-6 text-center text-muted-foreground">
-              No nudges found for the selected days.
-            </Card>
-          )}
-        </>
-      )}
-
-      {notifications.length === 0 && <Card className="p-6 text-center text-muted-foreground">
-        No notifications found.
-      </Card>}
-    </div>
+    {notifications.length === 0
+      ? <CreateFirstNotification />
+      :
+      <Tabs defaultValue="recent" className="">
+        <Header
+          selected={selected}
+          setSelected={setSelected}
+        />
+        <NotificationRecent
+          notifications={notifications}
+          selected={selected}
+        />
+        <NotificationAllDays
+          notifications={notifications.filter(notif => notif.schedule_type === "reocurr")}
+          selected={selected}
+        />
+        <NotificationSchedule
+          notifications={notifications.filter(notif => notif.schedule_type === "schedule")}
+          selected={selected}
+        />
+      </Tabs>}
   </div>
 }
 
-function DaySection({ dayName, nudges }) {
+function CreateFirstNotification() {
+  return <div className="h-40 p-4 mt-4 flex items-center justify-center bg-[var(--comp-1)] border-1 text-sm text-[#808080] font-bold rounded-[4px]">
+    No Notifications found!
+  </div>
+}
+
+const tabOptions = [
+  { id: 1, name: "Recent", value: "recent" },
+  { id: 2, name: "Reocurr", value: "all-days" },
+  { id: 3, name: "Schedule", value: "schedule" },
+]
+
+function Header({
+  selected,
+  setSelected
+}) {
+  return <div className="my-4 flex flex-wrap items-center gap-4 select-none">
+    <TabsList className="mr-auto bg-transpatent gap-2">
+      {tabOptions.map(tab =>
+        <TabsTrigger
+          key={tab.id}
+          className="md:min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+             data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
+             data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
+          value={tab.value}
+        >
+          {tab.name}
+        </TabsTrigger>)}
+    </TabsList>
+    <SelectMultiple
+      label="Days"
+      align="top"
+      options={DAYS_EEEE.map((day, idx) => ({
+        id: idx,
+        name: day,
+        value: day
+      }))}
+      value={selected}
+      onChange={value => setSelected(value)}
+      
+    />
+  </div>
+}
+
+function NotificationRecent({
+  notifications,
+  selected
+}) {
+  const [paginate, setPaginate] = useState({
+    page: 1,
+    limit: 5
+  })
+  const sortedNotifications = getRecentNotifications(
+    notifications,
+    selected,
+    paginate
+  )
+
+  return <TabsContent
+    value="recent"
+    className="bg-[var(--comp-1)] text-sm px-4 py-2 border-1 rounded-[6px]"
+  >
+    <p className="font-bold text-[16px] mb-2">Recent Notifications</p>
+    {sortedNotifications.length === 0 && <NoNotificationFound />}
+    {sortedNotifications.map(notif => <NotificationItem
+      key={notif._id}
+      notif={notif}
+    />)}
+    {sortedNotifications.length > 0 && <Paginate
+      paginate={paginate}
+      setPaginate={setPaginate}
+      totalPages={Math.ceil(notifications.length / paginate.limit)}
+    />}
+  </TabsContent>
+}
+
+function NotificationAllDays({
+  notifications,
+  selected,
+}) {
+  const [paginate, setPaginate] = useState({
+    page: 1,
+    limit: 5
+  })
+  const sortedNotifications = getReocurrNotification(
+    notifications,
+    selected,
+    paginate
+  )
+
+  return <TabsContent
+    value="all-days"
+    className="bg-[var(--comp-1)] text-sm px-4 py-2 border-1 rounded-[6px]"
+  >
+    <p className="font-bold text-[16px] mb-2">Reocurr Notifications</p>
+    {sortedNotifications.length === 0 && <NoNotificationFound />}
+    {sortedNotifications.map(notif => <NotificationItem
+      key={notif._id}
+      notif={notif}
+    />)}
+    {sortedNotifications.length > 0 && <Paginate
+      paginate={paginate}
+      setPaginate={setPaginate}
+      totalPages={Math.ceil(notifications.length / paginate.limit)}
+    />}
+  </TabsContent>
+}
+
+function NotificationSchedule({
+  notifications,
+  selected,
+}) {
+  const [paginate, setPaginate] = useState({
+    page: 1,
+    limit: 5
+  })
+  const sortedNotifications = getReocurrNotification(
+    notifications,
+    selected,
+    paginate
+  )
+
+  return <TabsContent
+    value="schedule"
+    className="bg-[var(--comp-1)] text-sm px-4 py-2 border-1 rounded-[6px]"
+  >
+    <p className="font-bold text-[16px] mb-2">Schedule Notifications</p>
+    {sortedNotifications.length === 0 && <NoNotificationFound />}
+    {sortedNotifications.map(notif => <NotificationItem
+      key={notif._id}
+      notif={notif}
+    />)}
+    {sortedNotifications.length > 0 && <Paginate
+      paginate={paginate}
+      setPaginate={setPaginate}
+      totalPages={Math.ceil(notifications.length / paginate.limit)}
+    />}
+  </TabsContent>
+}
+
+function NotificationItem({ notif }) {
+  const { id } = useParams();
+
+  const isSeen = notif?.isRead;
+  const formattedTime = notif?.time || "--:--";
+  const formattedDate = notif?.date || "--/--/----";
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Calendar className="w-4 h-4 text-blue-600" />
-        <h3 className="font-semibold text-lg text-gray-800">{dayName}</h3>
-        <Badge variant="secondary" className="text-xs">
-          {nudges.length} {nudges.length === 1 ? 'nudge' : 'nudges'}
-        </Badge>
-      </div>
-      <div className="space-y-2">
-        {nudges.map(notification => (
-          <NotificationItem key={notification._id || notification.id} item={notification} />
-        ))}
+    <div
+      className={cn(
+        "border rounded-2xl px-4 py-3 mb-3 flex items-start justify-between transition hover:shadow-sm",
+        isSeen ? "bg-white" : "bg-[#f9fafb]"
+      )}
+    >
+      <div className="flex-1">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="flex-1">
+            <p className="font-bold text-gray-900 text-sm md:!text-lg">
+              {notif.subject || "Untitled Notification"}
+            </p>
+            {/* <NotificationReadStatus isSeen={isSeen} /> */}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 ml-2 shrink-0"
+              >
+                <EllipsisVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                <ScheduleNotificationWrapper
+                  selectedClients={[id]}
+                  defaultPayload={notif}
+                >
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                  >
+                    <Pen className="w-4 h-4 text-gray-600" />
+                    <span>Edit notification</span>
+                  </button>
+                </ScheduleNotificationWrapper>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                {/* <ScheduleNotificationWrapper
+                  defaultPayload={{
+                    ...notif,
+                    _id: undefined
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                  >
+                    <Copy className="w-4 h-4 text-gray-600" />
+                    <span>Copy notification</span>
+                  </button>
+                </ScheduleNotificationWrapper> */}
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={e => e.preventDefault()}
+                className="p-0"
+              >
+                <DeleteClientNotification id={notif._id}>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-600" />
+                      <span>Delete notification</span>
+                    </button>
+                  </AlertDialogTrigger>
+                </DeleteClientNotification>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <p className="text-sm text-gray-600 line-clamp-2">
+          {notif.message || "No message provided."}
+        </p>
+
+        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+          <Badge className="capitalize text-[10px] font-bold">{notif.schedule_type}</Badge>
+          {notif.schedule_type === "schedule" && (
+            <span>
+              📅 {formattedDate} •
+            </span>
+          )}
+          <span>🕒 {formattedTime}</span>
+          {notif.notificationType && (
+            <span className="px-2 py-0.5 bg-gray-100 rounded-full border text-gray-700">
+              {notif.notificationType}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-export function NotificationItem({ item = {} }) {
-  const { id } = useParams()
-  const { _id, message, subject, isRead, notificationType, schedule_type, time, date, createdAt } = item;
+function NotificationReadStatus({ isSeen }) {
+  if (isSeen) return <Badge className="text-green-500 font-bold px-1 py-[2px] text-[10px] bg-transparent">
+    Seen
+    <span className="h-2 w-2 bg-green-500 rounded-full inline-block ml-1" />
+  </Badge>
 
-  const isCached = createdAt && !_id;
-  const formatTime = (timeStr) => {
-    if (!timeStr) return "";
-    try {
-      const time = timeStr.includes(':') ? timeStr.substring(0, 5) : timeStr;
-      return time;
-    } catch {
-      return timeStr;
-    }
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    try {
-      return format(parse(dateStr, "dd-MM-yyyy", new Date()), "MMM dd, yyyy");
-    } catch {
-      return dateStr;
-    }
-  };
-
-  return (
-    <Card
-      className={cn("p-3 bg-white border border-gray-200 hover:shadow-sm transition-shadow", !isRead && "border-primary/20 ring-1 ring-primary/20")}
-      role="article"
-      aria-labelledby={`notif-${_id}-title`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            {!isRead ? (
-              <Badge variant="outline" className="text-[8px] font-bold border-primary/30 bg-primary/10 text-primary" aria-label="Unread">
-                Unread
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-[8px] font-bold" aria-label="Read">
-                Read
-              </Badge>
-            )}
-
-            {schedule_type ? (
-              <Badge variant="wz_fill" className="text-[8px] font-bold capitalize">
-                {schedule_type}
-              </Badge>
-            ) : null}
-
-            {time && (
-              <div className="flex items-center gap-1 text-xs text-gray-600">
-                <Clock className="w-3 h-3" />
-                <span>{formatTime(time)}</span>
-              </div>
-            )}
-
-            {date && schedule_type === "schedule" && (
-              <div className="flex items-center gap-1 text-xs text-gray-600">
-                <Calendar className="w-3 h-3" />
-                <span>{formatDate(date)}</span>
-              </div>
-            )}
-          </div>
-
-          <h3 id={`notif-${_id}-title`} className="text-pretty text-base font-medium mb-1">
-            {subject || "(no subject)"}
-          </h3>
-
-          <p className="text-sm leading-tight text-[#808080]">
-            {message}
-          </p>
-        </div>
-        <div className="shrink-0 flex items-center gap-2">
-          <ScheduleNotificationWrapper selectedClients={[id]} defaultPayload={item}>
-            <Pen className="w-[24px] h-[24px] text-white bg-[var(--accent-1)] p-[4px] rounded-[4px] cursor-pointer hover:bg-[var(--accent-1)]/80" />
-          </ScheduleNotificationWrapper>
-          <DeleteClientNotification id={item._id} />
-        </div>
-      </div>
-    </Card>
-  )
+  return <Badge className="text-red-500 font-bold px-1 py-[2px] text-[10px] bg-transparent">
+    Unseen
+    <span className="h-2 w-2 bg-red-500 rounded-full inline-block ml-1" />
+  </Badge>
 }
 
-function DeleteClientNotification({ id }) {
-  const { removeNotificationFromCache } = useNotificationSchedulerCache()
-
+function DeleteClientNotification({ id, children }) {
+  const { id: clientId } = useParams()
   async function deleteNotification(setLoading, closeBtnRef) {
     try {
       setLoading(true);
       const response = await sendData("app/notifications-schedule", { actionType: "DELETE", id }, "PUT");
       if (response.status_code !== 200) throw new Error(response.message);
-
-      removeNotificationFromCache(id);
-
       toast.success(response.message);
       closeBtnRef.current.click();
-      location.reload();
+      mutate(`client/nudges/${clientId}`)
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -374,8 +362,98 @@ function DeleteClientNotification({ id }) {
     description="Are you sure of deleting this notification!"
     action={(setLoading, btnRef) => deleteNotification(setLoading, btnRef)}
   >
-    <AlertDialogTrigger>
-      <Trash2 className="w-[24px] h-[24px] text-white bg-[var(--accent-2)] p-[4px] rounded-[4px] cursor-pointer hover:bg-[var(--accent-2)]/80" />
-    </AlertDialogTrigger>
+    {!children && <AlertDialogTrigger asChild>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+      >
+        <Trash2 className="w-4 h-4 text-[var(--accent-2)]" />
+      </Button>
+    </AlertDialogTrigger>}
+    {children}
   </DualOptionActionModal>
+}
+
+function Paginate({
+  paginate = {},
+  setPaginate,
+  totalPages = 10
+}) {
+  return <div className="mt-4 flex items-center justify-between gap-4">
+    <Select
+      value={paginate.limit}
+      onValueChange={value => setPaginate({ ...paginate, limit: value })}
+    >
+      <SelectTrigger className="bg-white">
+        <SelectValue value={paginate.limit} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={5}>5</SelectItem>
+        <SelectItem value={10}>10</SelectItem>
+        <SelectItem value={15}>15</SelectItem>
+      </SelectContent>
+    </Select>
+    <PaginatePages
+      paginate={paginate}
+      setPaginate={setPaginate}
+      totalPages={totalPages}
+    />
+  </div>
+}
+
+function PaginatePages({ paginate, setPaginate, totalPages = 20 }) {
+  const { page } = paginate;
+
+  const handlePageChange = (value) => {
+    if (value < 1 || value > totalPages) return;
+    setPaginate({ ...paginate, page: value });
+  };
+
+  const startPage = Math.floor((page - 1) / 4) * 4 + 1;
+  const endPage = Math.min(startPage + 3, totalPages);
+  const visiblePages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+
+  return (
+    <div className="bg-white flex items-center justify-center mt-4">
+      <Button
+        size="icon"
+        variant="outline"
+        onClick={() => handlePageChange(page - 1)}
+        disabled={page === 1}
+        className="rounded-none w-8 h-8"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
+      {visiblePages.map((num) => (
+        <Button
+          key={num}
+          onClick={() => handlePageChange(num)}
+          variant={num === page ? "default" : "outline"}
+          className={`w-8 h-8 text-sm rounded-none transition-all ${num === page
+            ? "bg-black text-white hover:bg-black"
+            : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+        >
+          {num}
+        </Button>
+      ))}
+      <Button
+        size="icon"
+        variant="outline"
+        onClick={() => handlePageChange(page + 1)}
+        disabled={page === totalPages}
+        className="rounded-none w-8 h-8"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+function NoNotificationFound() {
+  return <div className="h-32 flex flex-col items-center justify-center text-center text-gray-500">
+    <div className="text-sm font-medium">No notifications found</div>
+    <p className="text-xs text-gray-400 mt-1">Nothing here yet. Create your first notification.</p>
+  </div>
 }

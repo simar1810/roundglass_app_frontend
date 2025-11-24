@@ -1,4 +1,4 @@
-import { differenceInYears, format, parse } from "date-fns"
+import { differenceInYears, format, isValid, parse } from "date-fns"
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics"
 
 function calcAge(data) {
@@ -75,6 +75,250 @@ export function mealPlanDetailsPDFData(plan) {
     mealTypes: ['Breakfast', 'Lunch', 'Snack', 'Dinner', 'After Dinner'],
     meals: []
   }
+}
+
+function formatCustomPlanLabel(planKey, mode, explicitLabel) {
+  if (explicitLabel) return explicitLabel;
+  if (!planKey) return "";
+
+  if (mode === "monthly") {
+    const parsedDate = parse(planKey, "dd-MM-yyyy", new Date());
+    if (isValid(parsedDate)) {
+      return format(parsedDate, "LLL dd, yyyy EEE");
+    }
+  }
+
+  if (mode === "weekly") {
+    return planKey.charAt(0).toUpperCase() + planKey.slice(1);
+  }
+
+  if (mode === "daily") {
+    return "Daily Schedule";
+  }
+
+  return planKey;
+}
+
+function normalizeMealEntries(planForDay) {
+  if (!planForDay) return [];
+  if (Array.isArray(planForDay)) return planForDay;
+  if (Array.isArray(planForDay.meals)) return planForDay.meals;
+  return [];
+}
+
+function formatMacroValue(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return null;
+    const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+    const stringified = `${rounded}`;
+    if (!stringified.includes(".")) return stringified;
+    return stringified.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) return formatMacroValue(numeric);
+    return trimmed;
+  }
+  return null;
+}
+
+function resolveMacroValue(dish, key) {
+  if (!dish || typeof dish !== "object") return null;
+
+  const direct = dish[key];
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const caloriesField = dish.calories;
+  if (key === "calories") {
+    if (typeof caloriesField === "number" && Number.isFinite(caloriesField)) return caloriesField;
+    if (typeof caloriesField === "string" && caloriesField.trim()) return caloriesField.trim();
+    if (caloriesField && typeof caloriesField === "object") {
+      const nested = caloriesField.total ?? caloriesField.calories ?? caloriesField.value;
+      if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+      if (typeof nested === "string" && nested.trim()) return nested.trim();
+    }
+    return null;
+  }
+
+  if (caloriesField && typeof caloriesField === "object") {
+    const nestedKeys = [key];
+    if (key === "protein") nestedKeys.push("proteins");
+    if (key === "carbohydrates") nestedKeys.push("carbs");
+    if (key === "fats") nestedKeys.push("fat");
+
+    for (const nestedKey of nestedKeys) {
+      const nested = caloriesField[nestedKey];
+      if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+      if (typeof nested === "string" && nested.trim()) return nested.trim();
+    }
+  }
+
+  return null;
+}
+
+function buildMealItemsForPDF(mealEntry, { includeMacros = true } = {}) {
+  if (!mealEntry) return [];
+  const dishes = Array.isArray(mealEntry.meals) ? mealEntry.meals : [];
+
+  return dishes.map((dish, index) => {
+    const title = dish?.dish_name || dish?.name || dish?.title || `Item ${index + 1}`;
+
+    const detailsParts = [];
+    if (dish?.measure) detailsParts.push(dish.measure);
+    if (dish?.quantity) detailsParts.push(dish.quantity);
+    if (dish?.description) detailsParts.push(dish.description);
+
+    if (includeMacros) {
+      const macroParts = [];
+
+      const caloriesValue = formatMacroValue(resolveMacroValue(dish, "calories"));
+      const proteinValue = formatMacroValue(resolveMacroValue(dish, "protein"));
+      const carbsValue = formatMacroValue(resolveMacroValue(dish, "carbohydrates"));
+      const fatsValue = formatMacroValue(resolveMacroValue(dish, "fats"));
+
+      if (caloriesValue !== null) {
+        const label = typeof caloriesValue === "string" && /cal/i.test(caloriesValue)
+          ? caloriesValue
+          : `${caloriesValue} kcal`;
+        macroParts.push(label);
+      }
+
+      if (proteinValue !== null) {
+        const label = typeof proteinValue === "string" && /g\b/i.test(proteinValue)
+          ? proteinValue
+          : `${proteinValue}g`;
+        macroParts.push(`Protein ${label}`);
+      }
+
+      if (carbsValue !== null) {
+        const label = typeof carbsValue === "string" && /g\b/i.test(carbsValue)
+          ? carbsValue
+          : `${carbsValue}g`;
+        macroParts.push(`Carbs ${label}`);
+      }
+
+      if (fatsValue !== null) {
+        const label = typeof fatsValue === "string" && /g\b/i.test(fatsValue)
+          ? fatsValue
+          : `${fatsValue}g`;
+        macroParts.push(`Fats ${label}`);
+      }
+
+      if (macroParts.length) detailsParts.push(macroParts.join(", "));
+    }
+
+    return {
+      title,
+      details: detailsParts.filter(Boolean).join(" | ")
+    };
+  });
+}
+
+export function customMealDailyPDFData(customPlan, planKey, coach, options = {}) {
+  const { includeMacros = true } = options;
+
+  if (!customPlan || typeof customPlan !== "object") return null;
+
+  const plansRecord = customPlan?.plans || {};
+  const planEntries = Object.entries(plansRecord);
+  if (planEntries.length === 0) return null;
+
+  const generalNotesList = normalizeNotes(customPlan?.notes);
+  const mealTypeOrder = [];
+  const planSummaries = [];
+
+  let selectedSummary = null;
+
+  planEntries.forEach(([planKeyEntry, planValue]) => {
+    const normalizedMeals = normalizeMealEntries(planValue);
+    const planMeta = Array.isArray(planValue) ? {} : planValue || {};
+
+    const planMeals = normalizedMeals.map((mealEntry, index) => {
+      const dishes = Array.isArray(mealEntry?.meals) ? mealEntry.meals : [];
+      const firstTimedDish = dishes.find(dish => dish?.meal_time);
+
+      const mealType = mealEntry?.mealType || mealEntry?.title || `Meal ${index + 1}`;
+      if (mealType && !mealTypeOrder.includes(mealType)) {
+        mealTypeOrder.push(mealType);
+      }
+
+      return {
+        mealType,
+        timeWindow: mealEntry?.time || mealEntry?.meal_time || firstTimedDish?.meal_time || "",
+        items: buildMealItemsForPDF(mealEntry, { includeMacros }),
+        dishes,
+      };
+    });
+
+    const explicitLabel = planMeta?.dateLabel || planMeta?.displayDate || planMeta?.title;
+    const dateLabel = formatCustomPlanLabel(planKeyEntry, customPlan.mode, explicitLabel);
+    const perPlanNotes = normalizeNotes(planMeta?.notes);
+
+    const summary = {
+      key: planKeyEntry,
+      label: dateLabel,
+      meals: planMeals,
+      notes: perPlanNotes,
+    };
+
+    planSummaries.push(summary);
+
+    if (planKey && planKeyEntry === planKey) {
+      selectedSummary = summary;
+    }
+  });
+
+  if (!planSummaries.length) return null;
+
+  if (!selectedSummary) {
+    selectedSummary = planSummaries[0];
+  }
+
+  const scheduleMeals = selectedSummary.meals.map((meal, index) => ({
+    name: meal.mealType || `Meal ${index + 1}`,
+    timeWindow: meal.timeWindow,
+    items: meal.items,
+  }));
+
+  const selectedNotes = [
+    ...selectedSummary.notes,
+    ...generalNotesList,
+  ].filter(Boolean);
+
+  const uniqueMealTypes = mealTypeOrder.length
+    ? mealTypeOrder
+    : selectedSummary.meals.map(meal => meal.mealType).filter(Boolean);
+
+  return {
+    title: customPlan?.title || "Custom Meal Plan",
+    coachName: coach?.name || "",
+    dateLabel: selectedSummary.label,
+    meals: scheduleMeals,
+    notes: selectedNotes.length > 0 ? selectedNotes : undefined,
+    mode: customPlan?.mode || "daily",
+    plans: planSummaries,
+    mealTypes: uniqueMealTypes,
+    selectedPlanKey: selectedSummary.key,
+    generalNotes: generalNotesList,
+  };
+}
+
+function normalizeNotes(notes) {
+  if (Array.isArray(notes)) {
+    return notes
+      .map(note => (typeof note === "string" ? note.trim() : ""))
+      .filter(Boolean);
+  }
+
+  if (typeof notes === "string" && notes.trim()) {
+    return [notes.trim()];
+  }
+
+  return [];
 }
 
 export function invoicePDFData(order, coach) {

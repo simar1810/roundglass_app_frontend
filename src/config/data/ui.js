@@ -64,7 +64,7 @@ export const clientDetailsFields = [
       { id: 2, name: "Female", value: "female" },
     ]
   },
-  { id: 7, label: "Weight", name: "weight", type: 3 },
+  // { id: 7, label: "Weight", name: "weight", type: 3 },
   { id: 8, label: "Height", name: "height", type: 2 },
 ]
 
@@ -128,6 +128,12 @@ export const quickAddClientFormFields = [
 ]
 
 export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+
+export const DAYS_EEEE = [
+  "Sunday", "Monday", "Tuesday",
+  "Wednesday", "Thursday", "Friday",
+  "Saturday"
+];
 
 export const marathonTaskFields = [
   {

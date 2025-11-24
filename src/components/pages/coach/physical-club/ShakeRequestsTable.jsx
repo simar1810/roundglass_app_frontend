@@ -50,9 +50,10 @@ export default function ShakeRequestsTable({
                 {req.status === "requested" && (
                   <>
                     <ChangeClientAttendanceStatus
-                      date={req.date}
                       clientId={req.clientId}
                       status="present"
+                      date={req.date}
+                      servingNumber={req.servingNumber}
                     >
                       <Button
                         variant="outline"
@@ -62,9 +63,10 @@ export default function ShakeRequestsTable({
                       </Button>
                     </ChangeClientAttendanceStatus>
                     <ChangeClientAttendanceStatus
-                      date={req.date}
                       clientId={req.clientId}
                       status="absent"
+                      date={req.date}
+                      servingNumber={req.servingNumber}
                     >
                       <Button
                         variant="outline"

@@ -1,5 +1,6 @@
 import { addDays, format, parse } from "date-fns";
 import { followUpInitialState } from "../state-data/follow-up";
+import { calculateIdealWeightFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 
 export function followUpReducer(state, action) {
   switch (action.type) {
@@ -92,7 +93,7 @@ export function init(data) {
     healthMatrix: {
       ...followUpInitialState.healthMatrix,
       heightUnit: data.healthMatrix.heightUnit,
-      heightCms: data.healthMatrix.heightUnit.toLowerCase() === "cm"
+      heightCms: ["cm", "cms"].includes(data.healthMatrix.heightUnit.toLowerCase())
         ? data.healthMatrix.height
         : "",
       heightFeet: data.healthMatrix.heightUnit.toLowerCase() === "inches"
@@ -107,18 +108,16 @@ export function init(data) {
 }
 
 const fields = ["weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
-export function generateRequestPayload(state) {
+export function generateRequestPayload(state, forIdealWeight) {
   const payload = {
-    healthMatrix: {
-
-    }
+    healthMatrix: {}
   };
-  if (state.healthMatrix["weightUnit"].toLowerCase() === "kg") {
+  if (["kg", "kgs"].includes(state.healthMatrix["weightUnit"].toLowerCase())) {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInKgs);
   } else {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
   };
-  if (state.healthMatrix["heightUnit"].toLowerCase() === "cm") {
+  if (["cm", "cms"].includes(state.healthMatrix["heightUnit"].toLowerCase())) {
     payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
   } else {
     payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
@@ -126,6 +125,11 @@ export function generateRequestPayload(state) {
   for (const field of fields) {
     if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = String(state.healthMatrix[field]);
   }
+  payload.healthMatrix.ideal_weight = String(calculateIdealWeightFinal(forIdealWeight))
+  payload.healthMatrix.sub_fat = String(calculateSubcutaneousFat({
+    ...state,
+    ...state.healthMatrix
+  })?.subcutaneousPercent)
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
     : format(addDays(new Date(), 8), 'dd-MM-yyyy');

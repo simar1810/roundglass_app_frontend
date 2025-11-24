@@ -31,7 +31,8 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
             setInitialState(prev => ({
               ...prev,
               mobileNumber: response.data.mobileNumber,
-              clientId: response.data.clientId
+              clientId: response.data.clientId,
+              dob: response.data.dob
             }))
             setDataGenerated(true);
           } catch (error) {
@@ -65,9 +66,10 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
 
 function AddClientCheckupContainer() {
   const { stage } = useCurrentStateContext();
+  console.log(stage)
   const Component = selectComponent(stage)
 
-  return <DialogContent className="!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">
+  return <DialogContent className="w-[600px] md:!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">
     <DialogHeader className="!p-0 !h-auto border-b-2 border-[var(--dark-1)]/25 z-[100]">
       <DialogTitle className="bg-white p-4 text-left text-black text-lg font-semibold ">
         Client Details

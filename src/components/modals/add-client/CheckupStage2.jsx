@@ -1,7 +1,7 @@
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { Button } from "@/components/ui/button";
 import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
-import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal } from "@/lib/client/statistics";
+import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
 import { differenceInYears, parse } from "date-fns";
 import { useEffect } from "react";
@@ -51,6 +51,13 @@ const formFields = [
     icon: "/svgs/body.svg",
     name: "bodyAge"
   },
+  {
+    label: "Subcuatneous Fat",
+    value: "26",
+    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "sub_fat"
+  },
 ]
 
 export default function CheckupStage2() {
@@ -67,6 +74,7 @@ export default function CheckupStage2() {
     rm: calculateBMRFinal({ ...state, age }),
     ideal_weight: calculateIdealWeightFinal(state),
     bodyAge: calculateBodyAgeFinal({ ...state, age }),
+    sub_fat: calculateSubcutaneousFat({ ...state, age })?.subcutaneousPercent
   }
   useEffect(function () {
     dispatch(updateMatrices(formFields, payload));
@@ -80,13 +88,15 @@ export default function CheckupStage2() {
       <div>
         Height:&nbsp;
         <span className="font-semibold">
-          {state.heightUnit.toLowerCase() === "cm"
+          {["cm", "cms"].includes(state.heightUnit.toLowerCase())
             ? `${state.heightCms} cm`
             : `${state.heightFeet} ft. ${state.heightInches} in`}
         </span>
       </div>
       <div>
-        D.O.B: <span className="font-semibold">{state.dob}</span>
+        D.O.B: <span className="font-semibold">
+          {state.dob.split("-").reverse().join("-")}
+        </span>
       </div>
       <div>
         Age: <span className="font-semibold">{differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))} yrs</span>
@@ -96,7 +106,7 @@ export default function CheckupStage2() {
       </div>
     </div>
     <h3 className="font-semibold my-4">Statistics</h3>
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <HealthMetrics
         onUpdate={(payload, fieldName, closeBtnRef) => {
           dispatch(changeFieldvalue(fieldName, payload[fieldName]));

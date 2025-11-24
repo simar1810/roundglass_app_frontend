@@ -1,5 +1,6 @@
 import { addDays, differenceInYears, format, parse } from "date-fns";
 import { addClientCheckupInitialState } from "../state-data/add-client-checkup";
+import { ddMMyyyy } from "../data/regex";
 
 export function addClientCheckupReducer(state, action) {
   switch (action.type) {
@@ -124,7 +125,7 @@ const fields = {
     "name", "email", "mobileNumber", "notes", "gender",
     "heightUnit", "weightUnit", "bodyComposition", "file", "bmi",
     "visceral_fat", "activeType", "rm", "muscle",
-    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID"
+    "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "sub_fat"
   ],
 }
 
@@ -181,6 +182,12 @@ export function init(type, data) {
   const payload = addClientCheckupInitialState;
   for (const field of ["mobileNumber", "name", "clientId"]) {
     payload[field] = data[field] || "";
+  }
+  if (ddMMyyyy.test(data.dob)) {
+    payload.dob = format(
+      parse(data.dob, "dd-MM-yyyy", new Date()),
+      "yyyy-MM-dd"
+    )
   }
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;

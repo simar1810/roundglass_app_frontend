@@ -24,7 +24,9 @@ import {
   Hourglass,
   BadgeCheck,
   LayoutDashboard,
+  Library,
   Link,
+  List,
   ListTodo,
   Logs,
   MapPin,
@@ -46,7 +48,8 @@ import {
   Users,
   Video,
   QrCode,
-  Salad
+  Salad,
+  Play
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
@@ -144,7 +147,7 @@ export const sidebar__coachContent = [
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Meal Plan",
+        title: "Meal Plan",
         url: "/coach/meals/list-custom",
         // items: [
         //   {
@@ -167,26 +170,26 @@ export const sidebar__coachContent = [
         //   },
         // ],
       },
-      {
-        id: 3,
-        icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Routine Meal Plan",
-        url: "/coach/meals/list/",
-        items: [
-          {
-            id: 1,
-            icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
-            title: "All Plans",
-            url: "/coach/meals/list/",
-          },
-          {
-            id: 2,
-            icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Add",
-            url: "/coach/meals/add-plan",
-          },
-        ],
-      },
+      // {
+      //   id: 3,
+      //   icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Routine Meal Plan",
+      //   url: "/coach/meals/list/",
+      //   items: [
+      //     {
+      //       id: 1,
+      //       icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "All Plans",
+      //       url: "/coach/meals/list/",
+      //     },
+      //     {
+      //       id: 2,
+      //       icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
+      //       title: "Add",
+      //       url: "/coach/meals/add-plan",
+      //     },
+      //   ],
+      // },
       {
         id: 4,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
@@ -536,8 +539,16 @@ export const sidebar__coachContent = [
     title: "Downline",
     url: "/coach/downline",
     permission: null
+  },
+  {
+    id: 15,
+    icon: <Play />,
+    title: "Courses",
+    url: "/coach/courses",
+    permission: 15
   }
 ];
+
 
 export const sidebar__coachFooter = [
   {

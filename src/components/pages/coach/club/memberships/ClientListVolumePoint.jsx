@@ -19,20 +19,20 @@ export default function ClientListVolumePoint({
       </AvatarFallback>
     </Avatar>
     <div className="grow">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-start md:flex-row md:items-center gap-2">
         <p className="text-[14px] font-semibold">{client.name}</p>
         {daysRemaining > 5
           ? <div className="text-[10px] font-semibold text-[var(--accent-1)]">
-            {activePoints}&nbsp;Points Remaining |&nbsp;{daysRemaining}&nbsp;Days Remaining
+            {parseInt(activePoints)}&nbsp;Points Remaining |&nbsp;{parseInt(daysRemaining)}&nbsp;Days Remaining
           </div>
           : <div className="text-[var(--accent-2)] flex items-center gap-2">
             <CircleAlert fill="#FF1D1D" className="w-[14px] h-[14px] text-white" />
             <div className="text-[10px] font-semibold">
-              {activePoints}&nbsp;Points Remaining |&nbsp;{daysRemaining}&nbsp;Days Remaining
+              {parseInt(activePoints)}&nbsp;Points Remaining |&nbsp;{parseInt(daysRemaining)}&nbsp;Days Remaining
             </div>
           </div>}
       </div>
-      <Progress value={daysRemaining} className="w-full mt-2 [&_.progress-bar]:bg-[var(--accent-1)]" />
+      <Progress value={parseInt(daysRemaining)} className="w-full mt-2 [&_.progress-bar]:bg-[var(--accent-1)]" />
     </div>
     {/* {client.isVerified && <Link
       className="text-[12px] text-[var(--accent-1)] font-semibold ml-auto"

@@ -10,7 +10,7 @@ import { useRef } from "react";
 export default function CustomMealMetaData() {
   const { dispatch, ...state } = useCurrentStateContext()
   const fileRef = useRef()
-  return <div className="pr-8 flex flex-col gap-y-4">
+  return <div className="md:pr-8 flex flex-col gap-y-4">
     <FormControl
       value={state.title}
       onChange={e => dispatch(customWorkoutUpdateField("title", e.target.value))}
@@ -45,5 +45,18 @@ export default function CustomMealMetaData() {
         className="min-h-[120px]"
       />
     </div>
+    {state.mode === "monthly" && <div>
+      <Label className="font-bold mb-2">Number Of Days</Label>
+      <FormControl
+        value={state.noOfDays}
+        onChange={e => (parseInt(e.target.value) >= 0 || e.target.value === "") &&
+          dispatch(customWorkoutUpdateField("noOfDays", e.target.value))
+        }
+        placeholder="Enter Number of days"
+        type="number"
+        min={0}
+        className="min-h-[120px]"
+      />
+    </div>}
   </div>
 }

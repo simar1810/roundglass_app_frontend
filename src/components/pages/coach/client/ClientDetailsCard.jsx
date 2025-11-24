@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/menubar";
 import {
   ChevronDown,
+  Copy,
   EllipsisVertical,
   Plus,
 } from "lucide-react";
@@ -49,12 +50,18 @@ import ClientUpdateCategories from "./ClientUpdateCategories";
 import { notesColors } from "@/config/data/other-tools";
 import { Badge } from "@/components/ui/badge";
 import ClientNudges from "./ClientNudges";
+import { extractNumber } from "@/lib/utils";
 
 export default function ClientDetailsCard({ clientData }) {
   return <div>
     <ClientDetails clientData={clientData} />
     <ClientNudges />
   </div>
+}
+
+function findClientLatestWeight(matrices = []) {
+  const lastIndex = findClientLatestWeight.length - 1;
+  return `${extractNumber(matrices?.at(lastIndex)?.weight)} ${matrices?.at(lastIndex)?.weightUnit}`
 }
 
 function ClientDetails({ clientData }) {
@@ -68,13 +75,15 @@ function ClientDetails({ clientData }) {
       toast.error(error.message || "Please try again later!");
     }
   }
-  const clienthealthMatrix = clientData.healthMatrix.healthMatrix
+  const clienthealthMatrix = clientData?.healthMatrix?.healthMatrix || [{}]
   const healthMatricesLength = clienthealthMatrix.length
-    // const weightLoss = healthMatricesLength <= 1
     ? false
     : (generateWeightStandard(clienthealthMatrix?.at(0)) - generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1)))
       .toFixed(2)
-  return <Card className="bg-white rounded-[18px] shadow-none">
+
+  const latestWeight = findClientLatestWeight(clienthealthMatrix)
+
+  return <Card className="bg-white rounded-[18px] shadow-none w-[90vw] md:w-auto">
     <Header clientData={clientData} />
     <CardContent>
       <div className="flex items-center justify-between">
@@ -96,7 +105,7 @@ function ClientDetails({ clientData }) {
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <FollowUpModal clientData={clientData} />
-        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block">Analysis Reminder</Button>
+        <Button onClick={sendAnalysis} variant="wz" className="w-full mx-auto block text-xs">Analysis Reminder</Button>
       </div>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
@@ -116,10 +125,14 @@ function ClientDetails({ clientData }) {
           <p>Weight Lost Till Date</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss * -1} Pounds</p>
         </div>} */}
-        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+        {clientData?.healthMatrix?.height && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Height</p>
-          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData.healthMatrix.height} ${clientData.healthMatrix.heightUnit}`}</p>
-        </div>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData?.healthMatrix?.height} ${clientData?.healthMatrix?.heightUnit}`}</p>
+        </div>}
+        {latestWeight && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p>Latest Weight</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{latestWeight}</p>
+        </div>}
       </div>
     </CardContent>
   </Card>
@@ -150,7 +163,7 @@ function ClientActivities({ activities }) {
 
 function Header({ clientData }) {
   const [modalOpened, setModalOpened] = useState(false);
-  const { roles } = useAppSelector(state => state.coach.data)
+  const { roles, coachRefUrl } = useAppSelector(state => state.coach.data)
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setModalOpened(false));
@@ -170,15 +183,30 @@ function Header({ clientData }) {
     }
   }
 
+  function copyLoginLink() {
+    const loginLink = `${coachRefUrl}/loginClient?clientID=${clientData.clientId}`;
+    navigator.clipboard.writeText(loginLink)
+      .then(() => {
+        toast.success("Login link copied to clipboard!");
+        setModalOpened(false);
+      })
+      .catch(() => {
+        toast.error("Failed to copy login link");
+      });
+  }
+
   return <CardHeader className="relative flex items-center gap-4 md:gap-8">
-    <Avatar className="w-[100px] h-[100px]">
+    <Avatar className="w-[80px] h-[80px] md:w-[100px] md:h-[100px]">
       <AvatarImage src={clientData.profilePhoto} />
       <AvatarFallback>{nameInitials(clientData.name)}</AvatarFallback>
     </Avatar>
-    <div>
+    <div className="">
       <h3 className="mb-2">{clientData.name}</h3>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
+        <div className="px-2 flex items-center gap-2 cursor-pointer" onClick={copyLoginLink}>
+          <Copy strokeWidth="3" className="w-[14px] h-[14px] text-[var(--accent-1)]" />
+        </div>
         <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
         {clientData.rollno && permit("club", roles) && <EditClientRollnoModal
           defaultValue={clientData.rollno}
@@ -254,7 +282,7 @@ function ClientStatus({
   }
   return <Menubar className="p-0 border-0 shadow-none">
     <MenubarMenu className="p-0">
-      <MenubarTrigger className={`${status ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
+      <MenubarTrigger className={`${status ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[4px] md:py-[2px] px-2 text-[10px] md:text-[12px] gap-1`}>
         {status ? <>Active</> : <>In Active</>}
         <ChevronDown className="w-[18px]" />
       </MenubarTrigger>
@@ -303,7 +331,7 @@ function ClientClubStatus({
 
   return <Menubar className="p-0 border-0 shadow-none">
     <MenubarMenu className="p-0">
-      <MenubarTrigger className={`${status ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
+      <MenubarTrigger className={`${status ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[4px] md:py-[2px] px-2 text-[10px]  md:text-[12px] gap-1`}>
         {status ? <>Membership On</> : <>Membership Off</>}
         <ChevronDown className="w-[18px]" />
       </MenubarTrigger>
@@ -335,7 +363,7 @@ function ClientCategoriesList({ clientData }) {
       <h4>Categories</h4>
       <ClientUpdateCategories clientData={clientData} />
     </div>
-    <div className="mt-2 flex items-center gap-1">
+    <div className="mt-2 flex flex-wrap items-center gap-1">
       {selectedCategories.map((category, index) => <Badge
         key={category._id}
         style={{

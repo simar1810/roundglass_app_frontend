@@ -77,11 +77,11 @@ function RetailStatisticsCards({
   acumulatedVP
 }) {
   const [hide, setHide] = useState(true);
-  return <div className="grid grid-cols-3 gap-4">
+  return <div className="grid grid-cols-3 gap-1 md:gap-4">
     <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
       <CardHeader className="text-white p-0 mb-0">
         <CardTitle className="">
-          <span className="w-full">Total Sales</span>
+          <span className="w-full text-base md:text-lg mr-2">Total Sales</span>
           {hide
             ? <EyeClosed
               className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
@@ -94,23 +94,23 @@ function RetailStatisticsCards({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className={cn("text-white !text-[28px]", hide && "text-transparent")}>₹ {totalSales}</h4>
+        <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>₹ {totalSales}</h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
       <CardHeader className="p-0 mb-0">
-        <CardTitle>Total Orders</CardTitle>
+        <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="!text-[28px]">{totalOrders}</h4>
+        <h4 className="text-base md:!text-[28px]">{totalOrders}</h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
       <CardHeader className="p-0 mb-0">
-        <CardTitle>Volume Points</CardTitle>
+        <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="!text-[28px]">{acumulatedVP}</h4>
+        <h4 className="text-[10px] md:!text-[28px]">{acumulatedVP}</h4>
       </CardContent>
     </Card>
   </div>
@@ -120,22 +120,22 @@ function RetailContainer({ orders, retails }) {
   return <Tabs defaultValue="brands">
     <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
       <TabsTrigger
-        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="brands"
       >
-        New Order
+        <p className="text-sm md:text-lg">New Order</p>
       </TabsTrigger>
       <TabsTrigger
-        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="order-history"
       >
-        Order History
+        <p className="text-sm md:text-lg">Order History</p>
       </TabsTrigger>
       <TabsTrigger
-        className="pb-4 px-4 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="inventory"
       >
-        Inventory
+        <p className="text-sm md:text-lg">Inventory</p>
       </TabsTrigger>
     </TabsList>
     <Brands brands={retails.brands} />
@@ -153,7 +153,7 @@ function Brands({ brands }) {
         Add New Kit
       </Button> */}
     </div>
-    <div className="mt-4 grid grid-cols-6">
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
     </div>
   </TabsContent>
@@ -218,7 +218,7 @@ function Orders({ orders }) {
 
   return <TabsContent value="order-history">
     <ExportOrdersoExcel orders={orders} />
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
     </div>
   </TabsContent>
@@ -297,7 +297,7 @@ function SaleOrder({ order }) {
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
+          {order.status === "Completed" && <RetailCompletedLabel status={order.status}/>}
           {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
           {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
@@ -308,7 +308,7 @@ function SaleOrder({ order }) {
           <DropdownMenuTrigger asChild className="text-black w-[16px]">
             <EllipsisVertical className="cursor-pointer" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="font-semibold px-2 py-[6px]">
+          <DropdownMenuContent className="font-semibold w-1 px-2 py-[6px]">
             <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
               <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
                 Invoice
@@ -329,7 +329,7 @@ function SaleOrder({ order }) {
           className="bg-black w-[64px] h-[64px] object-cover rounded-md"
         />
         <div>
-          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+          <h4 className="text-xs md:text-lg">{order.productModule.map(product => product.productName).join(", ")}</h4>
           <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
           {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
         </div>
@@ -516,15 +516,21 @@ function Inventory() {
 
 function InventoryContainer() {
   const [query, setQuery] = useState("")
+  const { isWhitelabel } = useAppSelector(state => state.coach.data)
 
   const { isLoading, error, data, mutate } = useSWR(
     "app/getAllReminder?person=coach",
-    () => fetchData("app/inventory?whitelabel=thewellnessspot")
+    () => fetchData(
+      buildUrlWithQueryParams(
+        "app/inventory",
+        isWhitelabel && { whitelabel: "thewellnessspot" }
+      )
+    )
   );
 
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
 
   const regex = new RegExp(query, "i")
   const products = data.data.filter(
@@ -538,7 +544,7 @@ function InventoryContainer() {
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Product Name..."
-        className="max-w-[400px] bg-[var(--comp-1)] ml-auto"
+        className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
       />
       <Button onClick={mutate} variant="icon">
         <RefreshCcw />

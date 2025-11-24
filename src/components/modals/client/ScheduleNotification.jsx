@@ -1,22 +1,71 @@
-import { Textarea } from "@/components/ui/textarea";
-import { sendData } from "@/lib/api";
-import { format, parse } from "date-fns";
-import FormControl from "@/components/FormControl";
-import SelectControl from "@/components/Select";
-import SelectMultiple from "@/components/SelectMultiple";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { RadioGroup } from "@/components/ui/radio-group";
-import { toast } from "sonner";
-import useSWR from "swr";
-import { retrieveCoachClientList, retrieveClientNudges } from "@/lib/fetchers/app";
 import Loader from "@/components/common/Loader";
 import TimePicker from "@/components/common/TimePicker";
-import { CircleMinus, CirclePlus, Clock, Calendar } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import FormControl from "@/components/FormControl";
+import SelectMultiple from "@/components/SelectMultiple";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerCache";
+import { sendData } from "@/lib/api";
+import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
+import { _throwError } from "@/lib/formatter";
+import { format, isValid, parse } from "date-fns";
+import { Calendar, CircleMinus, CirclePlus, Clock, History, Plus, X } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
+
+// Helper function to convert 24-hour time format to 12-hour format for TimePicker
+function convertTimeTo12Hour(timeStr) {
+  if (!timeStr) return "";
+
+  try {
+    const trimmed = timeStr.trim();
+
+    // Already in 12-hour format (e.g., "08:00 PM" or "8:00 am")
+    if (/[ap]m$/i.test(trimmed)) {
+      // Normalize the format to ensure it's in "hh:mm a" format
+      try {
+        const parsed = parse(trimmed, "hh:mm a", new Date());
+        return format(parsed, "hh:mm a");
+      } catch {
+        return trimmed;
+      }
+    }
+
+    // Handle 24-hour format with or without seconds (e.g., "21:37:00" or "21:37")
+    // Extract just hours and minutes
+    const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (timeMatch) {
+      const hours = parseInt(timeMatch[1], 10);
+      const minutes = parseInt(timeMatch[2], 10);
+
+      // Validate hours and minutes
+      if (isNaN(hours) || hours < 0 || hours > 23) {
+        return "";
+      }
+      if (isNaN(minutes) || minutes < 0 || minutes > 59) {
+        return "";
+      }
+
+      // Create a date object to use date-fns formatting
+      // Use a fixed date to avoid timezone issues
+      const date = new Date(2000, 0, 1, hours, minutes, 0);
+
+      return format(date, "hh:mm a");
+    }
+
+    return "";
+  } catch (error) {
+    return "";
+  }
+}
 
 export default function ScheduleNotificationWrapper({
   children,
@@ -46,38 +95,44 @@ export default function ScheduleNotificationWrapper({
   />
 }
 
-function formatDate(date) {
-  if (!date) return ""
+export function formatDate(date) {
+  if (!date) return "";
   try {
-    const parsedDate = parse(date, "dd-MM-yyyy", new Date())
-    // Check if the parsed date is valid
-    if (isNaN(parsedDate.getTime())) {
-      return ""
+    const formats = ["dd-MM-yyyy", "yyyy-MM-dd"];
+    let parsedDate = null;
+    for (const fmt of formats) {
+      const attempt = parse(date, fmt, new Date());
+      if (isValid(attempt)) {
+        parsedDate = attempt;
+        break;
+      }
     }
-    return format(parsedDate, "yyyy-MM-dd")
+    if (!parsedDate) return "";
+    return format(parsedDate, "yyyy-MM-dd");
   } catch (error) {
-    return ""
+    return "";
   }
 }
 
+
 function formatTime(timeStr) {
   if (!timeStr) return "00:00:00"
-  
+
   try {
     // Handle TimePicker format (hh:mm a) - like "02:30 PM"
     if (timeStr.match(/^\d{1,2}:\d{2}\s+(AM|PM)$/i)) {
       const parsed = parse(timeStr, "hh:mm a", new Date())
       return format(parsed, "HH:mm:ss")
     }
-    
+
     // Handle 24-hour format (HH:mm) - like "14:30"
     if (timeStr.match(/^\d{2}:\d{2}$/)) {
       return `${timeStr}:00`
     }
-        if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
       return timeStr
     }
-    
+
     return "00:00:00"
   } catch (error) {
     return "00:00:00"
@@ -95,43 +150,48 @@ function ScheduleNotification({
   const [showHistory, setShowHistory] = useState(false);
   const subjectRef = useRef(null);
   const dropdownRef = useRef(null);
-  
-  const { 
-    addNotificationToCache, 
-    getCachedNotificationsByContext, 
-    getCachedNotificationsForClientByContext 
+
+  const { id: currentClientId } = useParams()
+
+  const {
+    getCachedNotificationsByContext,
+    getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
 
   const [payload, setPayload] = useState({
     subject: defaultPayload.subject || "",
     message: defaultPayload.message || "",
     notificationType: defaultPayload.schedule_type || "schedule",
-    time: defaultPayload.time || "",
+    time: convertTimeTo12Hour(defaultPayload.time || ""),
     date: formatDate(defaultPayload.date),
     reocurrence: defaultPayload.reocurrence || [],
     clients: selectedClients || defaultPayload.clients || [],
     actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
-    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined
+    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
+    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || [],
+    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || ""
   })
 
   const clientId = selectedClients?.[0];
   const isClientNudgesContext = !!clientId;
   const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
-  
-  const cachedHistory = clientId 
+
+  const closeRef = useRef()
+
+  const cachedHistory = clientId
     ? getCachedNotificationsForClientByContext(clientId, context)
     : getCachedNotificationsByContext(context);
   const { data: apiHistoryData } = useSWR(
     clientId ? `client/nudges/history/${clientId}` : null,
     () => retrieveClientNudges(clientId, { limit: 50 })
   );
-  
+
   const apiHistoryNudges = apiHistoryData?.data?.results || [];
   const allHistoryNudges = [...cachedHistory, ...apiHistoryNudges];
-  
+
   const uniqueHistoryNudges = allHistoryNudges
-    .filter((nudge, index, self) => 
-      index === self.findIndex(n => 
+    .filter((nudge, index, self) =>
+      index === self.findIndex(n =>
         n.subject === nudge.subject && n.message === nudge.message
       )
     )
@@ -143,8 +203,8 @@ function ScheduleNotification({
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-          subjectRef.current && !subjectRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+        subjectRef.current && !subjectRef.current.contains(event.target)) {
         setShowHistory(false);
       }
     }
@@ -158,7 +218,7 @@ function ScheduleNotification({
       subject: nudge.subject || "",
       message: nudge.message || "",
       notificationType: nudge.schedule_type || nudge.notificationType || "schedule",
-      time: nudge.time ? nudge.time.substring(0, 5) : "",
+      time: convertTimeTo12Hour(nudge.time || ""),
       date: nudge.date ? formatDate(nudge.date) : "",
       reocurrence: nudge.reocurrence || [],
       clients: nudge.clients || []
@@ -170,36 +230,34 @@ function ScheduleNotification({
     const toastId = toast.loading("Please wait...")
     try {
       setLoading(true);
-      const formData = generatePayload(payload);
+      const formData = generatePayload(
+        payload,
+        defaultPayload._id,
+      );
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
         defaultPayload._id ? "PUT" : "POST"
       );
-      if (response.status_code !== 200) throw new Error(response.message);
-      
-      if (!defaultPayload._id) {
-        const clientNames = payload.clients.map(clientId => {
-          const client = clients.find(c => c.value === clientId);
-          return client ? client.name : `Client ${clientId}`;
-        });
 
-        addNotificationToCache({
-          subject: payload.subject,
-          message: payload.message,
-          notificationType: payload.notificationType,
-          time: payload.time,
-          date: payload.date,
-          reocurrence: payload.reocurrence,
-          clients: payload.clients,
-          clientNames: clientNames
-        }, context);
+      if (response.status_code === 200 && !response.errors?.length) {
+        toast.success(response.message)
+        closeRef.current.click()
+        mutate(`client/nudges/${currentClientId}`)
+        return
       }
-      
-      toast.success(response.message);
-      location.reload()
+
+      if (response.status_code !== 200) {
+        _throwError(response.message)
+      }
+
+      if (response.errors && response.errors.length) {
+        for (const error of response.errors) {
+          toast.error(error || "Something went wrong")
+        }
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong!");
       toast.dismiss(toastId);
     } finally {
       setLoading(false);
@@ -214,29 +272,60 @@ function ScheduleNotification({
         {children}
       </span>
     </DialogTrigger>
-    <DialogContent className="!max-w-[450px] max-h-[65vh] border-0 p-0 overflow-auto">
-      <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] ml-5">
-        {defaultPayload._id ? "Update Client Nudges" : "Add Client Nudges"}
+    <DialogContent
+      onInteractOutside={(event) => {
+        const originalEvent = event.detail?.originalEvent;
+        const target = originalEvent?.target;
+
+        if (
+          target &&
+          typeof target.closest === "function" &&
+          (target.closest("[data-slot='popover-content']") ||
+            target.closest("[data-slot='popover-trigger']"))
+        ) {
+          // Allow interacting with the time picker popover without closing this dialog
+          event.preventDefault();
+        }
+      }}
+      className="!max-w-[500px] max-h-[65vh] border-0 p-0 gap-0 overflow-auto"
+    >
+      <DialogClose ref={closeRef} />
+      <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] p-4">
+        {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
       <div className="px-4 pb-8">
-        <div className="relative mb-4">
-          <Label className="text-[14px] mb-2 block">
-            Subject
+        <div className="relative mb-4" ref={subjectRef}>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-[14px]">
+              Subject
+              {uniqueHistoryNudges.length > 0 && (
+                <span className="text-xs text-gray-500 ml-2">
+                  ({uniqueHistoryNudges.length} history available)
+                </span>
+              )}
+            </Label>
             {uniqueHistoryNudges.length > 0 && (
-              <span className="text-xs text-gray-500 ml-2">({uniqueHistoryNudges.length} history available)</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1 text-gray-600 hover:text-gray-900"
+                onClick={() => setShowHistory(prev => !prev)}
+              >
+                <History className="w-3.5 h-3.5" />
+                History
+              </Button>
             )}
-          </Label>
+          </div>
           <input
-            ref={subjectRef}
             type="text"
             placeholder="Subject"
             value={payload.subject}
             onChange={e => setPayload(prev => ({ ...prev, subject: e.target.value }))}
-            onFocus={() => uniqueHistoryNudges.length > 0 && setShowHistory(true)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--comp-1)]"
           />
           {showHistory && uniqueHistoryNudges.length > 0 && (
-            <div 
+            <div
               ref={dropdownRef}
               className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto"
             >
@@ -266,7 +355,7 @@ function ScheduleNotification({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2" style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -275,7 +364,7 @@ function ScheduleNotification({
                   }}>
                     {nudge.message}
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {nudge.time && (
@@ -291,14 +380,14 @@ function ScheduleNotification({
                         </div>
                       )}
                     </div>
-                    
+
                     {(nudge.clientNames && nudge.clientNames.length > 0) && (
                       <div className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-full">
                         {nudge.clientNames.length} client{nudge.clientNames.length > 1 ? 's' : ''}
                       </div>
                     )}
                   </div>
-                  
+
                   {nudge.clientNames && nudge.clientNames.length > 0 && (
                     <div className="mt-2 text-xs text-gray-600">
                       <span className="font-medium">Clients:</span> {nudge.clientNames.join(', ')}
@@ -309,7 +398,7 @@ function ScheduleNotification({
             </div>
           )}
         </div>
-        
+
         <div className="mb-4">
           <Label className="text-[14px] mb-2 block">Message</Label>
           <Textarea
@@ -342,7 +431,7 @@ function ScheduleNotification({
             </div>
           </RadioGroup>
         </div>
-        
+
         {(!selectedClients || selectedClients?.length <= 0) && (
           <div className="mb-4">
             <SelectMultiple
@@ -362,7 +451,7 @@ function ScheduleNotification({
             setSelectedTime={value => setPayload(prev => ({ ...prev, time: value }))}
           />
         </div>
-        
+
         {payload.notificationType === "schedule" && (
           <div className="mb-4">
             <FormControl
@@ -380,6 +469,10 @@ function ScheduleNotification({
             dispatch={setPayload}
           />
         )}
+        {/* <NotificationStatuses
+          payload={payload}
+          setPayload={setPayload}
+        /> */}
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -394,11 +487,13 @@ function ScheduleNotification({
   </Dialog>
 }
 
-function generatePayload(payload) {
+function generatePayload(payload, id) {
+  const isUpdate = Boolean(id)
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
-  
+  console.log(payload)
+
   if (payload.notificationType === "reocurr") {
     const result = {
       subject: payload.subject,
@@ -407,23 +502,28 @@ function generatePayload(payload) {
       schedule_type: "reocurr",
       time: formatTime(payload.time),
       reocurrence: payload.reocurrence,
-      clients: payload.clients
+      clients: Array.isArray(payload.clients)
+        ? payload.clients[0]
+        : payload.clients
     };
-    
-    // Only add actionType and id if they have values
+    result.notificationStatus = {
+      possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
+      clientMarkedStatus: payload.defaultStatus?.trim()
+    };
+
     if (payload.actionType) result.actionType = payload.actionType;
     if (payload.id) result.id = payload.id;
-    
+
     return result;
   } else if (payload.notificationType === "schedule") {
     if (!payload.date) throw new Error(`date is mandatory.`);
-    
+
     try {
       const parsedDate = parse(payload.date, "yyyy-MM-dd", new Date());
       if (isNaN(parsedDate.getTime())) {
         throw new Error("Invalid date format");
       }
-      
+
       const result = {
         subject: payload.subject,
         message: payload.message,
@@ -431,13 +531,25 @@ function generatePayload(payload) {
         schedule_type: "schedule",
         date: format(parsedDate, "dd-MM-yyyy"),
         time: formatTime(payload.time),
-        clients: payload.clients
+        clients: Array.isArray(payload.clients)
+          ? payload.clients[0]
+          : payload.clients
       };
-      
+
       // Only add actionType and id if they have values
       if (payload.actionType) result.actionType = payload.actionType;
       if (payload.id) result.id = payload.id;
-      
+
+      if (isUpdate) {
+        result.actionType = "UPDATE"
+        result.id = id
+      }
+
+      result.notificationStatus = {
+        possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
+        clientMarkedStatus: payload.defaultStatus?.trim()
+      };
+
       return result;
     } catch (error) {
       throw new Error(`Invalid date format: ${payload.date}`);
@@ -469,5 +581,57 @@ export function NotificationRepeat({
           : <CirclePlus className="w-[12px] h-[12px]" />}
       </Badge>)}
     </div>
+  </div>
+}
+
+function NotificationStatuses({ payload, setPayload }) {
+  const [newStatus, setNewStatus] = useState("");
+  return <div>
+    <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>
+    <div className="flex gap-4 items-center">
+      <Input
+        value={newStatus}
+        onChange={e => setNewStatus(e.target.value)}
+        placeholder="Enter status"
+        className="bg-[var(--comp-1)] rounded-[4px]"
+      />
+      <Button onClick={() => {
+        setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
+        setNewStatus("")
+      }}>
+        <Plus />
+      </Button>
+    </div>
+    {payload.possibleStatus.length > 0 && <div className="mt-4 border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
+      {payload.possibleStatus.map((status, index) => (
+        <div
+          className="px-2 py-1 relative rounded-full bg-white border-1 text-sm font-bold"
+          key={index}
+
+        >
+          <X
+            className="w-4 h-4 cursor-pointer absolute top-0 right-0 translate-y-[-30%] translate-x-[30%] text-[var(--accent-2)]"
+            strokeWidth={2.5}
+            onClick={() => setPayload(prev => ({ ...prev, possibleStatus: prev.possibleStatus.filter(item => item !== status) }))}
+          />
+          {status}
+        </div>
+      ))}
+    </div>}
+
+    <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
+    <Select
+      value={payload.defaultStatus}
+      onValueChange={value => setPayload(prev => ({ ...prev, defaultStatus: value }))}
+    >
+      <SelectTrigger className="bg-[var(--comp-1)] w-full">
+        <SelectValue placeholder="Select default status" />
+      </SelectTrigger>
+      <SelectContent>
+        {payload.possibleStatus.map((status, index) => (
+          <SelectItem value={status} key={index}>{status}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   </div>
 }

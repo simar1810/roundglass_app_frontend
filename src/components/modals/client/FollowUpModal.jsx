@@ -25,6 +25,7 @@ import {
   calculateBodyFatFinal,
   calculateIdealWeightFinal,
   calculateSMPFinal,
+  calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
@@ -33,8 +34,11 @@ import { sendData } from "@/lib/api";
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
+import { _throwError } from "@/lib/formatter";
+import { extractNumber } from "@/lib/utils";
 
 export default function FollowUpModal({ clientData }) {
+  if (!clientData.healthMatrix) return <></>
   return <Dialog>
     <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange className="w-[18px] h-[18px]" />
@@ -75,7 +79,7 @@ function Stage1({ clientData }) {
 
   const latesthealthMatrix = clientData?.healthMatrix?.healthMatrix
     .at(clientData?.healthMatrix?.healthMatrix.length - 1);
-  const latestOldWeight = `${latesthealthMatrix?.weight} ${latesthealthMatrix?.weightUnit}`
+  const latestOldWeight = `${extractNumber(latesthealthMatrix?.weight)} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
     <FormControl
@@ -86,7 +90,7 @@ function Stage1({ clientData }) {
       onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
     />
     {latestOldWeight && <h3 className="mt-4">Latest Old Weight {latestOldWeight}</h3>}
-    <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-4">
+    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
       <div>
         <div className="pr-2 flex items-center gap-2 justify-between">
           <p>Current Weight</p>
@@ -189,6 +193,7 @@ function Stage2({
       heightUnit,
       heightCms: height
     }
+
   const clienthealthStats = {
     bmi: calculateBMIFinal({ ...payload, ...statObj }),
     muscle: calculateSMPFinal({ ...payload, ...statObj }),
@@ -196,13 +201,14 @@ function Stage2({
     rm: calculateBMRFinal({ ...payload, ...statObj }),
     idealWeight: calculateIdealWeightFinal({ ...payload, ...statObj }),
     bodyAge: calculateBodyAgeFinal({ ...payload, ...statObj }),
+    sub_fat: calculateSubcutaneousFat(payload)?.subcutaneousPercent
   }
 
   async function createFollowUp() {
     try {
-      const data = generateRequestPayload({ healthMatrix, ...state })
+      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj })
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
-      if (response.status_code !== 200) throw new Error(response.message || response.error);
+      if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
       mutate(`app/clientStatsCoach?clientId=${clientId}`)
       closeBtnRef.current.click();
@@ -229,13 +235,18 @@ function Stage2({
             data={payload}
           />
         </div>
-        <Button
-          onClick={createFollowUp}
-          variant="wz"
-          className="block mx-auto mt-10 px-24"
-        >
-          Done
-        </Button>
+        <div className="grid grid-cols-2 gap-4 mt-10">
+          <Button
+            onClick={() => dispatch(setCurrentStage(1))}
+          >Previous</Button>
+          <Button
+            onClick={createFollowUp}
+            variant="wz"
+            className=""
+          >
+            Done
+          </Button>
+        </div>
         <DialogClose ref={closeBtnRef} />
       </div>
     </div>
@@ -248,7 +259,7 @@ function SelectBodyComposition() {
   return (
     <div className="mt-4 col-span-2">
       <span className="label font-[600] block mb-2">Body Composition</span>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
         <div
           onClick={() => dispatch(changeFieldvalue("body_composition", "Slim"))}
           className={`border rounded p-3 text-center cursor-pointer w-24 ${healthMatrix.body_composition === "Slim" &&

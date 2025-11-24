@@ -16,7 +16,7 @@ export function vpDaysPending(points, monthly = 100) {
 }
 
 export function getObjectUrl(file) {
-  return file instanceof File ? URL.createObjectURL(file) : null;
+  return file instanceof File ? URL.createObjectURL(file) : "";
 }
 
 export function navigateUserToFeature__notification(type) {
@@ -174,4 +174,10 @@ export async function getBase64ImageFromUrl(imageUrl) {
 
 export function nowIST(utcDate = new Date()) {
   return toZonedTime(utcDate);
+}
+
+export function extractNumber(input) {
+  if (!input) return null;
+  const match = String(input).match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : null;
 }

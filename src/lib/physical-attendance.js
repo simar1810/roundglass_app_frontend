@@ -255,13 +255,13 @@ export function clientWiseHistory(data, range) {
 
 
 export function clubHistory(clients, { from, to } = {}) {
+  const daysPending = Math.abs(differenceInCalendarDays(from, to)) + 1;
   return clients.map((record, index) => {
     const { client, attendance, membership } = record;
 
     const filteredAttendance = attendance;
 
     const presentRecords = filteredAttendance.filter(a => a.status === "present");
-    const servingsTaken = presentRecords.length;
 
     const presentDays = new Set(
       presentRecords.map(a => {
@@ -290,9 +290,7 @@ export function clubHistory(clients, { from, to } = {}) {
             dayStatusMap.set(dayKey, record);
           }
         }
-      } catch (error) {
-        // Skip invalid dates
-      }
+      } catch (error) { }
     });
 
     const finalStatusMap = new Map();
@@ -303,20 +301,8 @@ export function clubHistory(clients, { from, to } = {}) {
     const correctedPresentDays = Array.from(finalStatusMap.values()).filter(status => status === "present").length;
     const correctedAbsentDays = Array.from(finalStatusMap.values()).filter(status => status === "absent").length;
 
-    const absentDays = new Set(
-      filteredAttendance
-        .filter(a => a.status === "absent")
-        .map(a => {
-          try {
-            return startOfDay(new Date(a.date)).getTime();
-          } catch (error) {
-            return null;
-          }
-        })
-        .filter(Boolean)
-    ).size;
-
     const totalConsidered = Math.abs(differenceInCalendarDays(from, to)) + 1;
+    const completionPercentage = parseInt(((membership?.pendingServings ?? 0) / daysPending) * 100);
     const showupPercentage =
       totalConsidered > 0
         ? ((presentDays / totalConsidered) * 100).toFixed(1)
@@ -347,6 +333,7 @@ export function clubHistory(clients, { from, to } = {}) {
       pendingServings: membership?.pendingServings || 0,
       membershipType: membership?.membershipType || "Monthly",
       endDate: membership?.endDate || new Date(),
+      completionPercentage
     };
   });
 }
@@ -454,9 +441,16 @@ export function physicalClubReportsYearly(data, range) {
 
 export function dateWiseAttendanceSplit(data) {
   const badgeData = {}
+  const clientSet = new Set();
   data.forEach(item => {
     const dateKey = format(item.date, "yyyy-MM-dd")
-
+    if (
+      item.status !== "present" &&
+      clientSet.has(`${item.clientId}-${dateKey}`)
+    ) {
+      return;
+    }
+    clientSet.add(`${item.clientId}-${dateKey}`);
     if (!badgeData[dateKey]) {
       badgeData[dateKey] = { present: 0, absent: 0, requested: 0 }
     }
@@ -475,21 +469,12 @@ export function dateWiseAttendanceSplit(data) {
         break
     }
   })
-
   const formattedData = {}
   Object.keys(badgeData).forEach(dateKey => {
     const badges = []
-
     if (badgeData[dateKey].present > 0) {
       badges.push({ value: String(badgeData[dateKey].present), color: "bg-green-500" })
     }
-    if (badgeData[dateKey].absent > 0) {
-      badges.push({ value: String(badgeData[dateKey].absent), color: "bg-red-500" })
-    }
-    if (badgeData[dateKey].requested > 0) {
-      badges.push({ value: String(badgeData[dateKey].requested), color: "bg-yellow-500" })
-    }
-
     formattedData[dateKey] = badges
   })
 
@@ -592,4 +577,54 @@ export function physicalAttendanceExcelDownload(
     default:
       break;
   }
+}
+
+export function manualAttendanceGroupClients(clients) {
+  let result = [] // {id: Number, clientId: mongo _id, history: []}
+  const clientSet = new Set();
+
+  for (const client of clients) {
+    if (clientSet.has(client.clientId)) {
+      result = result.map(item => item.clientId === client.clientId
+        ? ({
+          ...item,
+          history: [
+            ...item.history,
+            {
+              servingNumber: client.servingNumber,
+              markedAt: client.markedAt,
+              date: client.date,
+              status: client.status
+            }
+          ]
+        })
+        : item
+      )
+    }
+
+    else {
+      clientSet.add(client.clientId)
+      result = [
+        ...result,
+        {
+          name: client.name,
+          clientId: client.clientId,
+          profilePhoto: client.profilePhoto,
+          history: [
+            ...(client.status !==
+              "unmarked" ?
+              [{
+                servingNumber: client.servingNumber,
+                markedAt: client.markedAt,
+                date: client.date,
+                status: client.status
+              }]
+              : [])
+          ]
+        }
+      ]
+    }
+  }
+
+  return result
 }

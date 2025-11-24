@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,20 +18,35 @@ function parseTime(timeStr) {
   }
   let date
 
-  if (/am|pm/i.test(timeStr)) {
-    date = parse(timeStr, "hh:mm a", new Date())
-  } else {
-    date = parse(timeStr, "HH:mm", new Date())
-  }
+  try {
+    if (/am|pm/i.test(timeStr)) {
+      // Already in 12-hour format
+      date = parse(timeStr, "hh:mm a", new Date())
+    } else {
+      // Handle 24-hour format - try with seconds first, then without
+      if (timeStr.match(/^\d{1,2}:\d{2}:\d{2}$/)) {
+        date = parse(timeStr, "HH:mm:ss", new Date())
+      } else {
+        date = parse(timeStr, "HH:mm", new Date())
+      }
+    }
 
-  const hours = format(date, "hh")
-  const minutes = format(date, "mm")
-  const ampm = format(date, "a")
+    const hours = format(date, "hh")
+    const minutes = format(date, "mm")
+    const ampm = format(date, "a")
 
-  return {
-    defaultHours: hours,
-    defaultMinutes: minutes,
-    defaultAmPm: ampm
+    return {
+      defaultHours: hours,
+      defaultMinutes: minutes,
+      defaultAmPm: ampm
+    }
+  } catch (error) {
+    // Fallback to default if parsing fails
+    return {
+      defaultHours: 12,
+      defaultMinutes: 0,
+      defaultAmPm: "AM"
+    }
   }
 }
 
@@ -44,19 +59,57 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
   const [hour, setHour] = useState(defaultHours)
   const [minute, setMinute] = useState(defaultMinutes)
   const [period, setPeriod] = useState(defaultAmPm)
+  const isInitialMount = useRef(true)
+  const lastSelectedTime = useRef(selectedTime)
+  const isSyncingFromProp = useRef(false)
 
   const hoursList = Array.from({ length: 12 }, (_, i) => i + 1)
   const minutesList = Array.from({ length: 60 }, (_, i) => i)
 
+  // Sync internal state when selectedTime prop changes (e.g., when editing)
   useEffect(() => {
-    let h = hour
-    if (period === "PM" && h !== 12) h += 12
-    if (period === "AM" && h === 12) h = 0
+    // Only sync if selectedTime actually changed (not just on initial mount)
+    if (selectedTime && selectedTime !== lastSelectedTime.current) {
+      isSyncingFromProp.current = true
+      const parsed = parseTime(selectedTime)
+      setHour(parsed.defaultHours)
+      setMinute(parsed.defaultMinutes)
+      setPeriod(parsed.defaultAmPm)
+      lastSelectedTime.current = selectedTime
+      // Reset the flag after a brief delay to allow state updates
+      setTimeout(() => {
+        isSyncingFromProp.current = false
+      }, 0)
+    }
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+    }
+  }, [selectedTime])
 
-    let date = new Date()
-    date = setHours(date, h)
-    date = setMinutes(date, minute)
-    setSelectedTime(format(date, "hh:mm a"))
+  useEffect(() => {
+    // Skip on initial mount or when syncing from prop to avoid overwriting
+    if (isInitialMount.current || isSyncingFromProp.current) {
+      return
+    }
+
+    // Only update if we have valid hour and minute values
+    if (hour && minute !== undefined && minute !== null && period) {
+      let h = Number(hour)
+      if (period === "PM" && h !== 12) h += 12
+      if (period === "AM" && h === 12) h = 0
+
+      let date = new Date()
+      date = setHours(date, h)
+      date = setMinutes(date, Number(minute))
+      const formattedTime = format(date, "hh:mm a")
+      
+      // Only update if the formatted time is different from current selectedTime
+      // This prevents unnecessary updates when syncing from prop
+      if (formattedTime !== selectedTime) {
+        setSelectedTime(formattedTime)
+        lastSelectedTime.current = formattedTime
+      }
+    }
   }, [hour, minute, period])
 
   const handleHourInput = (val) => {
@@ -98,7 +151,14 @@ export default function TimePicker({ selectedTime, setSelectedTime }) {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="bg-[white] p-0 w-auto [260px] gap-0 space-x-0 shadow-none border-gray-400">
+      <PopoverContent
+        // Keep the time picker open while interacting, even if the cursor moves,
+        // by preventing the default outside-click closing behavior.
+        onPointerDownOutside={(event) => {
+          event.preventDefault()
+        }}
+        className="bg-[white] p-0 w-auto [260px] gap-0 space-x-0 shadow-none border-gray-400"
+      >
         <div className="flex items-center justify-between !gap-0">
 
           <div className="py-4 flex flex-col items-center w-[86px] border-r border-gray-300">

@@ -1,25 +1,45 @@
-import { changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate } from "@/config/state-reducers/custom-meal";
+import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate, startFromToday } from "@/config/state-reducers/custom-meal";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
 import AddDayModal from "./AddDayModal";
-import CopyMealPlanModal from "./CopyMealPlanModal";
 import { Pen } from "lucide-react";
 import { Dialog } from "@radix-ui/react-dialog";
 import { DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useRef, useState } from "react";
-import { format, parse } from "date-fns";
+import { useMemo, useRef, useState } from "react";
+import { addDays, format, isBefore, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import MealPlanActionsMenu from "./MealPlanActionsMenu";
 
 export default function MonthlyMealCreation() {
   const { dispatch, selectedPlans, selectedPlan } = useCurrentStateContext();
+  const searchParams = useSearchParams();
+  const creationType = searchParams.get("creationType");
+  const canStartFromToday = ["copy_edit", "edit"].includes(creationType);
 
-  const days = Object.keys(selectedPlans);
+  const days = Object
+    .keys(selectedPlans)
+    .sort((dateA, dateB) => {
+      return isBefore(
+        parse(dateA, "dd-MM-yyyy", new Date()),
+        parse(dateB, "dd-MM-yyyy", new Date()),
+      ) ? -1 : 1
+    });
+
+  const nextDate = useMemo(
+    () => findNextDate(Object.keys(selectedPlans)),
+    [Object.keys(selectedPlans)]
+  )
 
   return <>
-    <div className="flex items-center justify-between">
-      <h3 className="mt-4">Days</h3>
-      <CopyMealPlanModal to={selectedPlan} />
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="mr-auto">Days</h3>
+      <MealPlanActionsMenu
+        toPlan={selectedPlan}
+        showStartFromToday={canStartFromToday}
+        onStartFromToday={() => dispatch(startFromToday())}
+      />
     </div>
     <div className="mt-4 flex gap-2 overflow-x-auto pb-4">
       {days.length === 0 && <div className="bg-[var(--comp-1)] border-1 p-2 rounded-[6px] grow text-center mr-auto"
@@ -44,7 +64,12 @@ export default function MonthlyMealCreation() {
           defaultValue={day}
         />
       </div>)}
-      <AddDayModal />
+      <Button
+        onClick={() => dispatch(addNewPlanType(nextDate))}
+        variant="wz">
+        Add
+      </Button>
+      {/* <AddDayModal /> */}
     </div>
   </>
 }
@@ -100,4 +125,17 @@ function UpdateDate({ defaultValue = "" }) {
       <DialogClose ref={closeRef} />
     </DialogContent>
   </Dialog>
+}
+
+function findNextDate(keys) {
+  return format(
+    addDays(
+      keys
+        .map(date => parse(date, "dd-MM-yyyy", new Date()))
+        .sort((dateA, dateB) => isBefore(dateB, dateA) ? -1 : 1)
+        ?.at(0),
+      1
+    ),
+    "yyyy-MM-dd"
+  )
 }

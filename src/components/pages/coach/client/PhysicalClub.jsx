@@ -1,30 +1,33 @@
 "use client"
-import { TabsContent } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import ContentError from "@/components/common/ContentError"
 import ContentLoader from "@/components/common/ContentLoader"
-import { getPhysicalAttendance, getPhysicalMemberships } from "@/lib/fetchers/app"
-import { _throwError, getMembershipType } from "@/lib/formatter"
-import useSWR, { mutate } from "swr"
-import { format } from "date-fns"
-import { useParams } from "next/navigation"
+import FormControl from "@/components/FormControl"
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
-import { useState } from "react"
-import { toast } from "sonner"
-import { sendData } from "@/lib/api"
-import { Trash2, X } from "lucide-react"
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TabsContent } from "@/components/ui/tabs"
+import { sendData } from "@/lib/api"
+import { getPhysicalAttendance, getPhysicalMemberships } from "@/lib/fetchers/app"
+import { _throwError, getMembershipType } from "@/lib/formatter"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Trash2, X } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useRef, useState } from "react"
+import { toast } from "sonner"
+import useSWR, { mutate } from "swr"
 
 export default function PhysicalClub() {
   return <TabsContent
@@ -83,13 +86,24 @@ function MembershipData() {
 
   return (
     <div>
-      <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px] flex items-center justify-between">
-        <p>Service Status</p>
-        <div>
-          <UpdatePhysicalServiceStatus
-            status={Boolean(membership.isActive)}
-            clientId={clientId}
-          />
+      <div className="bg-[var(--comp-1)] p-4 mb-4 border-1 rounded-[8px]">
+        <div className="flex items-center justify-between">
+          <p>Service Status</p>
+          <div>
+            <UpdatePhysicalServiceStatus
+              status={Boolean(membership.isActive)}
+              clientId={clientId}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p>Auto Mark Attendance</p>
+          <div>
+            <AutoMarkAttendance
+              status={Boolean(membership.autoMarkRequested)}
+              clientId={clientId}
+            />
+          </div>
         </div>
       </div>
       <div
@@ -98,7 +112,10 @@ function MembershipData() {
       >
         <div className="space-y-6">
           <ClientDetails membership={membership} />
-          <SubscriptionHistoryTable history={membership.history} />
+          <SubscriptionHistoryTable
+            history={membership.history}
+            clientId={membership.client?._id}
+          />
         </div>
       </div>
     </div>
@@ -204,13 +221,14 @@ function ClientDetails({ membership }) {
   )
 }
 
-function SubscriptionHistoryTable({ history }) {
+function SubscriptionHistoryTable({ clientId, history }) {
+  console.log(clientId)
   if (!history || history.length === 0) {
     return <p className="text-sm text-muted-foreground">No subscription history found</p>
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto w-72 md:w-full rounded-lg border">
       <Table className="bg-white">
         <TableHeader>
           <TableRow>
@@ -220,6 +238,7 @@ function SubscriptionHistoryTable({ history }) {
             <TableHead>Servings</TableHead>
             <TableHead>Start Date</TableHead>
             <TableHead>End Date</TableHead>
+            <TableHead>Pending Amount</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -240,8 +259,18 @@ function SubscriptionHistoryTable({ history }) {
                 {type === "Monthly"
                   ? <TableCell className="text-center">{format(item.endDate, "dd/MM/yyyy")}</TableCell>
                   : <TableCell className="text-center">-</TableCell>}
-                <TableCell>
+                <TableCell>{
+                  item.partialAmount === true
+                    ? item.amount - (item.paidAmount || 0)
+                    : item.amount
+                }</TableCell>
+                <TableCell className="flex items-center gap-2">
                   <DeleteSubscription membershipId={item._id} />
+                  {item.partialAmount === true && <PayPartialAmount
+                    clientId={clientId}
+                    membershipId={item._id}
+                    pendingAmount={item.amount - (item.paidAmount || 0)}
+                  />}
                 </TableCell>
               </TableRow>
             )
@@ -328,10 +357,12 @@ function AddMembershipDialog({
     membershipType: 1,
     paymentMode: "Online",
     amount: 0,
+    paidAmount: 0,
     startDate: "",
     endDate: "",
     servings: 0,
-    overdue: 0
+    overdue: 0,
+    partialAmount: false
   })
 
   const handleChange = (field, value) => {
@@ -351,6 +382,16 @@ function AddMembershipDialog({
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleUpdateAmount(e) {
+    const amount = parseInt(e.target.value) ?? 0
+    const updatePayload = {
+      ...payload,
+      amount
+    }
+    if (!payload.partialAmount) updatePayload.paidAmount = amount
+    setPayload(updatePayload)
   }
 
   return (
@@ -386,14 +427,36 @@ function AddMembershipDialog({
             </select>
           </div>
           <div className="flex flex-col">
-            <label>Amount</label>
+            <div className="flex items-center justify-between gap-4">
+              <label>Amount</label>
+              <TogglePartialAmount
+                onToggle={() => setPayload(prev => ({
+                  ...prev,
+                  partialAmount: !prev.partialAmount
+                }))}
+                isPartialAmount={payload.partialAmount}
+              />
+            </div>
             <input
               type="number"
               value={payload.amount}
-              onChange={e => handleChange("amount", Number(e.target.value))}
+              onChange={handleUpdateAmount}
               className="border rounded px-2 py-1"
             />
           </div>
+
+          {payload.partialAmount && <div className="flex flex-col">
+            <div className="flex items-center justify-between gap-4">
+              <label>Paid Amount</label>
+              <span className="text-[12px] text-[#808080] italic font-bold">Pending Amount = {payload.amount - payload.paidAmount}</span>
+            </div>
+            <input
+              type="number"
+              value={payload.paidAmount}
+              onChange={e => handleChange("paidAmount", parseInt(e.target.value))}
+              className="border rounded px-2 py-1"
+            />
+          </div>}
 
           <div className="flex flex-col">
             <label>Start Date</label>
@@ -506,4 +569,116 @@ function UpdatePhysicalServiceStatus({
       </div>
     </AlertDialogTrigger>
   </DualOptionActionModal>
+}
+
+function AutoMarkAttendance({ clientId, status }) {
+  async function updatePhysicalServiceStatus(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/physical-club/attendance",
+        { clientId, status: !status },
+        "PATCH"
+      );
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/physical-club/memberships/${clientId}`);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      closeBtnRef.current.click();
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure? Requested Attendance will be auto marked as present!"
+    action={updatePhysicalServiceStatus}
+  >
+    <AlertDialogTrigger asChild>
+      <div className="flex items-center space-x-2">
+        <Switch checked={status} id="active-status" />
+        <Label htmlFor="active-status">Active</Label>
+      </div>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function TogglePartialAmount({ isPartialAmount, onToggle }) {
+  return <div className="font-semibold text-sm flex items-center gap-3">
+    <Switch
+      checked={isPartialAmount}
+      onCheckedChange={onToggle}
+      className={cn(
+        "data-[state=checked]:bg-[var(--accent-1)] data-[state=unchecked]:bg-[var(--comp-3)]",
+        "ring-2 ring-offset-2 ring-[var(--accent-1)]/20",
+        "h-6 w-11"
+      )}
+    />
+    <span className={cn(
+      "font-semibold",
+      isPartialAmount ? "text-[var(--accent-1)]" : "text-[var(--dark-1)]"
+    )}>
+      Partial Payment
+    </span>
+  </div>
+}
+
+function PayPartialAmount({ clientId, membershipId, pendingAmount }) {
+  const [loading, setLoading] = useState(false)
+  const [payingAmount, setPayingAmount] = useState(0)
+
+  const closeBtnRef = useRef()
+
+  async function udpateMembershipPartialAmount() {
+    try {
+      setLoading(true);
+      const payload = {
+        payingAmount,
+        clientId,
+        membershipId
+      }
+      const response = await sendData(`app/physical-club/memberships/partial-payment`, payload);
+      console.log(response)
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate(`app/physical-club/memberships/${clientId}`,);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <Dialog>
+    <DialogClose ref={closeBtnRef} />
+    <DialogTrigger asChild>
+      <Button size="sm">Pay</Button>
+    </DialogTrigger>
+    <DialogContent className="p-0 !gap-0">
+      <DialogTitle className="p-4 border-b-1">Pay Partial Amount</DialogTitle>
+      <div className="p-4">
+        <FormControl
+          label="Pay Amount"
+          value={payingAmount}
+          onChange={e => {
+            const amount = isNaN(e.target.value) ? 0 : (Number(e.target.value) ?? 0)
+            if (amount > pendingAmount) {
+              toast.error("Amount should be less than pending amount")
+              return
+            }
+            setPayingAmount(amount)
+          }}
+        />
+        {payingAmount > 0 && <Button
+          variant="wz"
+          disabled={loading}
+          onClick={udpateMembershipPartialAmount}
+          className="mt-4 w-full"
+        >
+          Save
+        </Button>}
+      </div>
+    </DialogContent>
+  </Dialog>
 }
