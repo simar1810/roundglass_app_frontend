@@ -271,7 +271,7 @@ function NotificationItem({ notif }) {
                 onSelect={e => e.preventDefault()}
                 className="p-0"
               >
-                <ScheduleNotificationWrapper
+                {/* <ScheduleNotificationWrapper
                   defaultPayload={{
                     ...notif,
                     _id: undefined
@@ -284,7 +284,7 @@ function NotificationItem({ notif }) {
                     <Copy className="w-4 h-4 text-gray-600" />
                     <span>Copy notification</span>
                   </button>
-                </ScheduleNotificationWrapper>
+                </ScheduleNotificationWrapper> */}
               </DropdownMenuItem>
 
               <DropdownMenuItem

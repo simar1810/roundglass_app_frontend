@@ -75,9 +75,8 @@ function ClientDetails({ clientData }) {
       toast.error(error.message || "Please try again later!");
     }
   }
-  const clienthealthMatrix = clientData.healthMatrix.healthMatrix
+  const clienthealthMatrix = clientData?.healthMatrix?.healthMatrix || [{}]
   const healthMatricesLength = clienthealthMatrix.length
-    // const weightLoss = healthMatricesLength <= 1
     ? false
     : (generateWeightStandard(clienthealthMatrix?.at(0)) - generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1)))
       .toFixed(2)
@@ -126,14 +125,14 @@ function ClientDetails({ clientData }) {
           <p>Weight Lost Till Date</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss * -1} Pounds</p>
         </div>} */}
-        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+        {clientData?.healthMatrix?.height && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Height</p>
-          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData.healthMatrix.height} ${clientData.healthMatrix.heightUnit}`}</p>
-        </div>
-        <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData?.healthMatrix?.height} ${clientData?.healthMatrix?.heightUnit}`}</p>
+        </div>}
+        {latestWeight && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Latest Weight</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{latestWeight}</p>
-        </div>
+        </div>}
       </div>
     </CardContent>
   </Card>

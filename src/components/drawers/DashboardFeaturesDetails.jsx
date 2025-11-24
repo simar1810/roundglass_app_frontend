@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, ChevronLeft, Download, RefreshCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, Download, Filter, RefreshCcw } from "lucide-react";
 import useSWR from "swr";
 import Link from "next/link";
 
@@ -22,6 +22,8 @@ import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { addDays, addYears, differenceInCalendarDays, format, isBefore, isValid, parse, setDate, setMonth, startOfDay } from "date-fns";
 import { normalizeMealPlansSorting } from "../pages/coach/dashboard/feature-statistics/ClientPlansExpiry";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const DATE_FORMATS = ["dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd"];
 const TONE_CLASSES = {
@@ -80,6 +82,9 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
     plans: { page: 1, limit: 10 },
     incomplete: { page: 1, limit: 10 },
   });
+  const [filters, setFilters] = useState({
+    plans: "all"
+  })
 
   const { birthdays = [], subscriptions = [], plans = [] } = data?.data || {};
   const normalizedBirthdays = useMemo(() => normalizeBirthdays(birthdays), [birthdays])
@@ -98,6 +103,7 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
         plans,
         normalizedPlans,
         incompletePlans: normalizedIncompletePlans,
+        filters
       }),
     [
       birthdays,
@@ -107,6 +113,7 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
       plans,
       normalizedPlans,
       normalizedIncompletePlans,
+      filters.plans
     ]
   );
 
@@ -162,6 +169,7 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
                 return (
                   <TabsContent key={tabItem.value} value={tabItem.value} className="mt-6 mx-2 md:mx-0">
                     <DataCard
+                      selectedTab={tab}
                       title={tabItem.title}
                       description={tabItem.description}
                       columns={tabItem.columns}
@@ -180,6 +188,8 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
                         }))
                       }
                       onExport={() => exportRowsAsCSV(tabItem.exportFileName, tabItem.columns, tableRows)}
+                      filter={filters}
+                      onFilterChange={setFilters}
                     />
                   </TabsContent>
                 );
@@ -221,6 +231,7 @@ function ActivitiesHeader({ onRefresh, isRefreshing }) {
 }
 
 function DataCard({
+  selectedTab,
   title,
   description,
   columns,
@@ -231,6 +242,8 @@ function DataCard({
   totalPages,
   onPageChange,
   onExport,
+  filter,
+  onFilterChange
 }) {
   const hasData = rows.length > 0;
 
@@ -246,11 +259,16 @@ function DataCard({
           size="sm"
           onClick={onExport}
           disabled={totalRows === 0}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 ml-auto"
         >
           <Download className="h-4 w-4" />
           Export table
         </Button>
+        <FilterOptions
+          selectedTab={selectedTab}
+          filter={filter}
+          onFilterChange={onFilterChange}
+        />
       </div>
       <div className="overflow-x-auto">
         <Table className="min-w-full">
@@ -269,7 +287,7 @@ function DataCard({
           <TableBody>
             {hasData ? (
               rows.map((row, index) => (
-                <TableRow key={row.id ?? index} className="text-sm text-slate-700 transition hover:bg-slate-50">
+                <TableRow key={row._id ?? index} className="text-sm text-slate-700 transition hover:bg-slate-50">
                   {columns.map((column) => {
                     const content = column.render ? column.render(row, index) : row[column.key];
                     return (
@@ -421,6 +439,7 @@ function createTabsConfig({
   plans,
   normalizedPlans,
   incompletePlans,
+  filters
 }) {
   const birthdayColumns = [
     {
@@ -579,7 +598,7 @@ function createTabsConfig({
       title: "Meal Plans About to Expire",
       description: null,
       columns: mealPlanColumns,
-      rows: normalizedPlans,
+      rows: renderMealPlanRows(normalizedPlans, filters),
       rawRows: plans,
       exportFileName: "meal-plans-expiring",
     },
@@ -1057,4 +1076,44 @@ function calculateMissingDates(startDate, availableDates, totalDays) {
   }
 
   return missing;
+}
+
+function FilterOptions({
+  selectedTab,
+  filter,
+  onFilterChange
+}) {
+  if (selectedTab == "plans") return <ExpiringMealPlanFilterOptions
+    filter={filter}
+    onFilterChange={onFilterChange}
+  />
+  return <></>
+}
+
+function ExpiringMealPlanFilterOptions({
+  filter,
+  onFilterChange
+}) {
+  const planFilter = filter.plans || "all"
+  return <Select
+    value={planFilter}
+    onValueChange={(value) => onFilterChange(prev => ({ ...prev, plans: value }))}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="active">Active</SelectItem>
+      <SelectItem value="expired">Expired</SelectItem>
+      <SelectItem value="all">All</SelectItem>
+    </SelectContent>
+  </Select>
+}
+
+function renderMealPlanRows(plans, { plans: plansFilter } = {}) {
+  if (plansFilter === "active") return plans
+    .filter(plan => plan.remainingDays > 0);
+  if (plansFilter === "expired") return plans
+    .filter(plan => plan.remainingDays <= 0);
+  return plans;
 }
