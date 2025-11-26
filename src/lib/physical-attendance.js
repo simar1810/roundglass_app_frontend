@@ -6,6 +6,7 @@ import {
   startOfYear,
   endOfYear,
   getMonth,
+  subDays,
 } from "date-fns";
 import { _throwError } from "./formatter";
 import { MONTHS } from "@/config/data/date";
@@ -176,15 +177,13 @@ export function clientWiseHistoryClientOptions(data) {
 
 export function clientWiseHistory(data, range) {
   if (!range?.from || !range?.to) return [];
-
-  const start = new Date(range.from);
+  const start = addDays(new Date(range.from), 1);
   const end = new Date(range.to);
 
   const totalDays =
     Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
   return data.map(record => {
-    // Group attendance by date to handle multiple servings per day
     const attendanceByDate = new Map();
     record.attendance.forEach(a => {
       const d = new Date(a.date);
@@ -203,12 +202,12 @@ export function clientWiseHistory(data, range) {
       const key = currentDate.toISOString().split("T")[0];
       const dayAttendances = attendanceByDate.get(key) || [];
 
-      // Only show days where there's actual attendance data
+
       if (dayAttendances.length === 0) {
         return {
           date: currentDate.getDate(),
           month: currentDate.getMonth(),
-          status: undefined, // No attendance data for this day
+          status: undefined,
           presentCount: 0,
           absentCount: 0,
           unmarkedCount: 0,
