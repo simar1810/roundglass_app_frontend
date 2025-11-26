@@ -330,13 +330,13 @@ export function invoicePDFData(order, coach) {
   return {
     clientName: order.clientName,
     age: order?.clientId?.age || '21',
-    address: 'New Amritsar, Punjab',
-    city: 'Amritsar',
-    phone: order?.clientId?.mobileNumber || '9XXXXXXXXX',
+    address: order?.clientId?.city ?? '',
+    city: order?.clientId?.city ?? '',
+    phone: order?.clientId?.mobileNumber || '',
     invoiceNo: order?.invoiceNumber || 'INVXXXXXX',
     date: order.createdAt || format(new Date(), 'dd-MM-yyyy'),
     coachName: 'Wellness Coach',
-    coachPhone: '9876543210',
+    coachPhone: '',
     coachCity: coach?.city || 'Ludhiana',
     subtotal: (order.sellingPrice * 100 * Number(coach.margin)) || "0",
     discount: 100 - Number(coach.margin), // how to get this field

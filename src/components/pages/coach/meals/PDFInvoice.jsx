@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/providers/global/hooks";
 import {
   Page,
   Text,
@@ -145,6 +146,11 @@ function getStyles(brand) {
 
 export default function PDFInvoice({ data, brand }) {
   const {
+    mobileNumber: coachPhoneNumber,
+    city: coachCity
+
+  } = useAppSelector(state => state.coach.data) ?? {}
+  const {
     clientName,
     age,
     address,
@@ -175,10 +181,10 @@ export default function PDFInvoice({ data, brand }) {
 
           <View style={styles.headerRow}>
             <Text>
-              <Text style={styles.label}>City:</Text> {city}
+              <Text style={styles.label}>City:</Text> {coachCity}
             </Text>
             <Text>
-              <Text style={styles.label}>Phone:</Text> {phone}
+              <Text style={styles.label}>Phone:</Text> {coachPhoneNumber}
             </Text>
           </View>
 

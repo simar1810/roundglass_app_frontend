@@ -66,7 +66,6 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
 
 function AddClientCheckupContainer() {
   const { stage } = useCurrentStateContext();
-  console.log(stage)
   const Component = selectComponent(stage)
 
   return <DialogContent className="w-[600px] md:!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">

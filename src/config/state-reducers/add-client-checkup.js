@@ -1,4 +1,4 @@
-import { addDays, differenceInYears, format, parse } from "date-fns";
+import { addDays, differenceInYears, format, parse, subYears } from "date-fns";
 import { addClientCheckupInitialState } from "../state-data/add-client-checkup";
 import { ddMMyyyy } from "../data/regex";
 
@@ -184,10 +184,13 @@ export function init(type, data) {
     payload[field] = data[field] || "";
   }
   if (ddMMyyyy.test(data.dob)) {
+    const bday = parse(data.dob, "dd-MM-yyyy", new Date())
     payload.dob = format(
-      parse(data.dob, "dd-MM-yyyy", new Date()),
+      bday,
       "yyyy-MM-dd"
     )
+    const age = differenceInYears(new Date(), bday)
+    payload.age = age > 0 ? age : 0
   }
   payload.pendingCustomer = "true";
   payload.existingClientID = data._id;

@@ -46,10 +46,10 @@ export default function Page() {
   if (isLoading) return <ContentLoader />
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  
+
   // Get all clients from API response and implement frontend pagination
   const allClients = Array.isArray(data?.data) ? data.data : [];
-  
+
   // Apply status filter
   let filteredClients = allClients;
   if (statusFilter === "pending") {
@@ -59,7 +59,7 @@ export default function Page() {
   } else if (statusFilter === "inactive") {
     filteredClients = allClients.filter(client => client.isVerified && !client.isActive);
   }
-  
+
   // Apply category filter
   let clients = [];
   if (selectedCategories.length > 0) {
@@ -71,7 +71,7 @@ export default function Page() {
   } else {
     clients = filteredClients;
   }
-  
+
   // Apply pagination after filtering
   const totalClients = clients.length;
   const totalPages = Math.ceil(totalClients / query.limit);
@@ -81,7 +81,7 @@ export default function Page() {
 
   return <div className="mt-8 content-container">
     <div className="flex flex-col gap-4 md:gap-0 md:flex-row items-start justify-between mb-6">
-      <StatusFilter 
+      <StatusFilter
         statusFilter={statusFilter}
         setStatusFilter={(filter) => {
           setStatusFilter(filter);
@@ -94,7 +94,7 @@ export default function Page() {
         categories={client_categories}
       />
     </div>
-    
+
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 divide-y-1">
       {currentClients.map((client, index) => <ClientListItemStatus
         key={index}
