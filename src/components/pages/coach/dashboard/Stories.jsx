@@ -14,9 +14,9 @@ export default function Stories({ stories }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [modalOpened, setModalOpened] = useState(false);
 
-  return <div className="bg-[var(--primary-1)] max-h-[50vh] mt-8 p-4 border-1 rounded-[12px] overflow-y-auto">
+  return <div className="bg-[var(--primary-1)] max-h-[80vh] md:max-h-[50vh] mt-2 md:mt-8 p-4 border-1 rounded-[12px] overflow-y-auto">
     <h4 className="mb-4">Results</h4>
-    <div className="grid grid-cols-4 gap-4 no-scrollbar">
+    <div className="grid md:grid-cols-4 gap-4 no-scrollbar">
       <AddStoryModal />
       {stories.map((story, index) => <div
         className="relative"
@@ -71,8 +71,8 @@ function DeleteStory({ id }) {
     description="Are you sure to delete this result?"
     action={(setLoading, closeBtnRef) => deleteStory(setLoading, closeBtnRef)}
   >
-    <AlertDialogTrigger className="bg-[var(--accent-1)] text-white p-[2px] absolute top-[2px] right-[2px] z-10 border-1 rounded-full">
-      <X className="w-[14px] h-[14px] close" strokeWidth={3} />
+    <AlertDialogTrigger className="bg-[var(--accent-1)] text-white p-[2px] absolute top-[10px] right-[10px] md:top-[2px] md:right-[2px] z-10 border-1 rounded-full">
+      <X className="w-[20px] h-[20px] md:w-[14px] md:h-[14px] close" strokeWidth={3} />
     </AlertDialogTrigger>
   </DualOptionActionModal>
 }

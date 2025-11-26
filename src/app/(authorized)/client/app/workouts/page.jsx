@@ -59,10 +59,10 @@ function Header({
   searchQuery,
   setSearchQuery
 }) {
-  return <div className="flex items-center justify-between gap-4 mb-10">
+  return <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10">
     <h1 className="text-2xl font-semibold">Workout Library</h1>
     <FormControl
-      className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
+      className="w-full lg:min-w-[280px] md:max-w-[500px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] md:ml-auto"
       placeholder="Search Meal.."
       value={searchQuery}
       onChange={e => setSearchQuery(e.target.value)}
@@ -76,7 +76,7 @@ function WorkoutsContainer({
 }) {
   const workouts = allWorkouts.filter(workout => new RegExp(searchQuery, "i").test(workout.title));;
   return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-    {workouts.map(workout => <div key={workout._id} className=" overflow-hidden bg-white">
+    {workouts.map(workout => <div key={workout._id} className="overflow-hidden bg-white">
       <div className="relative">
         <Link href={`/client/app/workouts/${workout._id}`}>
           <Image

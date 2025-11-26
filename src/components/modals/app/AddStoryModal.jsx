@@ -36,8 +36,8 @@ export default function AddStoryModal() {
 
   return <Dialog>
     <DialogTrigger>
-      <div className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2">
-        <div className="w-[64px] h-[64px] border-2 bg-[var(--primary-1)] border-[var(--primary-1)] relative rounded-full">
+      <div className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2 h-40 md:h-auto w-full">
+        <div className="w-[100px] h-[100px] md:w-[64px] md:h-[64px] border-2 bg-[var(--primary-1)] border-[var(--primary-1)] relative rounded-full">
           <Avatar className="w-full h-full p-3">
             <AvatarImage src="/logo.png" />
           </Avatar>
@@ -72,7 +72,7 @@ export default function AddStoryModal() {
           </div>
           : <div
             onClick={() => fileRef.current.click()}
-            className="h-64 flex items-center justify-center border-1 border-dashed rounded-[8px]"
+            className="h-64 flex items-center justify-center border-2 bg-zinc-100 border-dashed rounded-[8px]"
           >
             <ImageIcon className="w-[20px] h-[20px]" />
           </div>}

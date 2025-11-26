@@ -51,10 +51,10 @@ function SelectedMarathonDetails({ marathon }) {
     <div className="flex items-center gap-4">
       <h4 className="leading-[1] mb-4 mr-auto">{marathon?.marathonTitle}</h4>
     </div>
-    <div className="grid grid-cols-2 gap-x-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
       {marathon.tasks.map(task => <div className="mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px]" key={task.taskId}>
         <div>
-          <h3>{task.title}</h3>
+          <h3 className="text-base">{task.title}</h3>
           <p className="text-[var(--dark-1)]/32 text-[14px] font-[500] mt-1">{task.description}</p>
           {task.photoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic mt-4">* Photo required at Submission</p>}
           {task.videoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic">* Video required at Submission</p>}

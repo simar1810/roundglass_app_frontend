@@ -37,7 +37,7 @@ export default function AddNoteModal({ person = "coach" }) {
   }
 
   return <Dialog>
-    <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold px-2 py-1 flex items-center gap-1 rounded-[8px]">
+    <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-bold px-2 py-2 md:py-1 flex items-center gap-1 rounded-[8px]">
       <Plus className="w-[16px]" />
       Create New
     </DialogTrigger>
