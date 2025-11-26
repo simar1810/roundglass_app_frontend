@@ -24,7 +24,7 @@ export default async function Layout({ children }) {
     <FAQChatbot />
     <SidebarProvider className="!bg-white">
       <AppClientSidebar />
-      <div className="max-w-[calc(100vw-205px)] grow no-scrollbar">
+      <div className="md:max-w-[calc(100vw-205px)] grow no-scrollbar">
         <AppClientNavbar />
         <div className="bg-[var(--comp-2)] p-4">
           {children}

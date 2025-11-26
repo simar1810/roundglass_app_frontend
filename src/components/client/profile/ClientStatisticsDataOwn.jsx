@@ -63,7 +63,7 @@ export default function ClientStatisticsDataOwn({ clientData }) {
         </Button>)}
       </div>
       {!isNaN(weightDifference) && <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
-      <div className="mt-8 grid grid-cols-3 gap-5">
+      <div className="mt-8 grid md:grid-cols-3 gap-5">
         <HealthMetrics data={payload} />
       </div>
     </TabsContent>
