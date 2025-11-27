@@ -11,62 +11,10 @@ import { TabsContent } from "@/components/ui/tabs"
 import { retrieveAIAgentHistory } from "@/lib/fetchers/app"
 import { format } from "date-fns"
 import { Activity, Brain, Lightbulb, Utensils, X } from "lucide-react"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import useSWR from "swr"
-
-const sampleData = {
-  _id: "68a4362b50cb8c4371a1c4b5",
-  person: "client",
-  calories: 660,
-  carbohydrates: 124,
-  fats: 9.7,
-  protein: 15.6,
-  history: [
-    {
-      type: "Food",
-      question: "Rajma Chawal",
-      _id: "68a55ddea31aa573ad963644",
-      date: "2025-08-20T05:32:14.405Z",
-    },
-    {
-      type: "Mood",
-      question: "Nice To Meet You",
-      _id: "68a55da4a31aa573ad963613",
-      date: "2025-08-20T05:31:16.436Z",
-    },
-    {
-      type: "Exercise",
-      question: "Push Ups",
-      _id: "68a55df7a31aa573ad963676",
-      date: "2025-08-20T05:32:39.345Z",
-    },
-    {
-      type: "Mood",
-      question: "Feeling Low",
-      _id: "68a55e18a31aa573ad9636a9",
-      date: "2025-08-20T05:33:12.434Z",
-    },
-    {
-      type: "Guidance",
-      question: "Help me in creating a daily schedule",
-      _id: "68a55e30a31aa573ad9636c9",
-      date: "2025-08-20T05:33:36.193Z",
-    },
-    {
-      type: "Food",
-      question: "Breakfast Bowl",
-      _id: "68a43c1247fdd75a6321b16c",
-      date: "2025-08-19T08:55:46.886Z",
-    },
-    {
-      type: "Exercise",
-      question: "Morning Jog",
-      _id: "68a43a8f92a59e1380d55693",
-      date: "2025-08-19T08:49:19.993Z",
-    },
-  ],
-}
 
 const typeIcons = {
   Food: Utensils,
@@ -85,19 +33,19 @@ const typeColors = {
 // Helper function to format numbers and remove floating point precision errors
 const formatNumber = (value, decimals = 0) => {
   if (value == null || value === undefined || isNaN(value)) return '0'
-  
+
   // Convert to number if it's a string
   const numValue = typeof value === 'string' ? parseFloat(value) : value
-  
+
   // Round to remove floating point errors
   const multiplier = Math.pow(10, decimals)
   const rounded = Math.round(numValue * multiplier) / multiplier
-  
+
   // Format based on decimal places needed
   if (decimals === 0) {
     return Math.round(rounded).toString()
   }
-  
+
   // Format with decimals and remove trailing zeros
   return rounded.toFixed(decimals).replace(/\.?0+$/, '')
 }
@@ -237,7 +185,18 @@ export default function AIAgentHistory() {
                             {item.date}
                           </span>
                         </div>
-                        <p className="font-medium truncate">{item.question || "No description available"}</p>
+                        <p className="font-medium truncate">
+                          {item.question.startsWith("http")
+                            ? <Image
+                              src={item.question}
+                              alt=""
+                              className="w-full aspect-video object-contain bg-white border-1 rounded-[10px]"
+                              onError={e => e.target.src = "/not-found.png"}
+                              height={400}
+                              width={400}
+                            />
+                            : item.question || "No description available"}
+                        </p>
                       </div>
                     </div>
                   )

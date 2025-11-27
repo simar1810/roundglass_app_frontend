@@ -116,26 +116,26 @@ export function formatDate(date) {
 
 
 function formatTime(timeStr) {
-  if (!timeStr) return "00:00:00"
+  if (!timeStr) return "00:00"
 
   try {
     // Handle TimePicker format (hh:mm a) - like "02:30 PM"
     if (timeStr.match(/^\d{1,2}:\d{2}\s+(AM|PM)$/i)) {
       const parsed = parse(timeStr, "hh:mm a", new Date())
-      return format(parsed, "HH:mm:ss")
+      return format(parsed, "HH:mm")
     }
 
     // Handle 24-hour format (HH:mm) - like "14:30"
     if (timeStr.match(/^\d{2}:\d{2}$/)) {
       return `${timeStr}:00`
     }
-    if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    if (timeStr.match(/^\d{2}:\d{2}$/)) {
       return timeStr
     }
 
-    return "00:00:00"
+    return "00:00"
   } catch (error) {
-    return "00:00:00"
+    return "00:00"
   }
 }
 
@@ -492,7 +492,6 @@ function generatePayload(payload, id) {
   for (const field of ["subject", "message", "time"]) {
     if (!payload[field]) throw new Error(`${field} is mandatory.`);
   }
-  console.log(payload)
 
   if (payload.notificationType === "reocurr") {
     const result = {

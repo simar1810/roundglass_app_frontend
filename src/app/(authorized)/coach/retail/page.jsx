@@ -297,7 +297,7 @@ function SaleOrder({ order }) {
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          {order.status === "Completed" && <RetailCompletedLabel status={order.status}/>}
+          {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
           {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
           {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">

@@ -40,6 +40,7 @@ import { DialogTrigger } from "../ui/dialog";
 import { useSWRConfig } from "swr";
 import { SearchBar } from "./AppNavbar";
 import { isCoach, getUserType, getUserPermissions } from "@/lib/permissions";
+import AddClientWithCheckup from "../modals/add-client/AddClientWithCheckup";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
@@ -411,30 +412,17 @@ function ActiveClient({ client }) {
   );
 }
 
-function InactiveClient({ query, setQuery, setModal, client }) {
-  const { cache } = useSWRConfig();
+function InactiveClient({ setModal, client }) {
   return (
     <div
       className="hover:bg-[var(--accent-1)] hover:text-[var(--primary-1)] text-[var(--dark-1)] text-[12px] px-2 py-2 flex items-center gap-4"
       onClick={() => {
         setModal(
-          <PendingClientClubDataModal
-            open={true}
-            onClose={() => setModal()}
-            clientData={client}
-            mutateQuery={{
-              search: true,
-              all: true,
-              query: query,
-            }}
-            onSubmit={() => {
-              setModal();
-              cache.delete(`app/allClient?limit=5&search=${query}`);
-              setQuery();
-            }}
-          >
-            <DialogTrigger />
-          </PendingClientClubDataModal>
+          <AddClientWithCheckup
+            type="add-details"
+            data={client}
+            setModal={setModal}
+          />
         );
       }}
     >
