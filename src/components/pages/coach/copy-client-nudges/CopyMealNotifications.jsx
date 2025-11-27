@@ -1,24 +1,20 @@
 import Loader from "@/components/common/Loader";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { mealPlanNudgesInitialState } from "@/config/state-data/copy-meal-nudges";
-import { copyMealNudgeReducer } from "@/config/state-reducers/copy-meal-nudges";
 import { fetchData, sendData } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function CopyMealNotifications({ clientId }) {
-  return <></>
   return <Dialog className="">
     <DialogTrigger asChild>
       <Button className="fon-bold">
         Meal Nudges
       </Button>
     </DialogTrigger>
-    <DialogContent className="p-0 ">
+    <DialogContent className="p-0 !gap-0 !space-y-0">
       <DialogTitle className="p-4 border-b-1">Copy Meal Plan Nudges</DialogTitle>
       <div className="p-4">
         <Container clientId={clientId} />
@@ -46,13 +42,18 @@ function Container({ clientId }) {
   async function saveMealPlan() {
     try {
       setLoading(true);
-      const response = await sendData("app/", formData);
+      const response = await sendData(
+        `app/notification-copy/meal-plan/${clientId}`,
+        { clientId, mealId: selectedMealPlans }
+      );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`getClientVolumePoints/${_id}`);
+      mutate(`client/nudges/${clientId}`,);
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message || "Something went wrong")
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -73,6 +74,7 @@ function Container({ clientId }) {
       variant="wz"
       onClick={saveMealPlan}
       disabled={loading}
+      className="mt-4 w-full"
     >
       Save
     </Button>}
