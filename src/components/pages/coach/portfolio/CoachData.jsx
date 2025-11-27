@@ -85,7 +85,7 @@ function CoachSMLinks() {
           className="px-4 mb-2 flex items-center gap-4"
         >
           {social.icon}
-          <Link target="_blank" href={socialLinks[social.name]}>{socialLinks[social.name]}</Link>
+          <Link target="_blank" href={socialLinks[social.name]} className="w-full md:text-xs lg:text-base break-all">{socialLinks[social.name]}</Link>
         </div>)}
     </div>
     <UpdateCoachSocialsModal socialLinks={socialLinks} />
