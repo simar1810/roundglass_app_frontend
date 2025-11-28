@@ -25,6 +25,8 @@ import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
 import DeleteClientNudges from "./DeleteClientNudges"
+import CopyClientNudges from "../copy-client-nudges/CopyClientNudges"
+import CopyMealNotifications from "../copy-client-nudges/CopyMealNotifications"
 
 export default function ClientNudges() {
   const [selected, setSelected] = useState([])
@@ -50,6 +52,10 @@ export default function ClientNudges() {
       <ScheduleNotificationWrapper
         selectedClients={id}
       />
+    </div>
+    <div className="flex items-center justify-end gap-4">
+      <CopyMealNotifications clientId={id} />
+      <CopyClientNudges clientId={id} />
     </div>
     {notifications.length === 0
       ? <CreateFirstNotification />
@@ -114,7 +120,7 @@ function Header({
       }))}
       value={selected}
       onChange={value => setSelected(value)}
-      
+
     />
   </div>
 }
