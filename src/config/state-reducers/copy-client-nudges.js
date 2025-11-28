@@ -39,6 +39,16 @@ export function copyClientNudgesReducer(state, action) {
             selected: true
           }))
       }
+    case "DESELECT_ALL_NOTIFICATIONS":
+      return {
+        ...state,
+        clientNudges: state
+          .clientNudges
+          .map(notification => ({
+            ...notification,
+            selected: false
+          }))
+      }
     default:
       return state;
   }
@@ -85,5 +95,11 @@ export function toggleNotificationSelection(payload) {
 export function selectAllNotifications() {
   return {
     type: "SELECT_ALL_NOTIFICATIONS"
+  }
+}
+
+export function deselectAllNotifications() {
+  return {
+    type: "DESELECT_ALL_NOTIFICATIONS"
   }
 }

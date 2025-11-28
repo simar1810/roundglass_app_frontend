@@ -19,7 +19,8 @@ import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
 import { getRecentNotifications, getReocurrNotification } from "@/lib/nudges"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Copy, EllipsisVertical, Pen, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, EllipsisVertical, Image as ImageIcon, Pen, Trash2 } from "lucide-react"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -227,109 +228,164 @@ function NotificationItem({ notif }) {
   const isSeen = notif?.isRead;
   const formattedTime = notif?.time || "--:--";
   const formattedDate = notif?.date || "--/--/----";
+  
+  // Get status options if available
+  const possibleStatuses = Array.isArray(notif?.notificationStatus?.possibleStatus) 
+    ? notif.notificationStatus.possibleStatus 
+    : [];
+  const defaultStatus = notif?.notificationStatus?.clientMarkedStatus || "";
+  
+  // Get image URL if available (check multiple possible field names)
+  const imageUrl = notif?.image || notif?.imageUrl || notif?.attachment || notif?.photo || null;
 
   return (
     <div
       className={cn(
-        "border rounded-2xl px-4 py-3 mb-3 flex items-start justify-between transition hover:shadow-sm",
+        "border rounded-2xl px-4 py-3 mb-3 flex flex-col gap-3 transition hover:shadow-sm",
         isSeen ? "bg-white" : "bg-[#f9fafb]"
       )}
     >
-      <div className="flex-1">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <div className="flex-1">
-            <p className="font-bold text-gray-900 text-sm md:!text-lg">
-              {notif.subject || "Untitled Notification"}
-            </p>
-            {/* <NotificationReadStatus isSeen={isSeen} /> */}
-          </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex-1">
+              <p className="font-bold text-gray-900 text-sm md:!text-lg">
+                {notif.subject || "Untitled Notification"}
+              </p>
+            </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 ml-2 shrink-0"
-              >
-                <EllipsisVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem
-                onSelect={e => e.preventDefault()}
-                className="p-0"
-              >
-                <ScheduleNotificationWrapper
-                  selectedClients={[id]}
-                  defaultPayload={notif}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 ml-2 shrink-0"
                 >
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
-                  >
-                    <Pen className="w-4 h-4 text-gray-600" />
-                    <span>Edit notification</span>
-                  </button>
-                </ScheduleNotificationWrapper>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onSelect={e => e.preventDefault()}
-                className="p-0"
-              >
-                {/* <ScheduleNotificationWrapper
-                  defaultPayload={{
-                    ...notif,
-                    _id: undefined
-                  }}
+                  <EllipsisVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onSelect={e => e.preventDefault()}
+                  className="p-0"
                 >
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                  <ScheduleNotificationWrapper
+                    selectedClients={[id]}
+                    defaultPayload={notif}
                   >
-                    <Copy className="w-4 h-4 text-gray-600" />
-                    <span>Copy notification</span>
-                  </button>
-                </ScheduleNotificationWrapper> */}
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onSelect={e => e.preventDefault()}
-                className="p-0"
-              >
-                <DeleteClientNotification id={notif._id}>
-                  <AlertDialogTrigger asChild>
                     <button
                       type="button"
                       className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
                     >
-                      <Trash2 className="w-4 h-4 text-gray-600" />
-                      <span>Delete notification</span>
+                      <Pen className="w-4 h-4 text-gray-600" />
+                      <span>Edit notification</span>
                     </button>
-                  </AlertDialogTrigger>
-                </DeleteClientNotification>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                  </ScheduleNotificationWrapper>
+                </DropdownMenuItem>
 
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {notif.message || "No message provided."}
-        </p>
+                <DropdownMenuItem
+                  onSelect={e => e.preventDefault()}
+                  className="p-0"
+                >
+                  {/* <ScheduleNotificationWrapper
+                    defaultPayload={{
+                      ...notif,
+                      _id: undefined
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                    >
+                      <Copy className="w-4 h-4 text-gray-600" />
+                      <span>Copy notification</span>
+                    </button>
+                  </ScheduleNotificationWrapper> */}
+                </DropdownMenuItem>
 
-        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-          <Badge className="capitalize text-[10px] font-bold">{notif.schedule_type}</Badge>
-          {notif.schedule_type === "schedule" && (
-            <span>
-              📅 {formattedDate} •
-            </span>
+                <DropdownMenuItem
+                  onSelect={e => e.preventDefault()}
+                  className="p-0"
+                >
+                  <DeleteClientNotification id={notif._id}>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-sm"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-600" />
+                        <span>Delete notification</span>
+                      </button>
+                    </AlertDialogTrigger>
+                  </DeleteClientNotification>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+            {notif.message || "No message provided."}
+          </p>
+
+          {/* Display Image if available */}
+          {imageUrl && (
+            <div className="mb-2 mt-2">
+              <div className="relative w-full max-w-md h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                <Image
+                  src={imageUrl}
+                  alt={notif.subject || "Notification image"}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
           )}
-          <span>🕒 {formattedTime}</span>
-          {notif.notificationType && (
-            <span className="px-2 py-0.5 bg-gray-100 rounded-full border text-gray-700">
-              {notif.notificationType}
-            </span>
+
+          {/* Display Status Options if available */}
+          {possibleStatuses.length > 0 && (
+            <div className="mt-2 mb-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-gray-700">Status Options:</span>
+                {possibleStatuses.map((status, index) => (
+                  <Badge
+                    key={index}
+                    className="text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-300"
+                    variant="outline"
+                  >
+                    {status}
+                  </Badge>
+                ))}
+              </div>
+              {/* Show current client status if available */}
+              {defaultStatus && possibleStatuses.includes(defaultStatus) && (
+                <div className="mt-2 text-xs text-gray-600">
+                  <span className="font-medium">Current Status:</span>{" "}
+                  <Badge className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 border-blue-300 ml-1">
+                    {defaultStatus}
+                  </Badge>
+                </div>
+              )}
+            </div>
           )}
+
+          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+            <Badge className="capitalize text-[10px] font-bold">{notif.schedule_type}</Badge>
+            {notif.schedule_type === "schedule" && (
+              <span>
+                📅 {formattedDate} •
+              </span>
+            )}
+            <span>🕒 {formattedTime}</span>
+            {notif.notificationType && (
+              <span className="px-2 py-0.5 bg-gray-100 rounded-full border text-gray-700">
+                {notif.notificationType}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

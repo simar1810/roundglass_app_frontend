@@ -4,7 +4,8 @@ import FormControl from "@/components/FormControl";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -168,8 +169,9 @@ function ScheduleNotification({
     clients: selectedClients || defaultPayload.clients || [],
     actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
     id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
-    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || [],
-    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || ""
+    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || ["In Progress", "Done"],
+    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || "In Progress",
+    isImageRequired: defaultPayload?.isImageRequired || false
   })
 
   const clientId = selectedClients?.[0];
@@ -293,6 +295,9 @@ function ScheduleNotification({
       <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] p-4">
         {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
+      <DialogDescription className="sr-only">
+        {defaultPayload.id ? "Update notification settings for your client" : "Create a new notification for your client"}
+      </DialogDescription>
       <div className="px-4 pb-8">
         <div className="relative mb-4" ref={subjectRef}>
           <div className="flex items-center justify-between mb-2">
@@ -469,10 +474,32 @@ function ScheduleNotification({
             dispatch={setPayload}
           />
         )}
+<<<<<<< Updated upstream
         {<NotificationStatuses
           payload={payload}
           setPayload={setPayload}
         />}
+=======
+        <NotificationStatuses
+          payload={payload}
+          setPayload={setPayload}
+        />
+        <div className="mb-4">
+          <Label className="font-bold text-[14px] mb-2 block">Image Requirement</Label>
+          <p className="text-xs text-gray-500 mb-3">
+            Require clients to upload an image when responding to this notification
+          </p>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={payload.isImageRequired || false}
+              onCheckedChange={(checked) => {
+                setPayload(prev => ({ ...prev, isImageRequired: checked || false }))
+              }}
+            />
+            <span className="text-sm text-gray-700">Require image upload</span>
+          </label>
+        </div>
+>>>>>>> Stashed changes
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -503,11 +530,12 @@ function generatePayload(payload, id) {
       reocurrence: payload.reocurrence,
       clients: Array.isArray(payload.clients)
         ? payload.clients[0]
-        : payload.clients
+        : payload.clients,
+      isImageRequired: payload.isImageRequired || false
     };
     result.notificationStatus = {
       possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-      clientMarkedStatus: payload.defaultStatus?.trim()
+      clientMarkedStatus: payload.defaultStatus?.trim() || "In Progress"
     };
 
     if (payload.actionType) result.actionType = payload.actionType;
@@ -532,7 +560,8 @@ function generatePayload(payload, id) {
         time: formatTime(payload.time),
         clients: Array.isArray(payload.clients)
           ? payload.clients[0]
-          : payload.clients
+          : payload.clients,
+        isImageRequired: payload.isImageRequired || false
       };
 
       // Only add actionType and id if they have values
@@ -546,7 +575,7 @@ function generatePayload(payload, id) {
 
       result.notificationStatus = {
         possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-        clientMarkedStatus: payload.defaultStatus?.trim()
+        clientMarkedStatus: payload.defaultStatus?.trim() || "In Progress"
       };
 
       return result;
@@ -585,52 +614,173 @@ export function NotificationRepeat({
 
 function NotificationStatuses({ payload, setPayload }) {
   const [newStatus, setNewStatus] = useState("");
-  return <div>
+  
+  const handleAddStatus = (e) => {
+    try {
+      // Prevent any default behavior
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      const trimmedStatus = newStatus.trim();
+      if (!trimmedStatus) {
+        toast.error("Please enter a status name");
+        return;
+      }
+      
+      // Ensure possibleStatus is an array
+      const currentStatuses = Array.isArray(payload.possibleStatus) 
+        ? payload.possibleStatus 
+        : [];
+      
+      // Check if status already exists
+      if (currentStatuses.includes(trimmedStatus)) {
+        toast.error("This status already exists");
+        setNewStatus("");
+        return;
+      }
+      
+      // Safely update the payload
+      setPayload(prev => {
+        const prevStatuses = Array.isArray(prev.possibleStatus) 
+          ? prev.possibleStatus 
+          : [];
+        
+        return {
+          ...prev,
+          possibleStatus: [...prevStatuses, trimmedStatus]
+        };
+      });
+      
+      setNewStatus("");
+    } catch (error) {
+      console.error("Error adding status:", error);
+      toast.error("Failed to add status. Please try again.");
+    }
+  };
+
+  const handleRemoveStatus = (statusToRemove) => {
+    try {
+      setPayload(prev => {
+        const prevStatuses = Array.isArray(prev.possibleStatus) 
+          ? prev.possibleStatus 
+          : [];
+        
+        const updatedStatuses = prevStatuses.filter(item => item !== statusToRemove);
+        // If the removed status was the default, clear the default status
+        const updatedDefaultStatus = prev.defaultStatus === statusToRemove ? "" : prev.defaultStatus;
+        
+        return {
+          ...prev,
+          possibleStatus: updatedStatuses,
+          defaultStatus: updatedDefaultStatus
+        };
+      });
+    } catch (error) {
+      console.error("Error removing status:", error);
+      toast.error("Failed to remove status. Please try again.");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAddStatus(e);
+    }
+  };
+
+  // Ensure possibleStatus is always an array
+  const possibleStatuses = Array.isArray(payload.possibleStatus) 
+    ? payload.possibleStatus 
+    : [];
+
+  return <div className="mb-4">
     <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>
-    <div className="flex gap-4 items-center">
+    <p className="text-xs text-gray-500 mb-3">
+      Add status options that clients can choose from when responding to this notification
+    </p>
+    <div 
+      className="flex gap-2 items-center"
+      onKeyDown={(e) => {
+        // Prevent form submission if this is inside a form
+        if (e.key === "Enter" && e.target.tagName !== "BUTTON") {
+          e.preventDefault();
+        }
+      }}
+    >
       <Input
+        type="text"
         value={newStatus}
         onChange={e => setNewStatus(e.target.value)}
-        placeholder="Enter status"
-        className="bg-[var(--comp-1)] rounded-[4px]"
+        onKeyDown={handleKeyDown}
+        placeholder="Enter status (e.g., Completed, Pending)"
+        className="bg-[var(--comp-1)] rounded-[4px] flex-1"
+        autoComplete="off"
       />
-      <Button onClick={() => {
-        setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
-        setNewStatus("")
-      }}>
-        <Plus />
+      <Button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleAddStatus(e);
+        }}
+        variant="outline"
+        size="icon"
+        className="shrink-0"
+        disabled={!newStatus.trim()}
+      >
+        <Plus className="w-4 h-4" />
       </Button>
     </div>
-    {payload.possibleStatus.length > 0 && <div className="mt-4 border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
-      {payload.possibleStatus.map((status, index) => (
-        <div
-          className="px-2 py-1 relative rounded-full bg-white border-1 text-sm font-bold"
-          key={index}
-
-        >
-          <X
-            className="w-4 h-4 cursor-pointer absolute top-0 right-0 translate-y-[-30%] translate-x-[30%] text-[var(--accent-2)]"
-            strokeWidth={2.5}
-            onClick={() => setPayload(prev => ({ ...prev, possibleStatus: prev.possibleStatus.filter(item => item !== status) }))}
-          />
-          {status}
+    
+    {possibleStatuses.length > 0 && (
+      <div className="mt-3 p-3 bg-[var(--comp-1)] border border-gray-200 rounded-lg">
+        <div className="flex items-center gap-2 flex-wrap">
+          {possibleStatuses.map((status, index) => (
+            <div
+              className="px-3 py-1.5 relative rounded-full bg-white border border-gray-300 text-sm font-medium flex items-center gap-2 group"
+              key={index}
+            >
+              <span>{status}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveStatus(status)}
+                className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                aria-label={`Remove ${status}`}
+              >
+                <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>}
+      </div>
+    )}
 
-    <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
-    <Select
-      value={payload.defaultStatus}
-      onValueChange={value => setPayload(prev => ({ ...prev, defaultStatus: value }))}
-    >
-      <SelectTrigger className="bg-[var(--comp-1)] w-full">
-        <SelectValue placeholder="Select default status" />
-      </SelectTrigger>
-      <SelectContent>
-        {payload.possibleStatus.map((status, index) => (
-          <SelectItem value={status} key={index}>{status}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    {possibleStatuses.length > 0 && (
+      <>
+        <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
+        <p className="text-xs text-gray-500 mb-2">
+          Select the default status that will be pre-selected for clients
+        </p>
+        <Select
+          value={payload.defaultStatus || undefined}
+          onValueChange={value => {
+            // Handle clearing the selection - if value is empty, set to empty string
+            setPayload(prev => ({ ...prev, defaultStatus: value || "" }))
+          }}
+        >
+          <SelectTrigger className="bg-[var(--comp-1)] w-full">
+            <SelectValue placeholder="Select default status (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {possibleStatuses.map((status, index) => (
+              <SelectItem value={status} key={index}>{status}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </>
+    )}
   </div>
 }
