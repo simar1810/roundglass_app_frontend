@@ -820,7 +820,7 @@ function NotificationStatuses({ payload, setPayload }) {
               <span className="font-medium text-sm">{status.name}</span>
             <button
               type="button"
-              onClick={() => handleRemoveStatus(status.name)}
+              onClick={() => handleRemoveStatus(status)}
               className="text-gray-400 hover:text-red-500"
             >
               <X className="w-3.5 h-3.5" />
