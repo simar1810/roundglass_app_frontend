@@ -193,7 +193,7 @@ function ScheduleNotification({
         return {
             ...payload,
             possibleStatus: payload.possibleStatus.map(status => {
-                if (typeof status === "string") return { name: status, imageRequired: false };
+                if (typeof status === "string") return { name: status, imageRequired: payload.isImageRequired};
                 return status;
             }),
             clientMarkedStatus: typeof payload.defaultStatus === "string"
@@ -488,7 +488,7 @@ function ScheduleNotification({
           <div className="mb-4">
             <FormControl
               label="Date"
-              value={payload.date}
+              value={payload.date || ""}
               onChange={e => setPayload(prev => ({ ...prev, date: e.target.value }))}
               type="date"
               className="[&_.input]:bg-[var(--comp-1)]"
@@ -554,9 +554,23 @@ function generatePayload(payload, id) {
       isImageRequired: payload.isImageRequired || false
     };
     result.notificationStatus = {
-      possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-      clientMarkedStatus: payload.defaultStatus?.trim() || "In Progress"
-    };
+    possibleStatus: (payload.possibleStatus || []).map(status => {
+      if (typeof status === "string") {
+        return { name: status.trim(), imageRequired: false };
+      }
+      return status;
+    }),
+
+    clientMarkedStatus: [
+      typeof payload.defaultStatus === "string"
+        ? {
+            status: payload.defaultStatus.trim(),
+            imageLink: null,
+            date: format(new Date(), "dd-MM-yyyy HH:mm")
+          }
+        : payload.defaultStatus
+    ]
+  };
 
     if (payload.actionType) result.actionType = payload.actionType;
     if (payload.id) result.id = payload.id;
@@ -720,6 +734,20 @@ function NotificationStatuses({ payload, setPayload }) {
   const possibleStatuses = Array.isArray(payload.possibleStatus) 
     ? payload.possibleStatus 
     : [];
+  useEffect(() => {
+    setPayload(prev => {
+    const prevStatuses = Array.isArray(prev.possibleStatus)
+      ? prev.possibleStatus
+      : [];
+    const defaults = ["In Progress", "Done"];
+    const missing = defaults.filter(item => !prevStatuses.includes(item));
+    if (missing.length === 0) return prev;
+    return {
+      ...prev,
+      possibleStatus: [...prevStatuses, ...missing],
+    };
+    });
+  }, []);
 
   return <div className="mb-4">
     <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>

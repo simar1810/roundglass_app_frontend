@@ -28,6 +28,7 @@ import useSWR, { mutate } from "swr"
 import DeleteClientNudges from "./DeleteClientNudges"
 import CopyClientNudges from "../copy-client-nudges/CopyClientNudges"
 import CopyMealNotifications from "../copy-client-nudges/CopyMealNotifications"
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ClientNudges() {
   const [selected, setSelected] = useState([])
@@ -224,6 +225,7 @@ function NotificationSchedule({
 
 function NotificationItem({ notif }) {
   const { id } = useParams();
+  const [showImage, setShowImage] = useState(false);
 
   const isSeen = notif?.isRead;
   const formattedTime = notif?.time || "--:--";
@@ -233,12 +235,17 @@ function NotificationItem({ notif }) {
   const possibleStatuses = Array.isArray(notif?.notificationStatus?.possibleStatus) 
     ? notif.notificationStatus.possibleStatus 
     : [];
-  const defaultStatus = notif?.notificationStatus?.clientMarkedStatus || "";
-  console.log("DefaultStatus", defaultStatus);
-  console.log("---",possibleStatuses);
-  // Get image URL if available (check multiple possible field names)
-  const imageUrl = notif?.image || notif?.imageUrl || notif?.attachment || notif?.photo || null;
-
+  let defaultStatus = notif?.notificationStatus?.clientMarkedStatus || "";
+  const status = defaultStatus?.[0].status;
+  const imageUrlFromStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
+  ? notif.notificationStatus.clientMarkedStatus.find(entry => entry?.imageLink)?.imageLink
+  : null;
+  const imageUrl =
+  imageUrlFromStatus ||
+  notif?.imageUrl ||
+  notif?.attachment ||
+  notif?.photo ||
+  null;
   return (
     <div
       className={cn(
@@ -252,6 +259,11 @@ function NotificationItem({ notif }) {
             <div className="flex-1">
               <p className="font-bold text-gray-900 text-sm md:!text-lg">
                 {notif.subject || "Untitled Notification"}
+                  {imageUrl && (
+                    <button onClick={() => setShowImage(!showImage)} className="ml-4 text-gray-500 hover:text-gray-700">
+                      {showImage ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  )}
               </p>
             </div>
 
@@ -329,7 +341,7 @@ function NotificationItem({ notif }) {
           </p>
 
           {/* Display Image if available */}
-          {imageUrl && (
+          {imageUrl && showImage && (
             <div className="mb-2 mt-2">
               <div className="relative w-full max-w-md h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                 <Image
@@ -362,11 +374,11 @@ function NotificationItem({ notif }) {
                 ))}
               </div>
               {/* Show current client status if available */}
-              {defaultStatus && possibleStatuses.includes(defaultStatus) && (
+              {status && possibleStatuses.some(s => s.name === status) && (
                 <div className="mt-2 text-xs text-gray-600">
                   <span className="font-medium">Current Status:</span>{" "}
                   <Badge className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 border-blue-300 ml-1">
-                    {defaultStatus}
+                    {status}
                   </Badge>
                 </div>
               )}
