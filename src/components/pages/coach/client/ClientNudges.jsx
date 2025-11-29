@@ -163,6 +163,8 @@ function NotificationAllDays({
   notifications,
   selected,
 }) {
+  const [selectedDay, setSelectedDay] = useState(null);
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const [paginate, setPaginate] = useState({
     page: 1,
     limit: 5
@@ -172,12 +174,93 @@ function NotificationAllDays({
     selected,
     paginate
   )
-
+  const notifForSelectedDay =
+    selectedDay !== null
+      ? notifications.filter((n) => n.reocurrence?.includes(selectedDay))
+      : [];
   return <TabsContent
     value="all-days"
     className="bg-[var(--comp-1)] text-sm px-4 py-2 border-1 rounded-[6px]"
   >
     <p className="font-bold text-[16px] mb-2">Reocurr Notifications</p>
+        <div className="grid grid-cols-7 gap-2 my-4">
+        {weekDays.map((day, index) => {
+          const isActive =
+            notifications.some((n) => n.reocurrence?.includes(index));
+
+          return (
+            <div
+              key={index}
+              onClick={() => setSelectedDay(index)}
+              className={`
+                p-3 rounded-lg text-center cursor-pointer
+                border transition
+                ${
+                  selectedDay === index
+                    ? "bg-green-600 text-white"
+                    : isActive
+                    ? "bg-blue-100 border-blue-300"
+                    : "bg-gray-100 border-gray-300 text-gray-400"
+                }
+              `}
+            >
+              {day}
+            </div>
+          );
+        })}
+      </div>
+     {selectedDay !== null && (
+      <div className="mt-4">
+        <h3 className="font-semibold text-lg mb-2">
+          Selected: {weekDays[selectedDay]}
+        </h3>
+
+        {notifForSelectedDay.length === 0 ? (
+          <p>No notifications for this day.</p>
+        ) : (
+        notifForSelectedDay.map((notif) => {
+        const currentStatus = notif.notificationStatus?.current_status?.status;
+
+        const matchedEntry = notif.notificationStatus?.clientMarkedStatus?.find(
+          (entry) => entry.status === currentStatus
+        );
+
+        const imageLink = matchedEntry?.imageLink || null;
+
+        return (
+          <div
+            key={notif._id}
+            className="p-3 border rounded-md my-2 bg-white"
+          >
+            <p className="font-semibold text-gray-700 mb-1">
+              Subject: <span className="text-black">{notif.subject}</span>
+            </p>
+            <p className="font-medium">
+              Status:{" "}
+              <span className="font-semibold text-blue-600">
+                {currentStatus || "No Status"}
+              </span>
+            </p>
+            {imageLink ? (
+              <div className="mt-2">
+                <Image
+                  src={imageLink}
+                  alt="status image"
+                  width={120}
+                  height={120}
+                  className="rounded-md border"
+                />
+              </div>
+            ) : (
+              <p className="text-gray-400 mt-1">No Image</p>
+            )}
+          </div>
+          );
+        })
+        )}
+      </div>
+    )}
+
     {sortedNotifications.length === 0 && <NoNotificationFound />}
     {sortedNotifications.map(notif => <NotificationItem
       key={notif._id}
