@@ -175,14 +175,18 @@ function ScheduleNotification({
         clients: selectedClients || defaultPayload.clients || [],
         actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
         id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
-        possibleStatus: Array.isArray(defaultPayload?.notificationStatus?.possibleStatus)
-            ? defaultPayload.notificationStatus.possibleStatus.map(statusObj => {
-                if (typeof statusObj === "string") return statusObj;
-                return Object.values(statusObj)
-                    .filter(v => typeof v === "string")
-                    .join("");
-            })
-            : [],
+        possibleStatus:
+          Array.isArray(defaultPayload?.notificationStatus?.possibleStatus)
+          ? defaultPayload.notificationStatus.possibleStatus.map(item => {
+          if (typeof item === "string") {
+          return { name: item, imageRequired: false };
+          }
+          return {
+          name: item.name,
+          imageRequired: Boolean(item.imageRequired)
+          };
+        }): [],
+
         defaultStatus:
             typeof defaultPayload?.notificationStatus?.clientMarkedStatus === "string"
                 ? defaultPayload.notificationStatus.clientMarkedStatus
@@ -192,10 +196,10 @@ function ScheduleNotification({
     function getNormalizedPayloadForSave(payload) {
         return {
             ...payload,
-            possibleStatus: payload.possibleStatus.map(status => {
-                if (typeof status === "string") return { name: status, imageRequired: payload.isImageRequired};
-                return status;
-            }),
+           possibleStatus: payload.possibleStatus.map(s => ({
+            name: s.name,
+            imageRequired: Boolean(s.imageRequired)})),
+
             clientMarkedStatus: typeof payload.defaultStatus === "string"
                 ? { status: payload.defaultStatus, markedAt: null }
                 : payload.clientMarkedStatus
@@ -505,7 +509,7 @@ function ScheduleNotification({
           payload={payload}
           setPayload={setPayload}
         />
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <Label className="font-bold text-[14px] mb-2 block">Image Requirement</Label>
           <p className="text-xs text-gray-500 mb-3">
             Require clients to upload an image when responding to this notification
@@ -519,7 +523,7 @@ function ScheduleNotification({
             />
             <span className="text-sm text-gray-700">Require image upload</span>
           </label>
-        </div>
+        </div> */}
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -688,7 +692,10 @@ function NotificationStatuses({ payload, setPayload }) {
         
         return {
           ...prev,
-          possibleStatus: [...prevStatuses, trimmedStatus]
+          possibleStatus: [
+            ...prevStatuses,
+            { name: trimmedStatus, imageRequired: false }
+          ]
         };
       });
       
@@ -730,24 +737,37 @@ function NotificationStatuses({ payload, setPayload }) {
     }
   };
 
-  // Ensure possibleStatus is always an array
   const possibleStatuses = Array.isArray(payload.possibleStatus) 
     ? payload.possibleStatus 
     : [];
   useEffect(() => {
     setPayload(prev => {
-    const prevStatuses = Array.isArray(prev.possibleStatus)
+      const prevStatuses = Array.isArray(prev.possibleStatus)
       ? prev.possibleStatus
       : [];
-    const defaults = ["In Progress", "Done"];
-    const missing = defaults.filter(item => !prevStatuses.includes(item));
-    if (missing.length === 0) return prev;
-    return {
+
+      const defaults = [
+      { name: "In Progress", imageRequired: false },
+      { name: "Done", imageRequired: false },
+      ];
+      const missing = defaults.filter(def =>
+      !prevStatuses.some(s => s.name === def.name)
+      );
+
+      const updatedStatuses = [...prevStatuses, ...missing];
+      const shouldSetDefault =
+      !prev.defaultStatus ||
+      !updatedStatuses.some(s => s.name === prev.defaultStatus);
+
+      return {
       ...prev,
-      possibleStatus: [...prevStatuses, ...missing],
-    };
+      possibleStatus: updatedStatuses,
+      defaultStatus: shouldSetDefault
+        ? updatedStatuses[0].name
+        : prev.defaultStatus,
+      };
     });
-  }, []);
+    }, []);
 
   return <div className="mb-4">
     <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>
@@ -791,22 +811,39 @@ function NotificationStatuses({ payload, setPayload }) {
     {possibleStatuses.length > 0 && (
       <div className="mt-3 p-3 bg-[var(--comp-1)] border border-gray-200 rounded-lg">
         <div className="flex items-center gap-2 flex-wrap">
-          {possibleStatuses.map((status, index) => (
-            <div
-              className="px-3 py-1.5 relative rounded-full bg-white border border-gray-300 text-sm font-medium flex items-center gap-2 group"
-              key={index}
+        {possibleStatuses.map((status, index) => (
+          <div
+            key={index}
+            className="w-full flex items-center justify-between border p-2 rounded-lg bg-white"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm">{status.name}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveStatus(status.name)}
+              className="text-gray-400 hover:text-red-500"
             >
-              <span>{status}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveStatus(status)}
-                className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                aria-label={`Remove ${status}`}
-              >
-                <X className="w-3.5 h-3.5" strokeWidth={2.5} />
-              </button>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Image Required</span>
+        <Checkbox
+        checked={status.imageRequired}
+        onCheckedChange={(checked) => {
+          setPayload(prev => {
+            const updated = prev.possibleStatus.map(s =>
+              s.name === status.name
+                ? { ...s, imageRequired: !!checked }
+                : s
+            );
+            return { ...prev, possibleStatus: updated };
+          });
+                }} />
             </div>
-          ))}
+          </div>))}
+
         </div>
       </div>
     )}
@@ -825,11 +862,11 @@ function NotificationStatuses({ payload, setPayload }) {
           }}
         >
           <SelectTrigger className="bg-[var(--comp-1)] w-full">
-            <SelectValue placeholder="Select default status (optional)" />
+            <SelectValue placeholder="Select default status" />
           </SelectTrigger>
           <SelectContent>
             {possibleStatuses.map((status, index) => (
-              <SelectItem value={status} key={index}>{status}</SelectItem>
+              <SelectItem value={status.name} key={index}>{status.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>

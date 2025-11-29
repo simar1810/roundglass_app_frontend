@@ -225,7 +225,8 @@ function NotificationSchedule({
 
 function NotificationItem({ notif }) {
   const { id } = useParams();
-  const [showImage, setShowImage] = useState(false);
+  const [selectedStatusImage, setSelectedStatusImage] = useState(null);
+  const [showStatusImage, setShowStatusImage] = useState(false);
 
   const isSeen = notif?.isRead;
   const formattedTime = notif?.time || "--:--";
@@ -259,11 +260,6 @@ function NotificationItem({ notif }) {
             <div className="flex-1">
               <p className="font-bold text-gray-900 text-sm md:!text-lg">
                 {notif.subject || "Untitled Notification"}
-                  {imageUrl && (
-                    <button onClick={() => setShowImage(!showImage)} className="ml-4 text-gray-500 hover:text-gray-700">
-                      {showImage ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  )}
               </p>
             </div>
 
@@ -341,11 +337,11 @@ function NotificationItem({ notif }) {
           </p>
 
           {/* Display Image if available */}
-          {imageUrl && showImage && (
+          {selectedStatusImage && showStatusImage && (
             <div className="mb-2 mt-2">
               <div className="relative w-full max-w-md h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                 <Image
-                  src={imageUrl}
+                  src={selectedStatusImage}
                   alt={notif.subject || "Notification image"}
                   fill
                   className="object-cover"
@@ -363,17 +359,35 @@ function NotificationItem({ notif }) {
             <div className="mt-2 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-semibold text-gray-700">Status Options:</span>
-                {possibleStatuses.map((status, index) => (
-                  <Badge
-                    key={index}
-                    className="text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-300"
-                    variant="outline"
-                  >
-                    {typeof status === "string" ? status : status.name}
-                  </Badge>
-                ))}
+                {possibleStatuses.map((status, index) => {
+                  const statusName = typeof status === "string" ? status : status.name;
+                  const imageForStatus =
+                   notif?.notificationStatus?.clientMarkedStatus?.find(
+                    (entry) => entry.status === statusName
+                    )?.imageLink || null;
+                   return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-1 bg-gray-100 border border-gray-300 rounded px-2 py-0.5"
+                      >
+                        <span className="text-[10px] font-medium text-gray-700">
+                          {statusName}
+                        </span>
+                        {imageForStatus && (
+                          <button
+                            onClick={() => {
+                              setSelectedStatusImage(imageForStatus);
+                              setShowStatusImage(!showStatusImage);
+                            }}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <Eye className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                   );
+                })}
               </div>
-              {/* Show current client status if available */}
               {status && possibleStatuses.some(s => s.name === status) && (
                 <div className="mt-2 text-xs text-gray-600">
                   <span className="font-medium">Current Status:</span>{" "}
