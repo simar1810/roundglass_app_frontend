@@ -234,7 +234,8 @@ function NotificationItem({ notif }) {
     ? notif.notificationStatus.possibleStatus 
     : [];
   const defaultStatus = notif?.notificationStatus?.clientMarkedStatus || "";
-  
+  console.log("DefaultStatus", defaultStatus);
+  console.log("---",possibleStatuses);
   // Get image URL if available (check multiple possible field names)
   const imageUrl = notif?.image || notif?.imageUrl || notif?.attachment || notif?.photo || null;
 
@@ -356,7 +357,7 @@ function NotificationItem({ notif }) {
                     className="text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-300"
                     variant="outline"
                   >
-                    {status}
+                    {typeof status === "string" ? status : status.name}
                   </Badge>
                 ))}
               </div>

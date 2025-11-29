@@ -15,7 +15,7 @@ import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerC
 import { sendData } from "@/lib/api";
 import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
-import { format, isValid, parse } from "date-fns";
+import { format, isValid, parse, parseISO } from "date-fns";
 import { Calendar, CircleMinus, CirclePlus, Clock, History, Plus, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -158,22 +158,49 @@ function ScheduleNotification({
     getCachedNotificationsByContext,
     getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
+    function normalizeTime(timeStr) {
+        if (!timeStr) return null;
+        const parsed = parse(timeStr, "hh:mm a", new Date());
+        return isValid(parsed) ? parsed : null;
+    }
+    const [payload, setPayload] = useState({
+        subject: defaultPayload.subject || "",
+        message: defaultPayload.message || "",
+        notificationType: defaultPayload.schedule_type || "schedule",
+        time: normalizeTime(defaultPayload.time),
+        date: defaultPayload.date
+            ? parseISO(defaultPayload.date)
+            : null,
+        reocurrence: defaultPayload.reocurrence || [],
+        clients: selectedClients || defaultPayload.clients || [],
+        actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
+        id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
+        possibleStatus: Array.isArray(defaultPayload?.notificationStatus?.possibleStatus)
+            ? defaultPayload.notificationStatus.possibleStatus.map(statusObj => {
+                if (typeof statusObj === "string") return statusObj;
+                return Object.values(statusObj)
+                    .filter(v => typeof v === "string")
+                    .join("");
+            })
+            : [],
+        defaultStatus:
+            typeof defaultPayload?.notificationStatus?.clientMarkedStatus === "string"
+                ? defaultPayload.notificationStatus.clientMarkedStatus
+                : defaultPayload?.notificationStatus?.clientMarkedStatus?.status || ""
 
-  const [payload, setPayload] = useState({
-    subject: defaultPayload.subject || "",
-    message: defaultPayload.message || "",
-    notificationType: defaultPayload.schedule_type || "schedule",
-    time: convertTimeTo12Hour(defaultPayload.time || ""),
-    date: formatDate(defaultPayload.date),
-    reocurrence: defaultPayload.reocurrence || [],
-    clients: selectedClients || defaultPayload.clients || [],
-    actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
-    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
-    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || ["In Progress", "Done"],
-    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || "In Progress",
-    isImageRequired: defaultPayload?.isImageRequired || false
-  })
-
+    })
+    function getNormalizedPayloadForSave(payload) {
+        return {
+            ...payload,
+            possibleStatus: payload.possibleStatus.map(status => {
+                if (typeof status === "string") return { name: status, imageRequired: false };
+                return status;
+            }),
+            clientMarkedStatus: typeof payload.defaultStatus === "string"
+                ? { status: payload.defaultStatus, markedAt: null }
+                : payload.clientMarkedStatus
+        };
+    }
   const clientId = selectedClients?.[0];
   const isClientNudgesContext = !!clientId;
   const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
@@ -233,7 +260,7 @@ function ScheduleNotification({
     try {
       setLoading(true);
       const formData = generatePayload(
-        payload,
+        getNormalizedPayloadForSave(payload),
         defaultPayload._id,
       );
       const response = await sendData(
@@ -474,12 +501,6 @@ function ScheduleNotification({
             dispatch={setPayload}
           />
         )}
-<<<<<<< Updated upstream
-        {<NotificationStatuses
-          payload={payload}
-          setPayload={setPayload}
-        />}
-=======
         <NotificationStatuses
           payload={payload}
           setPayload={setPayload}
@@ -499,7 +520,6 @@ function ScheduleNotification({
             <span className="text-sm text-gray-700">Require image upload</span>
           </label>
         </div>
->>>>>>> Stashed changes
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -574,8 +594,13 @@ function generatePayload(payload, id) {
       }
 
       result.notificationStatus = {
-        possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-        clientMarkedStatus: payload.defaultStatus?.trim() || "In Progress"
+        possibleStatus: (payload.possibleStatus || []).map(status => {
+                    if (typeof status === "string") return { name: status.trim(), imageRequired: false };
+                    return status;
+                }),
+               clientMarkedStatus: typeof payload.defaultStatus === "string"
+                    ? { status: payload.defaultStatus.trim(), markedAt: null }
+                    : payload.defaultStatus || { status: "", markedAt: null }
       };
 
       return result;
