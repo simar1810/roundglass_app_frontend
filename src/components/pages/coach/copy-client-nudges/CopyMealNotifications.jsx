@@ -138,64 +138,62 @@ function Container({ clientId }) {
     </div>
   }
 
+  // Since each client has only 1 meal plan, show it as a single card
+  const meal = meals[0];
+  const isSelected = meal._id === selectedMealPlans;
+
   return <div className="space-y-5">
     <div>
       <div className="mb-4">
         <h3 className="text-base font-semibold text-gray-900 mb-1">
-          Select a Meal Plan
+          Meal Plan
         </h3>
         <p className="text-xs text-gray-600">
-          Choose a meal plan to copy all its nudges to this client. The nudges will be scheduled for future dates only.
+          Copy all nudges from this meal plan to the client. The nudges will be scheduled for future dates only.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-        {meals.map(meal => {
-          const isSelected = meal._id === selectedMealPlans
-          return (
-            <div
-              key={meal._id}
-              className={cn(
-                "p-4 rounded-lg border-2 cursor-pointer transition-all",
-                "hover:scale-[1.02]",
-                isSelected
-                  ? "bg-blue-50 border-blue-500 shadow-lg ring-2 ring-blue-200"
-                  : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-md"
-              )}
-              onClick={() => setSelectedPlans(prev => meal._id === prev ? "" : meal._id)}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">🍽️</span>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {meal.title || "Untitled Meal Plan"}
-                    </p>
-                  </div>
-                  {meal.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                      {meal.description}
-                    </p>
-                  )}
-                  {isSelected && (
-                    <div className="flex items-center gap-1 text-xs text-blue-600 font-medium">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Selected
-                    </div>
-                  )}
-                </div>
-                {isSelected && (
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
+      <div 
+        className={cn(
+          "p-5 rounded-lg border-2 cursor-pointer transition-all",
+          "hover:shadow-md",
+          isSelected
+            ? "bg-blue-50 border-blue-500 shadow-lg ring-2 ring-blue-200"
+            : "bg-white border-gray-200 hover:border-blue-300"
+        )}
+        onClick={() => setSelectedPlans(prev => meal._id === prev ? "" : meal._id)}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">🍽️</span>
+              <div className="flex-1">
+                <p className="text-base font-semibold text-gray-900 mb-1">
+                  {meal.title || "Untitled Meal Plan"}
+                </p>
+                {meal.description && (
+                  <p className="text-sm text-gray-600 line-clamp-3">
+                    {meal.description}
+                  </p>
                 )}
               </div>
             </div>
-          )
-        })}
+            {isSelected && (
+              <div className="flex items-center gap-2 text-sm text-blue-600 font-medium mt-3">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Selected - Ready to copy
+              </div>
+            )}
+          </div>
+          {isSelected && (
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
     </div>
     

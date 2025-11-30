@@ -23,7 +23,7 @@ import { addMonths, eachDayOfInterval, format, getDay, isSameDay, isToday, isVal
 import { ChevronLeft, ChevronRight, EllipsisVertical, Eye, Pen, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
 import CopyClientNudges from "../copy-client-nudges/CopyClientNudges"
@@ -205,14 +205,37 @@ function isScheduledNotificationOnDate(notif, date) {
 
 function NudgesCalendar({ notifications }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const scrollContainerRef = useRef(null);
+  const today = new Date();
   
   // Get all dates that have nudges (past 30 days + next 30 days)
   const dateRange = useMemo(() => {
-    const today = new Date();
     const startDate = subMonths(today, 1);
     const endDate = addMonths(today, 1);
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, []);
+  
+  // Scroll to today's date on mount
+  useEffect(() => {
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      if (scrollContainerRef.current) {
+        const todayDate = new Date();
+        const todayIndex = dateRange.findIndex(date => isSameDay(date, todayDate));
+        if (todayIndex !== -1) {
+          const dateButton = scrollContainerRef.current.children[todayIndex];
+          if (dateButton) {
+            // Scroll to center the current date
+            dateButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            // Also set today as selected by default
+            setSelectedDate(todayDate);
+          }
+        }
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [dateRange]);
   
   // Organize notifications by date
   const notificationsByDate = useMemo(() => {
@@ -259,7 +282,10 @@ function NudgesCalendar({ notifications }) {
     <div className="space-y-4">
       {/* Horizontal Scrollable Date Picker */}
       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div 
+          ref={scrollContainerRef}
+          className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+        >
           {dateRange.map((date) => {
             const dateKey = format(date, "yyyy-MM-dd");
             const nudgesForDate = notificationsByDate.get(dateKey) || [];
