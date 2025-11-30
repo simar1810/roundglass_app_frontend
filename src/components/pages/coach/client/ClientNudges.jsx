@@ -642,7 +642,14 @@ function DateNotificationItem({ nudge, date }) {
             <div className="flex items-center gap-2">
               {status.date && (
                 <span className="text-xs text-gray-500">
-                  {format(parseNotificationDate(status.date) || new Date(), "dd-MM-yyyy HH:mm")}
+                  {(() => {
+                    // Remove time from date if it exists (format: "dd-MM-yyyy HH:mm" -> "dd-MM-yyyy")
+                    const dateStr = status.date;
+                    if (dateStr && dateStr.includes(' ')) {
+                      return dateStr.split(' ')[0];
+                    }
+                    return dateStr;
+                  })()}
                 </span>
               )}
               {status.imageLink && (
