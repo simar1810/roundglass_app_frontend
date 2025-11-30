@@ -11,12 +11,12 @@ import useSWR, { mutate } from "swr";
 export default function CopyMealNotifications({ clientId }) {
   return <Dialog>
     <DialogTrigger asChild>
-      <Button variant="wz">
-        Meal Nudges
+      <Button variant="wz" className="font-medium">
+        📋 Copy from Meal Plan
       </Button>
     </DialogTrigger>
-    <DialogContent className="!max-w-[600px] w-full max-h-[85vh] overflow-hidden flex flex-col p-0">
-      <DialogTitle className="px-6 py-4 border-b bg-[var(--comp-2)] text-lg font-semibold">
+    <DialogContent className="!max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col p-0">
+      <DialogTitle className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 text-lg font-semibold text-gray-900">
         Copy Meal Plan Nudges
       </DialogTitle>
       <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -56,54 +56,125 @@ function Container({ clientId }) {
         }
       );
       
-      // Handle response
+      // Handle response - check for multiple failure indicators
       if (!response) {
-        throw new Error("No response received from server");
-      }
-      
-      if (response.status_code !== 200) {
-        // Check for specific error messages about past dates
-        const errorMessage = response.message || response.error || "Failed to copy meal plan nudges";
-        if (errorMessage.includes("past") || errorMessage.includes("future")) {
-          toast.error(errorMessage);
-        } else {
-          throw new Error(errorMessage);
-        }
+        toast.error("Unable to connect to the server. Please check your connection and try again.");
         return;
       }
       
-      toast.success(response.message || "Meal plan nudges copied successfully!");
-      mutate(`client/nudges/${clientId}`);
-      if (closeRef.current) {
-        closeRef.current.click();
+      // Check if response is an Error object
+      if (response instanceof Error) {
+        toast.error("An error occurred while copying nudges. Please try again.");
+        return;
+      }
+      
+      // Check for explicit error indicators
+      const hasError = 
+        response.status_code !== 200 ||
+        response.statusCode !== 200 ||
+        response.success === false ||
+        response.error ||
+        (response.message && (
+          response.message.toLowerCase().includes("error") ||
+          response.message.toLowerCase().includes("failed") ||
+          response.message.toLowerCase().includes("fail")
+        ));
+      
+      if (hasError) {
+        // Extract error message and make it client-centric
+        const errorMessage = response.message || response.error || response.errorMessage || "An error occurred";
+        
+        // Transform technical errors into user-friendly messages
+        let userFriendlyMessage = errorMessage;
+        
+        if (errorMessage.toLowerCase().includes("past") || errorMessage.toLowerCase().includes("future")) {
+          userFriendlyMessage = "Some nudges are scheduled for past dates. Please ensure all nudges are scheduled for future dates only.";
+        } else if (errorMessage.toLowerCase().includes("not found") || errorMessage.toLowerCase().includes("does not exist")) {
+          userFriendlyMessage = "The selected meal plan could not be found. Please try selecting a different meal plan.";
+        } else if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("unauthorized")) {
+          userFriendlyMessage = "You don't have permission to copy nudges from this meal plan.";
+        } else if (errorMessage.toLowerCase().includes("validation") || errorMessage.toLowerCase().includes("invalid")) {
+          userFriendlyMessage = "The meal plan data is invalid. Please contact support if this issue persists.";
+        } else if (errorMessage.toLowerCase().includes("server") || errorMessage.toLowerCase().includes("500")) {
+          userFriendlyMessage = "A server error occurred. Please try again in a few moments.";
+        } else {
+          // Keep original message but make it more friendly
+          userFriendlyMessage = `Unable to copy nudges: ${errorMessage}`;
+        }
+        
+        toast.error(userFriendlyMessage);
+        return;
+      }
+      
+      // Only show success if we have clear indicators of success
+      // Be strict: require status_code === 200 AND either success === true OR a positive message
+      const hasSuccess = 
+        (response.status_code === 200 || response.statusCode === 200) &&
+        (
+          response.success === true ||
+          (response.message && (
+            response.message.toLowerCase().includes("success") ||
+            response.message.toLowerCase().includes("copied") ||
+            response.message.toLowerCase().includes("created")
+          )) ||
+          response.data // Some APIs return data on success
+        );
+      
+      if (hasSuccess) {
+        toast.success(response.message || "Meal plan nudges have been copied successfully!");
+        mutate(`client/nudges/${clientId}`);
+        if (closeRef.current) {
+          closeRef.current.click();
+        }
+      } else {
+        // If status is 200 but we can't verify success, treat as potential failure
+        if (response.status_code === 200 || response.statusCode === 200) {
+          toast.error("The operation may have failed. Please check the nudges list to verify if nudges were copied.");
+        } else {
+          toast.error("Unable to verify if nudges were copied. Please check the nudges list to confirm.");
+        }
       }
     } catch (error) {
-      const errorMessage = error?.message || error?.toString() || "Failed to copy meal plan nudges";
-      // Check if error is about past dates
-      if (errorMessage.includes("past") || errorMessage.includes("future")) {
-        toast.error(errorMessage);
+      // Handle network errors and other exceptions
+      const errorMessage = error?.message || error?.toString() || "An unexpected error occurred";
+      
+      let userFriendlyMessage = "Unable to copy nudges at this time. ";
+      
+      if (errorMessage.toLowerCase().includes("network") || errorMessage.toLowerCase().includes("fetch")) {
+        userFriendlyMessage += "Please check your internet connection and try again.";
+      } else if (errorMessage.toLowerCase().includes("timeout")) {
+        userFriendlyMessage += "The request took too long. Please try again.";
       } else {
-        toast.error(errorMessage);
+        userFriendlyMessage += "Please try again or contact support if the problem continues.";
       }
+      
+      toast.error(userFriendlyMessage);
     } finally {
       setLoading(false);
     }
   }
 
   if (meals.length === 0) {
-    return <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-      <p className="text-sm text-gray-600 text-center">
-        No meal plans available to copy nudges from.
+    return <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg text-center">
+      <div className="text-4xl mb-3">🍽️</div>
+      <p className="text-sm font-medium text-gray-700 mb-1">No meal plans available</p>
+      <p className="text-xs text-gray-500">
+        Create a meal plan first to copy nudges from it.
       </p>
     </div>
   }
 
-  return <div className="space-y-4">
+  return <div className="space-y-5">
     <div>
-      <label className="text-sm font-medium text-gray-700 mb-3 block">
-        Select Meal Plan to Copy Nudges From
-      </label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-gray-900 mb-1">
+          Select a Meal Plan
+        </h3>
+        <p className="text-xs text-gray-600">
+          Choose a meal plan to copy all its nudges to this client. The nudges will be scheduled for future dates only.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
         {meals.map(meal => {
           const isSelected = meal._id === selectedMealPlans
           return (
@@ -111,27 +182,39 @@ function Container({ clientId }) {
               key={meal._id}
               className={cn(
                 "p-4 rounded-lg border-2 cursor-pointer transition-all",
+                "hover:scale-[1.02]",
                 isSelected
-                  ? "bg-blue-50 border-blue-400 shadow-md"
-                  : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                  ? "bg-blue-50 border-blue-500 shadow-lg ring-2 ring-blue-200"
+                  : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-md"
               )}
               onClick={() => setSelectedPlans(prev => meal._id === prev ? "" : meal._id)}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
-                    {meal.title || "Untitled Meal Plan"}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🍽️</span>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {meal.title || "Untitled Meal Plan"}
+                    </p>
+                  </div>
                   {meal.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2">
+                    <p className="text-xs text-gray-600 line-clamp-2 mb-2">
                       {meal.description}
                     </p>
                   )}
+                  {isSelected && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 font-medium">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Selected
+                    </div>
+                  )}
                 </div>
                 {isSelected && (
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                 )}
@@ -143,17 +226,30 @@ function Container({ clientId }) {
     </div>
     
     {selectedMealPlans && (
-      <div className="flex items-center justify-between pt-4 border-t">
-        <p className="text-sm text-gray-600">
-          {meals.find(m => m._id === selectedMealPlans)?.title || "Selected meal plan"}
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-gray-200 bg-gray-50 p-4 rounded-lg">
+        <div className="flex-1">
+          <p className="text-xs text-gray-500 mb-1">Selected meal plan:</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {meals.find(m => m._id === selectedMealPlans)?.title || "Selected meal plan"}
+          </p>
+        </div>
         <Button
           variant="wz"
           onClick={saveMealPlan}
           disabled={loading}
-          className="font-semibold"
+          className="font-semibold min-w-[140px]"
         >
-          {loading ? "Copying..." : "Copy Nudges"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Copying...
+            </span>
+          ) : (
+            "Copy Nudges"
+          )}
         </Button>
       </div>
     )}

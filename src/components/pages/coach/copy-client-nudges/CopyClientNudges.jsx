@@ -6,25 +6,27 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { copyClientNudgesInitialState } from "@/config/state-data/copy-client-nudges"
 import {
-  copyClientNudgesReducer, pulledClientNudges, selectAllNotifications, deselectAllNotifications,
-  selectCopyNudgeClient, selectCurrentClientNudges, toggleNotificationSelection
+    copyClientNudgesReducer,
+    deselectAllNotifications,
+    pulledClientNudges, selectAllNotifications,
+    selectCopyNudgeClient, selectCurrentClientNudges, toggleNotificationSelection
 } from "@/config/state-reducers/copy-client-nudges"
 import { fetchData, sendData } from "@/lib/api"
 import { nameInitials } from "@/lib/formatter"
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
 import { useEffect, useRef, useState } from "react"
-import useSWR, { mutate } from "swr"
 import { toast } from "sonner"
+import useSWR, { mutate } from "swr"
 
 export default function CopyClientNudges({ clientId }) {
   return <Dialog>
     <DialogTrigger asChild>
-      <Button variant="wz">
-        Copy Client Nudges
+      <Button variant="wz" className="font-medium">
+        👥 Copy from Client
       </Button>
     </DialogTrigger>
     <DialogContent className="!max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col p-0">
-      <DialogTitle className="px-6 py-4 border-b bg-[var(--comp-2)] text-lg font-semibold">
+      <DialogTitle className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 text-lg font-semibold text-gray-900">
         Copy Client Nudges
       </DialogTitle>
       <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -161,14 +163,97 @@ function SelectNudgesContainer({ clientId, nudgesPulledFrom }) {
         notifications: Array.from(selectedNotification)
       }
       const response = await sendData(`app/notification-copy/clients/${clientId}`, payload);
-      if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message || "Nudges copied successfully!");
-      mutate(`client/nudges/${clientId}`);
-      if (closeRef.current) {
-        closeRef.current.click();
+      
+      // Handle response - check for multiple failure indicators
+      if (!response) {
+        toast.error("Unable to connect to the server. Please check your connection and try again.");
+        return;
+      }
+      
+      // Check if response is an Error object
+      if (response instanceof Error) {
+        toast.error("An error occurred while copying nudges. Please try again.");
+        return;
+      }
+      
+      // Check for explicit error indicators
+      const hasError = 
+        response.status_code !== 200 ||
+        response.statusCode !== 200 ||
+        response.success === false ||
+        response.error ||
+        (response.message && (
+          response.message.toLowerCase().includes("error") ||
+          response.message.toLowerCase().includes("failed") ||
+          response.message.toLowerCase().includes("fail")
+        ));
+      
+      if (hasError) {
+        const errorMessage = response.message || response.error || response.errorMessage || "An error occurred";
+        
+        // Transform technical errors into user-friendly messages
+        let userFriendlyMessage = errorMessage;
+        
+        if (errorMessage.toLowerCase().includes("past") || errorMessage.toLowerCase().includes("future")) {
+          userFriendlyMessage = "Some nudges are scheduled for past dates. Please ensure all nudges are scheduled for future dates only.";
+        } else if (errorMessage.toLowerCase().includes("not found") || errorMessage.toLowerCase().includes("does not exist")) {
+          userFriendlyMessage = "The selected nudges could not be found. Please try selecting different nudges.";
+        } else if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("unauthorized")) {
+          userFriendlyMessage = "You don't have permission to copy these nudges.";
+        } else if (errorMessage.toLowerCase().includes("validation") || errorMessage.toLowerCase().includes("invalid")) {
+          userFriendlyMessage = "The nudge data is invalid. Please contact support if this issue persists.";
+        } else if (errorMessage.toLowerCase().includes("server") || errorMessage.toLowerCase().includes("500")) {
+          userFriendlyMessage = "A server error occurred. Please try again in a few moments.";
+        } else {
+          userFriendlyMessage = `Unable to copy nudges: ${errorMessage}`;
+        }
+        
+        toast.error(userFriendlyMessage);
+        return;
+      }
+      
+      // Only show success if we have clear indicators of success
+      // Be strict: require status_code === 200 AND either success === true OR a positive message
+      const hasSuccess = 
+        (response.status_code === 200 || response.statusCode === 200) &&
+        (
+          response.success === true ||
+          (response.message && (
+            response.message.toLowerCase().includes("success") ||
+            response.message.toLowerCase().includes("copied") ||
+            response.message.toLowerCase().includes("created")
+          )) ||
+          response.data // Some APIs return data on success
+        );
+      
+      if (hasSuccess) {
+        toast.success(response.message || "Nudges have been copied successfully!");
+        mutate(`client/nudges/${clientId}`);
+        if (closeRef.current) {
+          closeRef.current.click();
+        }
+      } else {
+        // If status is 200 but we can't verify success, treat as potential failure
+        if (response.status_code === 200 || response.statusCode === 200) {
+          toast.error("The operation may have failed. Please check the nudges list to verify if nudges were copied.");
+        } else {
+          toast.error("Unable to verify if nudges were copied. Please check the nudges list to confirm.");
+        }
       }
     } catch (error) {
-      toast.error(error.message || "Failed to copy nudges");
+      const errorMessage = error?.message || error?.toString() || "An unexpected error occurred";
+      
+      let userFriendlyMessage = "Unable to copy nudges at this time. ";
+      
+      if (errorMessage.toLowerCase().includes("network") || errorMessage.toLowerCase().includes("fetch")) {
+        userFriendlyMessage += "Please check your internet connection and try again.";
+      } else if (errorMessage.toLowerCase().includes("timeout")) {
+        userFriendlyMessage += "The request took too long. Please try again.";
+      } else {
+        userFriendlyMessage += "Please try again or contact support if the problem continues.";
+      }
+      
+      toast.error(userFriendlyMessage);
     } finally {
       setLoading(false);
     }
