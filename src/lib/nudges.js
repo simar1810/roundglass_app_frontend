@@ -20,11 +20,25 @@ export function getRecentNotifications(
 
   return notifications
     .filter(notif => filterNotificationByDay(notif, selected))
-    .map(notif => ({
-      ...notif,
-      createdTime: parse(notif.createdDate, "dd-MM-yyyy HH:mm", new Date())
-    }))
-    .sort((dateA, dateB) => isBefore(dateA, dateB) ? 1 : -1)
+    .map(notif => {
+      let createdTime = new Date(0); // Default to epoch if date is invalid
+      if (notif?.createdDate && typeof notif.createdDate === 'string') {
+        try {
+          const parsed = parse(notif.createdDate, "dd-MM-yyyy HH:mm", new Date());
+          // Check if parsed date is valid
+          if (!isNaN(parsed.getTime())) {
+            createdTime = parsed;
+          }
+        } catch (error) {
+          console.warn("Error parsing createdDate:", notif.createdDate, error);
+        }
+      }
+      return {
+        ...notif,
+        createdTime
+      };
+    })
+    .sort((dateA, dateB) => isBefore(dateA.createdTime, dateB.createdTime) ? 1 : -1)
     .slice(start, end);
 }
 
@@ -47,12 +61,30 @@ function filterNotificationByDay(notif, selected) {
     : selected.map(day => dayOfWeekToIndexMap.get(day))
 
   if (notif.schedule_type === "reocurr") {
-    return notif
-      .reocurrence
-      .some(day => selectedDayIndexes.includes(day))
+    // Safely check reocurrence array
+    if (!Array.isArray(notif?.reocurrence) || notif.reocurrence.length === 0) {
+      return false;
+    }
+    return notif.reocurrence.some(day => selectedDayIndexes.includes(day))
   }
 
-  return selectedDayIndexes.includes(
-    getDay(parse(notif.date, "dd-MM-yyyy", new Date())),
-  )
+  // For schedule type, safely parse the date
+  if (!notif?.date || typeof notif.date !== 'string') {
+    // If no date is provided, don't filter it out (include it)
+    return true;
+  }
+
+  try {
+    const parsedDate = parse(notif.date, "dd-MM-yyyy", new Date());
+    // Check if parsed date is valid
+    if (isNaN(parsedDate.getTime())) {
+      return true; // If date is invalid, include it rather than filter out
+    }
+    const dayOfWeek = getDay(parsedDate);
+    return selectedDayIndexes.includes(dayOfWeek);
+  } catch (error) {
+    // If parsing fails, include the notification rather than filter it out
+    console.warn("Error parsing notification date:", notif.date, error);
+    return true;
+  }
 }
