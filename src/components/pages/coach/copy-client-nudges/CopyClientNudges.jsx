@@ -19,7 +19,9 @@ import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
 
 export default function CopyClientNudges({ clientId }) {
-  return <Dialog>
+  const [open, setOpen] = useState(false);
+  
+  return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild>
       <Button variant="wz" className="font-medium">
         👥 Copy from Client
@@ -30,19 +32,19 @@ export default function CopyClientNudges({ clientId }) {
         Copy Client Nudges
       </DialogTitle>
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <Container clientId={clientId} />
+        <Container clientId={clientId} open={open} />
       </div>
     </DialogContent>
   </Dialog>
 }
 
-function Container({ clientId }) {
+function Container({ clientId, open }) {
   return <CurrentStateProvider
     state={copyClientNudgesInitialState}
     reducer={copyClientNudgesReducer}
   >
     <SelectClient clientId={clientId} />
-    <SelectNudges clientId={clientId} />
+    <SelectNudges clientId={clientId} open={open} />
   </CurrentStateProvider>
 }
 
@@ -108,7 +110,7 @@ function SelectClient({ clientId }) {
   </div>
 }
 
-function SelectNudges({ clientId }) {
+function SelectNudges({ clientId, open }) {
   const { nudgesPulledFrom } = useCurrentStateContext()
 
   if (!nudgesPulledFrom) return <></>
@@ -116,17 +118,29 @@ function SelectNudges({ clientId }) {
   return <SelectNudgesContainer
     clientId={clientId}
     nudgesPulledFrom={nudgesPulledFrom}
+    open={open}
   />
 }
 
-function SelectNudgesContainer({ clientId, nudgesPulledFrom }) {
+function SelectNudgesContainer({ clientId, nudgesPulledFrom, open }) {
   const [loading, setLoading] = useState(false)
   const closeRef = useRef(null)
   const { clientNudges, dispatch } = useCurrentStateContext();
-  const { isLoading, error, data } = useSWR(
+  const { isLoading, error, data, mutate } = useSWR(
     nudgesPulledFrom ? `notification-copy/clients/${nudgesPulledFrom}` : null,
-    () => fetchData(`app/notification-copy/clients/${nudgesPulledFrom}`)
+    () => fetchData(`app/notification-copy/clients/${nudgesPulledFrom}`),
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true
+    }
   );
+  
+  // Refresh data when modal opens
+  useEffect(() => {
+    if (open && nudgesPulledFrom) {
+      mutate();
+    }
+  }, [open, nudgesPulledFrom, mutate]);
 
   const notifications = data?.data || [];
 
