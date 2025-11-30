@@ -1,5 +1,5 @@
-import Loader from "@/components/common/Loader";
 import ContentError from "@/components/common/ContentError";
+import Loader from "@/components/common/Loader";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchData, sendData } from "@/lib/api";
@@ -55,14 +55,36 @@ function Container({ clientId }) {
           isImageRequired: true // Meal plan nudges always require images
         }
       );
-      if (response.status_code !== 200) throw new Error(response.message);
+      
+      // Handle response
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (response.status_code !== 200) {
+        // Check for specific error messages about past dates
+        const errorMessage = response.message || response.error || "Failed to copy meal plan nudges";
+        if (errorMessage.includes("past") || errorMessage.includes("future")) {
+          toast.error(errorMessage);
+        } else {
+          throw new Error(errorMessage);
+        }
+        return;
+      }
+      
       toast.success(response.message || "Meal plan nudges copied successfully!");
       mutate(`client/nudges/${clientId}`);
       if (closeRef.current) {
         closeRef.current.click();
       }
     } catch (error) {
-      toast.error(error.message || "Failed to copy meal plan nudges")
+      const errorMessage = error?.message || error?.toString() || "Failed to copy meal plan nudges";
+      // Check if error is about past dates
+      if (errorMessage.includes("past") || errorMessage.includes("future")) {
+        toast.error(errorMessage);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

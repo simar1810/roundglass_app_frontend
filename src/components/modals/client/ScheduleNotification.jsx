@@ -493,8 +493,22 @@ function ScheduleNotification({
             <FormControl
               label="Date"
               value={payload.date || ""}
-              onChange={e => setPayload(prev => ({ ...prev, date: e.target.value }))}
+              onChange={e => {
+                const selectedDate = e.target.value;
+                // Validate that date is in the future
+                if (selectedDate) {
+                  const parsedDate = parse(selectedDate, "yyyy-MM-dd", new Date());
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  if (parsedDate < today) {
+                    toast.error("Scheduled time must be in the future");
+                    return;
+                  }
+                }
+                setPayload(prev => ({ ...prev, date: selectedDate }));
+              }}
               type="date"
+              min={format(new Date(), "yyyy-MM-dd")}
               className="[&_.input]:bg-[var(--comp-1)]"
             />
           </div>
@@ -587,6 +601,26 @@ function generatePayload(payload, id) {
       const parsedDate = parse(payload.date, "yyyy-MM-dd", new Date());
       if (isNaN(parsedDate.getTime())) {
         throw new Error("Invalid date format");
+      }
+
+      // Validate that the date is in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(parsedDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        throw new Error("Scheduled time must be in the future");
+      }
+
+      // Also validate date + time combination is in the future
+      const timeStr = formatTime(payload.time);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const scheduledDateTime = new Date(parsedDate);
+      scheduledDateTime.setHours(hours || 0, minutes || 0, 0, 0);
+      
+      if (scheduledDateTime < new Date()) {
+        throw new Error("Scheduled time must be in the future");
       }
 
       const result = {

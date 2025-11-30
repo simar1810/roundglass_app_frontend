@@ -6,29 +6,28 @@ import SelectMultiple from "@/components/SelectMultiple"
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { DAYS, DAYS_EEEE } from "@/config/data/ui"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DAYS_EEEE } from "@/config/data/ui"
 import { sendData } from "@/lib/api"
 import { retrieveClientNudges } from "@/lib/fetchers/app"
 import { getRecentNotifications, getReocurrNotification } from "@/lib/nudges"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Copy, EllipsisVertical, Image as ImageIcon, Pen, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, EllipsisVertical, Eye, Pen, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate } from "swr"
-import DeleteClientNudges from "./DeleteClientNudges"
 import CopyClientNudges from "../copy-client-nudges/CopyClientNudges"
 import CopyMealNotifications from "../copy-client-nudges/CopyMealNotifications"
-import { Eye, EyeOff } from "lucide-react";
+import DeleteClientNudges from "./DeleteClientNudges"
 
 export default function ClientNudges() {
   const [selected, setSelected] = useState([])
@@ -219,7 +218,13 @@ function NotificationAllDays({
           <p>No notifications for this day.</p>
         ) : (
         notifForSelectedDay.map((notif) => {
-        const currentStatus = notif.notificationStatus?.current_status?.status;
+        // Get the most recent status from clientMarkedStatus array (last item)
+        const clientMarkedStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
+          ? notif.notificationStatus.clientMarkedStatus
+          : [];
+        const currentStatus = clientMarkedStatus.length > 0
+          ? clientMarkedStatus[clientMarkedStatus.length - 1]?.status
+          : null;
 
         const matchedEntry = notif.notificationStatus?.clientMarkedStatus?.find(
           (entry) => entry.status === currentStatus
@@ -319,8 +324,15 @@ function NotificationItem({ notif }) {
   const possibleStatuses = Array.isArray(notif?.notificationStatus?.possibleStatus) 
     ? notif.notificationStatus.possibleStatus 
     : [];
-  let defaultStatus = notif?.notificationStatus?.clientMarkedStatus || "";
-  const status = defaultStatus?.[0].status;
+  // Ensure defaultStatus is always an array, not a string
+  const defaultStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
+    ? notif.notificationStatus.clientMarkedStatus
+    : [];
+  // Safely access status from the LAST item (most recent) if it exists
+  // The array is ordered chronologically, with the most recent status at the end
+  const status = defaultStatus.length > 0 
+    ? defaultStatus[defaultStatus.length - 1]?.status || null
+    : null;
   const imageUrlFromStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
   ? notif.notificationStatus.clientMarkedStatus.find(entry => entry?.imageLink)?.imageLink
   : null;
@@ -471,7 +483,10 @@ function NotificationItem({ notif }) {
                    );
                 })}
               </div>
-              {status && possibleStatuses.some(s => s.name === status) && (
+              {status && possibleStatuses.some(s => {
+                const statusName = typeof s === "string" ? s : s?.name;
+                return statusName === status;
+              }) && (
                 <div className="mt-2 text-xs text-gray-600">
                   <span className="font-medium">Current Status:</span>{" "}
                   <Badge className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 border-blue-300 ml-1">
