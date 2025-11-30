@@ -584,7 +584,7 @@ function generatePayload(payload, id) {
         ? {
             status: payload.defaultStatus.trim(),
             imageLink: null,
-            date: format(new Date(), "dd-MM-yyyy HH:mm")
+            date: format(new Date(), "dd-MM-yyyy")
           }
         : payload.defaultStatus
     ]
