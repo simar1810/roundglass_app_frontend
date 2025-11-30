@@ -56,7 +56,7 @@ function Container({ clientId }) {
         }
       );
       
-      // Handle response - check for multiple failure indicators
+      // Handle response
       if (!response) {
         toast.error("Unable to connect to the server. Please check your connection and try again.");
         return;
@@ -68,19 +68,14 @@ function Container({ clientId }) {
         return;
       }
       
-      // Check for explicit error indicators
-      const hasError = 
-        response.status_code !== 200 ||
-        response.statusCode !== 200 ||
+      // Check for explicit error indicators - only show error if status_code is NOT 200 or explicit error field exists
+      const isError = 
+        (response.status_code !== 200 && response.status_code !== undefined) ||
+        (response.statusCode !== 200 && response.statusCode !== undefined) ||
         response.success === false ||
-        response.error ||
-        (response.message && (
-          response.message.toLowerCase().includes("error") ||
-          response.message.toLowerCase().includes("failed") ||
-          response.message.toLowerCase().includes("fail")
-        ));
+        response.error;
       
-      if (hasError) {
+      if (isError) {
         // Extract error message and make it client-centric
         const errorMessage = response.message || response.error || response.errorMessage || "An error occurred";
         
@@ -98,7 +93,6 @@ function Container({ clientId }) {
         } else if (errorMessage.toLowerCase().includes("server") || errorMessage.toLowerCase().includes("500")) {
           userFriendlyMessage = "A server error occurred. Please try again in a few moments.";
         } else {
-          // Keep original message but make it more friendly
           userFriendlyMessage = `Unable to copy nudges: ${errorMessage}`;
         }
         
@@ -106,32 +100,12 @@ function Container({ clientId }) {
         return;
       }
       
-      // Only show success if we have clear indicators of success
-      // Be strict: require status_code === 200 AND either success === true OR a positive message
-      const hasSuccess = 
-        (response.status_code === 200 || response.statusCode === 200) &&
-        (
-          response.success === true ||
-          (response.message && (
-            response.message.toLowerCase().includes("success") ||
-            response.message.toLowerCase().includes("copied") ||
-            response.message.toLowerCase().includes("created")
-          )) ||
-          response.data // Some APIs return data on success
-        );
-      
-      if (hasSuccess) {
+      // If status_code is 200 or not explicitly an error, treat as success
+      if (response.status_code === 200 || response.statusCode === 200 || !isError) {
         toast.success(response.message || "Meal plan nudges have been copied successfully!");
         mutate(`client/nudges/${clientId}`);
         if (closeRef.current) {
           closeRef.current.click();
-        }
-      } else {
-        // If status is 200 but we can't verify success, treat as potential failure
-        if (response.status_code === 200 || response.statusCode === 200) {
-          toast.error("The operation may have failed. Please check the nudges list to verify if nudges were copied.");
-        } else {
-          toast.error("Unable to verify if nudges were copied. Please check the nudges list to confirm.");
         }
       }
     } catch (error) {
