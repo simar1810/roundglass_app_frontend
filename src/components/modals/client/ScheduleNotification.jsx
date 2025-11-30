@@ -159,18 +159,50 @@ function ScheduleNotification({
     getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
     function normalizeTime(timeStr) {
-        if (!timeStr) return null;
-        const parsed = parse(timeStr, "hh:mm a", new Date());
-        return isValid(parsed) ? parsed : null;
+        if (!timeStr) return "";
+        // First try to convert from 24-hour format to 12-hour format
+        const converted = convertTimeTo12Hour(timeStr);
+        if (converted) {
+            return converted; // Return the string directly
+        }
+        // If already in 12-hour format, return as is
+        if (timeStr.match(/^\d{1,2}:\d{2}\s+(AM|PM)$/i)) {
+            return timeStr;
+        }
+        return "";
     }
+    
+    function parseDateForInput(dateStr) {
+        if (!dateStr) return "";
+        try {
+            let parsed = null;
+            // Try parsing as "dd-MM-yyyy" format first (most common in this app)
+            parsed = parse(dateStr, "dd-MM-yyyy", new Date());
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            // Try ISO format
+            parsed = parseISO(dateStr);
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            // Try "yyyy-MM-dd" format
+            parsed = parse(dateStr, "yyyy-MM-dd", new Date());
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            return "";
+        } catch {
+            return "";
+        }
+    }
+    
     const [payload, setPayload] = useState({
         subject: defaultPayload.subject || "",
         message: defaultPayload.message || "",
         notificationType: defaultPayload.schedule_type || "schedule",
         time: normalizeTime(defaultPayload.time),
-        date: defaultPayload.date
-            ? parseISO(defaultPayload.date)
-            : null,
+        date: parseDateForInput(defaultPayload.date),
         reocurrence: defaultPayload.reocurrence || [],
         clients: selectedClients || defaultPayload.clients || [],
         actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
@@ -187,10 +219,10 @@ function ScheduleNotification({
           };
         }): [],
 
-        defaultStatus:
-            typeof defaultPayload?.notificationStatus?.clientMarkedStatus === "string"
-                ? defaultPayload.notificationStatus.clientMarkedStatus
-                : defaultPayload?.notificationStatus?.clientMarkedStatus?.status || ""
+        // Preserve the entire clientMarkedStatus array when editing
+        defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || [],
+        // Store original clientMarkedStatus for image preservation
+        originalClientMarkedStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || []
 
     })
     function getNormalizedPayloadForSave(payload) {
@@ -483,8 +515,8 @@ function ScheduleNotification({
         <div className="mb-4">
           <Label className="text-[14px] mb-2 block">Time</Label>
           <TimePicker
-            selectedTime={payload.time}
-            setSelectedTime={value => setPayload(prev => ({ ...prev, time: value }))}
+            selectedTime={typeof payload.time === 'string' ? payload.time : (payload.time instanceof Date ? format(payload.time, "hh:mm a") : "")}
+            setSelectedTime={value => setPayload(prev => ({ ...prev, time: typeof value === 'string' ? value : "" }))}
           />
         </div>
 
@@ -579,15 +611,28 @@ function generatePayload(payload, id) {
       return status;
     }),
 
-    clientMarkedStatus: [
-      typeof payload.defaultStatus === "string"
-        ? {
-            status: payload.defaultStatus.trim(),
-            imageLink: null,
-            date: format(new Date(), "dd-MM-yyyy")
-          }
-        : payload.defaultStatus
-    ]
+    // Preserve existing clientMarkedStatus with images when updating
+    clientMarkedStatus: (() => {
+      if (isUpdate && Array.isArray(payload.originalClientMarkedStatus) && payload.originalClientMarkedStatus.length > 0) {
+        // When updating, preserve existing clientMarkedStatus entries with their images
+        return payload.originalClientMarkedStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (Array.isArray(payload.defaultStatus) && payload.defaultStatus.length > 0) {
+        return payload.defaultStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (typeof payload.defaultStatus === "string") {
+        return [{
+          status: payload.defaultStatus.trim(),
+          imageLink: null,
+          date: format(new Date(), "dd-MM-yyyy")
+        }];
+      }
+      return payload.defaultStatus || [];
+    })()
   };
 
     if (payload.actionType) result.actionType = payload.actionType;
@@ -598,6 +643,7 @@ function generatePayload(payload, id) {
     if (!payload.date) throw new Error(`date is mandatory.`);
 
     try {
+      // Parse date string (always in yyyy-MM-dd format from input)
       const parsedDate = parse(payload.date, "yyyy-MM-dd", new Date());
       if (isNaN(parsedDate.getTime())) {
         throw new Error("Invalid date format");
@@ -620,7 +666,7 @@ function generatePayload(payload, id) {
       scheduledDateTime.setHours(hours || 0, minutes || 0, 0, 0);
       
       if (scheduledDateTime < new Date()) {
-        throw new Error("Scheduled time must be in the future");
+        throw new Error("Time should be in the future");
       }
 
       const result = {
@@ -645,27 +691,46 @@ function generatePayload(payload, id) {
         result.id = id
       }
 
+      // Preserve existing clientMarkedStatus with images when updating
+      let clientMarkedStatus = [];
+      if (isUpdate && Array.isArray(payload.originalClientMarkedStatus) && payload.originalClientMarkedStatus.length > 0) {
+        // When updating, preserve existing clientMarkedStatus entries with their images
+        clientMarkedStatus = payload.originalClientMarkedStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (Array.isArray(payload.defaultStatus) && payload.defaultStatus.length > 0) {
+        // Use provided defaultStatus array
+        clientMarkedStatus = payload.defaultStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (typeof payload.defaultStatus === "string" && payload.defaultStatus.trim()) {
+        // Fallback to string defaultStatus
+        clientMarkedStatus = [{
+          status: payload.defaultStatus.trim(),
+          imageLink: null,
+          date: format(new Date(), "dd-MM-yyyy")
+        }];
+      } else {
+        // Empty fallback
+        clientMarkedStatus = [];
+      }
+
       result.notificationStatus = {
         possibleStatus: (payload.possibleStatus || []).map(status => {
                     if (typeof status === "string") return { name: status.trim(), imageRequired: false };
                     return status;
                 }),
-               clientMarkedStatus: typeof payload.defaultStatus === "string"
-                    ? [{
-                        status: payload.defaultStatus.trim(),
-                        imageLink: null,
-                        date: format(new Date(), "dd-MM-yyyy")
-                      }]
-                    : Array.isArray(payload.defaultStatus) 
-                      ? payload.defaultStatus.map(entry => ({
-                          ...entry,
-                          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
-                        }))
-                      : payload.defaultStatus || [{ status: "", imageLink: null, date: format(new Date(), "dd-MM-yyyy") }]
+        clientMarkedStatus: clientMarkedStatus
       };
 
       return result;
     } catch (error) {
+      // Preserve the original error message if it's about future time
+      if (error.message && error.message.includes("future")) {
+        throw error;
+      }
       throw new Error(`Invalid date format: ${payload.date}`);
     }
   }
