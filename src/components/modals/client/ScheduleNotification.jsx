@@ -651,8 +651,17 @@ function generatePayload(payload, id) {
                     return status;
                 }),
                clientMarkedStatus: typeof payload.defaultStatus === "string"
-                    ? { status: payload.defaultStatus.trim(), markedAt: null }
-                    : payload.defaultStatus || { status: "", markedAt: null }
+                    ? [{
+                        status: payload.defaultStatus.trim(),
+                        imageLink: null,
+                        date: format(new Date(), "dd-MM-yyyy")
+                      }]
+                    : Array.isArray(payload.defaultStatus) 
+                      ? payload.defaultStatus.map(entry => ({
+                          ...entry,
+                          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+                        }))
+                      : payload.defaultStatus || [{ status: "", imageLink: null, date: format(new Date(), "dd-MM-yyyy") }]
       };
 
       return result;
