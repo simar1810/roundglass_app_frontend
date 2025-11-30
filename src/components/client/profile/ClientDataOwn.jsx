@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { CustomMealDetails, WorkoutDetails } from "@/components/pages/coach/client/ClientData";
 
 export default function ClientDataOwn({ clientData }) {
-  return <div className="bg-white p-4 rounded-[18px] border-1">
+  return <div className="bg-white p-4 rounded-[18px] border-1 w-[90vw] md:w-auto">
     <Tabs defaultValue="statistics">
       <Header />
       <ClientStatisticsDataOwn clientData={clientData} />

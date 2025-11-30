@@ -35,10 +35,10 @@ function Header({
   searchQuery,
   setSearchQuery
 }) {
-  return <div className="mb-4 pb-4 flex items-center gap-4 border-b-1">
+  return <div className="mb-4 pb-4 flex flex-col  md:flex-row md:items-center gap-4 border-b-1">
     <h4>Meal Plans</h4>
     <FormControl
-      className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
+      className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] md:ml-auto"
       placeholder="Search Meal.."
       value={searchQuery}
       onChange={e => setSearchQuery(e.target.value)}
@@ -55,7 +55,7 @@ function MealPlanContainer({
     className="font-bold"
     title="No Meals plans assigned to the client"
   />
-  return <div className="grid grid-cols-4 gap-4">
+  return <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
     {plans.map(plan => <MealDisplayCard
       plan={plan}
       key={plan._id} />)}

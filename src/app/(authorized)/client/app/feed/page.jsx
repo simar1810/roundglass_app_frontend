@@ -27,7 +27,7 @@ export default function Page() {
 
 function FeedContainer() {
   const { type } = useCurrentStateContext()
-  return <div className="max-w-[650px] bg-white mt-10 mx-auto relative border-1 border-b-0 rounded-t-[10px]">
+  return <div className="grid md:grid-cols-3 gap-5 bg-white mt-10 mx-auto relative border-1 border-b-0 rounded-t-[10px]">
     {type === "mine"
       ? <ClientPersonalFeeds />
       : <ClientFeeds />}

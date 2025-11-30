@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, ChevronLeft, Download, Filter, RefreshCcw } from "lucide-react";
+import { ArrowRight, ChevronLeft, Download, RefreshCcw } from "lucide-react";
 import useSWR from "swr";
 import Link from "next/link";
-
 import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "../ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
@@ -16,14 +15,16 @@ import ContentError from "../common/ContentError";
 import { DialogTitle } from "../ui/dialog";
 import TopPerformers from "../pages/coach/dashboard/TopPerformers";
 import FollowUpList from "../pages/coach/dashboard/FollowUpList";
-
 import { fetchData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
-import { addDays, addYears, differenceInCalendarDays, format, isBefore, isValid, parse, setDate, setMonth, startOfDay } from "date-fns";
 import { normalizeMealPlansSorting } from "../pages/coach/dashboard/feature-statistics/ClientPlansExpiry";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  addDays, addYears, differenceInCalendarDays, format,
+  isBefore, isValid, parse, setDate, setMonth, startOfDay
+} from "date-fns";
+import { ddMMyyyy } from "@/config/data/regex";
 
 const DATE_FORMATS = ["dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd"];
 const TONE_CLASSES = {
@@ -734,15 +735,16 @@ function getPaginationSequence(current, total, maxLength = 7) {
 function normalizeBirthdays(birthdays = []) {
   const today = new Date();
   return birthdays
+    .filter(client => ddMMyyyy.test(client.dob))
     .map(client => {
       const [day, month] = (client.dob || "")?.split("-") || [];
-      const parsedDate = setMonth(
-        setDate(new Date(), day),
-        month - 1
-      )
-      const newDob = isBefore(parsedDate, today)
-        ? addYears(parsedDate, 1)
-        : parsedDate
+      const bday = setDate(new Date(), day)
+      bday.setDate(day)
+      bday.setMonth(month - 1)
+      const newDob = isBefore(bday, today)
+        ? new Date(addYears(bday, 1))
+        : new Date(bday)
+      if (client.clientId === "mry822") console.log(newDob)
       return {
         ...client,
         dob: newDob

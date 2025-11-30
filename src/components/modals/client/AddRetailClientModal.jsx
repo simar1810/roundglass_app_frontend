@@ -80,10 +80,10 @@ function Stage2() {
   const products = data.data
 
   return <div>
-    <div className="p-4 grid grid-cols-3 gap-4">
+    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
       {products.map(product => <ProductCard key={product._id} product={product} />)}
     </div>
-    {productModule.length > 0 && <div className="bg-[var(--primary-1)] sticky py-2 bottom-0 border-t-1">
+    {productModule?.length > 0 && <div className="bg-[var(--primary-1)] sticky py-2 bottom-0 border-t-1">
       <Button
         variant="wz"
         className="block mx-auto"
@@ -97,24 +97,25 @@ function Stage2() {
 
 function ProductCard({ product }) {
   const { productModule, dispatch } = useCurrentStateContext();
-  const quantity = productModule.find(item => item._id === product._id)?.quantity || 0;
+  const quantity = productModule?.find(item => item._id === product._id)?.quantity || 0;
 
-  return <div className="bg-[var(--comp-1)] p-2 flex flex-col rounded-[8px] border-1">
+  return <div className="bg-[var(--comp-1)] px-4 py-5 md:p-2 flex flex-row md:flex-col gap-5 md:gap-0 rounded-[8px] border-1">
     <Image
       alt=""
       src={product.productImage || "/not-found.png"}
       height={200}
       width={200}
-      className="w-full object-cover aspect-square"
+      className="w-1/2 h-2/3 md:w-full md:h-auto object-cover aspect-square rounded-md"
     />
-    <p className="font-[500] mt-4">{product.productName}</p>
-    <p className="text-[12px] text-[var(--dark-1)]/25 leading-[1.2] mb-2">{product.productDescription.slice(0, 100)}</p>
+    <div className="flex flex-col items-start justify-start gap-1">
+    <p className="font-[500] md:mt-4">{product.productName}</p>
+    <p className="text-[12px] text-gray-500 leading-[1.2] mb-2">{product.productDescription.slice(0, 100)}</p>
     {quantity === 0
       ? <Button
         onClick={() => dispatch(addProductToProductModule(product))}
         variant="wz"
         size="sm"
-        className="w-full mt-auto text-[12px]"
+        className="w-2/3 md:w-full md:mt-auto text-[12px]"
       >
         <ShoppingCart className="w-[12px] h-[12px]" />
         Add to Cart
@@ -127,7 +128,8 @@ function ProductCard({ product }) {
         <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity - 1))} size="sm" variant="wz_outline">
           <Minus />
         </Button>
-      </div>}
+        </div>}
+      </div>
   </div>
 }
 

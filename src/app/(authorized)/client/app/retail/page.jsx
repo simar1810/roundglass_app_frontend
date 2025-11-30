@@ -69,7 +69,7 @@ function Brands() {
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
     </div>
-    <div className="mt-4 grid grid-cols-6">
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
     </div>
   </TabsContent>
@@ -111,7 +111,7 @@ function OrderHistory({ orders }) {
   </TabsContent>
 
   return <TabsContent value="order-history">
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
     </div>
   </TabsContent>
@@ -135,8 +135,8 @@ function Order({ order }) {
           className="bg-black w-[64px] h-[64px] object-cover rounded-md"
         />
         <div>
-          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
-          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
+          <h4 className="text-xs md:text-base">{order.productModule.map(product => product.productName).join(", ")}</h4>
+          <p className="text-[12px] md:text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
           {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
         </div>
       </div>

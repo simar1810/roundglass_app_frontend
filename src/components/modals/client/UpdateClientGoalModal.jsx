@@ -7,18 +7,16 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-export default function UpdateClientGoalModal({ id,
-  clientData: {
-    goal: defaultValue,
-    ...clientData
-  }
-}) {
+export default function UpdateClientGoalModal({ id, clientData = {} }) {
+  const {
+    goal: defaultValue = "",
+    healthMatrix = {}
+  } = clientData;
+
   const [loading, setLoading] = useState(false);
-  const [goal, setGoal] = useState(() => defaultValue);
+  const [goal, setGoal] = useState(defaultValue);
 
   const closeBtnRef = useRef(null);
-
-  const healthMatrix = (clientData.healthMatrix || {})
 
   async function updateClientGoal() {
     try {
@@ -33,7 +31,7 @@ export default function UpdateClientGoalModal({ id,
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`clientDetails/${id}`);
-      closeBtnRef.current.click();
+      closeBtnRef.current?.click();
     } catch (error) {
       toast.error(error.message);
     } finally {

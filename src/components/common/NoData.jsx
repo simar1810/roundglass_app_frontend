@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 export default function NoData({ message }) {
-  return <div className="w-fit mx-auto">
+  return <div className="w-fit mx-auto my-10">
     <Image
       src="/illustrations/no-data.svg"
       alt=""

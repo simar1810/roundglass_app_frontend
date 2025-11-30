@@ -1,6 +1,6 @@
 "use client"
 import { Input } from "../ui/input";
-import { ChevronDown, LogOut, Search } from "lucide-react";
+import { ChevronDown, LogOut, Search, Menu } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -16,14 +16,21 @@ import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import useClickOutside from "@/hooks/useClickOutside";
 import { nameInitials } from "@/lib/formatter";
+import { useSidebar } from "../ui/sidebar";
 
 export default function AppClientNavbar() {
   const data = useAppSelector(state => state.client.data)
+  const {toggleSidebar} = useSidebar()
   if (!data) return <></>
 
   const { profilePhoto, name } = data;
-
-  return <nav className="bg-white h-16 sticky top-0 py-4 px-10 flex items-center justify-end font-bold gap-4 border-b-1 z-[30]">
+  const openSidebar = () => {
+    toggleSidebar();
+  }
+  return <nav className="bg-white h-16 sticky top-0 py-4 px-5 md:px-10 flex items-center justify-between md:justify-end font-bold gap-4 border-b-1 z-[30]">
+    <div>
+      <Menu onClick={openSidebar} size={30} className="text-gray-400 font-normal md:hidden" />
+    </div>
     <UserOptions
       profilePhoto={profilePhoto}
       name={name}

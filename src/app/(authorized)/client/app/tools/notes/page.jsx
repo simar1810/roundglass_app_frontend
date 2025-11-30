@@ -37,7 +37,7 @@ export default function Page() {
 
   return <div className="content-container content-height-screen">
     <NotesPageHeader setSearchQuery={setSearchQuery} />
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid md:grid-cols-3 gap-4">
       {notes.map((note, index) => <Note
         key={note._id}
         index={index}
@@ -48,14 +48,16 @@ export default function Page() {
 }
 
 function NotesPageHeader({ setSearchQuery }) {
-  return <div className="w-full mb-4 flex items-center gap-4">
+  return <div className="w-full mb-4 flex flex-col md:flex-row items-start justify-between md:items-center gap-4">
     <h4>Notes</h4>
+    <div className="flex items-center gap-4">
     <FormControl
-      className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
+      className="w-1/3 lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] md:ml-auto"
       placeholder="Search Notes.."
       onChange={e => setSearchQuery(e.target.value)}
     />
-    <AddNoteModal person="client" />
+      <AddNoteModal person="client" />
+    </div>
   </div>
 }
 

@@ -34,7 +34,7 @@ export function addRetailReducer(state, action) {
       return {
         ...state,
         productModule: [
-          ...state.productModule,
+          ...(state.productModule || []),
           {
             ...action.payload,
             quantity: 1

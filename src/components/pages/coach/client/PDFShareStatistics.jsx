@@ -482,7 +482,7 @@ function StatisticsPage1({ data, styles, brand }) {
 
   return (
     <Page size="A4" style={{ ...styles.page, display: "flex", flexDirection: "flex-col" }}>
-      <Text style={styles.brandTitle}>{brand.brandName || <>WellnessZ</>}</Text>
+      {brand.brandName && <Text style={styles.brandTitle}>{brand.brandName}</Text>}
       <Text style={{ ...styles.subHeader, marginTop: 2 }}>Checkup Report</Text>
       <View style={{ marginBottom: 10, height: 1, backgroundColor: brand.primaryColor }} />
       <View style={styles.infoBox}>
