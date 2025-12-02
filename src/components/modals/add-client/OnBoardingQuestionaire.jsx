@@ -66,17 +66,38 @@ function generateQuestionaireRP(
       .filter(section => !hiddenSections.has(section._id))
       .map((section) => ({
         name: section.name,
-        questions: section
-          .questions
+        questions: section.questions
           .filter(question => Boolean(question.answer))
-          .map((question) => ({
-            text: question.text,
-            type: question.type,
-            answer: question.answer || ""
-          }))
+          .map((question) => {
+            if (question.type === "attachFile") {
+
+              if (!question.answer) return null;
+
+              const fileName =
+                question.answer instanceof File
+                  ? question.answer.name
+                  : question.answer;
+
+              return {
+                text: question.text,
+                type: question.type,
+                filePath: fileName,
+                answer: ""
+              };
+            }
+
+            return {
+              text: question.text,
+              type: question.type,
+              answer: Array.isArray(question.answer)
+                ? question.answer.join(", ")
+                : (question.answer ?? "")
+            };
+          })
+          .filter(q => q !== null)
       }))
       .filter(section => section.questions.length > 0)
-  }
+  };
 }
 
 function QuestionsContainer({ sections = [] }) {
@@ -184,7 +205,7 @@ function RenderQuestion({ question, onChange }) {
     return <MultipleChoiceAnswer question={question} onChange={onChange} />
   }
 
-  if (question.type === "checkbox") {
+  if (question.type === "checkBoxes") {
     return <CheckboxAnswer question={question} onChange={onChange} />
   }
 
@@ -196,7 +217,7 @@ function RenderQuestion({ question, onChange }) {
     return <DropdownAnswer question={question} onChange={onChange} />
   }
 
-  if (question.type === "fileUpload") {
+  if (question.type === "attachFile") {
     return <FileUploadAnswer question={question} onChange={onChange} />
   }
 
