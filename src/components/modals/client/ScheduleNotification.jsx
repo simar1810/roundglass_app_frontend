@@ -4,7 +4,8 @@ import FormControl from "@/components/FormControl";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -14,7 +15,7 @@ import { useNotificationSchedulerCache } from "@/hooks/useNotificationSchedulerC
 import { sendData } from "@/lib/api";
 import { retrieveClientNudges, retrieveCoachClientList } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
-import { format, isValid, parse } from "date-fns";
+import { format, isValid, parse, parseISO } from "date-fns";
 import { Calendar, CircleMinus, CirclePlus, Clock, History, Plus, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -157,21 +158,85 @@ function ScheduleNotification({
     getCachedNotificationsByContext,
     getCachedNotificationsForClientByContext
   } = useNotificationSchedulerCache();
+    function normalizeTime(timeStr) {
+        if (!timeStr) return "";
+        // First try to convert from 24-hour format to 12-hour format
+        const converted = convertTimeTo12Hour(timeStr);
+        if (converted) {
+            return converted; // Return the string directly
+        }
+        // If already in 12-hour format, return as is
+        if (timeStr.match(/^\d{1,2}:\d{2}\s+(AM|PM)$/i)) {
+            return timeStr;
+        }
+        return "";
+    }
+    
+    function parseDateForInput(dateStr) {
+        if (!dateStr) return "";
+        try {
+            let parsed = null;
+            // Try parsing as "dd-MM-yyyy" format first (most common in this app)
+            parsed = parse(dateStr, "dd-MM-yyyy", new Date());
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            // Try ISO format
+            parsed = parseISO(dateStr);
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            // Try "yyyy-MM-dd" format
+            parsed = parse(dateStr, "yyyy-MM-dd", new Date());
+            if (isValid(parsed)) {
+                return format(parsed, "yyyy-MM-dd");
+            }
+            return "";
+        } catch {
+            return "";
+        }
+    }
+    
+    const [payload, setPayload] = useState({
+        subject: defaultPayload.subject || "",
+        message: defaultPayload.message || "",
+        notificationType: defaultPayload.schedule_type || "schedule",
+        time: normalizeTime(defaultPayload.time),
+        date: parseDateForInput(defaultPayload.date),
+        reocurrence: defaultPayload.reocurrence || [],
+        clients: selectedClients || defaultPayload.clients || [],
+        actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
+        id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
+        possibleStatus:
+          Array.isArray(defaultPayload?.notificationStatus?.possibleStatus)
+          ? defaultPayload.notificationStatus.possibleStatus.map(item => {
+          if (typeof item === "string") {
+          return { name: item, imageRequired: false };
+          }
+          return {
+          name: item.name,
+          imageRequired: Boolean(item.imageRequired)
+          };
+        }): [],
 
-  const [payload, setPayload] = useState({
-    subject: defaultPayload.subject || "",
-    message: defaultPayload.message || "",
-    notificationType: defaultPayload.schedule_type || "schedule",
-    time: convertTimeTo12Hour(defaultPayload.time || ""),
-    date: formatDate(defaultPayload.date),
-    reocurrence: defaultPayload.reocurrence || [],
-    clients: selectedClients || defaultPayload.clients || [],
-    actionType: Boolean(defaultPayload?._id) ? "UPDATE" : undefined,
-    id: Boolean(defaultPayload?._id) ? defaultPayload._id : undefined,
-    possibleStatus: defaultPayload?.notificationStatus?.possibleStatus || [],
-    defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || ""
-  })
+        // Preserve the entire clientMarkedStatus array when editing
+        defaultStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || [],
+        // Store original clientMarkedStatus for image preservation
+        originalClientMarkedStatus: defaultPayload?.notificationStatus?.clientMarkedStatus || []
 
+    })
+    function getNormalizedPayloadForSave(payload) {
+        return {
+            ...payload,
+           possibleStatus: payload.possibleStatus.map(s => ({
+            name: s.name,
+            imageRequired: Boolean(s.imageRequired)})),
+
+            clientMarkedStatus: typeof payload.defaultStatus === "string"
+                ? { status: payload.defaultStatus, markedAt: null }
+                : payload.clientMarkedStatus
+        };
+    }
   const clientId = selectedClients?.[0];
   const isClientNudgesContext = !!clientId;
   const context = isClientNudgesContext ? 'client_nudges' : 'notifications';
@@ -231,7 +296,7 @@ function ScheduleNotification({
     try {
       setLoading(true);
       const formData = generatePayload(
-        payload,
+        getNormalizedPayloadForSave(payload),
         defaultPayload._id,
       );
       const response = await sendData(
@@ -293,6 +358,9 @@ function ScheduleNotification({
       <DialogTitle className="bg-[var(--comp-2)] py-6 h-[56px] border-b-1 text-black text-[20px] p-4">
         {defaultPayload.id ? "Update Client Nudges" : "Add Client Nudges"}
       </DialogTitle>
+      <DialogDescription className="sr-only">
+        {defaultPayload.id ? "Update notification settings for your client" : "Create a new notification for your client"}
+      </DialogDescription>
       <div className="px-4 pb-8">
         <div className="relative mb-4" ref={subjectRef}>
           <div className="flex items-center justify-between mb-2">
@@ -447,8 +515,8 @@ function ScheduleNotification({
         <div className="mb-4">
           <Label className="text-[14px] mb-2 block">Time</Label>
           <TimePicker
-            selectedTime={payload.time}
-            setSelectedTime={value => setPayload(prev => ({ ...prev, time: value }))}
+            selectedTime={typeof payload.time === 'string' ? payload.time : (payload.time instanceof Date ? format(payload.time, "hh:mm a") : "")}
+            setSelectedTime={value => setPayload(prev => ({ ...prev, time: typeof value === 'string' ? value : "" }))}
           />
         </div>
 
@@ -456,9 +524,23 @@ function ScheduleNotification({
           <div className="mb-4">
             <FormControl
               label="Date"
-              value={payload.date}
-              onChange={e => setPayload(prev => ({ ...prev, date: e.target.value }))}
+              value={payload.date || ""}
+              onChange={e => {
+                const selectedDate = e.target.value;
+                // Validate that date is in the future
+                if (selectedDate) {
+                  const parsedDate = parse(selectedDate, "yyyy-MM-dd", new Date());
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  if (parsedDate < today) {
+                    toast.error("Scheduled time must be in the future");
+                    return;
+                  }
+                }
+                setPayload(prev => ({ ...prev, date: selectedDate }));
+              }}
               type="date"
+              min={format(new Date(), "yyyy-MM-dd")}
               className="[&_.input]:bg-[var(--comp-1)]"
             />
           </div>
@@ -469,10 +551,25 @@ function ScheduleNotification({
             dispatch={setPayload}
           />
         )}
-        {<NotificationStatuses
+        <NotificationStatuses
           payload={payload}
           setPayload={setPayload}
-        />}
+        />
+        {/* <div className="mb-4">
+          <Label className="font-bold text-[14px] mb-2 block">Image Requirement</Label>
+          <p className="text-xs text-gray-500 mb-3">
+            Require clients to upload an image when responding to this notification
+          </p>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={payload.isImageRequired || false}
+              onCheckedChange={(checked) => {
+                setPayload(prev => ({ ...prev, isImageRequired: checked || false }))
+              }}
+            />
+            <span className="text-sm text-gray-700">Require image upload</span>
+          </label>
+        </div> */}
         <div className="flex gap-2 mt-4">
           <Button
             onClick={scheduleNotification}
@@ -503,12 +600,40 @@ function generatePayload(payload, id) {
       reocurrence: payload.reocurrence,
       clients: Array.isArray(payload.clients)
         ? payload.clients[0]
-        : payload.clients
+        : payload.clients,
+      isImageRequired: payload.isImageRequired || false
     };
     result.notificationStatus = {
-      possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-      clientMarkedStatus: payload.defaultStatus?.trim()
-    };
+    possibleStatus: (payload.possibleStatus || []).map(status => {
+      if (typeof status === "string") {
+        return { name: status.trim(), imageRequired: false };
+      }
+      return status;
+    }),
+
+    // Preserve existing clientMarkedStatus with images when updating
+    clientMarkedStatus: (() => {
+      if (isUpdate && Array.isArray(payload.originalClientMarkedStatus) && payload.originalClientMarkedStatus.length > 0) {
+        // When updating, preserve existing clientMarkedStatus entries with their images
+        return payload.originalClientMarkedStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (Array.isArray(payload.defaultStatus) && payload.defaultStatus.length > 0) {
+        return payload.defaultStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (typeof payload.defaultStatus === "string") {
+        return [{
+          status: payload.defaultStatus.trim(),
+          imageLink: null,
+          date: format(new Date(), "dd-MM-yyyy")
+        }];
+      }
+      return payload.defaultStatus || [];
+    })()
+  };
 
     if (payload.actionType) result.actionType = payload.actionType;
     if (payload.id) result.id = payload.id;
@@ -518,9 +643,30 @@ function generatePayload(payload, id) {
     if (!payload.date) throw new Error(`date is mandatory.`);
 
     try {
+      // Parse date string (always in yyyy-MM-dd format from input)
       const parsedDate = parse(payload.date, "yyyy-MM-dd", new Date());
       if (isNaN(parsedDate.getTime())) {
         throw new Error("Invalid date format");
+      }
+
+      // Validate that the date is in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(parsedDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        throw new Error("Scheduled time must be in the future");
+      }
+
+      // Also validate date + time combination is in the future
+      const timeStr = formatTime(payload.time);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const scheduledDateTime = new Date(parsedDate);
+      scheduledDateTime.setHours(hours || 0, minutes || 0, 0, 0);
+      
+      if (scheduledDateTime < new Date()) {
+        throw new Error("Time should be in the future");
       }
 
       const result = {
@@ -532,7 +678,8 @@ function generatePayload(payload, id) {
         time: formatTime(payload.time),
         clients: Array.isArray(payload.clients)
           ? payload.clients[0]
-          : payload.clients
+          : payload.clients,
+        isImageRequired: payload.isImageRequired || false
       };
 
       // Only add actionType and id if they have values
@@ -544,13 +691,46 @@ function generatePayload(payload, id) {
         result.id = id
       }
 
+      // Preserve existing clientMarkedStatus with images when updating
+      let clientMarkedStatus = [];
+      if (isUpdate && Array.isArray(payload.originalClientMarkedStatus) && payload.originalClientMarkedStatus.length > 0) {
+        // When updating, preserve existing clientMarkedStatus entries with their images
+        clientMarkedStatus = payload.originalClientMarkedStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (Array.isArray(payload.defaultStatus) && payload.defaultStatus.length > 0) {
+        // Use provided defaultStatus array
+        clientMarkedStatus = payload.defaultStatus.map(entry => ({
+          ...entry,
+          date: entry.date ? (entry.date.includes(' ') ? entry.date.split(' ')[0] : entry.date) : format(new Date(), "dd-MM-yyyy")
+        }));
+      } else if (typeof payload.defaultStatus === "string" && payload.defaultStatus.trim()) {
+        // Fallback to string defaultStatus
+        clientMarkedStatus = [{
+          status: payload.defaultStatus.trim(),
+          imageLink: null,
+          date: format(new Date(), "dd-MM-yyyy")
+        }];
+      } else {
+        // Empty fallback
+        clientMarkedStatus = [];
+      }
+
       result.notificationStatus = {
-        possibleStatus: (payload.possibleStatus || [])?.map(status => status.trim()),
-        clientMarkedStatus: payload.defaultStatus?.trim()
+        possibleStatus: (payload.possibleStatus || []).map(status => {
+                    if (typeof status === "string") return { name: status.trim(), imageRequired: false };
+                    return status;
+                }),
+        clientMarkedStatus: clientMarkedStatus
       };
 
       return result;
     } catch (error) {
+      // Preserve the original error message if it's about future time
+      if (error.message && error.message.includes("future")) {
+        throw error;
+      }
       throw new Error(`Invalid date format: ${payload.date}`);
     }
   }
@@ -585,52 +765,220 @@ export function NotificationRepeat({
 
 function NotificationStatuses({ payload, setPayload }) {
   const [newStatus, setNewStatus] = useState("");
-  return <div>
+  
+  const handleAddStatus = (e) => {
+    try {
+      // Prevent any default behavior
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      const trimmedStatus = newStatus.trim();
+      if (!trimmedStatus) {
+        toast.error("Please enter a status name");
+        return;
+      }
+      
+      // Ensure possibleStatus is an array
+      const currentStatuses = Array.isArray(payload.possibleStatus) 
+        ? payload.possibleStatus 
+        : [];
+      
+      // Check if status already exists
+      if (currentStatuses.includes(trimmedStatus)) {
+        toast.error("This status already exists");
+        setNewStatus("");
+        return;
+      }
+      
+      // Safely update the payload
+      setPayload(prev => {
+        const prevStatuses = Array.isArray(prev.possibleStatus) 
+          ? prev.possibleStatus 
+          : [];
+        
+        return {
+          ...prev,
+          possibleStatus: [
+            ...prevStatuses,
+            { name: trimmedStatus, imageRequired: false }
+          ]
+        };
+      });
+      
+      setNewStatus("");
+    } catch (error) {
+      console.error("Error adding status:", error);
+      toast.error("Failed to add status. Please try again.");
+    }
+  };
+
+  const handleRemoveStatus = (statusToRemove) => {
+    try {
+      setPayload(prev => {
+        const prevStatuses = Array.isArray(prev.possibleStatus) 
+          ? prev.possibleStatus 
+          : [];
+        
+        const updatedStatuses = prevStatuses.filter(item => item !== statusToRemove);
+        // If the removed status was the default, clear the default status
+        const updatedDefaultStatus = prev.defaultStatus === statusToRemove ? "" : prev.defaultStatus;
+        
+        return {
+          ...prev,
+          possibleStatus: updatedStatuses,
+          defaultStatus: updatedDefaultStatus
+        };
+      });
+    } catch (error) {
+      console.error("Error removing status:", error);
+      toast.error("Failed to remove status. Please try again.");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAddStatus(e);
+    }
+  };
+
+  const possibleStatuses = Array.isArray(payload.possibleStatus) 
+    ? payload.possibleStatus 
+    : [];
+  useEffect(() => {
+    setPayload(prev => {
+      const prevStatuses = Array.isArray(prev.possibleStatus)
+      ? prev.possibleStatus
+      : [];
+
+      const defaults = [
+      { name: "In Progress", imageRequired: false },
+      { name: "Done", imageRequired: false },
+      ];
+      const missing = defaults.filter(def =>
+      !prevStatuses.some(s => s.name === def.name)
+      );
+
+      const updatedStatuses = [...prevStatuses, ...missing];
+      const shouldSetDefault =
+      !prev.defaultStatus ||
+      !updatedStatuses.some(s => s.name === prev.defaultStatus);
+
+      return {
+      ...prev,
+      possibleStatus: updatedStatuses,
+      defaultStatus: shouldSetDefault
+        ? updatedStatuses[0].name
+        : prev.defaultStatus,
+      };
+    });
+    }, []);
+
+  return <div className="mb-4">
     <Label className="font-bold text-[14px] mb-2 block">Possible Status</Label>
-    <div className="flex gap-4 items-center">
+    <p className="text-xs text-gray-500 mb-3">
+      Add status options that clients can choose from when responding to this notification
+    </p>
+    <div 
+      className="flex gap-2 items-center"
+      onKeyDown={(e) => {
+        // Prevent form submission if this is inside a form
+        if (e.key === "Enter" && e.target.tagName !== "BUTTON") {
+          e.preventDefault();
+        }
+      }}
+    >
       <Input
+        type="text"
         value={newStatus}
         onChange={e => setNewStatus(e.target.value)}
-        placeholder="Enter status"
-        className="bg-[var(--comp-1)] rounded-[4px]"
+        onKeyDown={handleKeyDown}
+        placeholder="Enter status (e.g., Completed, Pending)"
+        className="bg-[var(--comp-1)] rounded-[4px] flex-1"
+        autoComplete="off"
       />
-      <Button onClick={() => {
-        setPayload(prev => ({ ...prev, possibleStatus: [...prev.possibleStatus, newStatus] }))
-        setNewStatus("")
-      }}>
-        <Plus />
+      <Button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleAddStatus(e);
+        }}
+        variant="outline"
+        size="icon"
+        className="shrink-0"
+        disabled={!newStatus.trim()}
+      >
+        <Plus className="w-4 h-4" />
       </Button>
     </div>
-    {payload.possibleStatus.length > 0 && <div className="mt-4 border-1 px-4 py-1 bg-[var(--comp-1)] flex items-center gap-1 flex-wrap">
-      {payload.possibleStatus.map((status, index) => (
-        <div
-          className="px-2 py-1 relative rounded-full bg-white border-1 text-sm font-bold"
-          key={index}
+    
+    {possibleStatuses.length > 0 && (
+      <div className="mt-3 p-3 bg-[var(--comp-1)] border border-gray-200 rounded-lg">
+        <div className="flex items-center gap-2 flex-wrap">
+        {possibleStatuses.map((status, index) => (
+          <div
+            key={index}
+            className="w-full flex items-center justify-between border p-2 rounded-lg bg-white"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm">{status.name}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveStatus(status)}
+              className="text-gray-400 hover:text-red-500"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
-        >
-          <X
-            className="w-4 h-4 cursor-pointer absolute top-0 right-0 translate-y-[-30%] translate-x-[30%] text-[var(--accent-2)]"
-            strokeWidth={2.5}
-            onClick={() => setPayload(prev => ({ ...prev, possibleStatus: prev.possibleStatus.filter(item => item !== status) }))}
-          />
-          {status}
+          <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Image Required</span>
+        <Checkbox
+        checked={status.imageRequired}
+        onCheckedChange={(checked) => {
+          setPayload(prev => {
+            const updated = prev.possibleStatus.map(s =>
+              s.name === status.name
+                ? { ...s, imageRequired: !!checked }
+                : s
+            );
+            return { ...prev, possibleStatus: updated };
+          });
+                }} />
+            </div>
+          </div>))}
+
         </div>
-      ))}
-    </div>}
+      </div>
+    )}
 
-    <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
-    <Select
-      value={payload.defaultStatus}
-      onValueChange={value => setPayload(prev => ({ ...prev, defaultStatus: value }))}
-    >
-      <SelectTrigger className="bg-[var(--comp-1)] w-full">
-        <SelectValue placeholder="Select default status" />
-      </SelectTrigger>
-      <SelectContent>
-        {payload.possibleStatus.map((status, index) => (
-          <SelectItem value={status} key={index}>{status}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    {possibleStatuses.length > 0 && (
+      <>
+        <Label className="font-bold text-[14px] mt-4 mb-2 block">Default Status</Label>
+        <p className="text-xs text-gray-500 mb-2">
+          Select the default status that will be pre-selected for clients
+        </p>
+        <Select
+          value={payload.defaultStatus || undefined}
+          onValueChange={value => {
+            // Handle clearing the selection - if value is empty, set to empty string
+            setPayload(prev => ({ ...prev, defaultStatus: value || "" }))
+          }}
+        >
+          <SelectTrigger className="bg-[var(--comp-1)] w-full">
+            <SelectValue placeholder="Select default status" />
+          </SelectTrigger>
+          <SelectContent>
+            {possibleStatuses.map((status, index) => (
+              <SelectItem value={status.name} key={index}>{status.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </>
+    )}
   </div>
 }
