@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { formatMessage, getRelativeTime, nameInitials } from "@/lib/formatter";
 import useClientChatSocketContext, { ClientChatStateProvider } from "@/providers/ClientChatStateProvider";
 import { useAppSelector } from "@/providers/global/hooks";
-import { CheckCheck, SendHorizontal } from "lucide-react";
+import { CheckCheck, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function Page() {
-  return <div className="content-container bg-white p-4 pt-0 rounded-md border-1">
+  return <div className="content-container bg-white p-4 pt-0 rounded-4xl border-1">
     <ClientChatStateProvider>
       <SelectedChat />
     </ClientChatStateProvider>
@@ -30,28 +30,28 @@ function SelectedChat() {
   }, []);
 
   if (state === "joining-room") return <div className="bg-[var(--comp-1)] content-height-screen grow flex items-center justify-center">
-    <h4>Please Wait Opening Chat 😊</h4>
+    <h4 className="italic text-zinc-500">Please Wait Opening Chat 😊</h4>
   </div>
 
-  return <div className="relative grow mt-4 flex flex-col border-1 overflow-x-clip">
+  return <div className="relative grow mt-4 flex flex-col shadow-md rounded-4xl  overflow-x-clip">
     <CurrentChatHeader />
     <div className="w-full text-[12px] font-semibold py-2 px-6">
       <ChatMessages />
-    </div>
+    </div>  
     <CurrentChatMessageBox />
   </div>
 }
 
 function CurrentChatHeader() {
   const { coachName, coachProfilePhoto } = useAppSelector(state => state.client.data)
-  return <div className="bg-[var(--primary-1)] px-4 py-4 flex items-center gap-4 sticky top-0 z-[10] border-b-1">
+  return <div className="bg-zinc-50 px-4 py-4 flex items-center gap-4 sticky rounded-t-4xl top-0 z-[10] border-b-1 border-zinc-100">
     <Avatar className="h-[48px] w-[48px] rounded-[4px]">
-      <AvatarImage src={coachProfilePhoto || "/"} className="rounded-[8px]" />
-      <AvatarFallback className="bg-gray-200 rounded-[8px]">{nameInitials(coachName)}</AvatarFallback>
+      <AvatarImage src={coachProfilePhoto || "/"} className="rounded-full" />
+      <AvatarFallback className="bg-green-400 font-bold text-white rounded-full">{nameInitials(coachName)}</AvatarFallback>
     </Avatar>
     <div>
-      <p className="text-[16px] font-semibold mb-[2px]">{coachName}</p>
-      <p className="leading-[1] text-[#82867E] text-[12px]">Active Now</p>
+      <p className="text-[16px] md:text-[20px] text-zinc-600 font-bold mb-[2px]">{coachName}</p>
+      <p className="leading-[1] text-[var(--accent-1)] animate-pulse text-[12px] italic">Active Now</p>
     </div>
   </div>
 }
@@ -89,15 +89,15 @@ function CurrentChatMessageBox() {
     setMessage("");
   }
 
-  return <div className="mx-4 py-4 mt-auto flex items-center gap-4 border-t-1">
+  return <div className="mx-4 py-2 mb-3 mt-auto flex items-center relative gap-4">
     <Input
       value={message}
       onChange={e => setMessage(e.target.value)}
       placeholder="Write a Message"
-      className="px-0 border-0 shadow-none focus:shadow-none"
+      className="px-6 rounded-full py-[25px] shadow-md shadow-zinc-200 focus:shadow-none"
     />
-    <Button variant="wz" onClick={sendMessage}>
-      <SendHorizontal />
+    <Button variant="wz" onClick={sendMessage} className={"absolute right-0 py-[25px] rounded-r-full"}>
+      <Send />
       Send
     </Button>
   </div>
@@ -109,7 +109,7 @@ function CurrentUserMessage({ message }) {
   return <div className="mb-4 flex flex-wrap items-start justify-end gap-4">
     <div>
       <div
-        className="max-w-[80ch] bg-[var(--accent-1)] text-white relative px-4 py-2 rounded-[20px] rounded-br-0"
+        className="max-w-[80ch] bg-[var(--accent-1)] text-white text-xs md:text-sm relative px-4 py-2 rounded-[20px] rounded-br-0"
         style={{ borderBottomRightRadius: 0 }}
       >
         <div
@@ -120,9 +120,9 @@ function CurrentUserMessage({ message }) {
       <p className="text-[var(--dark-1)]/25 mt-1 text-right">{getRelativeTime(message.createdAt)}</p>
 
     </div>
-    <Avatar className="rounded-[4px] mt-1">
+    <Avatar className="rounded-full mt-1">
       <AvatarImage src={coachProfilePhoto || "/"} />
-      <AvatarFallback className="rounded-[4px]">{nameInitials(coachName)}</AvatarFallback>
+      <AvatarFallback className="bg-green-400 font-bold text-white rounded-full">{nameInitials(coachName)}</AvatarFallback>
     </Avatar>
   </div>
 }
@@ -133,11 +133,11 @@ function CompanionUserMessage({ message }) {
   return <div className="mb-4 flex flex-wrap items-start justify-start gap-4">
     <Avatar className="rounded-[4px] mt-1">
       <AvatarImage src={coachProfilePhoto || "/"} />
-      <AvatarFallback className="rounded-[4px]">{nameInitials(coachName)}</AvatarFallback>
+      <AvatarFallback className="bg-green-200 font-bold text-black rounded-full">{nameInitials(coachName)}</AvatarFallback>
     </Avatar>
     <div>
       <div
-        className="max-w-[40ch] bg-[var(--comp-1)] text-black px-4 py-2 rounded-[20px] rounded-br-0"
+        className="max-w-[40ch] bg-[var(--comp-1)] text-zinc-600 text-xs md:text-sm px-4 py-2 rounded-[20px] rounded-br-0"
         style={{ borderBottomLeftRadius: 0 }}
       >
         <div

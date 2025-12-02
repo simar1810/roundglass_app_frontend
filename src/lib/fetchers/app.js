@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { fetchData, sendData } from "../api";
+import { fetchData, sendData, sendFile, sendFileWithQuery } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
 import { toast } from "sonner";
 import { withClientFilter } from "../middleware/clientFilter";
@@ -42,6 +42,9 @@ export const dashboardStatistics = withClientFilter(async (router, cache) => {
 export function getCoachNotifications() {
   return fetchData("app/notification?person=coach");
 }
+export function getClientNotifications() {
+  return fetchData("app/notification?person=client");
+}
 
 export function getCoachSocialLinks() {
   return fetchData("app/sm");
@@ -82,7 +85,9 @@ export function getClientStatsForCoach(clientId) {
 export function getClientMealPlanById(_id) {
   return fetchData(`app/meal-plan/client/${_id}`);
 }
-
+export function addRemainder(data) {
+  return sendData(`app/addReminder`, data, "POST");
+}
 export function getClientOrderHistory(clientId) {
   return fetchData(`app/client/retail-order/${clientId}`);
 }
@@ -136,6 +141,9 @@ export const getAllChatClients = withClientFilter(() => {
 
 export function getPersonalBranding() {
   return fetchData("app/list?person=coach");
+}
+export function getClientPersonalBranding() {
+  return fetchData("app/list?person=client");
 }
 
 export const getClientForMeals = withClientFilter((planId) => {
@@ -299,6 +307,39 @@ export function retrieveAIAgentHistory(clientId, date) {
   let endpoint = `app/ai/analyze?person=coach&client=${clientId}`
   if (date && date !== "01-01-1970") endpoint += `&date=${date}`
   return fetchData(endpoint)
+}
+export function sendHealthMessages(queryText, dateString) {
+  const dateParam = dateString ? `&date=${encodeURIComponent(dateString)}` : "";
+  const endpoint = `app/ai/analyze?person=client${dateParam}`
+  return sendData(endpoint, {query: queryText}, "POST")
+}
+export async function sendHealthImage(file, dateString) {
+  const dateParam = dateString ? `&date=${encodeURIComponent(dateString)}` : "";
+  const endpoint = `app/ai/file-contents?person=client${dateParam}`;
+  return sendFile(endpoint, file);
+}
+export function sendHealthQueryWithImage(file, queryText, dateString) {
+  const dateParam = dateString ? `&date=${encodeURIComponent(dateString)}` : "";
+  const endpoint = `app/ai/analyze?person=client${dateParam}`;
+  return sendFileWithQuery(endpoint, file, queryText);
+}
+export async function getAnalyzation(dateStr) {
+  const person = "client";
+  const endpoint = `app/ai/analyze?person=${person}${dateStr ? `&date=${dateStr}` : ""}`;
+  return fetchData(endpoint);
+}
+export async function editAnalyzationQuestion(questionId, query, file, dateStr) {
+  try {
+    const data = {
+      questionId,
+      query
+    }
+    const queryDate = dateStr ? `&date=${encodeURIComponent(dateStr)}` : "";
+    const endpoint = `app/ai/edit-question?person=client${queryDate}`;
+    return sendData(endpoint, data, "POST")
+  } catch (err) {
+    throw err;
+  }
 }
 
 export const retrieveReports = withClientFilter(function (person = "coach", clientId) {
@@ -497,4 +538,19 @@ export async function loginUser(userData) {
       message: error.message || "Login failed. Please try again."
     };
   }
+}
+
+export async function getSmartActivity({ person = "client", token, startDate, endDate }) {
+  const params = new URLSearchParams({
+    person,
+    startDate,
+    endDate
+  });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/activity?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.json();
 }

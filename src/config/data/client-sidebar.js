@@ -77,7 +77,7 @@ export const sidebar__clientContent = [
   },
   {
     id: 10,
-    title: "Wz Sessions",
+    title: "Sessions",
     icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
     url: "/client/app/sessions"
   },

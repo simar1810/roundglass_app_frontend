@@ -17,7 +17,10 @@ export default function ClientStatisticsDataOwn({ clientData }) {
   try {
     const { dob, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
-
+    function formatDate(dateString) {
+      const [year, month, day] = dateString.split("-");
+      return `${day}-${month}-${year}`;
+    }
     const { isLoading, error, data } = useSWR("clientStatistics", () => getClientMatrices("client"));
 
     if (isLoading) return <ContentLoader />
@@ -52,16 +55,21 @@ export default function ClientStatisticsDataOwn({ clientData }) {
     const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
 
     return <TabsContent value="statistics">
-      <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto">
+      <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto no-scrollbar">
         {clientStats.map((stat, index) => <Button
           key={index}
           variant={selectedDate === index ? "wz" : "outline"}
           className={selectedDate !== index && "text-[var(--dark-1)]/25"}
           onClick={() => setSelectedDate(index)}
         >
-          {stat.createdDate}
+          {stat.createdDate || formatDate(stat.date)}
         </Button>)}
       </div>
+      <DownLoadPdf
+        clientData={clientData}
+        clientStats={clientStats}
+        selectedDate={selectedDate}
+      />
       {!isNaN(weightDifference) && <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid md:grid-cols-3 gap-5">
         <HealthMetrics data={payload} />
@@ -95,4 +103,26 @@ function StatisticsExportingOptions({
       </DialogTrigger>
     </PDFRenderer>
   </div>
+}
+
+function DownLoadPdf({ clientData, clientStats, selectedDate }) {
+  const coach = {
+    name: clientData?.coachName || "NA",
+    specialization: clientData?.coachDescription || "NA",
+    profilePhoto: clientData?.coachProfile || ""
+  }
+  return (
+    <PDFRenderer
+      pdfTemplate="PDFShareStatistics"
+      data={clientStatisticsPDFData(clientData, clientStats, coach, selectedDate)}
+    >
+      <DialogTrigger asChild>
+        <div className="w-full text-center mx-auto my-2 cursor-pointer">
+          <div className="ring-1 ring-[var(--accent-1)] text-center py-2 w-full md:w-[30vw] rounded-full mx-auto">
+            <p className="text-[var(--accent-1)] font-semibold text-base">Download PDF</p>
+          </div>
+        </div>
+      </DialogTrigger>
+    </PDFRenderer>
+  );
 }
