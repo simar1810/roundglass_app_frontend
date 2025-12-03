@@ -1,15 +1,14 @@
-import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate, startFromToday } from "@/config/state-reducers/custom-meal";
-import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Button } from "@/components/ui/button";
-import AddDayModal from "./AddDayModal";
-import { Pen } from "lucide-react";
-import { Dialog } from "@radix-ui/react-dialog";
 import { DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useMemo, useRef, useState } from "react";
-import { addDays, format, isBefore, parse } from "date-fns";
+import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMonthlyDate, startFromToday } from "@/config/state-reducers/custom-meal";
 import { cn } from "@/lib/utils";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { Dialog } from "@radix-ui/react-dialog";
+import { addDays, format, isBefore, parse } from "date-fns";
+import { Pen } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import MealPlanActionsMenu from "./MealPlanActionsMenu";
 
 export default function MonthlyMealCreation() {
@@ -46,24 +45,29 @@ export default function MonthlyMealCreation() {
       >
         Please select a date
       </div>}
-      {days.map((day, index) => <div
-        key={index}
-        className={cn(
-          "pr-4 flex items-center gap-0 rounded-[10px] border-1 border-[var(--accent-1)]",
-          selectedPlan === day && "bg-[var(--accent-1)]"
-        )}
-      >
-        <Button
-          variant={selectedPlan === day ? "wz" : "wz_outline"}
-          onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
-          className="border-0"
+      {days.map((day, index) => {
+        const parsedDate = parse(day, "dd-MM-yyyy", new Date());
+        const formattedDate = format(parsedDate, "EEE, dd MMM");
+        
+        return <div
+          key={index}
+          className={cn(
+            "pr-4 flex items-center gap-0 rounded-[10px] border-1 border-[var(--accent-1)]",
+            selectedPlan === day && "bg-[var(--accent-1)]"
+          )}
         >
-          {day.at(0).toUpperCase() + day.slice(1)}
-        </Button>
+          <Button
+            variant={selectedPlan === day ? "wz" : "wz_outline"}
+            onClick={() => dispatch(customWorkoutUpdateField("selectedPlan", day))}
+            className="border-0"
+          >
+            {formattedDate}
+          </Button>
         <UpdateDate
           defaultValue={day}
         />
-      </div>)}
+      </div>
+      })}
       <Button
         onClick={() => dispatch(addNewPlanType(nextDate))}
         variant="wz">
@@ -86,30 +90,38 @@ function UpdateDate({ defaultValue = "" }) {
   const closeRef = useRef();
 
   return <Dialog>
-    <DialogTrigger>
-      <Pen
-        className="w-[14px] h-[14px]"
-      />
-    </DialogTrigger>
-    <DialogContent className="p-0">
-      <DialogTitle className="p-4 border-b-1">Update Date</DialogTitle>
-      <div className="p-4">
-        <Input
-          placeholder="Update Date"
-          type="date"
-          value={value}
-          onChange={e => setValue(e.target.value)}
+    <DialogTrigger asChild>
+      <button className="p-2 hover:bg-[var(--comp-1)] rounded transition-colors">
+        <Pen
+          className="w-[14px] h-[14px]"
         />
-        <div className="mt-4 flex gap-4 [&_button]:grow">
+      </button>
+    </DialogTrigger>
+    <DialogContent className="p-0 max-w-md">
+      <DialogTitle className="p-4 border-b-1 text-lg font-semibold">Update Date</DialogTitle>
+      <div className="p-6 space-y-4">
+        <div>
+          <label className="text-sm font-medium mb-2 block">Select Date</label>
+          <Input
+            placeholder="Update Date"
+            type="date"
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <div className="flex gap-3 pt-2">
           <Button
             variant="wz"
             onClick={() => {
+              if (!value) return;
               dispatch(changeMonthlyDate({
                 prev: defaultValue,
                 new: format(parse(value, "yyyy-MM-dd", new Date()), "dd-MM-yyyy")
               }))
               closeRef.current.click();
             }}
+            className="flex-1"
           >Save</Button>
           <Button
             variant="destructive"
@@ -117,6 +129,7 @@ function UpdateDate({ defaultValue = "" }) {
               dispatch(deleteMonthlyDate(defaultValue));
               closeRef.current.click();
             }}
+            className="flex-1"
           >
             Delete
           </Button>
