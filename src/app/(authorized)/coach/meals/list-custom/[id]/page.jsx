@@ -284,6 +284,36 @@ function CustomMealsListing({
   const selectedMealsForMealType = selectedMealTypes
     .find(type => type?.mealType === selectedMealType)?.meals || [];
 
+  const mealTypeTotals = useMemo(() => {
+    const parseNum = (val) => {
+      if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+      if (typeof val === "string") {
+        const n = parseFloat(val.replace(/,/g, ""));
+        return Number.isFinite(n) ? n : 0;
+      }
+      return 0;
+    };
+
+    return selectedMealsForMealType.reduce(
+      (acc, meal) => {
+        const caloriesVal =
+          typeof meal?.calories === "object"
+            ? meal?.calories?.total
+            : meal?.calories;
+        const proteinVal = meal?.protein ?? meal?.calories?.proteins;
+        const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
+        const fatsVal = meal?.fats ?? meal?.calories?.fats;
+
+        acc.calories += parseNum(caloriesVal);
+        acc.protein += parseNum(proteinVal);
+        acc.carbohydrates += parseNum(carbsVal);
+        acc.fats += parseNum(fatsVal);
+        return acc;
+      },
+      { calories: 0, protein: 0, carbohydrates: 0, fats: 0 }
+    );
+  }, [selectedMealsForMealType]);
+
   return <div className="p-4 md:pl-8 relative">
     {customPlan.draft && <Badge className="absolute top-2 right-2">
       <SquarePen />
@@ -308,6 +338,14 @@ function CustomMealsListing({
         {mealType.mealType}
       </Button>)}
     </div>
+    {selectedMealType && (
+      <div className="mt-4 rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
+        <div>{mealTypeTotals.calories.toFixed(2)} Calories</div>
+        <div>{mealTypeTotals.protein.toFixed(2)} Protein</div>
+        <div>{mealTypeTotals.fats.toFixed(2)} Fats</div>
+        <div>{mealTypeTotals.carbohydrates.toFixed(2)} Carbs</div>
+      </div>
+    )}
     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
       {selectedMealsForMealType.map((meal, index) => <MealDetails
         key={index}
@@ -369,6 +407,17 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
     for (const plan in plans) {
       const p = plans[plan];
       if (!p) continue;
+      
+      // Handle array format (used during creation for monthly plans)
+      if (Array.isArray(p)) {
+        for (const mealType of p) {
+          if (Array.isArray(mealType?.meals)) {
+            arr.push(...mealType.meals);
+          }
+        }
+        continue;
+      }
+      
       if (p.daily && typeof p.daily === "object") {
         const d = p.daily;
         if (Array.isArray(d.breakfast)) arr.push(...d.breakfast);
@@ -392,6 +441,17 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
         }
         continue;
       }
+      
+      // Handle object format with meal types
+      if (p.meals && Array.isArray(p.meals)) {
+        for (const mealType of p.meals) {
+          if (Array.isArray(mealType?.meals)) {
+            arr.push(...mealType.meals);
+          }
+        }
+        continue;
+      }
+      
       if (Array.isArray(p.breakfast)) arr.push(...p.breakfast);
       if (Array.isArray(p.lunch)) arr.push(...p.lunch);
       if (Array.isArray(p.dinner)) arr.push(...p.dinner);
