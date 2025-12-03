@@ -6,6 +6,7 @@ import { getCustomMealPlans } from "@/lib/fetchers/app";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   return <div className="content-container">
