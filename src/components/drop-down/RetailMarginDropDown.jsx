@@ -24,7 +24,10 @@ export default function RetailMarginDropDown({
     >
       <span>
         {children}
-        {!children && <Badge variant="wz" className="font-bold badge opacity-0 cursor-pointer">
+        {!children && <Badge
+          variant="wz"
+          className="font-bold badge opacity-100 md:opacity-0 cursor-pointer px-3 py-1 text-xs md:text-[10px] rounded-full shadow-sm"
+        >
           <Tag />
           Sale
         </Badge>}

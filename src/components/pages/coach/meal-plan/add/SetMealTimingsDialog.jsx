@@ -256,15 +256,31 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
               "defaultMealTiming"
             );
 
-            if (existingValue === sanitizedValue && (hasDefaultField || sanitizedValue === "")) {
+            // Check if default timing changed
+            const defaultChanged = existingValue !== sanitizedValue;
+            
+            if (!defaultChanged && (hasDefaultField || sanitizedValue === "")) {
               return mealType;
             }
 
             planUpdated = true;
-            return {
+            
+            // Update defaultMealTiming
+            const updatedMealType = {
               ...mealType,
               defaultMealTiming: sanitizedValue,
             };
+
+            // Update ALL existing meals to use the new default timing
+            // This ensures consistency when "set meal timing" is used
+            if (Array.isArray(mealType.meals) && mealType.meals.length > 0 && defaultChanged && sanitizedValue) {
+              updatedMealType.meals = mealType.meals.map((meal) => ({
+                ...meal,
+                time: sanitizedValue,
+              }));
+            }
+
+            return updatedMealType;
           });
 
           if (planUpdated) {
@@ -291,15 +307,31 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
               "defaultMealTiming"
             );
 
-            if (existingValue === sanitizedValue && (hasDefaultField || sanitizedValue === "")) {
+            // Check if default timing changed
+            const defaultChanged = existingValue !== sanitizedValue;
+            
+            if (!defaultChanged && (hasDefaultField || sanitizedValue === "")) {
               return mealType;
             }
 
             planUpdated = true;
-            return {
+            
+            // Update defaultMealTiming
+            const updatedMealType = {
               ...mealType,
               defaultMealTiming: sanitizedValue,
             };
+
+            // Update ALL existing meals to use the new default timing
+            // This ensures consistency when "set meal timing" is used
+            if (Array.isArray(mealType.meals) && mealType.meals.length > 0 && defaultChanged && sanitizedValue) {
+              updatedMealType.meals = mealType.meals.map((meal) => ({
+                ...meal,
+                time: sanitizedValue,
+              }));
+            }
+
+            return updatedMealType;
           });
 
           if (planUpdated) {
