@@ -10,7 +10,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Plus, Flame, Footprints, Flag} from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,11 +21,14 @@ export default function Page() {
 }
 
 function Container() {
+  const [showPopup, setShowPopup] = useState(true);
   const { _id } = useAppSelector(state => state.client.data)
   const client = useAppSelector(state => state.client.data)
   const { isLoading, error, data } = useSWR("clientHome", () => getClientHome(_id));
   if (isLoading) return <ContentLoader />
-
+  if (data?.status_code === 407) return <div>
+    {showPopup && <NotActivePopup onClose={() => setShowPopup(false)} />}
+  </div>
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const clientHomeData = data.data;
   const nextMeals = clientHomeData?.next5MealTimings || null;
@@ -40,9 +43,7 @@ function Container() {
       </div>
       <div className="flex flex-col justify-start items-start gap-2">
       <div className="flex flex-col md:flex-row items-center gap-2 justify-between">
-        {clientHomeData.meal
-        ? <MealDetails meal={clientHomeData.meal} />
-        : <ContentError title="No Meal Plan" className="font-bold !min-h-[200px]" />}
+        <MealDetails meal={clientHomeData.meal} />
         <Sessions meetings={clientHomeData.closestMeeting} />
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 justify-between">
@@ -605,11 +606,15 @@ function NextMeals({ nextMeals }) {
   );
 }
 function MealDetails({ meal }) {
+  if (!meal) return <div className="bg-[var(--primary-1)] h-[305px] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
+    <p className="text-normal italic text-sm md:text-base text-center text-gray-400 mt-4">No Current Meal</p>
+    <Image src="/not-found.png" alt="not-found" className="w-full rounded-xl mt-4" width={500} height={500}/>
+  </div>
   return <div className="bg-[var(--primary-1)] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
     <h1 className="text-gray-800 font-bold text-base mb-4">Current Meal</h1>
     <div className="flex flex-row md:flex-col">
     <Image
-      alt=""
+      alt="img"
       height={400}
       width={400}
       src={meal?.image}
@@ -670,4 +675,17 @@ function GoalsSection({goal}) {
       <p className="text-gray-600 text-sm font-medium md:text-base italic"><span className="not-italic font-semibold">GOAL: </span>{goal}</p>
     </div>
   )
+}
+function NotActivePopup({ onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50">
+      <div className="bg-white p-6 w-[90%] max-w-lg py-10 text-center shadow-lg rounded-2xl">
+        <h2 className="text-2xl md:text-4xl font-semibold text-red-400 ">Woop!</h2>
+        <p className="font-semibold text-base md:text-xl italic text-gray-500 mt-1">You are not active !!</p> 
+        <p className="text-gray-700 font-bold text-base md:text-lg mt-6">
+          Contact your coach for assistance.
+        </p>
+      </div>
+    </div>
+  );
 }
