@@ -167,7 +167,7 @@ function Brand({
   const coachId = useAppSelector(state => state.coach.data._id);
   const [retailModal, setRetailModal] = useState(false)
   return <Card className="p-0 shadow-none border-0 gap-2 relative">
-    <div className="relative hover:[&_.badge]:opacity-100">
+    <div className="relative md:hover:[&_.badge]:opacity-100">
       <Image
         src={brand.image || "/not-found.png"}
         alt=""

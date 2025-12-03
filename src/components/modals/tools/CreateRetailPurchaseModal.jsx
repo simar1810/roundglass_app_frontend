@@ -25,7 +25,10 @@ export default function CreateRetailSaleModal({
   >
     <Dialog>
       <DialogTrigger className="absolute bottom-2 right-2">
-        <Badge variant="wz_fill" className="font-bold badge opacity-0 cursor-pointer">
+        <Badge
+          variant="wz_fill"
+          className="font-bold badge opacity-100 md:opacity-0 cursor-pointer px-3 py-1 text-xs md:text-[10px] rounded-full shadow-sm"
+        >
           <ShoppingCart />
           Purchase
         </Badge>
