@@ -196,17 +196,17 @@ function SelectedMarathonDetails({
         <CreateMarathonModal type="update" data={marathon}>
           <DialogTrigger className="
             text-gray-600 flex items-center justify-center gap-2  
-            text-[13px] font-semibold px-4 py-2 
+            text-[13px] font-semibold p-1 md:px-4 md:py-2 
             rounded-md border bg-gray-50
           ">
             <Pencil size={18} />
-            <p>Edit</p>
+            <p className="hidden md:block">Edit</p>
           </DialogTrigger>
         </CreateMarathonModal>
         <DeleteMarathonAction marathonId={marathon._id} />
       </div>
 
-      <div className=" mt-4 h-[500px] overflow-y-auto no-scrollbar">
+      <div className=" mt-4 h-[400px] md:h-[500px] overflow-y-auto no-scrollbar">
         {marathon.tasks.map((task) => (
           <div
             key={task._id}
@@ -244,7 +244,7 @@ function SelectedMarathonDetails({
               alt=""
               width={80}
               height={80}
-              className="opacity-80 w-[3vw] object-contain ml-auto"
+              className="opacity-80 w-[10vw] md:w-[3vw] object-contain ml-auto"
             />
           </div>
         ))}
