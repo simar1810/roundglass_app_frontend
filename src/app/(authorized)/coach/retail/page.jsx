@@ -22,13 +22,14 @@ import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { buildUrlWithQueryParams } from "@/lib/formatter";
 import { invoicePDFData } from "@/lib/pdf";
+import { sortByPriority } from "@/lib/retail";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
 import { Clock, EllipsisVertical, Eye, EyeClosed, RefreshCcw, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -532,8 +533,12 @@ function InventoryContainer() {
 
   if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
 
+  const sortedProducts = useMemo(() => data?.data?.length > 0
+    ? sortByPriority(data.data || [], isWhitelabel)
+    : [], [data?.data?.length])
+
   const regex = new RegExp(query, "i")
-  const products = data.data.filter(
+  const products = sortedProducts.filter(
     product => regex.test(product.productName)
   ) || []
 
@@ -562,9 +567,18 @@ function InventoryContainer() {
         {products.map((product, index) => <TableRow key={product._id}>
           <TableCell>{index + 1}</TableCell>
           <TableCell>{product.productName}</TableCell>
-          <TableCell>{product.quantity}</TableCell>
+          <TableCell>
+            <span className={getQuantityStatusColor(product.quantity)}>{product.quantity}</span>
+          </TableCell>
         </TableRow>)}
       </TableBody>
     </Table>
   </div>
+}
+
+function getQuantityStatusColor(quantity) {
+  if (isNaN(quantity)) return ""
+  if (quantity === 0) return "w-[8ch] block bg-red-300 text-black px-4 py-1 rounded-[2px] text-center"
+  if (quantity <= 3) return "w-[8ch] block bg-yellow-300 text-black px-4 py-1 rounded-[2px] text-center"
+  return "w-[8ch] block bg-green-300 text-black px-4 py-1 rounded-[2px] text-center"
 }
