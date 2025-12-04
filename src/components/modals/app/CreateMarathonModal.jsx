@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
+import { Trash, CalendarPlus } from "lucide-react";
 
 export default function CreateMarathonModal({
   children,
@@ -22,8 +23,9 @@ export default function CreateMarathonModal({
 }) {
   return <Dialog>
     {children}
-    {!Boolean(children) && <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold px-3 py-2 rounded-[8px]">
-      Add
+    {!Boolean(children) && <DialogTrigger className="text-gray-500 ring-1 flex items-center justify-start gap-2 ring-gray-400 text-[14px] font-normal px-3 py-2 rounded-[8px]">
+      <p>Add Marathon</p>
+      <CalendarPlus size={18} />
     </DialogTrigger>}
     <DialogContent className="!max-w-[650px] max-h-[70vh] border-b-1 mb-0 p-0 gap-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
@@ -99,7 +101,146 @@ function MarathonContainer() {
     <DialogClose ref={closeBtnRef} />
   </div>
 }
+export const DeleteMarathonTasks = ({marathons}) => {
+  const [open, setOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null); 
+  const { isLoading, error, data, mutate } = useSWR(
+    "app/marathon/task-options",
+    getMarathonTaskOptions
+  );
 
+  const tasks = data?.data || [];
+  const findAssignedMarathons = (taskId) => {
+    return marathons.filter((m) =>
+      m.tasks?.some((t) => t._id === taskId)
+    );
+  };
+  const confirmDeleteTask = async () => {
+    if (!confirmModal) return;
+
+    const taskId = confirmModal.task._id;
+    setConfirmModal(null);
+
+    try {
+      const res = await sendData(
+        "app/marathon/coach/task-options",
+        { taskId },
+        "DELETE"
+      );
+
+      if (res.status_code !== 200) {
+        toast.error(res.message);
+        return;
+      }
+      toast.success(res?.message || "Task deleted!");
+      mutate();
+    } catch (err) {
+      toast.error("Error deleting task");
+    }
+  };
+  const handleDelete = (task) => {
+    const assigned = findAssignedMarathons(task._id);
+    if (assigned.length === 0) {
+      return confirmDeleteTask({ task });
+    }
+    setConfirmModal({
+      task,
+      marathons: assigned,
+    });
+  };
+
+  return (
+    <>
+      <div
+        onClick={() => setOpen(true)}
+        className="ring-1 ring-red-200  text-red-300 cursor-pointer text-base font-normal rounded-md px-2 py-[6px]"
+      >
+        <Trash size={20}/>
+      </div>
+      {open && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white w-[500px] rounded-xl shadow-lg p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Delete Marathon Tasks</h2>
+              <button
+                className="text-gray-500 text-lg font-normal"
+                onClick={() => setOpen(false)}
+              >
+                ✖
+              </button>
+            </div>
+            {isLoading && <p className="text-gray-600">Loading...</p>}
+            {error && <p className="text-red-500">Failed to load tasks</p>}
+
+            <div className="max-h-[450px] overflow-y-auto no-scrollbar space-y-3 pr-2">
+              {tasks.length === 0 ? (
+                <p className="text-gray-500">No tasks found</p>
+              ) : (
+                tasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="border border-gray-200 rounded-md p-3 flex justify-between items-start"
+                  >
+                    <div>
+                      <p className="font-semibold">{task.title}</p>
+                      <p className="text-sm text-gray-600">{task.description}</p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDelete(task)}
+                      className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-md"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white w-[450px] rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-3">
+              Task is assigned to marathons!
+            </h3>
+
+            <p className="text-gray-700 mb-2">
+              The task <b>"{confirmModal.task.title}"</b> is assigned in:
+            </p>
+
+            <ul className="list-disc ml-5 text-gray-800 mb-4">
+              {confirmModal.marathons.map((m) => (
+                <li key={m._id}>{m.title}</li>
+              ))}
+            </ul>
+
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete this task?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-3 py-1 rounded-md border text-gray-700"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDeleteTask}
+                className="px-3 py-1 rounded-md bg-red-600 text-white"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 function TaskDetails({ task }) {
   const { tasks, selected, dispatch } = useCurrentStateContext();
 
