@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { sendData } from "@/lib/api";
+import { Trash, CalendarPlus } from "lucide-react";
 
 export default function CreateMarathonModal({
   children,
@@ -22,8 +23,9 @@ export default function CreateMarathonModal({
 }) {
   return <Dialog>
     {children}
-    {!Boolean(children) && <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold px-3 py-2 rounded-[8px]">
-      Add
+    {!Boolean(children) && <DialogTrigger className="text-gray-500 ring-1 flex items-center justify-start gap-2 ring-gray-400 text-[14px] font-normal px-3 py-2 rounded-[8px]">
+      <p>Add Marathon</p>
+      <CalendarPlus size={18} />
     </DialogTrigger>}
     <DialogContent className="!max-w-[650px] max-h-[70vh] border-b-1 mb-0 p-0 gap-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
@@ -99,37 +101,61 @@ function MarathonContainer() {
     <DialogClose ref={closeBtnRef} />
   </div>
 }
-export const DeleteMarathonTasks = () => {
+export const DeleteMarathonTasks = ({marathons}) => {
   const [open, setOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null); 
   const { isLoading, error, data, mutate } = useSWR(
     "app/marathon/task-options",
     getMarathonTaskOptions
   );
 
   const tasks = data?.data || [];
+  const findAssignedMarathons = (taskId) => {
+    return marathons.filter((m) =>
+      m.tasks?.some((t) => t._id === taskId)
+    );
+  };
+  const confirmDeleteTask = async () => {
+    if (!confirmModal) return;
 
-  const handleDelete = async (id) => {
+    const taskId = confirmModal.task._id;
+    setConfirmModal(null);
+
     try {
-      const res = await sendData("app/marathon/coach/task-options", {taskId: id} ,"DELETE");
+      const res = await sendData(
+        "app/marathon/coach/task-options",
+        { taskId },
+        "DELETE"
+      );
+
       if (res.status_code !== 200) {
-        console.log(res);
         toast.error(res.message);
         return;
       }
-      toast.success("Task deleted!");
+      toast.success(res?.message || "Task deleted!");
       mutate();
     } catch (err) {
       toast.error("Error deleting task");
     }
+  };
+  const handleDelete = (task) => {
+    const assigned = findAssignedMarathons(task._id);
+    if (assigned.length === 0) {
+      return confirmDeleteTask({ task });
+    }
+    setConfirmModal({
+      task,
+      marathons: assigned,
+    });
   };
 
   return (
     <>
       <div
         onClick={() => setOpen(true)}
-        className="bg-red-400 cursor-pointer text-white text-base font-normal rounded-md border border-red-500 px-2 py-1"
+        className="ring-1 ring-red-200  text-red-300 cursor-pointer text-base font-normal rounded-md px-2 py-[6px]"
       >
-        <p>Delete Tasks</p>
+        <Trash size={20}/>
       </div>
       {open && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
@@ -161,7 +187,7 @@ export const DeleteMarathonTasks = () => {
                     </div>
 
                     <button
-                      onClick={() => handleDelete(task._id)}
+                      onClick={() => handleDelete(task)}
                       className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-md"
                     >
                       Delete
@@ -170,7 +196,45 @@ export const DeleteMarathonTasks = () => {
                 ))
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {confirmModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white w-[450px] rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-3">
+              Task is assigned to marathons!
+            </h3>
 
+            <p className="text-gray-700 mb-2">
+              The task <b>"{confirmModal.task.title}"</b> is assigned in:
+            </p>
+
+            <ul className="list-disc ml-5 text-gray-800 mb-4">
+              {confirmModal.marathons.map((m) => (
+                <li key={m._id}>{m.title}</li>
+              ))}
+            </ul>
+
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete this task?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-3 py-1 rounded-md border text-gray-700"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDeleteTask}
+                className="px-3 py-1 rounded-md bg-red-600 text-white"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
