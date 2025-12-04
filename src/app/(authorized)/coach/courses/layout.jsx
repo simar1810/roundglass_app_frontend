@@ -7,7 +7,8 @@ import { buildUrlWithQueryParams } from "@/lib/formatter";
 const YT_REDIRECTION_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const YT_OAUTH_CLIENT_ID = "92110669040-tjdv1tdl21qs0d1dk5epe4lhrb7cjqqi.apps.googleusercontent.com"
 const YT_RESPONSE_TYPE = "code"
-const YT_REDIRECT_URL = "https://api.wellnessz.in/api/app/youtube/oauth"
+// const YT_REDIRECT_URL = "https://api.wellnessz.in/api/app/youtube/oauth"
+const YT_REDIRECT_URL = "https://314767e40d3e.ngrok-free.app/api/app/youtube/oauth"
 const YT_SCOPES = [
   // "https://www.googleapis.com/auth/youtube.upload"
   "https://www.googleapis.com/auth/youtube"

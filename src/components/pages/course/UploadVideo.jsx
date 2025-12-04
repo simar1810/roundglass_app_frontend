@@ -28,6 +28,7 @@ export default function UploadVideo({ courseId, lecture, upload }) {
         payload,
         "POST"
       )
+      if (response.status_code !== 200) _throwError(response.message)
 
       const { status, message } = await uploadChunks(file, lecture._id, setProgress)
       if (!status) _throwError(message)
