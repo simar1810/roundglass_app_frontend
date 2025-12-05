@@ -74,7 +74,7 @@ export default function ClientData({ clientData }) {
     <Tabs defaultValue={selectedTab} onValueChange={tabChange}>
       <Header />
       <ClientStatisticsData clientData={clientData} />
-      <ClientMealData _id={clientData._id} />
+      <ClientMealData _id={clientData._id} client={clientData} />
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       <ClientClubDataComponent clientData={clientData} />
       <MarathonData clientData={clientData} />
@@ -87,7 +87,7 @@ export default function ClientData({ clientData }) {
   </div>
 }
 
-function ClientMealData({ _id }) {
+function ClientMealData({ _id, client }) {
   const { isLoading, error, data } = useSWR(`app/getClientMealPlanById?clientId=${_id}`, () => getClientMealPlanById(_id));
 
   if (isLoading) return <TabsContent value="meal">
@@ -102,12 +102,13 @@ function ClientMealData({ _id }) {
     {meals && meals?.map((meal, index) => <CustomMealDetails
       key={index}
       meal={meal}
+      client={client}
     />)}
     {meals.length === 0 && <ContentError title="No Meal plan assigned to this client" />}
   </TabsContent>
 }
 
-export function CustomMealDetails({ meal }) {
+export function CustomMealDetails({ meal, client }) {
   if (meal.custom) return <div className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Link href={`/coach/meals/list-custom/${meal._id}`} className="block">
       <Image
@@ -123,7 +124,7 @@ export function CustomMealDetails({ meal }) {
       <div className="flex justify-between items-center">
         <h3>{meal.title}</h3>
         <div className="flex items-center gap-2">
-          <MealPDFGenerator meal={meal} />
+          <MealPDFGenerator meal={meal} client={client} />
           <Badge className="capitalize">{meal.mode}</Badge>
         </div>
       </div>
@@ -146,7 +147,7 @@ export function CustomMealDetails({ meal }) {
   </Link>
 }
 
-function MealPDFGenerator({ meal }) {
+function MealPDFGenerator({ meal, client }) {
   const coach = useAppSelector(state => state.coach.data);
   const coachName = coach?.name || "";
 
@@ -164,8 +165,8 @@ function MealPDFGenerator({ meal }) {
 
   const pdfData = useMemo(() => {
     if (!meal) return null;
-    return customMealDailyPDFData(meal, null, { name: coachName }, { includeMacros, includeDescription, includeGuidelines, includeSupplements });
-  }, [coachName, meal, includeMacros, includeDescription, includeGuidelines, includeSupplements]);
+    return customMealDailyPDFData(meal, null, { name: coachName }, { includeMacros, includeDescription, includeGuidelines, includeSupplements, client });
+  }, [coachName, meal, includeMacros, includeDescription, includeGuidelines, includeSupplements, client]);
 
   const pdfTemplateMap = {
     portrait: "PDFCustomMealPortrait",

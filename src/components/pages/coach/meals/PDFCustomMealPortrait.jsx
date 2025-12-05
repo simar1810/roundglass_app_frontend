@@ -203,7 +203,28 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
             <View style={styles.headerTextBlock}>
               <Text style={styles.planTitle}>{title}</Text>
               {coachName ? <Text style={styles.coachName}>Coach: {coachName}</Text> : null}
-              {data.clientName ? <Text style={styles.coachName}>Client: {data.clientName}</Text> : null}
+              {data.clientName ? (
+                <View style={{ marginTop: 8, paddingTop: 6, borderTop: "0.5pt solid #f0f0f0" }}>
+                  <Text style={{ fontSize: 10, fontWeight: "bold", color: "#444444", marginBottom: 2 }}>
+                    Client: {data.clientName}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {data.clientAge ? (
+                      <Text style={{ fontSize: 9, color: "#888888" }}>
+                        Age: {data.clientAge}
+                      </Text>
+                    ) : null}
+                    {data.clientAge && data.clientEmail ? (
+                      <Text style={{ fontSize: 9, color: "#cccccc", marginHorizontal: 4 }}>|</Text>
+                    ) : null}
+                    {data.clientEmail ? (
+                      <Text style={{ fontSize: 9, color: "#888888" }}>
+                        {data.clientEmail}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
             </View>
 
             {brand?.coachLogo ? (
