@@ -45,6 +45,26 @@ export default function CustomMealMetaData() {
         className="min-h-[120px]"
       />
     </div>
+    <div>
+      <Label className="font-bold mb-2">Guidelines</Label>
+      <Textarea
+        value={state.guidelines}
+        onChange={e => dispatch(customWorkoutUpdateField("guidelines", e.target.value))}
+        placeholder="Enter Guidelines"
+        label="Guidelines"
+        className="min-h-[120px]"
+      />
+    </div>
+    <div>
+      <Label className="font-bold mb-2">Supplements</Label>
+      <Textarea
+        value={state.supplements}
+        onChange={e => dispatch(customWorkoutUpdateField("supplements", e.target.value))}
+        placeholder="Enter Supplements"
+        label="Supplements"
+        className="min-h-[120px]"
+      />
+    </div>
     {state.mode === "monthly" && <div>
       <Label className="font-bold mb-2">Number Of Days</Label>
       <FormControl
