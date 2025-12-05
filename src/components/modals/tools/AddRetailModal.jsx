@@ -5,11 +5,17 @@ import SelectControl from "@/components/Select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { addProductToProductModule, addRetailReducer, changeFieldvalue, generateRequestPayload, init, orderCreated, previousStage, selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity } from "@/config/state-reducers/add-retail";
+import { Input } from "@/components/ui/input";
+import {
+  addProductToProductModule, addRetailReducer, changeFieldvalue,
+  generateRequestPayload, init, orderCreated, previousStage,
+  selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity
+} from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
 import { _throwError, buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import { sortByPriority } from "@/lib/retail";
+import { copyText } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
@@ -176,6 +182,7 @@ function Stage2() {
 
   return <div>
     <div className="px-4 mt-4">
+      <button onClick={() => copyText(JSON.stringify(button))}>button</button>
       <FormControl
         type="text"
         name="search"
@@ -234,11 +241,17 @@ function ProductCard({ product }) {
         <ShoppingCart className="w-[12px] h-[12px]" />
         Add to Cart
       </Button>
-      : <div className="mt-auto flex items-center justify-center gap-4">
+      : <div className="mt-auto flex items-center justify-center gap-2">
         <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity + 1))} size="sm" variant="wz_outline">
           <Plus />
         </Button>
-        <p className="text-[18px]">{quantity}</p>
+        <Input
+          value={quantity}
+          type="tel"
+          className="p-0 px-1 text-center border-[var(--accent-1)]"
+          onChange={e => dispatch(setProductAmountQuantity(product._id, !isNaN(parseInt(e.target.value)) ? parseInt(e.target.value) : 0))}
+        />
+        {/* <p className="text-[18px]">{quantity}</p> */}
         <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity - 1))} size="sm" variant="wz_outline">
           <Minus />
         </Button>
