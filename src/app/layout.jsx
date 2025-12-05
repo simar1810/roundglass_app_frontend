@@ -9,6 +9,7 @@ import { use } from "react";
 export const metadata = {
   title: "WellnessZ",
   description: "All in One Business Platform for Wellness Professionals",
+  manifest: "/app.webmanifest",
 };
 
 export default function RootLayout({ children }) {
