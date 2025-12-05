@@ -208,12 +208,34 @@ export default function PDFCustomMealLandscape({ data = {}, brand = {} }) {
             <View style={styles.headerTextBlock}>
               <Text style={styles.planTitle}>{title}</Text>
               {coachName ? <Text style={styles.coachName}>Coach: {coachName}</Text> : null}
+              {data.clientName ? <Text style={styles.coachName}>Client: {data.clientName}</Text> : null}
             </View>
 
             {brand?.coachLogo ? (
               <Image src={brand.coachLogo} style={styles.headerLogo} />
             ) : null}
           </View>
+
+          {data.description && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Description</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.description}</Text>
+            </View>
+          )}
+
+          {data.guidelines && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
+            </View>
+          )}
+
+          {data.supplements && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
+            </View>
+          )}
 
           <View style={styles.tableWrapper}>
             <View style={styles.tableHeaderRow}>

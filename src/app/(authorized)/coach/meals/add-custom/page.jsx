@@ -54,6 +54,8 @@ function CustomWorkoutContainer() {
           thumbnail: mealPlan.image,
           title: mealPlan.title,
           description: mealPlan.description,
+          guidelines: mealPlan.guidelines,
+          supplements: mealPlan.supplements,
           id: mealPlan._id,
           noOfDays: mealPlan.noOfDays,
         }))
