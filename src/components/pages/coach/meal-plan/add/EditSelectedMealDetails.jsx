@@ -1,18 +1,18 @@
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { Search, } from "lucide-react";
-import SelectMealCollection from "./SelectMealCollection";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import FormControl from "@/components/FormControl";
-import { useRef, useState } from "react";
-import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { recipeKey, saveRecipe } from "@/config/state-reducers/custom-meal";
 import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { format, parse } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { format, parse } from "date-fns";
+import { Search, } from "lucide-react";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import SelectMealCollection from "./SelectMealCollection";
 
 const MEASURE_OPTIONS = [
   { value: "cup", label: "Cup" },
@@ -84,12 +84,18 @@ export default function EditSelectedMealDetails({
           className="rounded-lg max-h-[100px] bg-[var(--comp-1)] object-contain border-1"
         />
         <div className="text-left text-sm md:text-base">
-          <h3>{recipe.dish_name || recipe.title}</h3>
-          {recipe.time && <p>
+          <h3>{recipe.name || recipe.dish_name || recipe.title}</h3>
+          {recipe.description && (
+            <p className="leading-[1.2] text-[14px] text-black/60 mt-1 line-clamp-2">{recipe.description}</p>
+          )}
+          {recipe.time && <p className="mt-1">
             {format(
               parse(recipe.time, "HH:mm", new Date()),
               "hh:mm a"
             )}
+          </p>}
+          {!recipe.time && recipe.meal_time && <p className="mt-1">
+            {recipe.meal_time}
           </p>}
           <div className="mt-2 flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
             {typeof recipe.calories === "object"

@@ -8,7 +8,6 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,8 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { customMealDailyPDFData } from "@/lib/pdf";
@@ -412,9 +411,11 @@ function MealDetails({ meal }) {
       className="w-full max-h-[180px] object-cover border-b-1"
     />
     <div className="p-3 text-md">
-      <h3>{meal.dish_name}</h3>
-      <p className="text-black/60 text-xs mt-1">{meal.description}</p>
-      <p className="text-[14px] text-[#808080]">{meal.meal_time}</p>
+      <h3>{meal.name || meal.dish_name}</h3>
+      {meal.description && (
+        <p className="leading-[1.2] text-[14px] text-black/60 mt-2 line-clamp-3">{meal.description}</p>
+      )}
+      <p className="text-[14px] text-[#808080] mt-2">{meal.meal_time}</p>
     </div>
   </div>
 }
