@@ -11,7 +11,7 @@ import {
 
 Font.register({
   family: "Roboto",
-  src: "/assets/fonts/Roboto-Regular.ttf"
+  src: "/fonts/Noto-Sans-Devnagiri.ttf"
 });
 
 function createStyles(brand) {
@@ -43,7 +43,6 @@ function createStyles(brand) {
     },
     planTitle: {
       fontSize: 18,
-      fontWeight: "bold",
       marginBottom: 4,
       color: "#222222"
     },
