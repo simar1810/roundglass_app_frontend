@@ -57,7 +57,7 @@ export default function ClientClubDataComponent({ onSubmit = () => { }, mutateQu
 
   return <TabsContent value="club">
     {clubSystem === 2 && <VolumePointHistory _id={clientData._id} />}
-    {[0, 1].includes(clubSystem) && <SubscriptionHistory _id={clientData._id} />}
+    {[0, 1].includes(clubSystem) && <SubscriptionHistory _id={clientData._id} clientData={clientData} />}
     <AttendanceRecord _id={clientData._id} />
   </TabsContent>
 }

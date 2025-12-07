@@ -16,6 +16,7 @@ import ContentError from "../common/ContentError";
 import { getBase64ImageFromUrl } from "@/lib/image";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/providers/global/hooks";
+import MembershipInvoicePDF from "@/components/modals/MembershipInvoicePDF"
 
 const Templates = {
   PDFComparison,
@@ -26,7 +27,8 @@ const Templates = {
   PDFCustomMealPortrait,
   PDFCustomMealLandscape,
   PDFCustomMealCompactLandscape,
-  PDFCustomMealCompactPortrait
+  PDFCustomMealCompactPortrait,
+  MembershipInvoicePDF
 }
 
 export default function PDFRenderer({ children, pdfTemplate, data }) {
