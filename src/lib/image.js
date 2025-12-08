@@ -9,6 +9,12 @@ export async function getBase64ImageFromUrl(imageUrl) {
 
     client.get(imageUrl, (res) => {
       if (res.statusCode !== 200) {
+        // For 403/404 errors, resolve with empty string instead of rejecting
+        // This prevents the app from breaking when images are not accessible
+        if (res.statusCode === 403 || res.statusCode === 404) {
+          resolve("");
+          return;
+        }
         reject(new Error(`Failed to get image. Status code: ${res.statusCode}`));
         return;
       }
