@@ -16,7 +16,7 @@ import useSWR from 'swr';
 
 Font.register({
   family: 'Roboto',
-  src: '/assets/fonts/Roboto-Regular.ttf',
+  src: '/fonts/Noto-Sans-Devnagiri.ttf',
 });
 
 function getStyles(brand) {

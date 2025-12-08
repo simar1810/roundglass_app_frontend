@@ -1,6 +1,7 @@
 import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import {
+  IndianRupee,
   Award,
   CalendarDays,
   CalendarRange,
@@ -102,6 +103,12 @@ export const sidebar__coachContent = [
         type: "modal",
         Component: QuickAddClient,
       },
+      {
+        id: 5,
+        icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Invoices",
+        url: "/coach/clients/invoices"
+      }
     ],
   },
   {

@@ -52,3 +52,74 @@ export const retailHerbalifePriorityProducts = new Map([
 
   ["Aloe plus", 58]
 ])
+
+export const retailHerbalifePriorityProductsx = new Map([
+  ["Formula 1 - Vanilla", 1],
+  ["Formula 1 - Chocolate", 2],
+  ["Formula 1 - Mango", 3],
+  ["Formula 1 - Orange Cream", 4],
+  ["Formula 1 - Strawberry", 5],
+  ["Formula 1 - Kulfi", 6],
+  ["Formula 1 - Banana Caramel", 7],
+  ["Formula 1 - Rose Kheer", 8],
+  ["Formula 1 - Paan", 9],
+
+  ["Formula 1 - Mango ( 750 gm )", 10],
+  ["Formula 1 - Vanila ( 750 gm )", 11],
+  ["Formula 1 - Rose Kheer ( 750 gm )", 12],
+  ["Formula 1 - Kulfi ( 750 gm )", 13],
+
+  ["Personalized Protein 200gm", 14],
+  ["Personalized Protein 400gm", 15],
+
+  ["ShakeMate", 16],
+  ["LiftOff", 17],
+  ["Ocular Defense", 18],
+  ["Male Factor Plus", 19],
+  ["Women's Choice", 20],
+
+  ["Brain Health", 21],
+  ["vriti Facial Cleanser", 22],
+  ["vriti Facial Toner", 23],
+  ["vriti Facial Serum", 24],
+  ["vriti Moisturizer", 25],
+
+  ["Skin Booster-Orange: Canister", 26],
+  ["Skin Booster-Orange (Box)", 27],
+
+  ["Immunne Health", 28],
+
+  ["Afresh Ginger", 29],
+  ["Afresh Elaichi", 30],
+  ["Afresh Lemon", 31],
+  ["Afresh Peach", 32],
+  ["Afresh Cinnamon", 33],
+  ["Afresh Kashmiri Kawa", 34],
+  ["Afresh Tulsi", 35],
+
+  ["h24- Hydrate", 36],
+  ["h24-Rebuild", 37],
+
+  ["Dino Shake - Choco", 38],
+  ["Dino Shake - Strawberry", 39],
+
+  ["Activated Fibre", 40],
+  ["Active Fibre Complex", 41],
+  ["Aloe plus", 42],
+  ["Herbal Aloe Concenterate", 43],
+  ["Simply Probiotic", 44],
+  ["Triphala", 45],
+
+  ["H-Calcium Tablets", 46],
+  ["Joint Support", 47],
+
+  ["H Nightworks", 48],
+  ["Herbalifeline", 49],
+  ["Beta Hearts", 50],
+  ["Multivitamins", 51],
+
+  ["Cell Activator", 52],
+  ["Cell-U-Loss", 53],
+  ["Herbal Control", 54],
+  ["Sleep Enhance", 55]
+]);

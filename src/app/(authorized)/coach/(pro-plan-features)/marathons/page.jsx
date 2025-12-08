@@ -5,12 +5,12 @@ import ContentLoader from "@/components/common/ContentLoader";
 import { getMarathonLeaderBoard, getMarathons } from "@/lib/fetchers/app";
 import useSWR, { mutate, useSWRConfig } from "swr";
 import FormControl from "@/components/FormControl";
-import { ArrowLeft, Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, Trash2, ListFilterPlus, Plus, Pencil } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
 import AssignMarathonModal from "@/components/modals/app/AssignMarathonModal";
-import CreateMarathonModal from "@/components/modals/app/CreateMarathonModal";
+import CreateMarathonModal, { DeleteMarathonTasks } from "@/components/modals/app/CreateMarathonModal";
 import { DialogTrigger } from "@/components/ui/dialog";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -29,107 +29,228 @@ export default function Page() {
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
   const marathons = data.data;
 
-  return <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-2 md:gap-8">
+  return <div className="">
     {!Boolean(selectedMarathonId) && <ListMarathons
       setSelectedMarathonId={setSelectedMarathonId}
       marathons={marathons}
     />}
-    <SelectedMarathonDetails
+    <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-2 md:gap-4">
+      <SelectedMarathonDetails
       setSelectedMarathonId={setSelectedMarathonId}
       marathon={marathons.find(marathon => marathon._id === selectedMarathonId)}
-    />
-    {selectedMarathonId && < MarathonLeaderBoard
+      />
+      {selectedMarathonId && < MarathonLeaderBoard
       marathon={marathons.find(marathon => marathon._id === selectedMarathonId)}
       marathonId={selectedMarathonId}
-    />}
+      />}
+    </div>
   </div>
 }
 
 function ListMarathons({ marathons, setSelectedMarathonId }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const marathonsToDisplay = marathons.filter(marathon => marathon.title
-    .toLowerCase()
-    .includes(searchQuery.toLowerCase()))
 
-  return <div className="content-container">
-    <FormControl
-      value={searchQuery}
-      onChange={e => setSearchQuery(e.target.value)}
-      className="[&_.input]:text-[14px] [&_.input]:bg-[var(--comp-1)]"
-      placeholder="Search Here..."
-    />
-    <div className="flex items-center gap-4">
-      <h3 className="my-4 mr-auto">{marathons.length} Marathons available</h3>
-      <CreateMarathonModal />
-      <CreateMarathonTaskModal />
-    </div>
-    <div className="divide-y-4 divide-[var(--comp-2)]">
-      {marathonsToDisplay.length === 0
-        ? <ContentError
-          className="border-0"
-          title="No marathons found for this search query!"
-        />
-        : marathonsToDisplay.map(marathon => <div className="py-2" key={marathon._id}>
+  const marathonsToDisplay = marathons.filter((marathon) =>
+    marathon.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="content-container space-y-4 md:space-y-2">
+      <div className="">
+        <h1 className="text-xl text-gray-700 mb-4">Marathons</h1>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 md:gap-4">
+        <p className="text-sm md:text-base font-semibold bg-gray-50 text-gray-500 mr-auto px-4 py-2 rounded-lg italic">
+          {marathons.length} Marathons
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
-            <h5 className="text-[14px]">{marathon.title}</h5>
-            <Eye className="w-[16px] h-[16px] text-[var(--dark-1)]/50 cursor-pointer" onClick={() => setSelectedMarathonId(marathon._id)} />
-            <AssignMarathonModal marathonId={marathon._id} />
+            <ListFilterPlus size={25} className="text-gray-400" />
+
+            <FormControl
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search marathons..."
+              className="[&_.input]:text-[14px] [&_.input]:bg-[var(--comp-1)]"
+            />
           </div>
-          {marathon.clients.slice(0, 4).map((client, index) => <Link href={`/coach/clients/${client._id}`} key={index} className="mb-2 flex items-center gap-2 hover:opacity-70">
-            <Avatar>
-              <AvatarImage src={"/"} />
-              <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
-            </Avatar>
-            <div className="text-[12px] font-bold">{client.name}</div>
-          </Link>)}
-        </div>)
-      }
+
+          <DeleteMarathonTasks marathons={marathons} />
+          <CreateMarathonModal />
+          <CreateMarathonTaskModal />
+        </div>
+      </div>
+
+      <div className="rounded-xl w-auto  overflow-x-auto no-scrollbar shadow bg-white border">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600 font-semibold">
+            <tr>
+              <th className="py-3 px-4 text-left">Marathon Name</th>
+              <th className="py-3 px-4 text-left">Assigned Clients</th>
+              <th className="py-3 px-4 text-right">Assign Clients</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y">
+            {marathonsToDisplay.length === 0 ? (
+              <tr>
+                <td colSpan="3">
+                  <ContentError
+                    className="border-0 py-6"
+                    title="No marathons found for this search query!"
+                  />
+                </td>
+              </tr>
+            ) : (
+              marathonsToDisplay.map((marathon) => {
+                const clients = marathon.clients || [];
+                const visibleClients = clients.slice(0, 2);
+                const extraCount = clients.length - 2;
+
+                return (
+                  <tr
+                    key={marathon._id}
+                    className="hover:bg-gray-50 transition"
+                  >
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <h5 className="text-[14px] font-medium">
+                          {marathon.title}
+                        </h5>
+
+                        <Eye
+                          className="w-[18px] h-[18px] text-gray-500 cursor-pointer hover:text-black transition"
+                          onClick={() => setSelectedMarathonId(marathon._id)}
+                        />
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-4">
+                      {clients.length === 0 && (
+                        <span className="text-sm text-gray-400">
+                          No clients assigned
+                        </span>
+                      )}
+
+                      {clients.length > 0 && (
+                        <div className="flex items-center -space-x-2">
+                          {visibleClients.map((client, index) => (
+                            <Avatar
+                              key={index}
+                              className="w-8 h-8 border-2 border-white shadow-sm"
+                            >
+                              <AvatarImage src={"/"} />
+                              <AvatarFallback>
+                                {nameInitials(client.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                          ))}
+
+                          {extraCount > 0 && (
+                            <span className="ml-2 text-sm font-medium text-gray-600">
+                              +{extraCount}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <AssignMarathonModal marathonId={marathon._id} />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  );
 }
 
 function SelectedMarathonDetails({
   marathon,
   setSelectedMarathonId
 }) {
-  if (!marathon) return <div className="content-container">
+  if (!marathon) return <div className="hidden content-container">
     <ContentError
-      className="border-0"
+      className="border-0 hidden"
       title="Select a marathon to see details"
     />
   </div>
-  return <div className="content-container">
-    <div className="flex items-center gap-4">
-      <ArrowLeft
-        className="w-[20px] h-[20px] mb-auto cursor-pointer"
-        onClick={() => setSelectedMarathonId("")}
-      />
-      <h4 className="leading-[1] mb-4 mr-auto">{marathon.title}</h4>
-      <CreateMarathonModal type="update" data={marathon}>
-        <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-[12px] leading-[1] font-semibold px-3 py-2 rounded-[8px]">
-          Edit
-        </DialogTrigger>
-      </CreateMarathonModal>
-      <DeleteMarathonAction marathonId={marathon._id} />
-    </div>
-    <AssignMarathonModal marathonId={marathon._id} />
-    <div className="mt-4" />
-    {marathon.tasks.map(task => <div className="mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px]" key={task._id}>
-      <div>
-        <h3>{task.title}</h3>
-        <p className="text-[var(--dark-1)]/32 text-[14px] font-[500] mt-1">{task.description}</p>
-        {task.photoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic mt-4">* Photo required at Submission</p>}
-        {task.videoSubmission && <p className="text-[var(--dark-1)]/25 text-[14px] italic">* Video required at Submission</p>}
+  return (
+    <div className="content-container space-y-6">
+      <div className="flex items-center gap-4 mb-2">
+        <ArrowLeft
+          className="w-[22px] h-[22px] cursor-pointer text-[var(--dark-1)]/70 hover:text-[var(--primary)] transition"
+          onClick={() => setSelectedMarathonId("")}
+        />
+
+        <h4 className="text-[20px] font-semibold tracking-tight mr-auto">
+          {marathon.title}
+        </h4>
+        <div>
+          <AssignMarathonModal marathonId={marathon._id} />
+        </div>
+        <CreateMarathonModal type="update" data={marathon}>
+          <DialogTrigger className="
+            text-gray-600 flex items-center justify-center gap-2  
+            text-[13px] font-semibold p-1 md:px-4 md:py-2 
+            rounded-md border bg-gray-50
+          ">
+            <Pencil size={18} />
+            <p className="hidden md:block">Edit</p>
+          </DialogTrigger>
+        </CreateMarathonModal>
+        <DeleteMarathonAction marathonId={marathon._id} />
       </div>
-      <Image
-        src="/svgs/marathon.svg"
-        alt=""
-        width={500}
-        height={500}
-        className="max-w-20 ml-auto object-contain"
-      />
-    </div>)}
-  </div>
+
+      <div className=" mt-4 h-[400px] md:h-[500px] overflow-y-auto no-scrollbar">
+        {marathon.tasks.map((task) => (
+          <div
+            key={task._id}
+            className="
+              flex items-start gap-4 
+              p-5 rounded-2xl mx-2 my-2
+              bg-white/90 backdrop-blur-sm
+              ring-1 ring-gray-50
+              shadow-sm shadow-gray-400 hover:shadow-md
+            "
+          >
+            <div className="flex-1">
+              <h3 className="text-[16px] font-semibold text-[var(--dark-1)]">
+                {task.title}
+              </h3>
+
+              <p className="text-[var(--dark-1)]/60 text-[14px] mt-1">
+                {task.description}
+              </p>
+
+              {task.photoSubmission && (
+                <p className="text-[var(--dark-1)]/30 text-[13px] italic mt-3">
+                  * Photo required at submission
+                </p>
+              )}
+
+              {task.videoSubmission && (
+                <p className="text-[var(--dark-1)]/30 text-[13px] italic">
+                  * Video required at submission
+                </p>
+              )}
+            </div>
+            <Image
+              src="/svgs/marathon.svg"
+              alt=""
+              width={80}
+              height={80}
+              className="opacity-80 w-[10vw] md:w-[3vw] object-contain ml-auto"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function DeleteMarathonAction({ marathonId }) {
@@ -153,7 +274,7 @@ function DeleteMarathonAction({ marathonId }) {
     action={(setLoading, btnRef) => deleteMarathon(setLoading, btnRef)}
   >
     <AlertDialogTrigger>
-      <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
+      <Trash2 size={18} className=" bg-red-50 rounded-full text-[var(--accent-2)]" />
     </AlertDialogTrigger>
   </DualOptionActionModal>
 }

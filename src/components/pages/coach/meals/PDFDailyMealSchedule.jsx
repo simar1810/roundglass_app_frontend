@@ -158,6 +158,20 @@ export default function PDFDailyMealSchedule({ data = {}, brand = {} }) {
             <Text style={styles.dateBannerText}>{bannerText}</Text>
           </View>
 
+          {data.description && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Description</Text>
+              <Text style={{ fontSize: 10, lineHeight: 1.4 }}>{data.description}</Text>
+            </View>
+          )}
+
+          {data.guidelines && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 10, lineHeight: 1.4 }}>{data.guidelines}</Text>
+            </View>
+          )}
+
           {meals.map((meal, index) => (
             <View style={styles.mealSection} key={`${meal?.name || "meal"}-${index}`}>
               <View style={styles.mealHeader}>

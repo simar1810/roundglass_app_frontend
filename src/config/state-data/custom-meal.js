@@ -5,6 +5,8 @@ export const customMealInitialState = {
   file: "",
   image: "",
   description: "",
+  guidelines: "",
+  supplements: "",
   selectedDate: "",
   selectedPlan: "daily",
   selectedMealType: "Breakfast",

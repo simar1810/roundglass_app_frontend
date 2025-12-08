@@ -448,6 +448,8 @@ export function customMealReducer(state, action) {
         ...state,
         title: ai.title,
         description: ai.description,
+        guidelines: ai.guidelines,
+        supplements: ai.supplements,
         mode: ai.mode || "daily",
         creationType: "new",
         stage: 2,
@@ -670,6 +672,8 @@ export function dailyMealRP(state) {
   return {
     title: state.title,
     description: state.description,
+    guidelines: state.guidelines,
+    supplements: state.supplements,
     mode: state.mode,
     image: state.image,
     ...(state.mode === "monthly" && { noOfDays: state.noOfDays })

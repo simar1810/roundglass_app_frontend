@@ -160,7 +160,7 @@ function resolveMacroValue(dish, key) {
   return null;
 }
 
-function buildMealItemsForPDF(mealEntry, { includeMacros = true } = {}) {
+function buildMealItemsForPDF(mealEntry, { includeMacros = true, includeDescription = true } = {}) {
   if (!mealEntry) return [];
   const dishes = Array.isArray(mealEntry.meals) ? mealEntry.meals : [];
 
@@ -170,7 +170,7 @@ function buildMealItemsForPDF(mealEntry, { includeMacros = true } = {}) {
     const detailsParts = [];
     if (dish?.measure) detailsParts.push(dish.measure);
     if (dish?.quantity) detailsParts.push(dish.quantity);
-    if (dish?.description) detailsParts.push(dish.description);
+    if (includeDescription && dish?.description) detailsParts.push(dish.description);
 
     if (includeMacros) {
       const macroParts = [];
@@ -219,7 +219,7 @@ function buildMealItemsForPDF(mealEntry, { includeMacros = true } = {}) {
 }
 
 export function customMealDailyPDFData(customPlan, planKey, coach, options = {}) {
-  const { includeMacros = true } = options;
+  const { includeMacros = true, includeDescription = true, includeGuidelines = true, includeSupplements = true, client } = options;
 
   if (!customPlan || typeof customPlan !== "object") return null;
 
@@ -249,7 +249,7 @@ export function customMealDailyPDFData(customPlan, planKey, coach, options = {})
       return {
         mealType,
         timeWindow: mealEntry?.time || mealEntry?.meal_time || firstTimedDish?.meal_time || "",
-        items: buildMealItemsForPDF(mealEntry, { includeMacros }),
+        items: buildMealItemsForPDF(mealEntry, { includeMacros, includeDescription }),
         dishes,
       };
     });
@@ -295,7 +295,14 @@ export function customMealDailyPDFData(customPlan, planKey, coach, options = {})
 
   return {
     title: customPlan?.title || "Custom Meal Plan",
+    description: includeDescription ? (customPlan?.description || "") : "",
+    guidelines: includeGuidelines ? (customPlan?.guidelines || "") : "",
+    supplements: includeSupplements ? (customPlan?.supplements || "") : "",
     coachName: coach?.name || "",
+    clientName: client?.name || "",
+    clientAge: client?.age || "",
+    clientDob: client?.dob || "",
+    clientEmail: client?.email || "",
     dateLabel: selectedSummary.label,
     meals: scheduleMeals,
     notes: selectedNotes.length > 0 ? selectedNotes : undefined,
