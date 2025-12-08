@@ -529,13 +529,16 @@ function InventoryContainer() {
     )
   );
 
+  const sortedProducts = useMemo(() => {
+    if (!data?.data || data.status_code !== 200) return [];
+    return data.data.length > 0
+      ? sortByPriority(data.data || [], isWhitelabel)
+      : [];
+  }, [data?.data, data?.status_code, isWhitelabel]);
+
   if (isLoading) return <ContentLoader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
-
-  const sortedProducts = useMemo(() => data?.data?.length > 0
-    ? sortByPriority(data.data || [], isWhitelabel)
-    : [], [data?.data?.length])
+  if (error || data?.status_code !== 200) return <ContentError title={error?.message || data?.message} />
 
   const regex = new RegExp(query, "i")
   const products = sortedProducts.filter(
