@@ -14,7 +14,7 @@ import { getPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
 import { getBase64ImageFromUrl } from "@/lib/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "@/providers/global/hooks";
 import MembershipInvoicePDF from "@/components/modals/MembershipInvoicePDF"
 
@@ -52,9 +52,31 @@ function Container({ Component, pdfData }) {
 
   const [brandLogo, setBrandLogo] = useState("");
   const [coachLogo, setCoachLogo] = useState("");
+  const [signatureBase64, setSignatureBase64] = useState("");
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = Array.isArray(data?.data) ? data.data : [];
+
+  useEffect(() => {
+    const signatureUrl = pdfData?.invoiceMeta?.signature;
+    if (!signatureUrl) {
+      setSignatureBase64("");
+      return;
+    }
+
+    let cancelled = false;
+    getBase64ImageFromUrl(signatureUrl)
+      .then((base64) => {
+        if (!cancelled) setSignatureBase64(base64);
+      })
+      .catch(() => {
+        if (!cancelled) setSignatureBase64("");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfData?.invoiceMeta?.signature]);
 
   useEffect(function () {
     const latestBrand = brands.length > 0 ? brands[brands.length - 1] : null;
@@ -77,8 +99,16 @@ function Container({ Component, pdfData }) {
   const primaryColor = latestBrand?.primaryColor ? `#${latestBrand.primaryColor.slice(-6)}` : "#67BC2A";
   const textColor = latestBrand?.textColor ? `#${latestBrand.textColor.slice(-6)}` : "#ffffff";
 
+  const pdfDataWithSignature = useMemo(() => ({
+    ...pdfData,
+    invoiceMeta: {
+      ...(pdfData?.invoiceMeta ?? {}),
+      signatureBase64: signatureBase64 || ""
+    }
+  }), [pdfData, signatureBase64]);
+
   return <Component
-    data={pdfData}
+    data={pdfDataWithSignature}
     brand={{
       ...primaryBrand,
       brandLogo,

@@ -222,6 +222,12 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#475569",
     textAlign: "left"
+  },
+  signatureImage: {
+    width: 140,
+    height: 40,
+    objectFit: "contain",
+    marginTop: 6
   }
 });
 
@@ -239,6 +245,18 @@ const defaultSubscriptionData = {
 const defaultClientData = {
   name: "Mahipat",
   phone: "918955796195"
+};
+
+const defaultInvoiceMeta = {
+  title: "MOHI LIFESTILE SOLUTIONS PRIVATE LIMITED",
+  address: "A279, FIRST FLOOR, A-Block, NEW AMRITSAR, Amritsar Amritsar, PUNJAB, 143001",
+  gstin: "03AARCM3868J1ZY",
+  placeOfSupply: "Punjab",
+  signature: "",
+  bankName: "ICICI Bank",
+  accountNumber: "777705131810",
+  ifscCode: "ICIC0007335",
+  branch: "New Amritsar"
 };
 
 const formatCurrency = (
@@ -327,9 +345,11 @@ const formatDate = (value) => {
 export default function MembershipInvoicePDF({ data = {} }) {
   const subscriptionSource = data?.subscription ?? data ?? {};
   const clientSource = data?.client ?? {};
+  const invoiceMetaData = data?.invoiceMeta ?? {};
 
   const subscription = { ...defaultSubscriptionData, ...subscriptionSource };
   const client = { ...defaultClientData, ...clientSource };
+  const invoiceMeta = { ...defaultInvoiceMeta, ...invoiceMetaData };
 
   const {
     amount = 1000,
@@ -357,6 +377,15 @@ export default function MembershipInvoicePDF({ data = {} }) {
   const invoiceDateShort = formatDateShort(startDate);
   const amountPaidText = `${formatCurrency(totalAmount, { decimals: 0, groupThousands: false })} Paid via ${paymentModeLabel}${invoiceDateShort ? ` on ${invoiceDateShort}` : ""}`;
   const notesText = subscriptionNotes || "Renewal";
+  const companyName = invoiceMeta.title;
+  const companyAddress = invoiceMeta.address;
+  const companyGSTIN = invoiceMeta.gstin;
+  const placeOfSupplyLabel = invoiceMeta.placeOfSupply;
+  const signatureImageUrl = invoiceMeta.signatureBase64 || invoiceMeta.signature;
+  const bankName = invoiceMeta.bankName;
+  const accountNumber = invoiceMeta.accountNumber;
+  const ifscCode = invoiceMeta.ifscCode;
+  const branch = invoiceMeta.branch;
 
   return (
     <PDFViewer style={{ width: "100%", height: "100vh" }}>
@@ -365,11 +394,9 @@ export default function MembershipInvoicePDF({ data = {} }) {
           <View style={styles.headerRow}>
             <Image style={styles.logo} src="/logo_vector.png" />
             <View style={styles.companyInfo}>
-              <Text style={styles.companyName}>MOHI LIFESTILE SOLUTIONS PRIVATE LIMITED</Text>
-              <Text style={styles.companyAddress}>GSTIN 03AARCM3868J1ZY</Text>
-              <Text style={styles.companyAddress}>
-                A279, FIRST FLOOR, A-Block, NEW AMRITSAR, Amritsar Amritsar, PUNJAB, 143001
-              </Text>
+              <Text style={styles.companyName}>{companyName}</Text>
+              {companyAddress && <Text style={styles.companyAddress}>{companyAddress}</Text>}
+              {companyGSTIN && <Text style={styles.companyAddress}>GSTIN {companyGSTIN}</Text>}
               <Text style={styles.companyAddress}>Mobile +91 7888624347 Email simarpreet@wellnessz.in</Text>
             </View>
           </View>
@@ -397,13 +424,15 @@ export default function MembershipInvoicePDF({ data = {} }) {
                 <Text style={styles.infoDetailValue}>{invoiceDate}</Text>
               </View>
               <View style={styles.infoDetailRow}>
-                <Text style={styles.infoDetailLabel}>Due Date:</Text>
-                <Text style={styles.infoDetailValue}>{dueDate}</Text>
+                {/* <Text style={styles.infoDetailLabel}>Due Date:</Text> */}
+                {/* <Text style={styles.infoDetailValue}>{dueDate}</Text> */}
               </View>
-              <View style={styles.infoDetailRow}>
-                <Text style={styles.infoDetailLabel}>Place of Supply:</Text>
-                <Text style={styles.infoDetailValue}>03-PUNJAB</Text>
-              </View>
+              {placeOfSupplyLabel && (
+                <View style={styles.infoDetailRow}>
+                  <Text style={styles.infoDetailLabel}>Place of Supply:</Text>
+                  <Text style={styles.infoDetailValue}>{placeOfSupplyLabel}</Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -458,25 +487,28 @@ export default function MembershipInvoicePDF({ data = {} }) {
 
           <View style={styles.bankDetails}>
             <Text style={styles.bankLabel}>Bank Details:</Text>
-            <Text>Bank: ICICI Bank</Text>
-            <Text>Account #: 777705131810</Text>
-            <Text>IFSC Code: ICIC0007335</Text>
-            <Text>Branch: New Amritsar</Text>
+            <Text>Bank: {bankName || "-"}</Text>
+            <Text>Account #: {accountNumber || "-"}</Text>
+            <Text>IFSC Code: {ifscCode || "-"}</Text>
+            <Text>Branch: {branch || "-"}</Text>
           </View>
 
           <View style={styles.signature}>
-            <Text>For MOHI LIFESTILE SOLUTIONS PRIVATE LIMITED</Text>
+            {signatureImageUrl && (
+              <Image style={styles.signatureImage} src={signatureImageUrl} />
+            )}
+            <Text>For {companyName}</Text>
             <Text>Authorized Signatory</Text>
           </View>
 
-          <View style={styles.notes}>
+          {/* <View style={styles.notes}>
             <Text style={styles.notesLabel}>Notes:</Text>
             <Text>{notesText}</Text>
-          </View>
+          </View> */}
 
-          <View style={styles.footer}>
+          {/* <View style={styles.footer}>
             <Text>Page 1 / 1 • This is a digitally signed document.</Text>
-          </View>
+          </View> */}
         </Page>
       </Document>
     </PDFViewer>

@@ -13,8 +13,10 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import PDFRenderer from "@/components/modals/PDFRenderer"
 import { FileText } from "lucide-react"
+import { useAppSelector } from "@/providers/global/hooks";
 
 export default function SubscriptionHistory({ _id, clientData }) {
+  const { invoiceMeta } = useAppSelector(state => state.coach.data)
   const { isLoading, error, data } = useSWR(`getClientSubscriptions/${_id}`, () => getClientSubscriptions(_id));
   if (isLoading) return <div className="h-[200px] flex items-center justify-center">
     <Loader />
@@ -63,7 +65,7 @@ export default function SubscriptionHistory({ _id, clientData }) {
             />
             <PDFRenderer
               pdfTemplate="MembershipInvoicePDF"
-              data={{ subscription, client: clientData }}
+              data={{ subscription, client: clientData, invoiceMeta }}
             >
               <DialogTrigger>
                 <FileText />
