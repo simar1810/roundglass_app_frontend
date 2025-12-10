@@ -9,7 +9,7 @@ function calcAge(data) {
 export function clientStatisticsPDFData(data, statistics, coach, index) {
   return {
     clientName: data.name,
-    age: calcAge(data),
+    age: data?.age || calcAge(data),
     bodyAge: statistics?.at(index)?.bodyAge || 0,
     gender: data.gender,
     joined: statistics?.at(index).createdDate,

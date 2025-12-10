@@ -50,7 +50,7 @@ export function ClientFeed({
   feed
 }) {
   const [commentsOpened, setCommentsOpened] = useState(false);
-  return <div className="relative border-b-1 py-2">
+  return <div className="relative py-2 rounded-2xl">
     <FeedHeader feed={feed} />
     <div>
       {feed.contentType === "img"
@@ -90,11 +90,11 @@ function FeedVideo({ video }) {
 }
 
 function FeedHeader({ feed }) {
-  return <div className="bg-white px-4 py-2 flex items-center gap-2">
-    <Avatar className="p-[2px] border-1">
+  return <div className="bg-white px-4 py-3 flex items-center shadow-md shadow-gray-200 rounded-t-2xl gap-2">
+    <Avatar className="p-[2px] ring-2 ring-[var(--accent-1)]">
       <AvatarImage src={feed.userImg} />
-      <AvatarFallback>{nameInitials(feed.userName)}</AvatarFallback>
+      <AvatarFallback className={"bg-[var(--accent-1)] text-white text-sm font-semibold"}>{nameInitials(feed.userName)}</AvatarFallback>
     </Avatar>
-    <p>{feed.userName}</p>
+    <p className="text-base font-bold text-gray-700 ml-2">{feed.userName}</p>
   </div>
 }

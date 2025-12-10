@@ -15,7 +15,7 @@ export default function Page() {
     }}
     reducer={feedReducer}
   >
-    <div className="content-container content-height-screen">
+    <div className="content-container content-height-screen bg-[var(--comp-2)]">
       <div className="flex items-center gap-4">
         <AddPostClientModal />
       </div>
@@ -27,7 +27,7 @@ export default function Page() {
 
 function FeedContainer() {
   const { type } = useCurrentStateContext()
-  return <div className="grid md:grid-cols-3 gap-5 bg-white mt-10 mx-auto relative border-1 border-b-0 rounded-t-[10px]">
+  return <div className="grid md:grid-cols-3 gap-5 bg-[var(--comp-2)] mt-2 mx-auto relative border-b-0 rounded-t-[10px]">
     {type === "mine"
       ? <ClientPersonalFeeds />
       : <ClientFeeds />}

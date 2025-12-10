@@ -47,8 +47,10 @@ export default function FeedFooter({
     }
   }
 
-  return <div className=" px-4 pb-2">
-    <div className="bg-white text[var(--dark-3)] pt-3 pb-1 flex items-center gap-1">
+  return <div className="bg-white px-4 pb-4 rounded-b-2xl shadow-md  shadow-gray-300">
+    <div className="bg-white text[var(--dark-3)] pt-3 pb-1 flex items-center justify-between gap-1">
+      <p className="text-gray-900 font-medium text-sm">{feed.caption}</p>
+      <div className="flex items-center justify-end gap-2">
       <Heart
         fill={feed.isLikedByMe ? "#FF1D1D" : "transparent"}
         stroke={feed.isLikedByMe ? "#FF1D1D" : "#000000"}
@@ -66,9 +68,10 @@ export default function FeedFooter({
         stroke={feed.isSavedByMe ? "#000000" : "#000000"}
         className="w-[20px] h-[20px] ml-auto cursor-pointer"
         onClick={() => saveUnsave(!feed.isSavedByMe)}
-      />
+        />
+      </div>
     </div>
-    <p>{feed.caption}</p>
+    
   </div>
 }
 

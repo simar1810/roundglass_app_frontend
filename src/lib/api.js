@@ -125,6 +125,57 @@ export async function sendDataWithFormData(
     return error;
   }
 }
+export async function sendFile(endpoint, file) {
+  try {
+    const cookieStore = await cookies();
+    const TOKEN = cookieStore.get("token")?.value;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+      },
+      body: formData,
+    });
+
+    if (response.status === 502) redirect("/maintenance");
+
+    return await response.json();
+  } catch (error) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
+    return error;
+  }
+}
+export async function sendFileWithQuery(endpoint, file, queryText) {
+  try {
+    const cookieStore = await cookies();
+    const TOKEN = cookieStore.get("token")?.value;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("query", queryText);
+
+    const url = `${API_ENDPOINT}/${endpoint}`;
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${TOKEN}`, 
+      },
+      body: formData,
+    });
+
+    if (response.status === 502) redirect("/maintenance");
+
+    return await response.json();
+  } catch (error) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
+    return error;
+  }
+}
 
 
 export async function uploadImage(file) {

@@ -10,7 +10,7 @@ import PDFCustomMealLandscape from "../pages/coach/meals/PDFCustomMealLandscape"
 import PDFCustomMealCompactLandscape from "../pages/coach/meals/PDFCustomMealCompactLandscape";
 import PDFCustomMealCompactPortrait from "../pages/coach/meals/PDFCustomMealCompactPortrait";
 import useSWR from "swr";
-import { getPersonalBranding } from "@/lib/fetchers/app";
+import { getPersonalBranding, getClientPersonalBranding } from "@/lib/fetchers/app";
 import ContentLoader from "../common/ContentLoader";
 import ContentError from "../common/ContentError";
 import { getBase64ImageFromUrl } from "@/lib/image";
@@ -49,8 +49,8 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
 }
 
 function Container({ Component, pdfData }) {
-  const { profilePhoto } = useAppSelector(state => state.coach.data)
-
+  const obtainedPhoto  = useAppSelector(state => state?.coach?.data?.profilePhoto) || "";
+  const finalProfilePhoto = obtainedPhoto && obtainedPhoto !== "" ? obtainedPhoto : pdfData?.coachProfileImage || ""
   const [brandLogo, setBrandLogo] = useState("");
   const [coachLogo, setCoachLogo] = useState("");
   const [signatureBase64, setSignatureBase64] = useState("");
@@ -93,7 +93,7 @@ function Container({ Component, pdfData }) {
         .then(setCoachLogo)
         .catch(() => setCoachLogo(""));
     }
-  }, [brands, profilePhoto])
+  }, [brands, finalProfilePhoto])
 
   const primaryBrand = brands[0] || {};
   const latestBrand = brands.length > 0 ? brands[brands.length - 1] : {};
