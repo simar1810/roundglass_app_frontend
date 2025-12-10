@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 800,
     letterSpacing: 0.5
   },
   companyAddress: {
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#d1d5db",
     marginBottom: 4,
     paddingBottom: 2,
-    fontWeight: "bold",
+    fontWeight: 700,
     fontSize: 9
   },
   infoText: {
@@ -112,8 +112,6 @@ const styles = StyleSheet.create({
   },
   table: {
     marginTop: 20,
-    // borderWidth: 1,
-    // borderColor: "#0d4ed8",
     borderRadius: 4,
     overflow: "hidden"
   },
@@ -121,20 +119,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#0d4ed8",
     paddingVertical: 8,
-    paddingHorizontal: 10
+    paddingHorizontal: 12,
+    alignItems: "center"
   },
   headerCell: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: 700,
     fontSize: 9
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#d1d5db",
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
+    alignItems: "center"
   },
   tableRowFooter: {
     borderTopWidth: 1,
@@ -143,22 +143,28 @@ const styles = StyleSheet.create({
     fontSize: 8
   },
   colIndex: {
-    width: "5%",
+    width: "10%",
     textAlign: "center",
     fontSize: 9
   },
   colItem: {
     width: "45%",
     fontSize: 9,
-    fontWeight: "bold"
-  },
-  colHsn: {
-    width: "20%",
-    fontSize: 9,
-    textAlign: "center"
+    fontWeight: 600,
+    paddingRight: 6
   },
   colAmount: {
-    width: "30%",
+    width: "15%",
+    fontSize: 9,
+    textAlign: "right"
+  },
+  colPaid: {
+    width: "15%",
+    fontSize: 9,
+    textAlign: "right"
+  },
+  colBalance: {
+    width: "15%",
     fontSize: 9,
     textAlign: "right"
   },
@@ -183,13 +189,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   amountPaidLabel: {
-    fontWeight: "bold",
+    fontWeight: 700,
     fontSize: 10
   },
   amountPaidValue: {
     marginTop: 2,
-    // color: "#0f9d58",
-    fontSize: 10
+    fontSize: 10,
+    fontWeight: 600
+  },
+  amountPendingValue: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#dc2626",
+    marginTop: 2
   },
   bankDetails: {
     marginTop: 18,
@@ -356,14 +368,17 @@ export default function MembershipInvoicePDF({ data = {} }) {
     description = "Membership Subscription",
     startDate,
     endDate,
-    invoice = "WZ180",
     paymentMode = "cash",
     discount: subscriptionDiscount = 0,
-    notes: subscriptionNotes = "Renewal"
+    notes: subscriptionNotes = "Renewal",
+    paidAmount: subscriptionPaidAmount = amount
   } = subscription;
 
   const totalAmount = Number(amount) || 0;
   const discountValue = Number(subscriptionDiscount) || 0;
+  const paidAmount = Number(subscriptionPaidAmount);
+  const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
+  const pendingAmount = Math.max(totalAmount - safePaidAmount, 0);
   const taxableAmount = totalAmount / 1.18;
   const gstAmount = totalAmount - taxableAmount;
   const cgst = gstAmount / 2;
@@ -375,7 +390,8 @@ export default function MembershipInvoicePDF({ data = {} }) {
   const invoiceDate = formatDate(startDate);
   const dueDate = formatDate(endDate || startDate);
   const invoiceDateShort = formatDateShort(startDate);
-  const amountPaidText = `${formatCurrency(totalAmount, { decimals: 0, groupThousands: false })} Paid via ${paymentModeLabel}${invoiceDateShort ? ` on ${invoiceDateShort}` : ""}`;
+  const amountPaidText = `${formatCurrency(safePaidAmount, { decimals: 0, groupThousands: false })} Paid via ${paymentModeLabel}${invoiceDateShort ? ` on ${invoiceDateShort}` : ""}`;
+  const pendingText = pendingAmount > 0 ? `Balance due: ${formatCurrency(pendingAmount, { decimals: 0, groupThousands: false })}` : "No balance pending";
   const notesText = subscriptionNotes || "Renewal";
   const companyName = invoiceMeta.title;
   const companyAddress = invoiceMeta.address;
@@ -416,16 +432,12 @@ export default function MembershipInvoicePDF({ data = {} }) {
             <View style={[styles.infoBox, styles.invoiceDetails]}>
               <Text style={styles.infoHeader}>Invoice Details</Text>
               <View style={styles.infoDetailRow}>
-                <Text style={styles.infoDetailLabel}>Invoice #:</Text>
-                <Text style={styles.infoDetailValue}>{invoice}</Text>
-              </View>
-              <View style={styles.infoDetailRow}>
                 <Text style={styles.infoDetailLabel}>Invoice Date:</Text>
                 <Text style={styles.infoDetailValue}>{invoiceDate}</Text>
               </View>
               <View style={styles.infoDetailRow}>
-                {/* <Text style={styles.infoDetailLabel}>Due Date:</Text> */}
-                {/* <Text style={styles.infoDetailValue}>{dueDate}</Text> */}
+                <Text style={styles.infoDetailLabel}>Period:</Text>
+                <Text style={styles.infoDetailValue}>{invoiceDate} - {dueDate}</Text>
               </View>
               {placeOfSupplyLabel && (
                 <View style={styles.infoDetailRow}>
@@ -438,18 +450,20 @@ export default function MembershipInvoicePDF({ data = {} }) {
 
           <View style={styles.table}>
             <View style={styles.tableHeader}>
-              <Text style={[styles.headerCell, { width: "5%", textAlign: "center" }]}>#</Text>
-              <Text style={[styles.headerCell, { width: "45%" }]}>Item</Text>
-              <Text style={[styles.headerCell, { width: "20%", textAlign: "center" }]}>HSN/SAC</Text>
-              <Text style={[styles.headerCell, { width: "30%", textAlign: "right" }]}>Amount</Text>
+              <Text style={[styles.headerCell, styles.colIndex]}>#</Text>
+              <Text style={[styles.headerCell, styles.colItem]}>Item</Text>
+              <Text style={[styles.headerCell, styles.colAmount]}>Amount</Text>
+              <Text style={[styles.headerCell, styles.colPaid]}>Paid</Text>
+              <Text style={[styles.headerCell, styles.colBalance]}>Balance</Text>
             </View>
             <View style={styles.tableRow}>
               <Text style={styles.colIndex}>1</Text>
               <Text style={styles.colItem}>{description}</Text>
-              <Text style={styles.colHsn}>-</Text>
               <Text style={styles.colAmount}>{formatCurrency(taxableAmount, { withSymbol: false })}</Text>
+              <Text style={styles.colPaid}>{formatCurrency(safePaidAmount, { withSymbol: false })}</Text>
+              <Text style={styles.colBalance}>{formatCurrency(pendingAmount, { withSymbol: false })}</Text>
             </View>
-            <View style={[styles.tableRowFooter, { paddingVertical: 4, paddingHorizontal: 10 }]}>
+            <View style={[styles.tableRowFooter, { paddingVertical: 4, paddingHorizontal: 12, justifyContent: "space-between", alignItems: "center" }]}>
               <Text>Total Items / Qty : 1 / 1</Text>
               <Text style={{ textAlign: "right" }}>Total amount (in words): {numberToWords(totalAmount)}</Text>
             </View>
@@ -472,6 +486,14 @@ export default function MembershipInvoicePDF({ data = {} }) {
               <Text style={styles.totalLabel}>Total</Text>
               <Text>{formatCurrency(totalAmount)}</Text>
             </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Paid</Text>
+              <Text>{formatCurrency(safePaidAmount)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Balance</Text>
+              <Text>{formatCurrency(pendingAmount)}</Text>
+            </View>
             {discountValue > 0 && (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Total Discount</Text>
@@ -482,7 +504,10 @@ export default function MembershipInvoicePDF({ data = {} }) {
 
           <View style={styles.amountPaid}>
             <Text style={styles.amountPaidLabel}>Amount Paid</Text>
-            <Text style={styles.amountPaidValue}>✓ {amountPaidText}</Text>
+            <View>
+              <Text style={styles.amountPaidValue}>✓ {amountPaidText}</Text>
+              <Text style={styles.amountPendingValue}>{pendingText}</Text>
+            </View>
           </View>
 
           <View style={styles.bankDetails}>
