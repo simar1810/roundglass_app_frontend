@@ -1,46 +1,43 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { Input } from "../ui/input";
-import { Search, ChevronRight } from "lucide-react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import {
-  sidebar__coachContent,
-  sidebar__coachFooter,
+    sidebar__coachContent,
+    sidebar__coachFooter,
 } from "@/config/data/sidebar";
-import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
-import { fetchData } from "@/lib/api";
-import useDebounce from "@/hooks/useDebounce";
-import Loader from "./Loader";
 import useClickOutside from "@/hooks/useClickOutside";
-import ContentError from "./ContentError";
+import useDebounce from "@/hooks/useDebounce";
+import { fetchData } from "@/lib/api";
+import { getUserPermissions, getUserType, isCoach } from "@/lib/permissions";
 import { useAppSelector } from "@/providers/global/hooks";
-import PendingClientClubDataModal from "../modals/client/PendingClientClubDataModal";
-import { DialogTrigger } from "../ui/dialog";
-import { useSWRConfig } from "swr";
-import { SearchBar } from "./AppNavbar";
-import { isCoach, getUserType, getUserPermissions } from "@/lib/permissions";
+import { ChevronRight, Search } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import AddClientWithCheckup from "../modals/add-client/AddClientWithCheckup";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { SearchBar } from "./AppNavbar";
+import ContentError from "./ContentError";
+import Loader from "./Loader";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
