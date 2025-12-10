@@ -49,7 +49,7 @@ export default function PDFRenderer({ children, pdfTemplate, data }) {
 }
 
 function Container({ Component, pdfData }) {
-  const obtainedPhoto  = useAppSelector(state => state?.coach?.data?.profilePhoto) || "";
+  const obtainedPhoto = useAppSelector(state => state?.coach?.data?.profilePhoto) || "";
   const finalProfilePhoto = obtainedPhoto && obtainedPhoto !== "" ? obtainedPhoto : pdfData?.coachProfileImage || ""
   const [brandLogo, setBrandLogo] = useState("");
   const [coachLogo, setCoachLogo] = useState("");
@@ -88,8 +88,8 @@ function Container({ Component, pdfData }) {
         .catch(() => setBrandLogo(""));
     }
 
-    if (profilePhoto) {
-      getBase64ImageFromUrl(profilePhoto)
+    if (finalProfilePhoto) {
+      getBase64ImageFromUrl(finalProfilePhoto)
         .then(setCoachLogo)
         .catch(() => setCoachLogo(""));
     }
