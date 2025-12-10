@@ -11,15 +11,19 @@ import { getClientSubscriptions } from "@/lib/fetchers/club";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import PDFRenderer from "@/components/modals/PDFRenderer"
+import { FileText } from "lucide-react"
+import { useAppSelector } from "@/providers/global/hooks";
 
-export default function SubscriptionHistory({ _id }) {
+export default function SubscriptionHistory({ _id, clientData }) {
+  const { invoiceMeta } = useAppSelector(state => state.coach.data)
   const { isLoading, error, data } = useSWR(`getClientSubscriptions/${_id}`, () => getClientSubscriptions(_id));
   if (isLoading) return <div className="h-[200px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
-  const subscriptions = data.data?.at(0)?.history.filter(subscription => subscription.amount!==0) || [];
+  const subscriptions = data.data?.at(0)?.history.filter(subscription => subscription.amount !== 0) || [];
 
   if (subscriptions.length === 0) return <div className="mb-8"> 
     <div className="flex items-center justify-between">
@@ -28,7 +32,6 @@ export default function SubscriptionHistory({ _id }) {
     </div>
     <ContentError className="!min-h-[200px] mt-4 mb-8" title="This client has 0 subscriptions" />
   </div>
-
   return <div className="mb-8 w-[87vw] overflow-x-auto no-scrollbar md:w-auto">
     <div className="flex items-center justify-between">
       <h5>Membership History</h5>
@@ -46,22 +49,32 @@ export default function SubscriptionHistory({ _id }) {
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
-        {subscriptions.map((subscription, index) => <TableRow key={subscription._id}>
+    <TableBody>
+      {subscriptions.map((subscription, index) => (
+        <TableRow key={subscription._id}>
           <TableCell>{index + 1}</TableCell>
           <TableCell>{subscription.startDate}</TableCell>
           <TableCell>{subscription.endDate}</TableCell>
           <TableCell>{subscription.paymentMode}</TableCell>
           <TableCell>{subscription.amount}</TableCell>
           <TableCell>{subscription.description}</TableCell>
-          <TableCell>
+          <TableCell className="flex items-center gap-2">
             <UpdateSubscription
               subscription={subscription}
               _id={_id}
             />
+            <PDFRenderer
+              pdfTemplate="MembershipInvoicePDF"
+              data={{ subscription, client: clientData, invoiceMeta }}
+            >
+              <DialogTrigger>
+                <FileText />
+              </DialogTrigger>
+            </PDFRenderer>
           </TableCell>
-        </TableRow>)}
-      </TableBody>
+        </TableRow>
+      ))}
+    </TableBody>
     </Table>
   </div>
 }

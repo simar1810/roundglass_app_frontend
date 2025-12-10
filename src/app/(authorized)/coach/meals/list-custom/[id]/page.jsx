@@ -8,14 +8,21 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
-import { FileDown, SquarePen, Trash2 } from "lucide-react";
+import { FileDown, MoreVertical, SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -150,6 +157,9 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
 
   const [selectedPdfVariant, setSelectedPdfVariant] = useState(defaultVariant);
   const [includeMacros, setIncludeMacros] = useState(true);
+  const [includeDescription, setIncludeDescription] = useState(true);
+  const [includeGuidelines, setIncludeGuidelines] = useState(true);
+  const [includeSupplements, setIncludeSupplements] = useState(true);
 
   useEffect(() => {
     setSelectedPdfVariant(defaultVariant);
@@ -157,8 +167,8 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
 
   const pdfData = useMemo(() => {
     if (!hasPlanData || !selectedPlan) return null;
-    return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName }, { includeMacros });
-  }, [coachName, customPlan, hasPlanData, includeMacros, selectedPlan]);
+    return customMealDailyPDFData(customPlan, selectedPlan, { name: coachName }, { includeMacros, includeDescription, includeGuidelines, includeSupplements });
+  }, [coachName, customPlan, hasPlanData, includeMacros, includeDescription, includeGuidelines, includeSupplements, selectedPlan]);
 
   const pdfTemplateMap = {
     portrait: "PDFCustomMealPortrait",
@@ -194,8 +204,8 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
         <DeleteCustomMealPlan id={customPlan._id} />
       </>}
     </div>
-        <div className="flex items-center justify-start gap-2 mt-4">
-    <Link
+    <div className="flex items-center justify-start gap-2 mt-4">
+      <Link
         href={`/coach/meals/add-custom?creationType=copy_edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
         className="md:hidden px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[12px]"
         variant="wz"
@@ -212,38 +222,25 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
         </Link>
       </>}
     </div>
-    <div className="flex flex-wrap items-center gap-4 mt-4">
-      <PDFRenderer pdfTemplate={pdfTemplateKey} data={pdfData || {}}>
-        <DialogTrigger
-          className="px-4 py-2 rounded-[10px] border-1 border-[var(--accent-1)] text-[var(--accent-1)] font-bold leading-[1] text-[12px] md:text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={pdfDisabled}
-        >
-          <FileDown size={16} />
-          Plan PDF
-        </DialogTrigger>
-      </PDFRenderer>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Switch
-          id="custom-plan-macros-toggle"
-          checked={includeMacros}
-          onCheckedChange={setIncludeMacros}
-          disabled={pdfDisabled}
-        />
-        <label
-          htmlFor="custom-plan-macros-toggle"
-          className="cursor-pointer select-none text-sm text-muted-foreground"
-        >
-          Show macro nutrients
-        </label>
-      </div>
-      <div className="ml-auto">
+    <div className="mt-6 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PDFRenderer pdfTemplate={pdfTemplateKey} data={pdfData || {}}>
+          <DialogTrigger
+            className="px-4 py-2 rounded-[10px] bg-[var(--accent-1)] text-white font-bold leading-[1] text-[14px] flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={pdfDisabled}
+          >
+            <FileDown size={18} />
+            Download PDF
+          </DialogTrigger>
+        </PDFRenderer>
+
         <Select
           value={selectedPdfVariant}
           onValueChange={setSelectedPdfVariant}
           disabled={pdfDisabled}
         >
-          <SelectTrigger className="w-[130px] md:min-w-[200px]">
-            <SelectValue placeholder="Select PDF Layout" />
+          <SelectTrigger className="w-[180px] ml-auto">
+            <SelectValue placeholder="Select Layout" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="portrait">Portrait Overview</SelectItem>
@@ -252,6 +249,47 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
             <SelectItem value="compactPortrait">Compact Portrait</SelectItem>
           </SelectContent>
         </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild disabled={pdfDisabled}>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuCheckboxItem
+              checked={includeMacros}
+              onCheckedChange={setIncludeMacros}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Macros
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={includeDescription}
+              onCheckedChange={setIncludeDescription}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Recipe Description
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={includeGuidelines}
+              onCheckedChange={setIncludeGuidelines}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Guidelines
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={includeSupplements}
+              onCheckedChange={setIncludeSupplements}
+              onSelect={(e) => e.preventDefault()}
+            >
+              Show Supplements
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="justify-center font-bold cursor-pointer">
+              Close
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
     <Image
@@ -263,6 +301,14 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       onError={e => e.target.src = "/not-found.png"}
     />
     <p>{customPlan.description}</p>
+    {customPlan.guidelines && <div className="mt-4">
+      <h5 className="font-bold">Guidelines</h5>
+      <p>{customPlan.guidelines}</p>
+    </div>}
+    {customPlan.supplements && <div className="mt-4">
+      <h5 className="font-bold">Supplements</h5>
+      <p>{customPlan.supplements}</p>
+    </div>}
   </div >
 }
 
@@ -365,9 +411,11 @@ function MealDetails({ meal }) {
       className="w-full max-h-[180px] object-cover border-b-1"
     />
     <div className="p-3 text-md">
-      <h3>{meal.dish_name}</h3>
-      <p className="text-black/60 text-xs mt-1">{meal.description}</p>
-      <p className="text-[14px] text-[#808080]">{meal.meal_time}</p>
+      <h3>{meal.name || meal.dish_name}</h3>
+      {meal.description && (
+        <p className="leading-[1.2] text-[14px] text-black/60 mt-2 line-clamp-3">{meal.description}</p>
+      )}
+      <p className="text-[14px] text-[#808080] mt-2">{meal.meal_time}</p>
     </div>
   </div>
 }
@@ -407,7 +455,7 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
     for (const plan in plans) {
       const p = plans[plan];
       if (!p) continue;
-      
+
       // Handle array format (used during creation for monthly plans)
       if (Array.isArray(p)) {
         for (const mealType of p) {
@@ -417,7 +465,7 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
         }
         continue;
       }
-      
+
       if (p.daily && typeof p.daily === "object") {
         const d = p.daily;
         if (Array.isArray(d.breakfast)) arr.push(...d.breakfast);
@@ -441,7 +489,7 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
         }
         continue;
       }
-      
+
       // Handle object format with meal types
       if (p.meals && Array.isArray(p.meals)) {
         for (const mealType of p.meals) {
@@ -451,7 +499,7 @@ export function DisplayMealStats({ meals: { plans = {} } = {} }) {
         }
         continue;
       }
-      
+
       if (Array.isArray(p.breakfast)) arr.push(...p.breakfast);
       if (Array.isArray(p.lunch)) arr.push(...p.lunch);
       if (Array.isArray(p.dinner)) arr.push(...p.dinner);

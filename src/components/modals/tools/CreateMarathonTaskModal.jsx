@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { mutate } from "swr"
 import { sendData } from "@/lib/api"
+import { Plus } from "lucide-react"
 
 export default function CreateMarathonTaskModal() {
   const [formData, setFormData] = useState({
@@ -53,7 +54,10 @@ export default function CreateMarathonTaskModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="font-bold" size="sm">New Task</Button>
+        <Button className="font-bold flex items-center justify-center gap-2" size="sm">
+          <Plus size={18} className="text-white"/>
+          <p className="text-white">New Task</p>
+        </Button>
       </DialogTrigger>
       <DialogContent className="!max-w-[500px] max-h-[75vh] overflow-y-auto border-0 p-0 gap-0">
         <DialogHeader className="py-4 px-6 border-b">

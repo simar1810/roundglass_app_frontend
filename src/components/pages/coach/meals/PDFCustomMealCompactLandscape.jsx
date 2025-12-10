@@ -11,7 +11,7 @@ import {
 
 Font.register({
   family: "Roboto",
-  src: "/assets/fonts/Roboto-Regular.ttf"
+  src: "/fonts/Noto-Sans-Devnagiri.ttf"
 });
 
 function createStyles(brand) {
@@ -43,7 +43,6 @@ function createStyles(brand) {
     },
     planTitle: {
       fontSize: 18,
-      fontWeight: "bold",
       marginBottom: 4,
       color: "#222222"
     },
@@ -177,12 +176,55 @@ export default function PDFCustomMealCompactLandscape({ data = {}, brand = {} })
             <View style={styles.headerTextBlock}>
               <Text style={styles.planTitle}>{title}</Text>
               {coachName ? <Text style={styles.coachName}>Coach: {coachName}</Text> : null}
+              {data.clientName ? (
+                <View style={{ marginTop: 8, paddingTop: 6, borderTop: "0.5pt solid #f0f0f0" }}>
+                  <Text style={{ fontSize: 10, fontWeight: "bold", color: "#444444", marginBottom: 2 }}>
+                    Client: {data.clientName}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {data.clientAge ? (
+                      <Text style={{ fontSize: 9, color: "#888888" }}>
+                        Age: {data.clientAge}
+                      </Text>
+                    ) : null}
+                    {data.clientAge && data.clientEmail ? (
+                      <Text style={{ fontSize: 9, color: "#cccccc", marginHorizontal: 4 }}>|</Text>
+                    ) : null}
+                    {data.clientEmail ? (
+                      <Text style={{ fontSize: 9, color: "#888888" }}>
+                        {data.clientEmail}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
             </View>
 
             {brand?.coachLogo ? (
               <Image src={brand.coachLogo} style={styles.headerLogo} />
             ) : null}
           </View>
+
+          {data.description && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Description</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.description}</Text>
+            </View>
+          )}
+
+          {data.guidelines && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
+            </View>
+          )}
+
+          {data.supplements && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
+            </View>
+          )}
 
           <View style={styles.cardsContainer}>
             {plans.map((plan, index) => (
