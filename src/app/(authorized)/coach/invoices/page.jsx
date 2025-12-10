@@ -1,22 +1,26 @@
 "use client";
-import useSWR, { mutate } from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import PDFRenderer from "@/components/modals/PDFRenderer";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { fetchData, sendDataWithFormData } from "@/lib/api";
-import {
-  Table, TableBody, TableCell,
-  TableHead, TableHeader, TableRow
-} from "@/components/ui/table";
-import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { fetchData, sendDataWithFormData } from "@/lib/api";
 import { useAppSelector } from "@/providers/global/hooks";
+import { Download, FileText, Filter, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
 
 export default function Page() {
   const [query, setQuery] = useState("")
+  const [activeFields, setActiveFields] = useState(["clientName", "email", "mobileNumber", "invoice", "city", "description"]);
+  const [paymentFilter, setPaymentFilter] = useState("all");
   const { isLoading, error, data } = useSWR(
     "membership/invoices",
     () => fetchData("app/memberships-invoices")
@@ -27,6 +31,7 @@ export default function Page() {
 
   if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
   const subscriptions = createSubscriptionList(data?.data);
+  const stats = createInvoiceStats(subscriptions);
 
   if (subscriptions.length === 0) {
     return (
@@ -38,81 +43,169 @@ export default function Page() {
   }
 
   const regex = new RegExp(query, "i")
-  const filteredMemberships = subscriptions?.filter(membership => regex.test(membership?.clientName));
+  const filteredMemberships = subscriptions?.filter(membership => {
+    if (paymentFilter !== "all") {
+      const mode = (membership?.paymentMode || "").toString().toLowerCase();
+      if (mode !== paymentFilter) return false;
+    }
+
+    if (!query) return true;
+    const haystack = [
+      activeFields.includes("clientName") && membership?.clientName,
+      activeFields.includes("email") && membership?.email,
+      activeFields.includes("mobileNumber") && membership?.mobileNumber,
+      activeFields.includes("invoice") && membership?.invoice,
+      activeFields.includes("city") && membership?.city,
+      activeFields.includes("description") && membership?.description
+    ].filter(Boolean).join(" ");
+    return regex.test(haystack);
+  });
 
   return (
-    <div className="content-container content-height-screen">
-      <div className="flex items-end justify-between gap-4 pb-4 border-b border-slate-200">
-        <h4>Membership Subscriptions</h4>
-        {/* <p className="text-sm text-slate-500">{subscriptions.length} subscriptions</p> */}
-        <SearchBar query={query} onChange={value => setQuery(value)} />
-        <UpdateInvoiceMeta meta={invoiceMeta} />
+    <div className="content-container content-height-screen space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-slate-200">
+        <div className="space-y-1">
+          <h4 className="leading-tight">Membership Invoices</h4>
+          {/* <p className="text-sm text-slate-600">
+            Find invoices quickly, see paid vs pending, and export clean PDFs.
+          </p> */}
+        </div>
+        <div className="flex w-full gap-3 md:w-auto md:items-center">
+          <SearchBar
+            query={query}
+            onChange={value => setQuery(value)}
+            activeFields={activeFields}
+            onToggleField={setActiveFields}
+            paymentFilter={paymentFilter}
+            onPaymentFilterChange={setPaymentFilter}
+          />
+          <UpdateInvoiceMeta meta={invoiceMeta} />
+        </div>
       </div>
-      <Table className="mt-6">
-        <TableHeader>
-          <TableRow className="[&_th]:text-sm">
-            <TableHead>Client</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>City</TableHead>
-            <TableHead>Invoice</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>End Date</TableHead>
-            <TableHead>Payment Mode</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Invoice PDF</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredMemberships.map((subscription, index) => {
-            const rowKey = subscription._id ?? subscription.historyId ?? `${subscription.clientName}-${index}`;
-            const pdfPayload = {
-              subscription: {
-                amount: Number(subscription.amount) || 0,
-                description: subscription.description || "Membership Subscription",
-                startDate: subscription.startDate,
-                endDate: subscription.endDate,
-                invoice: subscription.invoice,
-                paymentMode: subscription.paymentMode,
-                discount: Number(subscription.discount) || 0,
-                notes: subscription.notes || subscription.description || "Renewal"
-              },
-              client: {
-                name: subscription.clientName,
-                phone: subscription.mobileNumber,
-                email: subscription.email,
-                city: subscription.city
-              }
-            };
-            pdfPayload.invoiceMeta = invoiceMeta ?? {};
-            return (
-              <TableRow key={rowKey}>
-                <TableCell>{subscription.clientName || "-"}</TableCell>
-                <TableCell className="max-w-[160px] text-xs text-slate-600 truncate">{subscription.email || "-"}</TableCell>
-                <TableCell>{subscription.mobileNumber || "-"}</TableCell>
-                <TableCell>{subscription.city || "-"}</TableCell>
-                <TableCell>{subscription.invoice || "-"}</TableCell>
-                <TableCell>{formatDate(subscription.startDate)}</TableCell>
-                <TableCell>{formatDate(subscription.endDate)}</TableCell>
-                <TableCell>{(subscription.paymentMode || "-").toString().toUpperCase()}</TableCell>
-                <TableCell>{formatCurrency(subscription.amount)}</TableCell>
-                <TableCell className="max-w-[200px] text-xs text-slate-600 truncate">{subscription.description || "-"}</TableCell>
-                <TableCell className="whitespace-nowrap pr-2">
-                  <PDFRenderer pdfTemplate="MembershipInvoicePDF" data={pdfPayload}>
-                    <DialogTrigger className="px-3 py-1 rounded-[6px] bg-[var(--accent-1)] text-[12px] font-semibold text-white transition-opacity hover:opacity-90">
-                      PDF
-                    </DialogTrigger>
-                  </PDFRenderer>
-                </TableCell>
+
+      <InvoiceHighlights stats={stats} total={subscriptions.length} />
+
+      <Card className="shadow-sm">
+        {/* <CardHeader className="pb-4 border-b">
+          <CardTitle className="text-base">Invoice list</CardTitle>
+          <CardDescription>Search by client, invoice number, email, or phone.</CardDescription>
+        </CardHeader> */}
+        <CardContent className="p-0">
+          <Table className="text-sm">
+            <TableHeader>
+              <TableRow className="[&_th]:text-xs [&_th]:uppercase [&_th]:tracking-wide [&_th]:text-slate-500 bg-slate-50">
+                <TableHead className="pl-4">Client</TableHead>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead className="text-right pr-4">Amount</TableHead>
+                <TableHead className="text-right pr-5">Invoice PDF</TableHead>
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-      {filteredMemberships.length === 0 && <div className="min-h-[200px] flex items-center justify-center">
-        No invoices found!
-      </div>}
+            </TableHeader>
+            <TableBody>
+              {filteredMemberships.map((subscription, index) => {
+                const rowKey = subscription._id ?? subscription.historyId ?? `${subscription.clientName}-${index}`;
+                const paidAmount = Number(subscription.paidAmount ?? subscription.amount ?? 0);
+                const totalAmount = Number(subscription.amount ?? 0);
+                const pendingAmount = Math.max(totalAmount - paidAmount, 0);
+                const pdfPayload = {
+                  subscription: {
+                    amount: Number(subscription.amount) || 0,
+                    description: subscription.description || "Membership Subscription",
+                    startDate: subscription.startDate,
+                    endDate: subscription.endDate,
+                    invoice: subscription.invoice,
+                    paymentMode: subscription.paymentMode,
+                    discount: Number(subscription.discount) || 0,
+                    notes: subscription.notes || subscription.description || "Renewal",
+                    paidAmount: Number(subscription.paidAmount ?? subscription.amount ?? 0)
+                  },
+                  client: {
+                    name: subscription.clientName,
+                    phone: subscription.mobileNumber,
+                    email: subscription.email,
+                    city: subscription.city
+                  }
+                };
+                pdfPayload.invoiceMeta = invoiceMeta ?? {};
+                return (
+                  <TableRow key={rowKey} className="align-top">
+                    <TableCell className="pl-4">
+                      <div className="space-y-1">
+                        <p className="font-semibold text-slate-900">{subscription.clientName || "-"}</p>
+                        <p className="text-xs text-slate-600">{subscription.email || "No email"}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                          <span>{subscription.mobileNumber || "-"}</span>
+                          {subscription.city && (
+                            <Badge variant="outline" className="border-slate-200 bg-slate-50 text-[11px] font-medium">
+                              {subscription.city}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {subscription.invoice ? (
+                          <Badge variant="outline" className="w-fit border-slate-200">
+                            Invoice #{subscription.invoice}
+                          </Badge>
+                        ) : null}
+                        <p className="text-xs text-slate-600 max-w-[240px] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {subscription.description || "Membership subscription"}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-slate-900">{formatDate(subscription.startDate)} — {formatDate(subscription.endDate)}</div>
+                      {subscription.notes && (
+                        <p className="text-xs text-slate-600 mt-1 max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {subscription.notes}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <PaymentBadge mode={subscription.paymentMode} />
+                    </TableCell>
+                    <TableCell className="text-right pr-4 font-semibold text-slate-900">
+                      <div className="space-y-1">
+                        <div className="text-sm">{formatCurrency(totalAmount)}</div>
+                        <div className="flex justify-end gap-1 text-[11px] text-slate-600">
+                          <Badge variant="wz_fill" className="px-2 py-0 h-6 text-[11px] flex items-center">
+                            Paid {formatCurrency(paidAmount)}
+                          </Badge>
+                          {pendingAmount > 0 && (
+                            <Badge variant="outline" className="px-2 py-0 h-6 text-[11px] flex items-center border-amber-200 bg-amber-50 text-amber-800">
+                              Pending {formatCurrency(pendingAmount)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-5">
+                      <PDFRenderer pdfTemplate="MembershipInvoicePDF" data={pdfPayload}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Download className="size-4" />
+                            PDF
+                          </Button>
+                        </DialogTrigger>
+                      </PDFRenderer>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          {filteredMemberships.length === 0 && (
+            <div className="min-h-[220px] flex flex-col items-center justify-center gap-2 text-center px-4">
+              <FileText className="size-8 text-slate-300" />
+              <p className="text-sm font-medium text-slate-800">No invoices match that search.</p>
+              <p className="text-xs text-slate-500">Try a different client name, email, phone, or invoice number.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -157,13 +250,75 @@ function formatCurrency(value) {
   }).format(amount);
 }
 
-function SearchBar({ query, onChange }) {
-  return <Input
-    value={query}
-    onChange={e => onChange(e.target.value)}
-    className="max-w-md ml-auto"
-    placeholder="search by client name..."
-  />
+function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter, onPaymentFilterChange }) {
+  const filterOptions = [
+    { id: "clientName", label: "Client name" },
+    { id: "email", label: "Email" },
+    { id: "mobileNumber", label: "Phone" },
+    { id: "invoice", label: "Invoice #" },
+    { id: "city", label: "City" },
+    { id: "description", label: "Description" },
+  ];
+
+  const toggleField = (id) => {
+    onToggleField((prev) => {
+      if (prev.includes(id)) return prev.filter(item => item !== id);
+      return [...prev, id];
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-2 w-full md:w-auto">
+      <div className="relative flex-1 md:w-72">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        <Input
+          value={query}
+          onChange={e => onChange(e.target.value)}
+          className="pl-9"
+          placeholder="Search by name, invoice, phone..."
+        />
+      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Filter className="size-4" />
+            Filters
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-3 space-y-2">
+          <p className="text-xs text-slate-500">Search in fields</p>
+          <div className="grid grid-cols-1 gap-2">
+            {filterOptions.map((item) => {
+              const checked = activeFields.includes(item.id);
+              return (
+                <label key={item.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleField(item.id)}
+                    className="accent-[var(--accent-1)]"
+                  />
+                  <span>{item.label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+      <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Payment mode" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All payment modes</SelectItem>
+          <SelectItem value="cash">Cash</SelectItem>
+          <SelectItem value="upi">UPI</SelectItem>
+          <SelectItem value="online">Online / Netbanking</SelectItem>
+          <SelectItem value="card">Card</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
 function UpdateInvoiceMeta({ meta } = {}) {
@@ -307,4 +462,83 @@ function createInvoiceMetaPayload(meta = {}) {
     ifscCode: meta.ifscCode ?? "",
     branch: meta.branch ?? ""
   };
+}
+
+function createInvoiceStats(list = []) {
+  let totalAmount = 0;
+  let collectedAmount = 0;
+  let thisMonth = 0;
+
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  for (const item of list) {
+    const amount = Number(item.amount);
+    const paid = Number(item.paidAmount ?? item.amount);
+
+    if (Number.isFinite(amount)) totalAmount += amount;
+    if (Number.isFinite(paid)) collectedAmount += Math.min(paid, amount || paid);
+
+    const start = item.startDate ? new Date(item.startDate) : null;
+    if (start && start >= monthStart) thisMonth += 1;
+  }
+
+  const pendingAmount = Math.max(totalAmount - collectedAmount, 0);
+
+  return { totalAmount, collectedAmount, pendingAmount, thisMonth };
+}
+
+function InvoiceHighlights({ stats, total }) {
+  const items = [
+    {
+      label: "Total invoices",
+      value: total,
+      helper: "Across all clients"
+    },
+    {
+      label: "Billed this month",
+      value: stats.thisMonth,
+      helper: "Invoices that started this month"
+    },
+    {
+      label: "Collected",
+      value: formatCurrency(stats.collectedAmount),
+      helper: "Total paid"
+    },
+    {
+      label: "Total amount",
+      value: formatCurrency(stats.totalAmount),
+      helper: "All-time billed"
+    },
+    {
+      label: "Pending",
+      value: formatCurrency(stats.pendingAmount),
+      helper: "Outstanding balance"
+    }
+  ];
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      {items.map((item) => (
+        <Card key={item.label} className="py-4 shadow-none border-slate-200 bg-white">
+          <CardHeader className="pb-2">
+            <CardDescription className="text-xs uppercase tracking-wide text-slate-500">{item.label}</CardDescription>
+            <CardTitle className="text-2xl font-semibold text-slate-900">{item.value ?? "-"}</CardTitle>
+            <p className="text-xs text-slate-500">{item.helper}</p>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function PaymentBadge({ mode }) {
+  const value = (mode || "unknown").toString().toUpperCase();
+  const isOnline = ["ONLINE", "UPI", "CARD", "NETBANKING"].includes(value);
+  const variant = isOnline ? "wz" : "outline";
+  return (
+    <Badge variant={variant} className="text-xs px-2 py-1">
+      {value}
+    </Badge>
+  );
 }

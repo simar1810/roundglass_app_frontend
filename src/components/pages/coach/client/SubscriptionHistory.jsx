@@ -2,21 +2,19 @@ import ContentError from "@/components/common/ContentError";
 import Loader from "@/components/common/Loader";
 import FormControl from "@/components/FormControl";
 import AddSubscriptionModal from "@/components/modals/club/AddSubscriptionModal";
+import PDFRenderer from "@/components/modals/PDFRenderer";
 import SelectControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { sendData } from "@/lib/api";
 import { getClientSubscriptions } from "@/lib/fetchers/club";
+import { useAppSelector } from "@/providers/global/hooks";
+import { Eye, FileText, Pen } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import PDFRenderer from "@/components/modals/PDFRenderer"
-import { FileText, Pen, Eye } from "lucide-react"
-import { useAppSelector } from "@/providers/global/hooks";
-import { cn } from "@/lib/utils";
-import { Switch } from "@/components/ui/switch"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function SubscriptionHistory({ _id, clientData }) {
   const { invoiceMeta } = useAppSelector(state => state.coach.data)
