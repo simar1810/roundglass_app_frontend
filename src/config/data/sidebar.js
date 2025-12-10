@@ -107,7 +107,7 @@ export const sidebar__coachContent = [
         id: 5,
         icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,
         title: "Invoices",
-        url: "/coach/clients/invoices"
+        url: "/coach/invoices"
       }
     ],
   },
@@ -511,6 +511,12 @@ export const sidebar__coachContent = [
         icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
         title: "Questionaire",
         url: "/coach/tools/questionaire"
+      },
+      {
+        id: 11,
+        icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Health Matrix Fields",
+        url: "/coach/tools/health-matrix-fields"
       },
     ],
   },

@@ -36,6 +36,118 @@ import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
 import { _throwError } from "@/lib/formatter";
 import { extractNumber } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { useMemo } from "react";
+
+const SVG_ICONS = [
+  "/svgs/body.svg",      // 0
+  "/svgs/check.svg",     // 1
+  "/svgs/checklist.svg", // 2
+  "/svgs/bmi.svg",       // 3
+  "/svgs/cutlery.svg",   // 4
+  "/svgs/fat.svg",       // 5
+  "/svgs/fats.svg",      // 6
+  "/svgs/muscle.svg",    // 7
+  "/svgs/meta.svg",      // 8
+  "/svgs/person.svg",    // 9
+  "/svgs/weight.svg",    // 10
+  "/svgs/flame-icon.svg",// 11
+  "/svgs/marathon.svg",  // 12
+  "/svgs/users-icon.svg",// 13
+];
+
+const DEFAULT_FORM_FIELDS = [
+  {
+    label: "BMI",
+    value: "23.4",
+    desc: "Healthy",
+    info: "Optimal: 18–23\nOverweight: 23–27\nObese: 27–32",
+    icon: "/svgs/bmi.svg",
+    name: "bmi",
+    title: "BMI",
+    id: 1,
+    getMaxValue: () => 25,
+    getMinValue: () => 18,
+  },
+  {
+    label: "Muscle",
+    value: "15%",
+    info: "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
+    icon: "/svgs/muscle.svg",
+    name: "muscle",
+    title: "Muscle",
+    id: 2,
+    getMaxValue: () => 45,
+    getMinValue: () => 30,
+  },
+  {
+    label: "Fat",
+    value: "15%",
+    info: "Optimal Range:\n10–20% for Men\n20–30% for Women",
+    icon: "/svgs/fats.svg",
+    name: "fat",
+    title: "Fat",
+    id: 3,
+    getMaxValue: () => 20,
+    getMinValue: () => 10,
+  },
+  {
+    label: "Resting Metabolism",
+    value: "15%",
+    info: "Optimal Range: Varies by age,\ngender, and activity level",
+    icon: "/svgs/meta.svg",
+    name: "rm",
+    title: "Resting Metabolism",
+    id: 4,
+    getMaxValue: () => 3000,
+    getMinValue: () => 1500,
+  },
+  {
+    label: "Weight",
+    value: "65 Kg",
+    desc: "Ideal 75",
+    info: "Ideal weight Range:\n118. This varies by height and weight",
+    icon: "/svgs/weight.svg",
+    name: "ideal_weight",
+    title: "Ideal Weight",
+    id: 5,
+    getMaxValue: ({ value }) => value + 5,
+    getMinValue: ({ value }) => value - 5,
+  },
+  {
+    label: "Body Age",
+    value: "26",
+    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "bodyAge",
+    title: "Body Age",
+    id: 6,
+    getMaxValue: () => 67,
+    getMinValue: () => 33,
+  },
+  {
+    label: "Subcuatneous Fat",
+    value: "26",
+    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "sub_fat",
+    title: "Subcutaneous Fat",
+    id: 7,
+    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
+    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+  },
+  {
+    label: "Visceral Fat",
+    value: "26",
+    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "visceral_fat",
+    title: "Visceral Fat",
+    id: 8,
+    getMaxValue: () => 12,
+    getMinValue: () => 1,
+  },
+];
 
 export default function FollowUpModal({ clientData }) {
   if (!clientData.healthMatrix) return <></>
@@ -175,8 +287,36 @@ function Stage2({
   clientId
 }) {
   const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
+  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
 
   const closeBtnRef = useRef();
+
+  const formFields = useMemo(() => {
+    if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
+
+    const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
+
+    // Filter default fields
+    const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
+      defaultFields.includes(field.name) ||
+      (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
+    );
+
+    // Map coach added fields
+    const customFields = coachAddedFields.map(field => ({
+      label: field.title,
+      value: "0",
+      info: `Range: ${field.minValue} - ${field.maxValue}`,
+      icon: SVG_ICONS[field.svg] || "/svgs/checklist.svg",
+      name: field.fieldLabel,
+      title: field.title,
+      id: field._id || field.fieldLabel,
+      getMaxValue: () => field.maxValue,
+      getMinValue: () => field.minValue,
+    }));
+
+    return [...activeDefaultFields, ...customFields];
+  }, [coachHealthMatrixFields]);
 
   const payload = {
     ...healthMatrix,
@@ -206,7 +346,8 @@ function Stage2({
 
   async function createFollowUp() {
     try {
-      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj })
+      const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
+      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj }, extraFields)
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
       if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
@@ -233,6 +374,8 @@ function Stage2({
           <HealthMetrics
             onUpdate={onUpdateHealthMatrix}
             data={payload}
+            fields={formFields}
+            showAll={true}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-10">

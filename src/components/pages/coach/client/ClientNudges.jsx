@@ -954,7 +954,7 @@ function NotificationSchedule({
   </TabsContent>
 }
 
-function NotificationItem({ notif }) {
+export function NotificationItem({ notif }) {
   const { id } = useParams();
   const [selectedStatusImage, setSelectedStatusImage] = useState(null);
   const [showStatusImage, setShowStatusImage] = useState(false);

@@ -43,7 +43,7 @@ export default function Page() {
         <div className="mt-6 grid grid-cols-2 gap-4">
           {notifications.map(notification => <NotificationItem
             key={notification._id}
-            item={notification}
+            notif={notification}
           />)}
         </div>
         <Paginate
