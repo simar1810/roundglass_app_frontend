@@ -311,7 +311,7 @@ export function retrieveAIAgentHistory(clientId, date) {
 export function sendHealthMessages(queryText, dateString) {
   const dateParam = dateString ? `&date=${encodeURIComponent(dateString)}` : "";
   const endpoint = `app/ai/analyze?person=client${dateParam}`
-  return sendData(endpoint, {query: queryText}, "POST")
+  return sendData(endpoint, { query: queryText }, "POST")
 }
 export async function sendHealthImage(file, dateString) {
   const dateParam = dateString ? `&date=${encodeURIComponent(dateString)}` : "";
@@ -553,4 +553,16 @@ export async function getSmartActivity({ person = "client", token, startDate, en
   });
 
   return res.json();
+}
+
+export function getWaterLog(clientId, date = null, page = null, limit = null) {
+  let endpoint = `app/water-log?person=coach&clientId=${clientId}`;
+  if (date) {
+    endpoint += `&date=${date}`;
+  }
+  // Add pagination params only if provided (for server-side pagination if API supports it)
+  if (page !== null && limit !== null) {
+    endpoint += `&page=${page}&limit=${limit}`;
+  }
+  return fetchData(endpoint);
 }

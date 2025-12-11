@@ -108,16 +108,16 @@ export function init(data) {
 }
 
 const fields = ["weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
-export function generateRequestPayload(state, forIdealWeight) {
+export function generateRequestPayload(state, forIdealWeight, extraFields = []) {
   const payload = {
     healthMatrix: {}
   };
-  if (["kg", "kgs"].includes(state.healthMatrix["weightUnit"].toLowerCase())) {
+  if (["kg", "kgs"].includes(state.healthMatrix["weightUnit"]?.toLowerCase())) {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInKgs);
   } else {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInPounds);
   };
-  if (["cm", "cms"].includes(state.healthMatrix["heightUnit"].toLowerCase())) {
+  if (["cm", "cms"].includes(state.healthMatrix["heightUnit"]?.toLowerCase())) {
     payload.healthMatrix.height = String(state.healthMatrix["heightCms"]);
   } else {
     payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
@@ -130,6 +130,14 @@ export function generateRequestPayload(state, forIdealWeight) {
     ...state,
     ...state.healthMatrix
   })?.subcutaneousPercent)
+
+  // Add custom fields to healthMatrix
+  for (const field of extraFields) {
+    if (state.healthMatrix[field] !== undefined && state.healthMatrix[field] !== null) {
+      payload.healthMatrix[field] = String(state.healthMatrix[field]);
+    }
+  }
+
   payload.nextFollowUpDate = (state.healthMatrix.followUpType === "custom")
     ? format(parse(state.nextFollowUpDate, 'yyyy-MM-dd', new Date()), 'dd-MM-yyyy')
     : format(addDays(new Date(), 8), 'dd-MM-yyyy');

@@ -150,11 +150,21 @@ export function stage1Completed(state, stage) {
   return { success: true };
 }
 
-export function generateRequestPayload(state, coachId, existingClientID) {
+export function generateRequestPayload(state, coachId, existingClientID, extraFields = []) {
   const formData = new FormData();
+
+  // Add hardcoded fields
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
+
+  // Add each custom field as a separate body variable
+  for (const field of extraFields) {
+    if (state[field] !== undefined && state[field] !== null) {
+      formData.append(field, state[field]);
+    }
+  }
+
   if (state.weightUnit?.toLowerCase() === "kg") {
     formData.append("weight", state["weightInKgs"]);
   } else {

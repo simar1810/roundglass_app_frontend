@@ -134,7 +134,7 @@ const weightDabba = {
   optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
 }
 
-export default function HealthMetrics({ data, onUpdate }) {
+export default function HealthMetrics({ data, onUpdate, fields, showAll = false }) {
   const payload = {
     bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
     muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
@@ -149,7 +149,9 @@ export default function HealthMetrics({ data, onUpdate }) {
     weightInPounds: updateWeightField() === "weightInPounds"
       ? extractNumber(data.weightInPounds)
       : undefined,
-    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
+    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent,
+    // Add support for custom fields dynamically if needed
+    ...data
   };
 
   function updateWeightField() {
@@ -158,32 +160,37 @@ export default function HealthMetrics({ data, onUpdate }) {
     } else return "weightInPounds"
   }
 
+  // Use fields prop if provided, otherwise use default healtMetrics
+  const metricsToDisplay = fields || healtMetrics;
+
   try {
     return (
       <>
-        {healtMetrics
+        {metricsToDisplay
           .filter((metric) =>
-            !isNaN(payload[metric.name]) &&
-            payload[metric.name] !== 0 &&
-            payload[metric.name] !== ""
+            showAll || (
+              !isNaN(payload[metric.name]) &&
+              payload[metric.name] !== 0 &&
+              payload[metric.name] !== ""
+            )
           )
           .map((metric) => (
             <MetricProgress
-              key={metric.id}
+              key={metric.id || metric.name}
               {...metric}
-              value={payload[metric.name]}
-              maxPossibleValue={metric.getMaxValue({
-                value: payload[metric.name],
+              value={payload[metric.name] || 0}
+              maxPossibleValue={metric.getMaxValue ? metric.getMaxValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
-              maxThreshold={metric.getMaxValue({
-                value: payload[metric.name],
+              }) : (metric.maxValue || 100)}
+              maxThreshold={metric.getMaxValue ? metric.getMaxValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
-              minThreshold={metric.getMinValue({
-                value: payload[metric.name],
+              }) : (metric.maxValue || 100)}
+              minThreshold={metric.getMinValue ? metric.getMinValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
+              }) : (metric.minValue || 0)}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -293,7 +300,7 @@ function EditHealthMatric({
       <Pencil className="w-4 h-4 absolute bottom-2 right-2" />
     </DialogTrigger>
     <DialogContent className="p-0 gap-0">
-      <DialogHeader className="p-4 border-b-1">
+      <DialogHeader className="p-4 border-b">
         <DialogTitle>Edit Health Matrix</DialogTitle>
       </DialogHeader>
       <div className="max-h-[65vh] h-full overflow-y-auto p-4">

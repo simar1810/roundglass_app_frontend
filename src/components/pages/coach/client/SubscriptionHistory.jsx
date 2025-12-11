@@ -204,6 +204,8 @@ function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmou
   const [paidAmount, setPaidAmount] = useState(subscription.paidAmount || "");
   const [loading, setLoading] = useState(false);
 
+  const closeBtnRef = useRef()
+
   // if pending amount is 0, then return
   if (pendingAmount === 0) {
     return null;
@@ -217,7 +219,7 @@ function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmou
         clientId,
         paidAmount
       }
-      console.log(payload)
+
       if (paidAmount > pendingAmount) {
         toast.error("Paid amount cannot be greater than pending amount");
         return;
@@ -229,9 +231,10 @@ function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmou
       }
 
       const response = await sendData("subscription/pending-payment", payload, "POST");
-      if (!response.status) throw new Error(response.message);
+      if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      mutate(`getClientSubscriptions/${_id}`)
+      mutate(`getClientSubscriptions/${clientId}`)
+      closeBtnRef.current.click()
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -241,6 +244,7 @@ function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmou
 
   return (
     <Dialog>
+      <DialogClose ref={closeBtnRef} />
       <DialogTrigger>
         <Pen className="w-3 h-3 ml-auto block text-gray-500 hover:text-gray-700 cursor-pointer" />
       </DialogTrigger>
