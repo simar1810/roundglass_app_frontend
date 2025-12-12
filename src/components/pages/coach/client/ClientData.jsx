@@ -20,15 +20,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { sendData } from "@/lib/api";
-import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask, getWaterLog } from "@/lib/fetchers/app";
+import { fetchData, sendData } from "@/lib/api";
+import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
 import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, Users, Utensils } from "lucide-react";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,8 +41,7 @@ import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
-import Paginate from "@/components/Paginate";
-import AddWaterLogModal from "@/components/modals/client/AddWaterLogModal";
+import Loader from "@/components/common/Loader";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -52,11 +50,11 @@ const tabItems = [
   { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: ({ organisation }) => organisation.toLowerCase() === "herbalife" },
   { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
-  { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
+  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
 ]
 
 export default function ClientData({ clientData }) {
@@ -83,11 +81,13 @@ export default function ClientData({ clientData }) {
       <ClientClubDataComponent clientData={clientData} />
       <MarathonData clientData={clientData} />
       <WorkoutContainer id={clientData._id} />
-      <WaterLogData clientId={clientData._id} />
       <AIAgentHistory />
       <ClientReports />
       <CaseFile sections={clientData.onboarding_questionaire || []} />
       <PhysicalClub />
+      <TabsContent value="adherence">
+        <ClientAdherenceScore clientId={clientData.clientId} />
+      </TabsContent>
     </Tabs>
   </div>
 }
@@ -592,122 +592,6 @@ function WorkoutContainer({ id }) {
   </TabsContent>
 }
 
-function WaterLogData({ clientId }) {
-  const [date, setDate] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-  const dateString = date || null;
-
-  // Fetch all records (API might return all regardless of pagination params)
-  const { isLoading, error, data } = useSWR(
-    `app/water-log?person=coach&clientId=${clientId}${dateString ? `&date=${dateString}` : ""}`,
-    () => getWaterLog(clientId, dateString)
-  );
-
-  if (isLoading) return <TabsContent value="water-log">
-    <ContentLoader />
-  </TabsContent>
-
-  if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="water-log">
-    <ContentError className="mt-0" title={error || data?.message} />
-  </TabsContent>
-
-  // Get all water logs from API
-  const allWaterLogs = data?.data?.results || data?.data || [];
-
-  // Apply client-side pagination
-  const totalResults = allWaterLogs.length;
-  const totalPages = Math.ceil(totalResults / pagination.limit);
-  const startIndex = (pagination.page - 1) * pagination.limit;
-  const endIndex = startIndex + pagination.limit;
-  const waterLogs = allWaterLogs.slice(startIndex, endIndex);
-
-  // Format date to dd-MM-yyyy
-  const formatDate = (dateValue) => {
-    if (!dateValue) return "";
-    try {
-      const dateObj = new Date(dateValue);
-      if (isNaN(dateObj.getTime())) {
-        // If it's already in dd-MM-yyyy format, return as is
-        if (typeof dateValue === "string" && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
-          return dateValue;
-        }
-        return dateValue;
-      }
-      return format(dateObj, "dd-MM-yyyy");
-    } catch {
-      return dateValue;
-    }
-  };
-
-  return <TabsContent value="water-log">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-[var(--dark-1)] font-semibold text-lg">Water Log</h3>
-      <div className="flex items-center gap-2">
-        <AddWaterLogModal clientId={clientId} />
-        <DatePicker
-          date={date}
-          setDate={(newDate) => {
-            setDate(newDate);
-            setPagination({ page: 1, limit: pagination.limit });
-          }}
-        />
-        {date && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setDate(null);
-              setPagination({ page: 1, limit: pagination.limit });
-            }}
-            className="text-xs"
-          >
-            Clear
-          </Button>
-        )}
-      </div>
-    </div>
-    <div className="bg-white overflow-x-auto rounded-[10px] border-1">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Amount (ml)</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {waterLogs.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={2} className="text-center text-muted-foreground">
-                No water log entries found
-              </TableCell>
-            </TableRow>
-          ) : (
-            waterLogs.map((item) => (
-              <TableRow key={item._id}>
-                <TableCell>{formatDate(item.date || item.createdAt || item.createdDate)}</TableCell>
-                <TableCell>{item.amount || item.quantity || item.waterAmount} ml</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
-    {allWaterLogs.length > 0 && (
-      <div className="mt-4">
-        <Paginate
-          totalPages={totalPages}
-          totalResults={totalResults}
-          limit={pagination.limit}
-          page={pagination.page}
-          onChange={(newPagination) => {
-            setPagination(newPagination);
-          }}
-        />
-      </div>
-    )}
-  </TabsContent>
-}
-
 export function WorkoutDetails({ workout }) {
   if (workout.custom) return <Link
     href={`/coach/workouts/list-custom/${workout._id}`}
@@ -759,4 +643,22 @@ function CaseFile({ sections }) {
   return <TabsContent value="case-file">
     <DisplayClientQuestionaire data={sections} />
   </TabsContent>
+}
+
+function ClientAdherenceScore({ clientId }) {
+  const endpoint = useMemo(() => `app/client/adherence-score?person=coach&clientId=${clientId}`, [clientId])
+  const { isLoading, error, data, mutate } = useSWR(
+    endpoint, () => fetchData(endpoint)
+  );
+
+  if (isLoading) return <Loader />
+
+  if (error || data.status_code !== 200) return <div>
+    <Button onClick={mutate}>mutate</Button>
+    {error?.message || data.message}
+  </div>
+
+  return <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+
+  </div>
 }
