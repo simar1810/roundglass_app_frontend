@@ -22,7 +22,9 @@ export function clientStatisticsPDFData(data, statistics, coach, index) {
     bodyComposition: statistics?.at(index)?.body_composition,
     coachName: coach.name,
     coachDescription: coach.specialization,
-    coachProfileImage: coach.profilePhoto
+    coachProfileImage: coach.profilePhoto,
+    coachWeightLoss: coach.weightLoss,
+    coachAbout: coach.about,
   }
 }
 

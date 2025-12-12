@@ -20,15 +20,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { sendData } from "@/lib/api";
+import { fetchData, sendData } from "@/lib/api";
 import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask, getWaterLog } from "@/lib/fetchers/app";
 import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, Users, Utensils } from "lucide-react";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Droplet, Clock, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,8 +41,10 @@ import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
+import Loader from "@/components/common/Loader";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Paginate from "@/components/Paginate";
-import AddWaterLogModal from "@/components/modals/client/AddWaterLogModal";
+import AddWaterLogModal from "@/components/client/AddWaterLogModal";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -57,6 +58,7 @@ const tabItems = [
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
+  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
 ]
 
 export default function ClientData({ clientData }) {
@@ -83,11 +85,14 @@ export default function ClientData({ clientData }) {
       <ClientClubDataComponent clientData={clientData} />
       <MarathonData clientData={clientData} />
       <WorkoutContainer id={clientData._id} />
-      <WaterLogData clientId={clientData._id} />
       <AIAgentHistory />
+      <WaterLogData clientId={clientData._id} />
       <ClientReports />
       <CaseFile sections={clientData.onboarding_questionaire || []} />
       <PhysicalClub />
+      <TabsContent value="adherence">
+        <ClientAdherenceScore clientId={clientData.clientId} />
+      </TabsContent>
     </Tabs>
   </div>
 }
@@ -608,7 +613,7 @@ function WaterLogData({ clientId }) {
   </TabsContent>
 
   if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="water-log">
-    <ContentError className="mt-0" title={error || data?.message} />
+    <ContentError className="mt-0" title={error?.message || data?.message} />
   </TabsContent>
 
   // Get all water logs from API
@@ -643,7 +648,7 @@ function WaterLogData({ clientId }) {
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-[var(--dark-1)] font-semibold text-lg">Water Log</h3>
       <div className="flex items-center gap-2">
-        <AddWaterLogModal clientId={clientId} />
+        {/* <AddWaterLogModal clientId={clientId} /> */}
         <DatePicker
           date={date}
           setDate={(newDate) => {
@@ -759,4 +764,127 @@ function CaseFile({ sections }) {
   return <TabsContent value="case-file">
     <DisplayClientQuestionaire data={sections} />
   </TabsContent>
+}
+
+function ClientAdherenceScore({ clientId }) {
+  const [date, setDate] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+
+  const endpoint = useMemo(() => `app/client/adherence-score?person=coach&clientId=${clientId}`, [clientId])
+  const { isLoading, error, data, mutate } = useSWR(
+    endpoint, () => fetchData(endpoint)
+  );
+
+  if (isLoading) return <Loader />
+
+  if (error || !data || data?.status_code !== 200) return <div>
+    <Button onClick={mutate}>Retry</Button>
+    {error?.message || data?.message || "Error loading data"}
+  </div>
+
+  const adherenceData = data?.data || {};
+  const currentScore = adherenceData.adherenceScore;
+  let history = adherenceData.adherenceScoreHistory || [];
+
+  const formatDateHelper = (dateValue) => {
+    if (!dateValue) return "";
+    try {
+      const dateObj = new Date(dateValue);
+      if (isNaN(dateObj.getTime())) {
+        if (typeof dateValue === "string" && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+          return dateValue;
+        }
+        return dateValue;
+      }
+      return format(dateObj, "dd-MM-yyyy");
+    } catch {
+      return dateValue;
+    }
+  };
+
+  // Filter by date if selected
+  if (date) {
+    history = history.filter(item => {
+      const itemDate = formatDateHelper(item.date);
+      return itemDate === date;
+    });
+  }
+
+  // Pagination
+  const totalResults = history.length;
+  const totalPages = Math.ceil(totalResults / pagination.limit);
+  const startIndex = (pagination.page - 1) * pagination.limit;
+  const endIndex = startIndex + pagination.limit;
+  const paginatedHistory = history.slice(startIndex, endIndex);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[var(--dark-1)] font-semibold text-lg">Adherence Score</h3>
+          <p className="text-sm text-muted-foreground mt-1">Current Score: <span className="font-bold text-[var(--accent-1)]">{currentScore != null ? parseFloat(currentScore).toFixed(2) : "N/A"}</span></p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DatePicker
+            date={date}
+            setDate={(newDate) => {
+              setDate(newDate);
+              setPagination({ page: 1, limit: pagination.limit });
+            }}
+          />
+          {date && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDate(null);
+                setPagination({ page: 1, limit: pagination.limit });
+              }}
+              className="text-xs"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white overflow-x-auto rounded-[10px] border-1">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedHistory.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center text-muted-foreground">
+                  No entries found
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedHistory.map((item) => (
+                <TableRow key={item._id}>
+                  <TableCell>{formatDateHelper(item.date)}</TableCell>
+                  <TableCell>{item.score != null ? parseFloat(item.score).toFixed(2) : "N/A"}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {history.length > 0 && (
+        <Paginate
+          key={date}
+          totalPages={totalPages}
+          totalResults={totalResults}
+          limit={pagination.limit}
+          page={pagination.page}
+          onChange={(newPagination) => setPagination(newPagination)}
+        />
+      )}
+    </div>
+  );
 }

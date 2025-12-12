@@ -64,12 +64,12 @@ export default function AddWaterLogModal({ clientId }) {
 
       toast.success(response.message || "Water log added successfully!");
       closeBtnRef.current?.click();
-      
+
       // Reset form
       setSelectedDate(new Date());
       setTime("");
       setAmount("");
-      
+
       // Refresh water log data
       mutate((key) => typeof key === "string" && key.includes("app/water-log"));
     } catch (error) {
@@ -153,4 +153,3 @@ export default function AddWaterLogModal({ clientId }) {
     </Dialog>
   );
 }
-
