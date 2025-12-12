@@ -1,23 +1,19 @@
 "use client";
 
-import useSWR from "swr";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import PDFRenderer from "@/components/modals/PDFRenderer";
+import useSWR from "swr";
 
-import React from "react";
+import { getCustomMealPlans } from "@/lib/fetchers/app";
 import {
   Document,
-  Page as PDFPage,
-  Text,
-  View,
-  Image,
-  StyleSheet,
   Font,
+  Page as PDFPage,
   PDFViewer,
+  StyleSheet,
+  Text
 } from "@react-pdf/renderer";
 import { useParams } from "next/navigation";
-import { getCustomMealPlans } from "@/lib/fetchers/app";
 
 Font.register({ family: "NotoSans", src: "/fonts/Roboto-Regular.ttf" });
 
