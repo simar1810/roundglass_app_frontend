@@ -42,6 +42,8 @@ import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
 import Loader from "@/components/common/Loader";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Paginate from "@/components/Paginate";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -646,6 +648,9 @@ function CaseFile({ sections }) {
 }
 
 function ClientAdherenceScore({ clientId }) {
+  const [date, setDate] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+
   const endpoint = useMemo(() => `app/client/adherence-score?person=coach&clientId=${clientId}`, [clientId])
   const { isLoading, error, data, mutate } = useSWR(
     endpoint, () => fetchData(endpoint)
@@ -653,12 +658,114 @@ function ClientAdherenceScore({ clientId }) {
 
   if (isLoading) return <Loader />
 
-  if (error || data.status_code !== 200) return <div>
-    <Button onClick={mutate}>mutate</Button>
-    {error?.message || data.message}
+  if (error || !data || data?.status_code !== 200) return <div>
+    <Button onClick={mutate}>Retry</Button>
+    {error?.message || data?.message || "Error loading data"}
   </div>
 
-  return <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+  const adherenceData = data?.data || {};
+  const currentScore = adherenceData.adherenceScore;
+  let history = adherenceData.adherenceScoreHistory || [];
 
-  </div>
+  const formatDateHelper = (dateValue) => {
+    if (!dateValue) return "";
+    try {
+      const dateObj = new Date(dateValue);
+      if (isNaN(dateObj.getTime())) {
+        if (typeof dateValue === "string" && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+          return dateValue;
+        }
+        return dateValue;
+      }
+      return format(dateObj, "dd-MM-yyyy");
+    } catch {
+      return dateValue;
+    }
+  };
+
+  // Filter by date if selected
+  if (date) {
+    history = history.filter(item => {
+      const itemDate = formatDateHelper(item.date);
+      return itemDate === date;
+    });
+  }
+
+  // Pagination
+  const totalResults = history.length;
+  const totalPages = Math.ceil(totalResults / pagination.limit);
+  const startIndex = (pagination.page - 1) * pagination.limit;
+  const endIndex = startIndex + pagination.limit;
+  const paginatedHistory = history.slice(startIndex, endIndex);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[var(--dark-1)] font-semibold text-lg">Adherence Score</h3>
+          <p className="text-sm text-muted-foreground mt-1">Current Score: <span className="font-bold text-[var(--accent-1)]">{currentScore != null ? parseFloat(currentScore).toFixed(2) : "N/A"}</span></p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DatePicker
+            date={date}
+            setDate={(newDate) => {
+              setDate(newDate);
+              setPagination({ page: 1, limit: pagination.limit });
+            }}
+          />
+          {date && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDate(null);
+                setPagination({ page: 1, limit: pagination.limit });
+              }}
+              className="text-xs"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white overflow-x-auto rounded-[10px] border-1">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedHistory.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center text-muted-foreground">
+                  No entries found
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedHistory.map((item) => (
+                <TableRow key={item._id}>
+                  <TableCell>{formatDateHelper(item.date)}</TableCell>
+                  <TableCell>{item.score != null ? parseFloat(item.score).toFixed(2) : "N/A"}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {history.length > 0 && (
+        <Paginate
+          key={date}
+          totalPages={totalPages}
+          totalResults={totalResults}
+          limit={pagination.limit}
+          page={pagination.page}
+          onChange={(newPagination) => setPagination(newPagination)}
+        />
+      )}
+    </div>
+  );
 }
