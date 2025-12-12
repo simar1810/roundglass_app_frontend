@@ -31,7 +31,7 @@ import { BarChart2, Bot, Briefcase, CalendarIcon, Droplet, Clock, Dumbbell, Eye,
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import PDFRenderer from "@/components/modals/PDFRenderer";
@@ -60,6 +60,50 @@ const tabItems = [
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
 ]
+
+const ADHERENCE_SCORE_RANGES = [
+  {
+    label: "Excellent",
+    min: 80,
+    max: 100,
+    description: "You’re consistently performing at the top level and mastering your skills.",
+  },
+  {
+    label: "Good",
+    min: 60,
+    max: 79,
+    description: "You have a solid grasp and are on the right track, with room to improve.",
+  },
+  {
+    label: "Average",
+    min: 40,
+    max: 59,
+    description: "You’re doing okay, but there are key areas that need more focus.",
+  },
+  {
+    label: "Below Average",
+    min: 20,
+    max: 39,
+    description: "You may be struggling in some areas and should consider extra practice.",
+  },
+  {
+    label: "Poor",
+    min: 0,
+    max: 19,
+    description: "Significant improvement is needed; it’s time to reassess your approach and strategy.",
+  },
+];
+
+const GAUGE_RADIUS = 90;
+const GAUGE_LENGTH = Math.PI * GAUGE_RADIUS;
+
+function tooltipVisibilityClass(isVisible) {
+  return isVisible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0";
+}
+
+function getAdherenceRangeForScore(score) {
+  return ADHERENCE_SCORE_RANGES.find(range => score >= range.min) || ADHERENCE_SCORE_RANGES[ADHERENCE_SCORE_RANGES.length - 1];
+}
 
 export default function ClientData({ clientData }) {
   const router = useRouter();
@@ -769,18 +813,14 @@ function CaseFile({ sections }) {
 function ClientAdherenceScore({ clientId }) {
   const [date, setDate] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const tooltipHideTimeout = useRef(null);
 
   const endpoint = useMemo(() => `app/client/adherence-score?person=coach&clientId=${clientId}`, [clientId])
   const { isLoading, error, data, mutate } = useSWR(
     endpoint, () => fetchData(endpoint)
   );
 
-  if (isLoading) return <Loader />
-
-  if (error || !data || data?.status_code !== 200) return <div>
-    <Button onClick={mutate}>Retry</Button>
-    {error?.message || data?.message || "Error loading data"}
-  </div>
 
   const adherenceData = data?.data || {};
   const currentScore = adherenceData.adherenceScore;
@@ -810,6 +850,55 @@ function ClientAdherenceScore({ clientId }) {
     });
   }
 
+  const handleDatePickerChange = (newDate) => {
+    setDate(newDate);
+    setPagination(prev => ({ page: 1, limit: prev.limit }));
+  };
+
+  const clearDateFilter = () => {
+    setDate(null);
+    setPagination(prev => ({ page: 1, limit: prev.limit }));
+  };
+
+  const parsedScore = parseFloat(currentScore);
+  const hasScore = Number.isFinite(parsedScore);
+  const normalizedScore = hasScore ? Math.min(Math.max(parsedScore, 0), 100) : 0;
+  const targetRatio = hasScore ? normalizedScore / 100 : 0;
+  const gradientId = useMemo(() => `adherence-gradient-${clientId}`, [clientId]);
+  const [animatedRatio, setAnimatedRatio] = useState(0);
+  const animationStartRef = useRef(null);
+  const activeRange = hasScore ? getAdherenceRangeForScore(normalizedScore) : null;
+
+  useEffect(() => {
+    animationStartRef.current = null;
+    let frame;
+    const duration = 1200;
+    const animate = (timestamp) => {
+      if (animationStartRef.current === null) {
+        animationStartRef.current = timestamp;
+      }
+      const elapsed = timestamp - animationStartRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimatedRatio(progress * targetRatio);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      animationStartRef.current = null;
+    };
+  }, [targetRatio]);
+
+  useEffect(() => {
+    return () => {
+      if (tooltipHideTimeout.current) {
+        clearTimeout(tooltipHideTimeout.current);
+      }
+    };
+  }, []);
+
   // Pagination
   const totalResults = history.length;
   const totalPages = Math.ceil(totalResults / pagination.limit);
@@ -817,74 +906,177 @@ function ClientAdherenceScore({ clientId }) {
   const endIndex = startIndex + pagination.limit;
   const paginatedHistory = history.slice(startIndex, endIndex);
 
+  if (isLoading) return <Loader />
+
+  if (error || !data || data?.status_code !== 200) return <div>
+    <Button onClick={mutate}>Retry</Button>
+    {error?.message || data?.message || "Error loading data"}
+  </div>
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-[var(--dark-1)] font-semibold text-lg">Adherence Score</h3>
-          <p className="text-sm text-muted-foreground mt-1">Current Score: <span className="font-bold text-[var(--accent-1)]">{currentScore != null ? parseFloat(currentScore).toFixed(2) : "N/A"}</span></p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Current Score:
+            <span className="font-bold text-[var(--accent-1)] ml-1">
+              {hasScore ? normalizedScore.toFixed(0) : "N/A"}
+            </span>
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <DatePicker
-            date={date}
-            setDate={(newDate) => {
-              setDate(newDate);
-              setPagination({ page: 1, limit: pagination.limit });
-            }}
-          />
-          {date && (
+        <div
+          className="relative inline-flex"
+          onMouseEnter={() => {
+            if (tooltipHideTimeout.current) {
+              clearTimeout(tooltipHideTimeout.current);
+            }
+            setTooltipVisible(true);
+          }}
+          onMouseLeave={() => {
+            tooltipHideTimeout.current = setTimeout(() => {
+              setTooltipVisible(false);
+            }, 80);
+          }}
+        >
+          <div className="inline-flex text-left">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setDate(null);
-                setPagination({ page: 1, limit: pagination.limit });
-              }}
-              className="text-xs"
+              className="text-xs px-4"
             >
-              Clear
+              History
             </Button>
-          )}
+            <div
+              className={`absolute right-0 top-full z-50 mt-2 w-[min(90vw,520px)] min-w-[280px] max-h-[520px] overflow-auto rounded-[16px] border bg-white p-4 shadow-lg transition-opacity duration-200 ${tooltipVisibilityClass(isTooltipVisible)}`}
+            >
+              <div className="space-y-4 text-[var(--dark-1)]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <DatePicker date={date} setDate={handleDatePickerChange} />
+                  {date && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={clearDateFilter}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                <div className="max-h-[280px] overflow-auto rounded-[10px] border bg-white">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedHistory.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={2} className="text-center text-muted-foreground">
+                            No entries found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedHistory.map((item) => (
+                          <TableRow key={item._id}>
+                            <TableCell>{formatDateHelper(item.date)}</TableCell>
+                            <TableCell>{item.score != null ? parseFloat(item.score).toFixed(2) : "N/A"}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {history.length > 0 ? (
+                  <Paginate
+                    key={date}
+                    totalPages={totalPages}
+                    totalResults={totalResults}
+                    limit={pagination.limit}
+                    page={pagination.page}
+                    onChange={(newPagination) => setPagination(newPagination)}
+                  />
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground">No history yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white overflow-x-auto rounded-[10px] border-1">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Score</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedHistory.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center text-muted-foreground">
-                  No entries found
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedHistory.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell>{formatDateHelper(item.date)}</TableCell>
-                  <TableCell>{item.score != null ? parseFloat(item.score).toFixed(2) : "N/A"}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      <div className="grid gap-4 md:grid-cols-1">
+        <div className="bg-white border rounded-[12px] p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Live adherence gauge</p>
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-(--accent-1)">
+              {activeRange?.label ?? "No Data"}
+            </span>
+          </div>
+          <div className="relative mt-4 flex justify-center">
+            <div className="relative h-[140px] w-full max-w-[280px] overflow-hidden">
+              <svg viewBox="0 0 220 120" className="h-full w-full">
+                <defs>
+                  <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#5B5FD8" />
+                    <stop offset="100%" stopColor="#43E3FF" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M20 110 A 90 90 0 0 1 200 110"
+                  fill="transparent"
+                  stroke="rgba(0,0,0,0.05)"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M20 110 A 90 90 0 0 1 200 110"
+                  fill="transparent"
+                  stroke={`url(#${gradientId})`}
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeDasharray={GAUGE_LENGTH.toFixed(2)}
+                  strokeDashoffset={(GAUGE_LENGTH * (1 - animatedRatio)).toFixed(2)}
+                  style={{ transition: "stroke-dashoffset 0.2s ease-out" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <p className="text-[32px] font-semibold text-(--dark-1)">
+                  {hasScore ? normalizedScore.toFixed(0) : "N/A"}
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground mt-1">
+                  {activeRange?.label ?? "No Data"}
+                </p>
+                {activeRange && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Range: {activeRange.min}-{activeRange.max}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-[12px] p-5 space-y-3">
+          <h4 className="text-lg font-semibold text-(--dark-1)">What Your Score Says About You</h4>
+          <div className="space-y-2 text-sm text-[var(--dark-1)] leading-relaxed">
+            {ADHERENCE_SCORE_RANGES.map(range => (
+              <div key={range.label} className="flex gap-2">
+                <span
+                  className={`font-semibold ${range.label === activeRange?.label ? "text-[var(--accent-1)]" : "text-[var(--dark-1)]"}`}
+                >
+                  {range.label}:
+                </span>
+                <span className="text-muted-foreground">{range.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {history.length > 0 && (
-        <Paginate
-          key={date}
-          totalPages={totalPages}
-          totalResults={totalResults}
-          limit={pagination.limit}
-          page={pagination.page}
-          onChange={(newPagination) => setPagination(newPagination)}
-        />
-      )}
     </div>
   );
 }
