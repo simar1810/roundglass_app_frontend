@@ -1,13 +1,13 @@
-import useSWR from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
-import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { getAppPersonalFeeds } from "@/lib/fetchers/app";
 import ContentError from "@/components/common/ContentError";
-import { useEffect } from "react";
-import { changeDispalyedPostsType, pageEnd } from "@/config/state-reducers/feed";
-import { Button } from "@/components/ui/button";
-import { Bookmark, Images } from "lucide-react";
+import ContentLoader from "@/components/common/ContentLoader";
 import NoData from "@/components/common/NoData";
+import { Button } from "@/components/ui/button";
+import { changeDispalyedPostsType, pageEnd } from "@/config/state-reducers/feed";
+import { getAppPersonalFeeds } from "@/lib/fetchers/app";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { Bookmark, Images } from "lucide-react";
+import { useEffect } from "react";
+import useSWR from "swr";
 import { ClientFeed } from "./ClientFeed";
 
 export default function ClientPersonalFeeds() {
@@ -35,8 +35,8 @@ export default function ClientPersonalFeeds() {
     <NoData message="No feeds Available!" />
   </div>
 
-  return <div className="max-w-[650px] bg-white mx-auto relative rounded-t-[10px]">
-    <div className="sticky top-0 rounded-t-[10px] divide-x-1 border-b-1 border-[var(--dark-1)]/10 overflow-clip">
+  return <div className="max-w-[650px] mx-auto relative rounded-t-[10px]">
+    <div className="sticky top-0 bg-white rounded-t-[10px] divide-x-1 border-b-1 border-[var(--dark-1)]/10 overflow-clip z-10">
       <Button
         className={`w-1/2 text-center text-[12px] bg-transparent hover:bg-[var(--comp-1)] shadow-none rounded-none ${displayedPostsType === "myPosts" ? "text-[var(--accent-1)]" : "text-[var(--dark-2)]"}`}
         onClick={() => dispatch(changeDispalyedPostsType("myPosts"))}
@@ -49,7 +49,7 @@ export default function ClientPersonalFeeds() {
         onClick={() => dispatch(changeDispalyedPostsType("mySavedPosts"))}
       >
         <Bookmark />
-        My Posts
+        Saved
       </Button>
     </div>
     <>
