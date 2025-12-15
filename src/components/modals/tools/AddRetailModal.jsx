@@ -12,10 +12,9 @@ import {
   selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity
 } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
-import { getAppClients, getCoachHome, getProductByBrand } from "@/lib/fetchers/app";
-import { _throwError, buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
+import { getAppClients, getProductByBrand } from "@/lib/fetchers/app";
+import { buildUrlWithQueryParams, nameInitials } from "@/lib/formatter";
 import { sortByPriority } from "@/lib/retail";
-import { copyText } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
@@ -160,7 +159,7 @@ function Stage2() {
   const [query, setQuery] = useState("")
   const { isWhitelabel } = useAppSelector(state => state.coach.data) || {}
 
-  const { selectedBrandId, margins, coachMargin, dispatch, productModule } = useCurrentStateContext();
+  const { selectedBrandId, margins, coachMargin, dispatch, productModule, acceptFlow } = useCurrentStateContext();
   const { isLoading, error, data } = useSWR(
     `getProductByBrand/${selectedBrandId}`,
     () => getProductByBrand(selectedBrandId)
@@ -178,21 +177,8 @@ function Stage2() {
 
   const products = sortedProducts
     .filter(item => new RegExp(query, "i").test(item.productName))
-  const button = products.map(item => ({ productName: item.productName }))
 
   return <div>
-    <div className="px-4 mt-4">
-      <button onClick={() => copyText(JSON.stringify(button))}>button</button>
-      <FormControl
-        type="text"
-        name="search"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Search By Product Name"
-        className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
-      />
-    </div>
-    {/* <button onClick={() => navigator.clipboard.writeText(JSON.stringify(button))}>Copy</button> */}
     <div className="mt-2 px-4 flex items-center justify-between">
       <h3>Select Margin</h3>
       <SelectControl
@@ -202,9 +188,23 @@ function Stage2() {
         onChange={e => dispatch(changeFieldvalue("coachMargin", e.target.value))}
       />
     </div>
-    <div className="p-4 grid grid-cols-3 gap-4">
-      {products.map(product => <ProductCard key={product._id} product={product} />)}
-    </div>
+    {!acceptFlow && (
+      <div className="px-4 mt-4">
+        <FormControl
+          type="text"
+          name="search"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search By Product Name"
+          className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
+        />
+      </div>
+    )}
+    {!acceptFlow && (
+      <div className="p-4 grid grid-cols-3 gap-4">
+        {products.map(product => <ProductCard key={product._id} product={product} />)}
+      </div>
+    )}
     {productModule.length > 0 && <div className="bg-[var(--primary-1)] sticky py-2 bottom-0 border-t-1">
       <Button
         variant="wz"
@@ -219,7 +219,8 @@ function Stage2() {
 
 function ProductCard({ product }) {
   const { productModule, dispatch } = useCurrentStateContext();
-  const quantity = productModule.find(item => item._id === product._id)?.quantity || 0;
+  const productEntry = productModule.find(item => item._id === product._id);
+  const quantity = productEntry?.quantity ?? 0;
 
   return <div className="bg-[var(--comp-1)] p-2 flex flex-col rounded-[8px] border-1">
     <Image
@@ -231,7 +232,7 @@ function ProductCard({ product }) {
     />
     <p className="font-[500] mt-4">{product.productName}</p>
     <p className="text-[12px] text-[var(--dark-1)]/25 leading-[1.2] mb-2">{product.productDescription.slice(0, 100)}</p>
-    {quantity === 0
+    {!productEntry
       ? <Button
         onClick={() => dispatch(addProductToProductModule(product))}
         variant="wz"
@@ -242,18 +243,22 @@ function ProductCard({ product }) {
         Add to Cart
       </Button>
       : <div className="mt-auto flex items-center justify-center gap-2">
-        <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity + 1))} size="sm" variant="wz_outline">
-          <Plus />
+        <Button onClick={() => dispatch(setProductAmountQuantity(product._id, Math.max(quantity - 1, 0)))} size="sm" variant="wz_outline">
+          <Minus />
         </Button>
         <Input
-          value={quantity}
+          value={Number.isFinite(quantity) ? quantity : ""}
           type="tel"
-          className="p-0 px-1 text-center border-[var(--accent-1)]"
-          onChange={e => dispatch(setProductAmountQuantity(product._id, !isNaN(parseInt(e.target.value)) ? parseInt(e.target.value) : 0))}
+          className="p-0 px-1 text-center border-[var(--accent-1)] w-[72px]"
+          onChange={e => {
+            const val = e.target.value;
+            if (val === "") return dispatch(setProductAmountQuantity(product._id, 0));
+            const parsed = parseInt(val, 10);
+            dispatch(setProductAmountQuantity(product._id, Number.isFinite(parsed) ? Math.max(parsed, 0) : 0));
+          }}
         />
-        {/* <p className="text-[18px]">{quantity}</p> */}
-        <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity - 1))} size="sm" variant="wz_outline">
-          <Minus />
+        <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity + 1))} size="sm" variant="wz_outline">
+          <Plus />
         </Button>
       </div>}
   </div>

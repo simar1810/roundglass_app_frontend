@@ -328,13 +328,17 @@ function PurchaseOrder({ order }) {
 
 function SaleOrder({ order }) {
   const coach = useAppSelector(state => state.coach.data);
+  const status = (order.status || "").toLowerCase();
+  const pendingAmount = Math.max(order.pendingAmount || 0, 0);
+  const paidAmount = Math.max(order.paidAmount || 0, 0);
+
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
-          {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
-          {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
+          {status === "completed" && <RetailCompletedLabel status={order.status} />}
+          {status === "pending" && <RetailPendingLabel status={order.status} />}
+          {status === "cancelled" && <RetailCancelledLabel status={order.status} />}
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
             {order.orderType || 'Sale'}
           </span>
@@ -374,12 +378,14 @@ function SaleOrder({ order }) {
       <div className="text-[12px]">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order.clientName || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
-        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
-        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {pendingAmount}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {paidAmount}</span></p>
       </div>
-      {order.pendingAmount > 0
+      {pendingAmount > 0
         ? <UpdateClientOrderAmount order={order} />
-        : <Badge variant="wz">Paid</Badge>}
+        : status === "pending"
+          ? <RetailPendingLabel status={order.status} />
+          : <Badge variant="wz">Paid</Badge>}
     </CardFooter>
     <div>
       {order.status === "Pending" && <AcceptRejectOrder order={order} />}
@@ -525,7 +531,7 @@ function RejectOrderAction({
 
 function AcceptRetailsOrder({ order }) {
   const [open, setOpen] = useState(false);
-  const coachId = useAppSelector(state => state.coach.data._id);
+  const coach = useAppSelector(state => state.coach.data);
 
   return (
     <>
@@ -534,14 +540,18 @@ function AcceptRetailsOrder({ order }) {
       </Button>
       <AddRetailModal
         payload={{
-          ...order.brand,
-          coachId,
+          stage: 2,
+          acceptFlow: true,
+          coachId: coach?._id,
           clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
+          clientName: order.clientName || "",
           productModule: order.productModule || [],
           status: order.status || "Pending",
           orderId: order.orderId || "",
           margins: order.brand?.margins || [],
           selectedBrandId: order.brand?._id,
+          margin: order.brand?.margins?.[0] || 0,
+          brand: order.brand || {},
         }}
         open={open}
         setOpen={setOpen}
