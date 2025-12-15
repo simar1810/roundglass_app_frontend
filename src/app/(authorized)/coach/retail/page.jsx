@@ -204,7 +204,21 @@ function Brand({
 }
 
 function Orders({ orders }) {
-  const myOrders = [...orders.myOrder, ...orders.retailRequest]
+  const [filter, setFilter] = useState("all"); // all | pending | completed
+
+  const rawOrders = [...orders.myOrder, ...orders.retailRequest];
+
+  const myOrders = rawOrders
+    .filter((order) => {
+      if (filter === "all") return true;
+      if (filter === "pending") {
+        const isPendingStatus = (order.status || "").toLowerCase() === "pending";
+        const isClientRequest = Array.isArray(orders.retailRequest) && orders.retailRequest.some((req) => req._id === order._id);
+        return isPendingStatus || isClientRequest;
+      }
+      if (filter === "completed") return (order.status || "").toLowerCase() === "completed";
+      return true;
+    })
     .sort((a, b) => {
       const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
@@ -219,8 +233,28 @@ function Orders({ orders }) {
 
   return <TabsContent value="order-history">
     <ExportOrdersoExcel orders={orders} />
+
+    <div className="flex flex-wrap items-center gap-2 mb-3">
+      {["all", "pending", "completed"].map((item) => (
+        <Button
+          key={item}
+          size="sm"
+          variant={filter === item ? "wz" : "outline"}
+          className="text-xs capitalize"
+          onClick={() => setFilter(item)}
+        >
+          {item}
+        </Button>
+      ))}
+    </div>
+
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
+      {myOrders.length === 0 && (
+        <div className="col-span-full">
+          <ContentError title="No orders found for this filter." />
+        </div>
+      )}
     </div>
   </TabsContent>
 }
@@ -446,13 +480,12 @@ function ExportOrdersoExcel({ orders }) {
 }
 
 function AcceptRejectOrder({ order = {} }) {
-  return <div className="mt-4 flex items-center gap-2">
-    <AcceptRetailsOrder order={order} />
-    <RejectOrderAction
-      status="cancel"
-      id={order.orderId}
-    />
-  </div>
+  return (
+    <div className="mt-4 flex items-center gap-3 justify-end flex-wrap">
+      <AcceptRetailsOrder order={order} />
+      <RejectOrderAction status="cancel" id={order.orderId} />
+    </div>
+  );
 }
 
 function RejectOrderAction({
@@ -491,22 +524,30 @@ function RejectOrderAction({
 }
 
 function AcceptRetailsOrder({ order }) {
-  return <div>
-    <Brand
-      brand={{
-        ...order.brand,
-        clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
-        productModule: order.productModule,
-        status: order.status,
-        orderId: order.orderId,
-        status: "Pending"
-      }}
-    >
-      <Button
-        size="sm"
-        variant="wz">Accept</Button>
-    </Brand>
-  </div >
+  const [open, setOpen] = useState(false);
+  const coachId = useAppSelector(state => state.coach.data._id);
+
+  return (
+    <>
+      <Button size="sm" variant="wz" onClick={() => setOpen(true)}>
+        Accept
+      </Button>
+      <AddRetailModal
+        payload={{
+          ...order.brand,
+          coachId,
+          clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
+          productModule: order.productModule || [],
+          status: order.status || "Pending",
+          orderId: order.orderId || "",
+          margins: order.brand?.margins || [],
+          selectedBrandId: order.brand?._id,
+        }}
+        open={open}
+        setOpen={setOpen}
+      />
+    </>
+  );
 }
 
 function Inventory() {
