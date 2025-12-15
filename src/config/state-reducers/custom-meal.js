@@ -1,6 +1,6 @@
 import { addDays, format, isBefore, parse } from "date-fns";
-import { customMealInitialState } from "../state-data/custom-meal";
 import { DAYS } from "../data/ui";
+import { customMealInitialState } from "../state-data/custom-meal";
 
 const BASE_MEAL_TYPES = [
   "Breakfast",
@@ -198,7 +198,7 @@ export function customMealReducer(state, action) {
         ? {
           ...recipe,
           dish_name: recipe.dish_name || recipe.title,
-          image: recipe.image || recipe.image,
+          image: recipe.image,
           fats: recipe.fats || recipe?.calories?.fats,
           calories: recipe?.calories?.total || recipe.calories,
           protein: recipe.protein || recipe?.calories?.proteins,
@@ -207,6 +207,8 @@ export function customMealReducer(state, action) {
           isNew: !recipe.time || false,
         }
         : {
+          ...recipe,
+          image: recipe.image,
           time: recipe.time ?? defaultMealTiming,
           isNew: false,
         };
