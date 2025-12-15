@@ -18,18 +18,23 @@ export function addRetailReducer(state, action) {
         ...state,
         stage: action.payload
       }
-    case "SET_PRODUCT_QUANTITY":
-      if (action.payload.quantity === 0) return {
-        ...state,
-        productModule: state.productModule.filter(product => product._id !== action.payload._id)
-      }
+    case "SET_PRODUCT_QUANTITY": {
+      const nextQty = Math.max(Number(action.payload.quantity) || 0, 0);
+      const exists = state.productModule.some(product => product._id === action.payload._id);
       return {
         ...state,
-        productModule: state.productModule.map(product => product._id === action.payload._id
-          ? ({ ...product, quantity: action.payload.quantity })
-          : product
-        )
-      }
+        productModule: exists
+          ? state.productModule.map(product =>
+            product._id === action.payload._id
+              ? { ...product, quantity: nextQty }
+              : product
+          )
+          : [
+            ...state.productModule,
+            { _id: action.payload._id, quantity: nextQty }
+          ],
+      };
+    }
     case "ADD_PRODUCT_TO_PRODUCT_MODULE":
       return {
         ...state,
@@ -145,6 +150,8 @@ export function previousStage() {
 export function init(payload) {
   return {
     ...addRetailInitialState,
+    stage: payload.stage || addRetailInitialState.stage,
+    acceptFlow: payload.acceptFlow || false,
     coachId: payload.coachId,
     coachMargin: payload.margin,
     selectedBrandId: payload.selectedBrandId,

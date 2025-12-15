@@ -4,14 +4,17 @@ import FormControl from "@/components/FormControl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { retailPurchaseInitialState } from "@/config/state-data/retail-purchase";
 import { addProductToStock, removeProductFromStock, retailPurchaseReducer, setProductQuantity } from "@/config/state-reducers/retail-purchase";
 import { sendData } from "@/lib/api";
 import { getProductByBrand } from "@/lib/fetchers/app";
+import { sortByPriority } from "@/lib/retail";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
+import { useAppSelector } from "@/providers/global/hooks";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -47,6 +50,7 @@ export default function CreateRetailSaleModal({
 function SelectProducts({ brandId }) {
   const [query, setQuery] = useState("")
   const { ...state } = useCurrentStateContext();
+  const { isWhitelabel } = useAppSelector((s) => s.coach.data) || {};
   const { isLoading, error, data } = useSWR(
     `getProductByBrand/${brandId}`,
     () => getProductByBrand(brandId)
@@ -56,14 +60,18 @@ function SelectProducts({ brandId }) {
     ...state.stocks.map(product => [product.productId, product.quantity])
   ])
 
+  const sortedProducts = useMemo(
+    () => (data?.data?.length ? sortByPriority(data.data, isWhitelabel) : []),
+    [data?.data?.length, isWhitelabel]
+  );
+
   if (isLoading) return <div className="h-[120px] flex items-center justify-center">
     <Loader />
   </div>
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const products = (data.data || [])
-    .filter(item => new RegExp(query, "i").test(item.productName))
+  const products = sortedProducts.filter(item => new RegExp(query, "i").test(item.productName))
 
   return <div>
     <div className="mt-4">
@@ -77,16 +85,23 @@ function SelectProducts({ brandId }) {
       />
     </div>
     <div className="mt-4 grid grid-cols-3 gap-4">
-      {products.map(product => <ProductCard
-        key={product._id}
-        product={product}
-        quantity={SelectedProductQuantity.get(product._id) || 0}
-      />)}
+      {products.map(product => {
+        const qty = SelectedProductQuantity.get(product._id);
+        const inCart = SelectedProductQuantity.has(product._id);
+        return (
+          <ProductCard
+            key={product._id}
+            product={product}
+            quantity={qty ?? 0}
+            inCart={inCart}
+          />
+        );
+      })}
     </div>
   </div>
 }
 
-function ProductCard({ product, quantity }) {
+function ProductCard({ product, quantity, inCart }) {
   const { dispatch } = useCurrentStateContext();
   return <div className="bg-[var(--comp-1)] p-2 flex flex-col rounded-[8px] border-1">
     <Image
@@ -98,7 +113,7 @@ function ProductCard({ product, quantity }) {
     />
     <p className="font-[500] mt-4">{product.productName}</p>
     <p className="text-[12px] text-[var(--dark-1)]/25 leading-[1.2] mb-2">{product.productDescription?.slice(0, 100)}</p>
-    {quantity === 0
+    {!inCart
       ? <Button
         onClick={() => dispatch(addProductToStock({ productId: product._id, name: product.productName }))}
         variant="wz"
@@ -108,13 +123,7 @@ function ProductCard({ product, quantity }) {
         <ShoppingCart className="w-[12px] h-[12px]" />
         Add to Cart
       </Button>
-      : <div className="mt-auto flex items-center justify-center gap-4">
-        <Button
-          onClick={() => dispatch(setProductQuantity({ productId: product._id, quantity: quantity + 1, name: product.productName }))}
-          size="sm" variant="wz_outline">
-          <Plus />
-        </Button>
-        <p className="text-[18px]">{quantity}</p>
+      : <div className="mt-auto flex items-center justify-center gap-2">
         <Button
           onClick={() => quantity >= 2
             ? dispatch(setProductQuantity({ productId: product._id, quantity: quantity - 1, name: product.productName }))
@@ -122,6 +131,22 @@ function ProductCard({ product, quantity }) {
           }
           size="sm" variant="wz_outline">
           <Minus />
+        </Button>
+        <Input
+          value={Number.isFinite(quantity) ? quantity : ""}
+          type="tel"
+          className="p-0 px-1 text-center border-[var(--accent-1)] w-[72px]"
+          onChange={e => {
+            const val = e.target.value;
+            if (val === "") return dispatch(setProductQuantity({ productId: product._id, quantity: 0, name: product.productName }));
+            const parsed = parseInt(val, 10);
+            dispatch(setProductQuantity({ productId: product._id, quantity: Number.isFinite(parsed) ? Math.max(parsed, 0) : 0, name: product.productName }));
+          }}
+        />
+        <Button
+          onClick={() => dispatch(setProductQuantity({ productId: product._id, quantity: quantity + 1, name: product.productName }))}
+          size="sm" variant="wz_outline">
+          <Plus />
         </Button>
       </div>}
   </div>
