@@ -1,7 +1,7 @@
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { fetchData, sendData, sendFile, sendFileWithQuery } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
-import { toast } from "sonner";
 import { withClientFilter } from "../middleware/clientFilter";
 
 async function logoutUser(response, router, cache) {
@@ -557,6 +557,20 @@ export async function getSmartActivity({ person = "client", token, startDate, en
 
 export function getWaterLog(clientId, date = null, page = null, limit = null) {
   let endpoint = `app/water-log?person=coach&clientId=${clientId}`;
+  if (date) {
+    endpoint += `&date=${date}`;
+  }
+  // Add pagination params only if provided (for server-side pagination if API supports it)
+  if (page !== null && limit !== null) {
+    endpoint += `&page=${page}&limit=${limit}`;
+  }
+  return fetchData(endpoint);
+}
+
+export function getClientWaterLog(date = null, page = null, limit = null) {
+  // When called from the client side, the backend derives the client
+  // from the authenticated token, so clientId is not required.
+  let endpoint = `app/water-log?person=client`;
   if (date) {
     endpoint += `&date=${date}`;
   }

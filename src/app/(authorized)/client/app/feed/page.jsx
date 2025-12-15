@@ -27,11 +27,17 @@ export default function Page() {
 
 function FeedContainer() {
   const { type } = useCurrentStateContext()
-  return <div className="grid md:grid-cols-3 gap-5 bg-[var(--comp-2)] mt-2 mx-auto relative border-b-0 rounded-t-[10px]">
-    {type === "mine"
-      ? <ClientPersonalFeeds />
-      : <ClientFeeds />}
-  </div>
+  return (
+    <div className="mt-4">
+      {type === "mine" ? (
+        <ClientPersonalFeeds />
+      ) : (
+        <div className="max-w-[650px] mx-auto">
+          <ClientFeeds />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FeedPagination() {

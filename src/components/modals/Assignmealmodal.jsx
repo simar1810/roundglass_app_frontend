@@ -1,25 +1,25 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import FormControl from "@/components/FormControl";
-import { Badge } from "../ui/badge";
-import useSWR from "swr";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { sendData } from "@/lib/api";
 import { getClientForMeals, getClientsForCustomMeals } from "@/lib/fetchers/app";
-import ContentLoader from "../common/ContentLoader";
-import ContentError from "../common/ContentError";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { nameInitials } from "@/lib/formatter";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { sendData } from "@/lib/api";
+import useSWR from "swr";
+import ContentError from "../common/ContentError";
+import ContentLoader from "../common/ContentLoader";
+import { AlertDialogTrigger } from "../ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import DualOptionActionModal from "./DualOptionActionModal";
-import { X } from "lucide-react";
-import { AlertDialogTrigger } from "../ui/alert-dialog";
 
 export default function AssignMealModal({
   type,
@@ -31,12 +31,18 @@ export default function AssignMealModal({
       <DialogTrigger className="p-0">
         <Badge variant="wz_fill" className={"px-4 py-2 font-semibold"}>Assign Meal</Badge>
       </DialogTrigger>
-      <DialogContent className="!max-w-[650px] h-[70vh] border-0 p-0 overflow-auto block">
+      <DialogContent
+        className="!max-w-[650px] h-[70vh] border-0 p-0 overflow-auto block"
+        aria-describedby="assign-meal-description"
+      >
         <DialogHeader className="p-4 border-b-1">
           <DialogTitle className="text-[10px] md:text-lg font-semibold">
             Assign Meal
           </DialogTitle>
         </DialogHeader>
+        <p id="assign-meal-description" className="sr-only">
+          Select a client from the list to assign this meal plan.
+        </p>
         <Component planId={planId} />
       </DialogContent>
     </Dialog>
@@ -60,8 +66,17 @@ function AssignCustomMealPlanContainer({ planId }) {
     }
   }
 
-  const assignedClients = data.data.assignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name));
-  const unassignedClients = data.data.notAssignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name))
+  const normalizedQuery = searchQuery.trim();
+  const assignedClients = normalizedQuery
+    ? data.data.assignedClients.filter(client =>
+        client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
+      )
+    : data.data.assignedClients;
+  const unassignedClients = normalizedQuery
+    ? data.data.notAssignedClients.filter(client =>
+        client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
+      )
+    : data.data.notAssignedClients;
 
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
@@ -122,10 +137,15 @@ function AssignMealPlanContainer({ planId }) {
       toast.error(error.message);
     }
   }
-  const assignedClients = data.data.assignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name));
+  const normalizedQuery = searchQuery.trim();
+  const matchesQuery = (client) =>
+    !normalizedQuery ||
+    client.name?.toLowerCase().includes(normalizedQuery.toLowerCase());
+
+  const assignedClients = data.data.assignedClients.filter(matchesQuery);
   const unassignedClients = [
-    ...data.data.unassignedClients.filter(client => new RegExp(searchQuery, "i").test(client.name)),
-    ...data.data.assignedToOtherPlans.filter(client => new RegExp(searchQuery, "i").test(client.name))
+    ...data.data.unassignedClients.filter(matchesQuery),
+    ...data.data.assignedToOtherPlans.filter(matchesQuery),
   ];
 
   return <div className="p-4 mb-auto text-sm space-y-6">

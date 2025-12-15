@@ -4,15 +4,17 @@ import ContentLoader from "@/components/common/ContentLoader";
 import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
 import Stories from "@/components/pages/coach/dashboard/Stories";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getClientHome, getMarathonLeaderBoard, getSmartActivity } from "@/lib/fetchers/app";
+import { sendData } from "@/lib/api";
+import { getClientHome, getClientWaterLog, getMarathonLeaderBoard, getSmartActivity } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import { useAppSelector } from "@/providers/global/hooks";
+import { format } from "date-fns";
+import { Flag, Flame, Footprints, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import useSWR, { useSWRConfig } from "swr";
-import { useState, useEffect } from "react";
-import { X, Plus, Flame, Footprints, Flag} from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
   return <div className="mt-8">
@@ -22,8 +24,8 @@ export default function Page() {
 
 function Container() {
   const [showPopup, setShowPopup] = useState(true);
-  const { _id } = useAppSelector(state => state.client.data)
   const client = useAppSelector(state => state.client.data)
+  const { _id } = client || {};
   const { isLoading, error, data } = useSWR("clientHome", () => getClientHome(_id));
   if (isLoading) return <ContentLoader />
   if (data?.status_code === 407) return <div>
@@ -38,7 +40,7 @@ function Container() {
     <div className="flex flex-col md:flex-row justify-start items-start gap-2">
       <div className="flex flex-col gap-2 items-start justify-center">
         <GoalsSection goal={clientHomeData?.user?.goal} />
-        <WaterIntake />
+        <WaterIntake client={client} />
         <NextMeals nextMeals={nextMeals} />
       </div>
       <div className="flex flex-col justify-start items-start gap-2">
@@ -378,48 +380,75 @@ function ActivityPopup({ onClose }) {
     </div>
   );
 }
-function WaterIntake() {
-  const [intakeList, setIntakeList] = useState([]);
+function WaterIntake({ client }) {
   const [showHistory, setShowHistory] = useState(false);
-
-  const STORAGE_KEY = "waterIntake";
-  const TODAY_KEY = "waterIntakeDate";
   const MAX_WATER = 2500;
+  const clientId = client?._id;
+  const today = format(new Date(), "dd-MM-yyyy");
+  const { mutate: globalMutate } = useSWRConfig();
 
-  useEffect(() => {
-    const storedDate = localStorage.getItem(TODAY_KEY);
-    const today = new Date().toLocaleDateString();
+  const { data, isLoading, error, mutate } = useSWR(
+    client ? `app/water-log?person=client&date=${today}` : null,
+    () => getClientWaterLog(today)
+  );
 
-    if (storedDate !== today) {
-      localStorage.setItem(TODAY_KEY, today);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-      setIntakeList([]);
-    } else {
-      const storedIntake = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      setIntakeList(storedIntake);
-    }
-  }, []);
+  const intakeList = data?.data?.results || data?.data || [];
+  const totalWater = intakeList.reduce(
+    (sum, item) => {
+      const raw =
+        item.amount !== undefined && item.amount !== null
+          ? item.amount
+          : item.quantity !== undefined && item.quantity !== null
+          ? item.quantity
+          : item.waterAmount !== undefined && item.waterAmount !== null
+          ? item.waterAmount
+          : 0;
+      const numeric = Number(raw) || 0;
+      return sum + numeric;
+    },
+    0
+  );
 
-  const totalWater = intakeList.reduce((sum, g) => sum + g.amount, 0);
-  const addGlass = () => {
+  const addGlass = async () => {
+    if (!client) return;
+
     if (totalWater + 250 > MAX_WATER) {
-      alert(`You cannot drink more than ${MAX_WATER}ml of water per day.`);
+      toast.error(`You cannot drink more than ${MAX_WATER}ml of water per day.`);
       return;
     }
 
-    const newEntry = {
-      id: Date.now(),
-      amount: 250,
-      time: new Date().toLocaleTimeString(),
-    };
-    const updatedList = [...intakeList, newEntry];
-    setIntakeList(updatedList);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-  };
-  const removeGlass = (id) => {
-    const updatedList = intakeList.filter((g) => g.id !== id);
-    setIntakeList(updatedList);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+    try {
+      const now = new Date();
+      const dateString = today;
+      const timeString = format(now, "hh:mm a").toLowerCase();
+
+      const response = await sendData(
+        `app/water-log?person=client`,
+        {
+          date: dateString,
+          time: timeString,
+          amount: 250,
+        },
+        "POST"
+      );
+
+      if (response.status_code !== 200) {
+        throw new Error(response.message || "Failed to add water log");
+      }
+
+      toast.success(response.message || "Water log added successfully!");
+      await mutate(); // refresh client-side list
+
+      // also refresh any coach-side water log views for this client
+      if (globalMutate) {
+        globalMutate((key) =>
+          typeof key === "string" &&
+          key.startsWith(`app/water-log?person=coach&clientId=${clientId}`)
+        );
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to add water log");
+    }
   };
 
   return (
@@ -439,29 +468,27 @@ function WaterIntake() {
           You drank <span className="font-semibold text-gray-400">{totalWater} ml</span> of water today
         </p>
 
-        <div className="flex items-center gap-4 pt-1 overflow-x-auto no-scrollbar">
-          <div className="flex gap-3">
-            {intakeList.map((glass) => (
-              <div key={glass.id} className="relative">
-                <div className="w-10 h-12 border-2 border-black/80 rounded-md flex items-end justify-center pb-1">
-                  <div className="w-6 h-4 bg-blue-300 rounded-sm"></div>
-                </div>
-
-                <button
-                  onClick={() => removeGlass(glass.id)}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-[2px]"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="flex items-center gap-4 pt-1">
           <button
             onClick={addGlass}
-            className="bg-[var(--accent-1)] hover:bg-green-600 transition text-white rounded-full p-3"
+            className="shrink-0 bg-[var(--accent-1)] hover:bg-green-600 transition text-white rounded-full p-3"
           >
             <Plus size={20} />
           </button>
+          <div className="flex-1 overflow-x-auto no-scrollbar">
+            <div className="flex gap-3">
+              {isLoading && (
+                <p className="text-xs text-gray-400">Loading today&apos;s water logs…</p>
+              )}
+              {!isLoading && !error && intakeList.map((glass) => (
+                <div key={glass._id || glass.id} className="relative">
+                  <div className="w-10 h-12 border-2 border-black/80 rounded-md flex items-end justify-center pb-1">
+                    <div className="w-6 h-4 bg-blue-300 rounded-sm"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

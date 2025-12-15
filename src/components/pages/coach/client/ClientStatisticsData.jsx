@@ -4,7 +4,7 @@ import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
 import { sendData } from "@/lib/api";
@@ -13,8 +13,8 @@ import { _throwError } from "@/lib/formatter";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { FilePen, X } from "lucide-react"
-import { useState, useMemo } from "react";
+import { FilePen, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -132,7 +132,8 @@ export default function ClientStatisticsData({ clientData }) {
   try {
     const { dob, clientId, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
-    const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
+    const coachState = useAppSelector(state => state.coach?.data || {});
+    const coachHealthMatrixFields = coachState.coachHealthMatrixFields;
 
     const formFields = useMemo(() => {
       if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
@@ -229,7 +230,10 @@ export default function ClientStatisticsData({ clientData }) {
         ? clientStats?.at(selectedDate)?.weight
         : "",
     }
-    const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifferenceRaw = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifference = Number.isFinite(weightDifferenceRaw)
+      ? Number(weightDifferenceRaw.toFixed(1))
+      : NaN;
 
     return <TabsContent value="statistics">
       <div className="pb-4 flex items-center gap-2 border-b-1 w-80 md:w-full no-scrollbar overflow-x-auto pt-4">
@@ -255,7 +259,7 @@ export default function ClientStatisticsData({ clientData }) {
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
-      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {parseInt(weightDifference)} KG</h5>}
+      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5">
         <HealthMetrics
           onUpdate={onUpdateHealthMatrix}
@@ -279,7 +283,7 @@ function StatisticsExportingOptions({
   clientStats,
   selectedDate
 }) {
-  const coach = useAppSelector(state => state.coach.data);
+  const coach = useAppSelector(state => state.coach?.data || {});
 
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
     <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats, coach, selectedDate)}>

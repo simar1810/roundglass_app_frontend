@@ -2,15 +2,15 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import PDFRenderer from "@/components/modals/PDFRenderer";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
-import { getClientMatrices, getClientStatsForCoach } from "@/lib/fetchers/app";
+import { getClientMatrices } from "@/lib/fetchers/app";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { FilePen } from "lucide-react"
-import { useState, useMemo } from "react";
+import { FilePen } from "lucide-react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 
 const SVG_ICONS = [
@@ -127,7 +127,8 @@ export default function ClientStatisticsDataOwn({ clientData }) {
   try {
     const { dob, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
-    const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
+    const coachState = useAppSelector(state => state.coach?.data || {});
+    const coachHealthMatrixFields = coachState.coachHealthMatrixFields;
 
     function formatDate(dateString) {
       const [year, month, day] = dateString.split("-");
@@ -192,7 +193,10 @@ export default function ClientStatisticsDataOwn({ clientData }) {
         ? clientStats?.at(selectedDate)?.weight
         : "",
     }
-    const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifferenceRaw = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifference = Number.isFinite(weightDifferenceRaw)
+      ? Number(weightDifferenceRaw.toFixed(1))
+      : NaN;
 
     return <TabsContent value="statistics">
       <div className="pb-4 flex items-center gap-2 border-b-1 overflow-x-auto no-scrollbar">
@@ -210,7 +214,6 @@ export default function ClientStatisticsDataOwn({ clientData }) {
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
-      {!isNaN(weightDifference) && <h5 className="text-[16px] mt-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid md:grid-cols-3 gap-5">
         <HealthMetrics data={payload} fields={formFields} />
       </div>
@@ -227,7 +230,7 @@ function StatisticsExportingOptions({
   clientStats,
   selectedDate
 }) {
-  const coach = useAppSelector(state => state.coach.data);
+  const coach = useAppSelector(state => state.coach?.data || {});
 
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
     <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats, coach, selectedDate)}>
