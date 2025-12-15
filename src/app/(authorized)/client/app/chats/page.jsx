@@ -82,6 +82,7 @@ function CurrentChatMessageBox() {
   const inputRef = useRef();
 
   async function sendMessage() {
+    if (isSending) return;
     if (!message.trim() && !file) return;
 
     setIsSending(true);
