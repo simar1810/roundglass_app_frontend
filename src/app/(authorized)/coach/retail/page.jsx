@@ -21,13 +21,13 @@ import { fetchData, sendData } from "@/lib/api";
 import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { buildUrlWithQueryParams } from "@/lib/formatter";
-import { invoicePDFData } from "@/lib/pdf";
+import { invoicePDFData, salesReportPDFData } from "@/lib/pdf";
 import { sortByPriority } from "@/lib/retail";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
-import { parse } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, RefreshCcw, ShoppingCart } from "lucide-react";
+import { endOfMonth, endOfWeek, endOfYear, isValid, parse, startOfMonth, startOfWeek, startOfYear } from "date-fns";
+import { Clock, EllipsisVertical, Eye, EyeClosed, FileText, RefreshCcw, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -59,9 +59,10 @@ export default function Page() {
 
   return <div className="mt-4">
     <RetailStatisticsCards
-      totalSales={retails.totalSale}
-      totalOrders={orders.myOrder.length}
-      acumulatedVP={(orders?.acumulatedVP || 0).toFixed(2)}
+      totalSales={retails?.totalSale || 0}
+      totalOrders={orders?.myOrder?.length || 0}
+      acumulatedVP={Number(orders?.acumulatedVP || 0)}
+      orders={orders || null}
     />
     <div className="content-container">
       <RetailContainer
@@ -72,13 +73,289 @@ export default function Page() {
   </div>
 }
 
+// Helper function to parse date from order
+function parseOrderDate(dateString) {
+  try {
+    if (!dateString) return null;
+    
+    // Convert to string if it's not already
+    const dateStr = String(dateString).trim();
+    if (!dateStr) return null;
+    
+    // Try dd-MM-yyyy first (most common format from backend based on codebase)
+    const formats = ["dd-MM-yyyy", "dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy", "dd-MM-yy", "d-M-yyyy", "d/MM/yyyy"];
+    
+    for (const format of formats) {
+      try {
+        const parsed = parse(dateStr, format, new Date());
+        if (isValid(parsed) && !isNaN(parsed.getTime())) {
+          // Check if the parsed date makes sense (not too far in past/future)
+          const year = parsed.getFullYear();
+          if (year >= 2000 && year <= 2100) {
+            parsed.setHours(0, 0, 0, 0);
+            return parsed;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    // Fallback: try native Date parsing
+    try {
+      const nativeDate = new Date(dateStr);
+      if (isValid(nativeDate) && !isNaN(nativeDate.getTime())) {
+        const year = nativeDate.getFullYear();
+        if (year >= 2000 && year <= 2100) {
+          nativeDate.setHours(0, 0, 0, 0);
+          return nativeDate;
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Helper function to get date range based on period
+function getDateRange(period) {
+  try {
+    const now = new Date();
+    if (!isValid(now)) {
+      console.error("Invalid date");
+      return null;
+    }
+    
+    // Create a new date to avoid mutating the original
+    const currentDate = new Date(now);
+    currentDate.setHours(23, 59, 59, 999);
+    
+    switch (period) {
+      case "weekly": {
+        const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+        if (!isValid(start) || !isValid(end)) return null;
+        // Ensure end time is end of day
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+      case "monthly": {
+        const start = startOfMonth(currentDate);
+        const end = endOfMonth(currentDate);
+        if (!isValid(start) || !isValid(end)) return null;
+        // Ensure end time is end of day
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+      case "yearly": {
+        const start = startOfYear(currentDate);
+        const end = endOfYear(currentDate);
+        if (!isValid(start) || !isValid(end)) return null;
+        // Ensure end time is end of day
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+      default:
+        return null; // All time
+    }
+  } catch (error) {
+    console.error("Error getting date range:", error);
+    return null;
+  }
+}
+
+// Calculate filtered stats
+function calculateFilteredStats(orders, period) {
+  try {
+    if (!orders) {
+      return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+    }
+    
+    const allOrders = [...(orders.myOrder || []), ...(orders.retailRequest || [])];
+    const saleOrders = allOrders.filter(order => 
+      order && (order.orderType === "sale" || !order.orderType)
+    );
+    
+    if (period === "all") {
+      const totalSales = saleOrders.reduce((sum, order) => 
+        sum + (Number(order?.sellingPrice) || 0), 0
+      );
+      const totalOrders = saleOrders.length;
+      // Volume points calculation - try to sum from orders, fallback to accumulated VP
+      let volumePoints = saleOrders.reduce((sum, order) => {
+        // Try order.volumePoints first
+        if (order?.volumePoints !== undefined && order?.volumePoints !== null) {
+          return sum + (Number(order.volumePoints) || 0);
+        }
+        // Try order.volume_points (snake_case)
+        if (order?.volume_points !== undefined && order?.volume_points !== null) {
+          return sum + (Number(order.volume_points) || 0);
+        }
+        // Try calculating from productModule if it has VP data
+        if (order?.productModule && Array.isArray(order.productModule)) {
+          const orderVP = order.productModule.reduce((vpSum, product) => {
+            const productVP = Number(product?.volumePoints || product?.volume_points || product?.VP || 0);
+            const quantity = Number(product?.quantity || 1);
+            return vpSum + (productVP * quantity);
+          }, 0);
+          if (orderVP > 0) {
+            return sum + orderVP;
+          }
+        }
+        return sum;
+      }, 0);
+      
+      // If no VP found in orders, use accumulated VP
+      if (volumePoints === 0 && orders?.acumulatedVP) {
+        volumePoints = Number(orders.acumulatedVP) || 0;
+      }
+      
+      return { totalSales, totalOrders, volumePoints };
+    }
+    
+    const dateRange = getDateRange(period);
+    if (!dateRange || !dateRange.start || !dateRange.end) {
+      return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+    }
+    
+    // Normalize date range
+    const startDate = new Date(dateRange.start);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(dateRange.end);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const filteredOrders = saleOrders.filter(order => {
+      try {
+        if (!order || !order.createdAt) return false;
+        
+        const orderDate = parseOrderDate(order.createdAt);
+        if (!orderDate || !isValid(orderDate)) {
+          return false;
+        }
+        
+        // Normalize order date to start of day for comparison
+        const orderDateNormalized = new Date(orderDate);
+        orderDateNormalized.setHours(0, 0, 0, 0);
+        
+        // Check if order date is within range
+        const isInRange = orderDateNormalized >= startDate && orderDateNormalized <= endDate;
+        
+        return isInRange;
+      } catch (error) {
+        return false;
+      }
+    });
+    
+    
+    const totalSales = filteredOrders.reduce((sum, order) => 
+      sum + (Number(order?.sellingPrice) || 0), 0
+    );
+    const totalOrders = filteredOrders.length;
+    
+    // Calculate volume points - check multiple possible locations
+    const volumePoints = filteredOrders.reduce((sum, order) => {
+      // Try order.volumePoints first
+      if (order?.volumePoints !== undefined && order?.volumePoints !== null) {
+        return sum + (Number(order.volumePoints) || 0);
+      }
+      // Try order.volume_points (snake_case)
+      if (order?.volume_points !== undefined && order?.volume_points !== null) {
+        return sum + (Number(order.volume_points) || 0);
+      }
+      // Try calculating from productModule - products have VP in the product table
+      if (order?.productModule && Array.isArray(order.productModule)) {
+        const orderVP = order.productModule.reduce((vpSum, product) => {
+          // Check multiple possible VP field names in product
+          const productVP = Number(
+            product?.volumePoints || 
+            product?.volume_points || 
+            product?.VP || 
+            product?.vp ||
+            product?.volumePoint ||
+            product?.volume_point ||
+            0
+          );
+          const quantity = Number(product?.quantity || 1);
+          return vpSum + (productVP * quantity);
+        }, 0);
+        if (orderVP > 0) {
+          return sum + orderVP;
+        }
+      }
+      return sum;
+    }, 0);
+    
+    return { totalSales, totalOrders, volumePoints };
+  } catch (error) {
+    console.error("Error calculating filtered stats:", error);
+    return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+  }
+}
+
 function RetailStatisticsCards({
-  totalSales,
-  totalOrders,
-  acumulatedVP
+  totalSales = 0,
+  totalOrders = 0,
+  acumulatedVP = 0,
+  orders = null
 }) {
   const [hide, setHide] = useState(true);
-  return <div className="grid grid-cols-3 gap-1 md:gap-4">
+  const [period, setPeriod] = useState("all"); // all, weekly, monthly, yearly
+  
+  const filteredStats = useMemo(() => {
+    try {
+      if (period === "all") {
+        return {
+          totalSales: Number(totalSales || 0),
+          totalOrders: Number(totalOrders || 0),
+          volumePoints: Number(acumulatedVP || 0),
+          // Also include aliases for backward compatibility
+          sales: Number(totalSales || 0),
+          orders: Number(totalOrders || 0)
+        };
+      }
+      if (!orders || typeof orders !== 'object') {
+        return { totalSales: 0, totalOrders: 0, volumePoints: 0, sales: 0, orders: 0 };
+      }
+      const result = calculateFilteredStats(orders, period);
+      // Add aliases for consistency
+      return {
+        ...result,
+        sales: result.totalSales,
+        orders: result.totalOrders
+      };
+    } catch (error) {
+      console.error("Error in filteredStats useMemo:", error);
+      return { sales: 0, orders: 0, volumePoints: 0 };
+    }
+  }, [period, totalSales, totalOrders, acumulatedVP, orders]);
+  
+  return <div className="space-y-4">
+    {/* Period Filter */}
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium">Period:</span>
+        {["all", "weekly", "monthly", "yearly"].map((p) => (
+          <Button
+            key={p}
+            size="sm"
+            variant={period === p ? "wz" : "outline"}
+            className="text-xs capitalize"
+            onClick={() => setPeriod(p)}
+          >
+            {p === "all" ? "All Time" : p}
+          </Button>
+        ))}
+      </div>
+      <RetailReportGenerator orders={orders} period={period} />
+    </div>
+    
+    {/* Statistics Cards */}
+    <div className="grid grid-cols-3 gap-1 md:gap-4">
     <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
       <CardHeader className="text-white p-0 mb-0">
         <CardTitle className="">
@@ -95,7 +372,11 @@ function RetailStatisticsCards({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>₹ {totalSales}</h4>
+        <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>
+          ₹ {period === "all" 
+            ? Number(totalSales || 0).toFixed(2) 
+            : Number(filteredStats?.totalSales || filteredStats?.sales || 0).toFixed(2)}
+        </h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
@@ -103,7 +384,11 @@ function RetailStatisticsCards({
         <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="text-base md:!text-[28px]">{totalOrders}</h4>
+        <h4 className="text-base md:!text-[28px]">
+          {period === "all" 
+            ? totalOrders 
+            : Number(filteredStats?.totalOrders || filteredStats?.orders || 0)}
+        </h4>
       </CardContent>
     </Card>
     <Card className="p-4 rounded-[10px] shadow-none">
@@ -111,9 +396,14 @@ function RetailStatisticsCards({
         <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <h4 className="text-[10px] md:!text-[28px]">{acumulatedVP}</h4>
+        <h4 className="text-[10px] md:!text-[28px]">
+          {period === "all" 
+            ? Number(acumulatedVP || 0).toFixed(2)
+            : Number(filteredStats?.volumePoints || 0).toFixed(2)}
+        </h4>
       </CardContent>
     </Card>
+  </div>
   </div>
 }
 
@@ -204,7 +494,7 @@ function Brand({
 }
 
 function Orders({ orders }) {
-  const [filter, setFilter] = useState("all"); // all | pending | completed
+  const [filter, setFilter] = useState("all"); // all | pending | completed | cancelled
 
   const rawOrders = [...orders.myOrder, ...orders.retailRequest];
 
@@ -212,11 +502,16 @@ function Orders({ orders }) {
     .filter((order) => {
       if (filter === "all") return true;
       if (filter === "pending") {
+        // Exclude cancelled orders from pending filter
+        const isCancelled = (order.status || "").toLowerCase() === "cancelled";
+        if (isCancelled) return false;
+        
         const isPendingStatus = (order.status || "").toLowerCase() === "pending";
         const isClientRequest = Array.isArray(orders.retailRequest) && orders.retailRequest.some((req) => req._id === order._id);
         return isPendingStatus || isClientRequest;
       }
       if (filter === "completed") return (order.status || "").toLowerCase() === "completed";
+      if (filter === "cancelled") return (order.status || "").toLowerCase() === "cancelled";
       return true;
     })
     .sort((a, b) => {
@@ -235,7 +530,7 @@ function Orders({ orders }) {
     <ExportOrdersoExcel orders={orders} />
 
     <div className="flex flex-wrap items-center gap-2 mb-3">
-      {["all", "pending", "completed"].map((item) => (
+      {["all", "pending", "completed", "cancelled"].map((item) => (
         <Button
           key={item}
           size="sm"
@@ -381,11 +676,13 @@ function SaleOrder({ order }) {
         <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {pendingAmount}</span></p>
         <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {paidAmount}</span></p>
       </div>
-      {pendingAmount > 0
-        ? <UpdateClientOrderAmount order={order} />
-        : status === "pending"
-          ? <RetailPendingLabel status={order.status} />
-          : <Badge variant="wz">Paid</Badge>}
+      {status === "cancelled"
+        ? <RetailCancelledLabel status={order.status} />
+        : pendingAmount > 0
+          ? <UpdateClientOrderAmount order={order} />
+          : status === "pending"
+            ? <RetailPendingLabel status={order.status} />
+            : <Badge variant="wz">Paid</Badge>}
     </CardFooter>
     <div>
       {order.status === "Pending" && <AcceptRejectOrder order={order} />}
@@ -635,4 +932,137 @@ function getQuantityStatusColor(quantity) {
   if (quantity === 0) return "w-[8ch] block bg-red-300 text-black px-4 py-1 rounded-[2px] text-center"
   if (quantity <= 3) return "w-[8ch] block bg-yellow-300 text-black px-4 py-1 rounded-[2px] text-center"
   return "w-[8ch] block bg-green-300 text-black px-4 py-1 rounded-[2px] text-center"
+}
+
+function RetailReportGenerator({ orders, period: currentPeriod }) {
+  const [open, setOpen] = useState(false);
+  const [reportType, setReportType] = useState("summary"); // summary, detailed
+  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod || "all");
+  const [pdfData, setPdfData] = useState(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  
+  const handleGenerateReport = () => {
+    try {
+      if (!orders) {
+        toast.error("No orders data available");
+        return;
+      }
+      
+      const stats = calculateFilteredStats(orders, selectedPeriod);
+      const reportData = salesReportPDFData(stats, orders, selectedPeriod, reportType);
+      
+      setPdfData(reportData);
+      setOpen(false);
+      // Open PDF after a brief delay to ensure state is updated
+      setTimeout(() => {
+        setPdfOpen(true);
+      }, 100);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error(error.message || "Failed to generate report");
+    }
+  };
+  
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="wz" size="sm" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Generate Report
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="text-xl font-bold mb-4">Generate Sales Report</DialogTitle>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Report Period</label>
+              <div className="grid grid-cols-2 gap-2">
+                {["all", "weekly", "monthly", "yearly"].map((p) => (
+                  <Button
+                    key={p}
+                    variant={selectedPeriod === p ? "wz" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedPeriod(p)}
+                    className="text-xs capitalize"
+                  >
+                    {p === "all" ? "All Time" : p}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">Report Type</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={reportType === "summary" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("summary")}
+                  className="flex-1"
+                >
+                  Summary
+                </Button>
+                <Button
+                  variant={reportType === "detailed" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("detailed")}
+                  className="flex-1"
+                >
+                  Detailed
+                </Button>
+              </div>
+            </div>
+            
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Report Includes:</p>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                {reportType === "summary" ? (
+                  <>
+                    <li>Total Sales Amount</li>
+                    <li>Total Orders Count</li>
+                    <li>Volume Points</li>
+                    <li>Average Order Value</li>
+                  </>
+                ) : (
+                  <>
+                    <li>All order details</li>
+                    <li>Client information</li>
+                    <li>Product details</li>
+                    <li>Financial breakdown</li>
+                    <li>Volume points per order</li>
+                  </>
+                )}
+              </ul>
+            </div>
+            
+            <Button
+              variant="wz"
+              className="w-full gap-2"
+              onClick={handleGenerateReport}
+            >
+              <FileText className="h-4 w-4" />
+              Generate PDF Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {pdfData && (
+        <PDFRenderer 
+          pdfTemplate="PDFSalesReport" 
+          data={pdfData}
+          open={pdfOpen}
+          onOpenChange={setPdfOpen}
+        >
+          <Button 
+            variant="wz"
+            className="hidden"
+          >
+            View Report
+          </Button>
+        </PDFRenderer>
+      )}
+    </>
+  );
 }
