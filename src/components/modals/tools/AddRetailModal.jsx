@@ -4,7 +4,7 @@ import FormControl from "@/components/FormControl";
 import SelectControl from "@/components/Select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   addProductToProductModule, addRetailReducer, changeFieldvalue,
@@ -19,7 +19,7 @@ import useCurrentStateContext, { CurrentStateProvider } from "@/providers/Curren
 import { useAppSelector } from "@/providers/global/hooks";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -266,11 +266,12 @@ function ProductCard({ product }) {
 
 function Stage3() {
   const [loading, setLoading] = useState(false)
-  const { productModule, coachMargin, customerMargin, margins, dispatch, ...state } = useCurrentStateContext();
+  const { productModule, coachMargin, customerMargin, margins, dispatch, actionType, ...state } = useCurrentStateContext();
+
+  const closeBtnRef = useRef()
 
   async function createOrder() {
     try {
-      setLoading(true);
       const payload = generateRequestPayload({
         ...state,
         productModule,
@@ -297,8 +298,38 @@ function Stage3() {
       mutate("app/order-history");
     } catch (error) {
       toast.error(error.message || "Something went wrong!");
+    }
+  }
+
+  async function updateOrder() {
+    try {
+      const payload = generateRequestPayload({
+        ...state,
+        productModule,
+        coachMargin,
+        customerMargin
+      })
+
+      const response = await sendData(`app/update-order?id=${state.orderId}`, payload, "PUT")
+      if (response.status_code !== 200) throw new Error(response.message)
+      toast.message(response.message || "Successfull");
+      closeBtnRef.current.click()
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  async function continueSavingOrder() {
+    try {
+      setLoading(true);
+      if (actionType === "update") await updateOrder()
+      else {
+        await createOrder()
+      }
+    } catch (error) {
+
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -311,16 +342,18 @@ function Stage3() {
   }, [customerMargin])
 
   const discounts = margins.filter(margin => margin <= coachMargin);
-  const costPrice = productModule.reduce((acc, curr) => acc + (Number(curr.productMrpList[coachMargin]) * curr.quantity), 0)
-  const salesPrice = productModule.reduce((acc, curr) => acc + (Number(curr.productMrpList[customerMargin]) * curr.quantity), 0)
+  const costPrice = productModule.reduce((acc, curr) => acc + (parseInt(curr.productMrpList[coachMargin]) * parseInt(curr.quantity)), 0)
+  const salesPrice = productModule.reduce((acc, curr) => acc + (parseInt(curr.productMrpList[customerMargin]) * parseInt(curr.quantity)), 0)
+
   const orderMetaData = {
     costPrice,
-    mrp: productModule.reduce((acc, curr) => acc + (Number(curr.productMrpList["0"]) * curr.quantity), 0),
+    mrp: productModule.reduce((acc, curr) => acc + (Number(curr.productMrpList["0"]) * parseInt(curr.quantity)), 0),
     salesPrice,
     profit: salesPrice - costPrice,
   }
 
   return <div className="px-6 py-4 space-y-4">
+    <DialogClose ref={closeBtnRef} />
     {productModule.map(product => <ProductCardList key={product._id} product={product} />)}
     <div className="text-sm space-y-1 border-b pb-4 grid gap-2">
       <div className="flex justify-between">
@@ -351,7 +384,7 @@ function Stage3() {
     </div>
 
     <Button
-      onClick={createOrder}
+      onClick={continueSavingOrder}
       variant="wz"
       className="block mx-auto"
       disabled={loading}

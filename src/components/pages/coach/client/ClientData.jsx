@@ -371,9 +371,9 @@ function RetailOrderDetailCard({ order }) {
       {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
       </Link> */}
-      {order.pendingAmount > 0
+      {/* {order.pendingAmount > 0
         ? <UpdateClientOrderAmount order={order} />
-        : <Badge variant="wz">Paid</Badge>}
+        : <Badge variant="wz">Paid</Badge>} */}
     </CardFooter>
   </Card>
 }
@@ -386,7 +386,7 @@ export function UpdateClientOrderAmount({ order }) {
     try {
       setLoading(true);
       const response = await sendData(
-        `app/client/retail-order/${order.clientId}`,
+        `app/client/retail-order/${order.clientId?._id}`,
         { orderId: order._id, amount: value },
         "PUT"
       );
@@ -406,6 +406,7 @@ export function UpdateClientOrderAmount({ order }) {
       <DialogTitle className="p-4 border-b-1">Order Amount</DialogTitle>
       <div className="p-4">
         <p> Pending Amount - ₹{order.pendingAmount}</p>
+        <p> Paid Amount - ₹{order.paidAmount}</p>
         <FormControl
           label="Add Amount"
           value={value}
@@ -894,7 +895,7 @@ function ClientAdherenceScore({ clientId }) {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!history || history.length === 0) return [];
-    
+
     // Sort by date
     const sortedHistory = [...history].sort((a, b) => {
       const dateA = new Date(a.date);
@@ -910,7 +911,7 @@ function ClientAdherenceScore({ clientId }) {
   }, [history]);
 
   const getScoreColor = (label) => {
-    switch(label) {
+    switch (label) {
       case "Excellent": return "text-emerald-600";
       case "Good": return "text-green-600";
       case "Average": return "text-yellow-600";
@@ -961,24 +962,24 @@ function ClientAdherenceScore({ clientId }) {
                       <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="rgb(59, 130, 246)" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="rgb(59, 130, 246)" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="rgb(59, 130, 246)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="rgb(59, 130, 246)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis 
-                          dataKey="date" 
+                        <XAxis
+                          dataKey="date"
                           tick={{ fontSize: 12 }}
                           angle={-45}
                           textAnchor="end"
                           height={80}
                         />
-                        <YAxis 
+                        <YAxis
                           domain={[0, 100]}
                           tick={{ fontSize: 12 }}
                           label={{ value: 'Score', angle: -90, position: 'insideLeft' }}
                         />
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [`${value.toFixed(1)}`, "Score"]}
                           contentStyle={{
                             backgroundColor: "white",
@@ -1074,14 +1075,14 @@ function ClientAdherenceScore({ clientId }) {
                   />
                 </svg>
               </div>
-              
+
               {/* Score */}
               <div className="flex flex-col items-center">
                 <p className={`text-6xl font-bold ${getScoreColor(activeRange?.label)} mb-4`}>
                   {hasScore ? normalizedScore.toFixed(0) : "N/A"}
                 </p>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`text-base font-semibold px-4 py-2 ${getScoreColor(activeRange?.label)} border-current`}
                 >
                   {activeRange?.label ?? "No Data"}
@@ -1096,22 +1097,20 @@ function ClientAdherenceScore({ clientId }) {
               <h4 className="text-lg font-semibold text-[var(--dark-1)] mb-4">Score Breakdown</h4>
               <div className="space-y-3">
                 {ADHERENCE_SCORE_RANGES.map(range => (
-                  <div 
-                    key={range.label} 
-                    className={`p-3 rounded-lg border-2 transition-colors ${
-                      range.label === activeRange?.label 
-                        ? "border-primary bg-primary/5" 
-                        : "border-transparent bg-slate-50 hover:bg-slate-100"
-                    }`}
+                  <div
+                    key={range.label}
+                    className={`p-3 rounded-lg border-2 transition-colors ${range.label === activeRange?.label
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent bg-slate-50 hover:bg-slate-100"
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`font-semibold text-sm ${
-                            range.label === activeRange?.label 
-                              ? getScoreColor(range.label)
-                              : "text-slate-700"
-                          }`}>
+                          <span className={`font-semibold text-sm ${range.label === activeRange?.label
+                            ? getScoreColor(range.label)
+                            : "text-slate-700"
+                            }`}>
                             {range.label}
                           </span>
                           {range.label === activeRange?.label && (

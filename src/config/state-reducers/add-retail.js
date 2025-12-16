@@ -164,7 +164,8 @@ export function init(payload) {
     productModule: payload.productModule,
     status: payload.status,
     clientName: payload?.clientId?.name || "",
-    orderId: payload.orderId || ""
+    orderId: payload.orderId || "",
+    actionType: payload.actionType
   }
 }
 

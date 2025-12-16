@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import Loader from "@/components/common/Loader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import FormControl from "@/components/FormControl";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
@@ -12,7 +13,7 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,11 +28,11 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, RefreshCcw, ShoppingCart } from "lucide-react";
+import { Clock, EllipsisVertical, Eye, EyeClosed, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function Page() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
@@ -145,7 +146,9 @@ function RetailContainer({ orders, retails }) {
         <p className="text-sm md:text-lg">Inventory</p>
       </TabsTrigger>
     </TabsList>
-    <PurchaseHistory />
+    <TabsContent value="purchase-history">
+      <PurchaseHistory />
+    </TabsContent>
     <Brands brands={retails.brands} />
     <Orders orders={orders} />
     <Inventory />
@@ -294,18 +297,6 @@ function PurchaseOrder({ order }) {
           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
             {order.orderType || 'Purchase'}
           </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild className="text-black w-[16px]">
-              <EllipsisVertical className="cursor-pointer" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="font-semibold px-2 py-[6px]">
-              <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
-                <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
-                  Invoice
-                </DialogTrigger>
-              </PDFRenderer>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </CardHeader>
@@ -377,8 +368,8 @@ function SaleOrder({ order }) {
         </div>
       </div>
     </CardContent>
-    <CardFooter className="px-0 items-end justify-between">
-      <div className="text-[12px]">
+    <CardFooter className="px-0 items-end justify-between gap-2">
+      <div className="text-[12px] mr-auto">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order.clientName || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {pendingAmount}</span></p>
@@ -389,6 +380,12 @@ function SaleOrder({ order }) {
         : status === "pending"
           ? <RetailPendingLabel status={order.status} />
           : <Badge variant="wz">Paid</Badge>}
+      <OrderNote
+        notes={order.notes}
+        orderId={order._id}
+      />
+      <DeleteOrder orderId={order._id} />
+      <UpdateOrder order={order} />
     </CardFooter>
     <div>
       {order.status === "Pending" && <AcceptRejectOrder order={order} />}
@@ -641,44 +638,137 @@ function getQuantityStatusColor(quantity) {
 }
 
 
-function PurchaseHistory({ orders }) {
+function PurchaseHistory() {
   const { isLoading, error, data, mutate } = useSWR(
     "order/history-by-status?orderType=purchase",
     () => fetchData("app/order/history-by-status?orderType=purchase")
   );
 
-  if (isLoading) return <ContentLoader />
+  if (isLoading) return <Loader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  console.log(data)
-  return <button onClick={mutate}>
-    click
-  </button>
+
+  const orders = data.data || []
+
+  if (orders.length === 0) return <div className="min-h-[200px] flex items-center justify-center">
+    0 orders created
+  </div>
 
   return <TabsContent value="purchase-history">
-    <ExportOrdersoExcel orders={orders} />
-
-    <div className="flex flex-wrap items-center gap-2 mb-3">
-      {["all", "pending", "completed"].map((item) => (
-        <Button
-          key={item}
-          size="sm"
-          variant={filter === item ? "wz" : "outline"}
-          className="text-xs capitalize"
-          onClick={() => setFilter(item)}
-        >
-          {item}
-        </Button>
-      ))}
-    </div>
-
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {myOrders.map(order => <Order key={order._id} order={order} />)}
-      {myOrders.length === 0 && (
+      {orders.map(order => <Order key={order._id} order={order} />)}
+      {orders.length === 0 && (
         <div className="col-span-full">
-          <ContentError title="No orders found for this filter." />
+          <ContentError title="0 orders created" />
         </div>
       )}
     </div>
   </TabsContent>
+}
+
+function OrderNote({ notes = "", orderId }) {
+  const [value, setValue] = useState(notes)
+  const [loading, setLoading] = useState(false)
+
+  const closeBtnRef = useRef()
+
+  async function updateNote() {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/note", { notes: value, orderId });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogClose ref={closeBtnRef} />
+    <DialogTrigger>
+      <NotebookPen className="w-[28px] h-[28px] text-white bg-[var(--accent-1)] p-1 rounded-[4px]" />
+    </DialogTrigger>
+    <DialogContent className="p-0 !space-y-0">
+      <DialogTitle className="border-b-1 p-4">Order Notes</DialogTitle>
+      <div className="p-4">
+        {/* <p className="italics"></p>
+        {!notes && <div className="text-center">No note added</div>} */}
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Please add a note"
+        />
+        <Button
+          variant="wz"
+          className="mt-4"
+          disabled={!value || loading || value === notes}
+          onClick={updateNote}
+        >
+          Save
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function DeleteOrder({ orderId }) {
+  async function deleteOrder(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const endpoint = buildUrlWithQueryParams("app/delete-order", { id: orderId })
+      const response = await sendData(endpoint, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure of deleting this order!"
+    action={(setLoading, btnRef) => deleteOrder(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function UpdateOrder({ order }) {
+  const [open, setOpen] = useState(false)
+  return <div>
+    <Button onClick={() => setOpen(true)}>
+      <Pen />
+    </Button>
+    <AddRetailModal
+      open={open}
+      payload={{
+        stage: 2,
+        acceptFlow: false,
+        coachId: order.coachId,
+        margin: order.coachMargin,
+        selectedBrandId: order.brand?._id,
+        margins: order.brand?.margins || [],
+        brand: {
+          margins: order.brand?.margins || [],
+          _id: order.brand?._id
+        },
+        clientId: order.clientId?._id,
+        productModule: order.productModule,
+        status: order.status,
+        clientName: order?.clientId?.name || "",
+        orderId: order._id || "",
+        actionType: "update"
+      }}
+      setOpen={setOpen}
+    />
+  </div>
 }
