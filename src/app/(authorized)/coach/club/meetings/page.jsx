@@ -13,6 +13,7 @@ import useSWR from "swr";
 import { getMeetings } from "@/lib/fetchers/club";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
+import Link from "next/link";
 
 export default function Page() {
   const { isLoading, error, data: allData } = useSWR("getMeetings", () => getMeetings());
@@ -21,8 +22,12 @@ export default function Page() {
 
   if (!allData.status || error) return <div className="content-container">
     {allData.message === "No meetings found for the given coach." && <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <h4>Meeting Details</h4>
+      <h4 className="mr-auto">Meeting Details</h4>
       <ClubSystemOptions />
+      <Link
+        className="px-4 py-2 rounded-[4px] bg-[var(--accent-1)] text-white font-bold"
+        href="/coach/club/link-generator"
+      >Create</Link>
     </div>}
     <ContentError
       title={error || allData.message}
@@ -33,8 +38,12 @@ export default function Page() {
 
   return <div className="content-container">
     <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <h4>Meeting Details</h4>
+      <h4 className="mr-auto">Meeting Details</h4>
       <ClubSystemOptions />
+      <Link
+        className="px-4 py-2 rounded-[4px] bg-[var(--accent-1)] text-white font-bold"
+        href="/coach/club/link-generator"
+      >Create</Link>
     </div>
     <div className="overflow-x-auto">
       <Table className=" border-1 border-r-0 [&_th]:border-r-1 [&_td]:border-r-1 overflow-x-auto">

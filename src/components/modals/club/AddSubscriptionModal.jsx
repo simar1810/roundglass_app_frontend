@@ -24,7 +24,7 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
     startDate: "",
     description: "",
     noOfDays: 30,
-    paidAmount: ""
+    paidAmount: 0
   });
   const closeBtnRef = useRef(null);
 

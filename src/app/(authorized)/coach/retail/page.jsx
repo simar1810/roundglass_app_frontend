@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import Loader from "@/components/common/Loader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import FormControl from "@/components/FormControl";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
@@ -12,7 +13,7 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,12 +27,12 @@ import { sortByPriority } from "@/lib/retail";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
-import { endOfMonth, endOfWeek, endOfYear, isValid, parse, startOfMonth, startOfWeek, startOfYear } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, FileText, RefreshCcw, ShoppingCart } from "lucide-react";
+import { parse } from "date-fns";
+import { Clock, EllipsisVertical, Eye, EyeClosed, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 export default function Page() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
@@ -77,14 +78,14 @@ export default function Page() {
 function parseOrderDate(dateString) {
   try {
     if (!dateString) return null;
-    
+
     // Convert to string if it's not already
     const dateStr = String(dateString).trim();
     if (!dateStr) return null;
-    
+
     // Try dd-MM-yyyy first (most common format from backend based on codebase)
     const formats = ["dd-MM-yyyy", "dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy", "dd-MM-yy", "d-M-yyyy", "d/MM/yyyy"];
-    
+
     for (const format of formats) {
       try {
         const parsed = parse(dateStr, format, new Date());
@@ -100,7 +101,7 @@ function parseOrderDate(dateString) {
         continue;
       }
     }
-    
+
     // Fallback: try native Date parsing
     try {
       const nativeDate = new Date(dateStr);
@@ -114,7 +115,7 @@ function parseOrderDate(dateString) {
     } catch (e) {
       // Ignore
     }
-    
+
     return null;
   } catch (error) {
     return null;
@@ -129,11 +130,11 @@ function getDateRange(period) {
       console.error("Invalid date");
       return null;
     }
-    
+
     // Create a new date to avoid mutating the original
     const currentDate = new Date(now);
     currentDate.setHours(23, 59, 59, 999);
-    
+
     switch (period) {
       case "weekly": {
         const start = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -174,14 +175,14 @@ function calculateFilteredStats(orders, period) {
     if (!orders) {
       return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
     }
-    
+
     const allOrders = [...(orders.myOrder || []), ...(orders.retailRequest || [])];
-    const saleOrders = allOrders.filter(order => 
+    const saleOrders = allOrders.filter(order =>
       order && (order.orderType === "sale" || !order.orderType)
     );
-    
+
     if (period === "all") {
-      const totalSales = saleOrders.reduce((sum, order) => 
+      const totalSales = saleOrders.reduce((sum, order) =>
         sum + (Number(order?.sellingPrice) || 0), 0
       );
       const totalOrders = saleOrders.length;
@@ -208,55 +209,55 @@ function calculateFilteredStats(orders, period) {
         }
         return sum;
       }, 0);
-      
+
       // If no VP found in orders, use accumulated VP
       if (volumePoints === 0 && orders?.acumulatedVP) {
         volumePoints = Number(orders.acumulatedVP) || 0;
       }
-      
+
       return { totalSales, totalOrders, volumePoints };
     }
-    
+
     const dateRange = getDateRange(period);
     if (!dateRange || !dateRange.start || !dateRange.end) {
       return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
     }
-    
+
     // Normalize date range
     const startDate = new Date(dateRange.start);
     startDate.setHours(0, 0, 0, 0);
-    
+
     const endDate = new Date(dateRange.end);
     endDate.setHours(23, 59, 59, 999);
-    
+
     const filteredOrders = saleOrders.filter(order => {
       try {
         if (!order || !order.createdAt) return false;
-        
+
         const orderDate = parseOrderDate(order.createdAt);
         if (!orderDate || !isValid(orderDate)) {
           return false;
         }
-        
+
         // Normalize order date to start of day for comparison
         const orderDateNormalized = new Date(orderDate);
         orderDateNormalized.setHours(0, 0, 0, 0);
-        
+
         // Check if order date is within range
         const isInRange = orderDateNormalized >= startDate && orderDateNormalized <= endDate;
-        
+
         return isInRange;
       } catch (error) {
         return false;
       }
     });
-    
-    
-    const totalSales = filteredOrders.reduce((sum, order) => 
+
+
+    const totalSales = filteredOrders.reduce((sum, order) =>
       sum + (Number(order?.sellingPrice) || 0), 0
     );
     const totalOrders = filteredOrders.length;
-    
+
     // Calculate volume points - check multiple possible locations
     const volumePoints = filteredOrders.reduce((sum, order) => {
       // Try order.volumePoints first
@@ -272,9 +273,9 @@ function calculateFilteredStats(orders, period) {
         const orderVP = order.productModule.reduce((vpSum, product) => {
           // Check multiple possible VP field names in product
           const productVP = Number(
-            product?.volumePoints || 
-            product?.volume_points || 
-            product?.VP || 
+            product?.volumePoints ||
+            product?.volume_points ||
+            product?.VP ||
             product?.vp ||
             product?.volumePoint ||
             product?.volume_point ||
@@ -289,7 +290,7 @@ function calculateFilteredStats(orders, period) {
       }
       return sum;
     }, 0);
-    
+
     return { totalSales, totalOrders, volumePoints };
   } catch (error) {
     console.error("Error calculating filtered stats:", error);
@@ -305,7 +306,7 @@ function RetailStatisticsCards({
 }) {
   const [hide, setHide] = useState(true);
   const [period, setPeriod] = useState("all"); // all, weekly, monthly, yearly
-  
+
   const filteredStats = useMemo(() => {
     try {
       if (period === "all") {
@@ -333,7 +334,7 @@ function RetailStatisticsCards({
       return { sales: 0, orders: 0, volumePoints: 0 };
     }
   }, [period, totalSales, totalOrders, acumulatedVP, orders]);
-  
+
   return <div className="space-y-4">
     {/* Period Filter */}
     <div className="flex items-center justify-between flex-wrap gap-2">
@@ -353,57 +354,57 @@ function RetailStatisticsCards({
       </div>
       <RetailReportGenerator orders={orders} period={period} />
     </div>
-    
+
     {/* Statistics Cards */}
     <div className="grid grid-cols-3 gap-1 md:gap-4">
-    <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
-      <CardHeader className="text-white p-0 mb-0">
-        <CardTitle className="">
-          <span className="w-full text-base md:text-lg mr-2">Total Sales</span>
-          {hide
-            ? <EyeClosed
-              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
-              onClick={() => setHide(false)}
-            />
-            : <Eye
-              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
-              onClick={() => setHide(true)}
-            />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>
-          ₹ {period === "all" 
-            ? Number(totalSales || 0).toFixed(2) 
-            : Number(filteredStats?.totalSales || filteredStats?.sales || 0).toFixed(2)}
-        </h4>
-      </CardContent>
-    </Card>
-    <Card className="p-4 rounded-[10px] shadow-none">
-      <CardHeader className="p-0 mb-0">
-        <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className="text-base md:!text-[28px]">
-          {period === "all" 
-            ? totalOrders 
-            : Number(filteredStats?.totalOrders || filteredStats?.orders || 0)}
-        </h4>
-      </CardContent>
-    </Card>
-    <Card className="p-4 rounded-[10px] shadow-none">
-      <CardHeader className="p-0 mb-0">
-        <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className="text-[10px] md:!text-[28px]">
-          {period === "all" 
-            ? Number(acumulatedVP || 0).toFixed(2)
-            : Number(filteredStats?.volumePoints || 0).toFixed(2)}
-        </h4>
-      </CardContent>
-    </Card>
-  </div>
+      <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
+        <CardHeader className="text-white p-0 mb-0">
+          <CardTitle className="">
+            <span className="w-full text-base md:text-lg mr-2">Total Sales</span>
+            {hide
+              ? <EyeClosed
+                className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+                onClick={() => setHide(false)}
+              />
+              : <Eye
+                className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+                onClick={() => setHide(true)}
+              />}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>
+            ₹ {period === "all"
+              ? Number(totalSales || 0).toFixed(2)
+              : Number(filteredStats?.totalSales || filteredStats?.sales || 0).toFixed(2)}
+          </h4>
+        </CardContent>
+      </Card>
+      <Card className="p-4 rounded-[10px] shadow-none">
+        <CardHeader className="p-0 mb-0">
+          <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className="text-base md:!text-[28px]">
+            {period === "all"
+              ? totalOrders
+              : Number(filteredStats?.totalOrders || filteredStats?.orders || 0)}
+          </h4>
+        </CardContent>
+      </Card>
+      <Card className="p-4 rounded-[10px] shadow-none">
+        <CardHeader className="p-0 mb-0">
+          <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className="text-[10px] md:!text-[28px]">
+            {period === "all"
+              ? Number(acumulatedVP || 0).toFixed(2)
+              : Number(filteredStats?.volumePoints || 0).toFixed(2)}
+          </h4>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 }
 
@@ -424,11 +425,20 @@ function RetailContainer({ orders, retails }) {
       </TabsTrigger>
       <TabsTrigger
         className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="purchase-history"
+      >
+        <p className="text-sm md:text-lg">Purchase History</p>
+      </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="inventory"
       >
         <p className="text-sm md:text-lg">Inventory</p>
       </TabsTrigger>
     </TabsList>
+    <TabsContent value="purchase-history">
+      <PurchaseHistory />
+    </TabsContent>
     <Brands brands={retails.brands} />
     <Orders orders={orders} />
     <Inventory />
@@ -439,10 +449,6 @@ function Brands({ brands }) {
   return <TabsContent value="brands">
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
-      {/* <Button variant="wz" size="sm">
-        <Plus />
-        Add New Kit
-      </Button> */}
     </div>
     <div className="mt-4 grid grid-cols-1 md:grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
@@ -505,7 +511,7 @@ function Orders({ orders }) {
         // Exclude cancelled orders from pending filter
         const isCancelled = (order.status || "").toLowerCase() === "cancelled";
         if (isCancelled) return false;
-        
+
         const isPendingStatus = (order.status || "").toLowerCase() === "pending";
         const isClientRequest = Array.isArray(orders.retailRequest) && orders.retailRequest.some((req) => req._id === order._id);
         return isPendingStatus || isClientRequest;
@@ -586,18 +592,6 @@ function PurchaseOrder({ order }) {
           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
             {order.orderType || 'Purchase'}
           </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild className="text-black w-[16px]">
-              <EllipsisVertical className="cursor-pointer" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="font-semibold px-2 py-[6px]">
-              <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
-                <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
-                  Invoice
-                </DialogTrigger>
-              </PDFRenderer>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </CardHeader>
@@ -669,20 +663,24 @@ function SaleOrder({ order }) {
         </div>
       </div>
     </CardContent>
-    <CardFooter className="px-0 items-end justify-between">
-      <div className="text-[12px]">
+    <CardFooter className="px-0 items-end justify-between gap-2">
+      <div className="text-[12px] mr-auto">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order.clientName || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {pendingAmount}</span></p>
         <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {paidAmount}</span></p>
       </div>
-      {status === "cancelled"
-        ? <RetailCancelledLabel status={order.status} />
-        : pendingAmount > 0
-          ? <UpdateClientOrderAmount order={order} />
-          : status === "pending"
-            ? <RetailPendingLabel status={order.status} />
-            : <Badge variant="wz">Paid</Badge>}
+      {pendingAmount > 0
+        ? <UpdateClientOrderAmount order={order} />
+        : status === "pending"
+          ? <RetailPendingLabel status={order.status} />
+          : <Badge variant="wz">Paid</Badge>}
+      <OrderNote
+        notes={order.notes}
+        orderId={order._id}
+      />
+      <DeleteOrder orderId={order._id} />
+      <UpdateOrder order={order} />
     </CardFooter>
     <div>
       {order.status === "Pending" && <AcceptRejectOrder order={order} />}
@@ -934,135 +932,138 @@ function getQuantityStatusColor(quantity) {
   return "w-[8ch] block bg-green-300 text-black px-4 py-1 rounded-[2px] text-center"
 }
 
-function RetailReportGenerator({ orders, period: currentPeriod }) {
-  const [open, setOpen] = useState(false);
-  const [reportType, setReportType] = useState("summary"); // summary, detailed
-  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod || "all");
-  const [pdfData, setPdfData] = useState(null);
-  const [pdfOpen, setPdfOpen] = useState(false);
-  
-  const handleGenerateReport = () => {
-    try {
-      if (!orders) {
-        toast.error("No orders data available");
-        return;
-      }
-      
-      const stats = calculateFilteredStats(orders, selectedPeriod);
-      const reportData = salesReportPDFData(stats, orders, selectedPeriod, reportType);
-      
-      setPdfData(reportData);
-      setOpen(false);
-      // Open PDF after a brief delay to ensure state is updated
-      setTimeout(() => {
-        setPdfOpen(true);
-      }, 100);
-    } catch (error) {
-      console.error("Error generating report:", error);
-      toast.error(error.message || "Failed to generate report");
-    }
-  };
-  
-  return (
-    <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="wz" size="sm" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Generate Report
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogTitle className="text-xl font-bold mb-4">Generate Sales Report</DialogTitle>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Report Period</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["all", "weekly", "monthly", "yearly"].map((p) => (
-                  <Button
-                    key={p}
-                    variant={selectedPeriod === p ? "wz" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPeriod(p)}
-                    className="text-xs capitalize"
-                  >
-                    {p === "all" ? "All Time" : p}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">Report Type</label>
-              <div className="flex gap-2">
-                <Button
-                  variant={reportType === "summary" ? "wz" : "outline"}
-                  size="sm"
-                  onClick={() => setReportType("summary")}
-                  className="flex-1"
-                >
-                  Summary
-                </Button>
-                <Button
-                  variant={reportType === "detailed" ? "wz" : "outline"}
-                  size="sm"
-                  onClick={() => setReportType("detailed")}
-                  className="flex-1"
-                >
-                  Detailed
-                </Button>
-              </div>
-            </div>
-            
-            <div className="bg-muted/50 p-3 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Report Includes:</p>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                {reportType === "summary" ? (
-                  <>
-                    <li>Total Sales Amount</li>
-                    <li>Total Orders Count</li>
-                    <li>Volume Points</li>
-                    <li>Average Order Value</li>
-                  </>
-                ) : (
-                  <>
-                    <li>All order details</li>
-                    <li>Client information</li>
-                    <li>Product details</li>
-                    <li>Financial breakdown</li>
-                    <li>Volume points per order</li>
-                  </>
-                )}
-              </ul>
-            </div>
-            
-            <Button
-              variant="wz"
-              className="w-full gap-2"
-              onClick={handleGenerateReport}
-            >
-              <FileText className="h-4 w-4" />
-              Generate PDF Report
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {pdfData && (
-        <PDFRenderer 
-          pdfTemplate="PDFSalesReport" 
-          data={pdfData}
-          open={pdfOpen}
-          onOpenChange={setPdfOpen}
-        >
-          <Button 
-            variant="wz"
-            className="hidden"
-          >
-            View Report
-          </Button>
-        </PDFRenderer>
-      )}
-    </>
+
+function PurchaseHistory() {
+  const { isLoading, error, data, mutate } = useSWR(
+    "order/history-by-status?orderType=purchase",
+    () => fetchData("app/order/history-by-status?orderType=purchase")
   );
+
+  if (isLoading) return <Loader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  const orders = data.data || []
+
+  if (orders.length === 0) return <div className="min-h-[200px] flex items-center justify-center">
+    0 orders created
+  </div>
+
+  return <TabsContent value="purchase-history">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {orders.map(order => <Order key={order._id} order={order} />)}
+      {orders.length === 0 && (
+        <div className="col-span-full">
+          <ContentError title="0 orders created" />
+        </div>
+      )}
+    </div>
+  </TabsContent>
+}
+
+function OrderNote({ notes = "", orderId }) {
+  const [value, setValue] = useState(notes)
+  const [loading, setLoading] = useState(false)
+
+  const closeBtnRef = useRef()
+
+  async function updateNote() {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/note", { notes: value, orderId });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogClose ref={closeBtnRef} />
+    <DialogTrigger>
+      <NotebookPen className="w-[28px] h-[28px] text-white bg-[var(--accent-1)] p-1 rounded-[4px]" />
+    </DialogTrigger>
+    <DialogContent className="p-0 !space-y-0">
+      <DialogTitle className="border-b-1 p-4">Order Notes</DialogTitle>
+      <div className="p-4">
+        {/* <p className="italics"></p>
+        {!notes && <div className="text-center">No note added</div>} */}
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Please add a note"
+        />
+        <Button
+          variant="wz"
+          className="mt-4"
+          disabled={!value || loading || value === notes}
+          onClick={updateNote}
+        >
+          Save
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function DeleteOrder({ orderId }) {
+  async function deleteOrder(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const endpoint = buildUrlWithQueryParams("app/delete-order", { id: orderId })
+      const response = await sendData(endpoint, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure of deleting this order!"
+    action={(setLoading, btnRef) => deleteOrder(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function UpdateOrder({ order }) {
+  const [open, setOpen] = useState(false)
+  return <div>
+    <Button onClick={() => setOpen(true)}>
+      <Pen />
+    </Button>
+    <AddRetailModal
+      open={open}
+      payload={{
+        stage: 2,
+        acceptFlow: false,
+        coachId: order.coachId,
+        margin: order.coachMargin,
+        selectedBrandId: order.brand?._id,
+        margins: order.brand?.margins || [],
+        brand: {
+          margins: order.brand?.margins || [],
+          _id: order.brand?._id
+        },
+        clientId: order.clientId?._id,
+        productModule: order.productModule,
+        status: order.status,
+        clientName: order?.clientId?.name || "",
+        orderId: order._id || "",
+        actionType: "update"
+      }}
+      setOpen={setOpen}
+    />
+  </div>
 }
