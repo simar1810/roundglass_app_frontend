@@ -1,22 +1,23 @@
 "use client"
+import MembershipInvoicePDF from "@/components/modals/MembershipInvoicePDF";
 import PDFComparison from "@/components/pages/coach/client/PDFComparison";
 import PDFShareStatistics from "@/components/pages/coach/client/PDFShareStatistics";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import PDFInvoice from "../pages/coach/meals/PDFInvoice";
-import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
-import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
-import PDFCustomMealPortrait from "../pages/coach/meals/PDFCustomMealPortrait";
-import PDFCustomMealLandscape from "../pages/coach/meals/PDFCustomMealLandscape";
+import { getPersonalBranding } from "@/lib/fetchers/app";
+import { getBase64ImageFromUrl } from "@/lib/image";
+import { useAppSelector } from "@/providers/global/hooks";
+import { useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
+import ContentError from "../common/ContentError";
+import ContentLoader from "../common/ContentLoader";
 import PDFCustomMealCompactLandscape from "../pages/coach/meals/PDFCustomMealCompactLandscape";
 import PDFCustomMealCompactPortrait from "../pages/coach/meals/PDFCustomMealCompactPortrait";
-import useSWR from "swr";
-import { getPersonalBranding, getClientPersonalBranding } from "@/lib/fetchers/app";
-import ContentLoader from "../common/ContentLoader";
-import ContentError from "../common/ContentError";
-import { getBase64ImageFromUrl } from "@/lib/image";
-import { useEffect, useMemo, useState } from "react";
-import { useAppSelector } from "@/providers/global/hooks";
-import MembershipInvoicePDF from "@/components/modals/MembershipInvoicePDF"
+import PDFCustomMealLandscape from "../pages/coach/meals/PDFCustomMealLandscape";
+import PDFCustomMealPortrait from "../pages/coach/meals/PDFCustomMealPortrait";
+import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
+import PDFInvoice from "../pages/coach/meals/PDFInvoice";
+import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
+import PDFSalesReport from "../pages/coach/retail/PDFSalesReport";
 
 const Templates = {
   PDFComparison,
@@ -28,12 +29,18 @@ const Templates = {
   PDFCustomMealLandscape,
   PDFCustomMealCompactLandscape,
   PDFCustomMealCompactPortrait,
-  MembershipInvoicePDF
+  MembershipInvoicePDF,
+  PDFSalesReport
 }
 
-export default function PDFRenderer({ children, pdfTemplate, data }) {
+export default function PDFRenderer({ children, pdfTemplate, data, open, onOpenChange }) {
   const Component = Templates[pdfTemplate]
-  return <Dialog>
+  // If open/onOpenChange are provided, use controlled dialog, otherwise uncontrolled
+  const dialogProps = open !== undefined && onOpenChange !== undefined 
+    ? { open, onOpenChange }
+    : {};
+  
+  return <Dialog {...dialogProps}>
     {children}
     <DialogContent className="h-[95vh] min-w-[95vw] border-b-0 p-0 block gap-0 overflow-y-auto">
       <DialogHeader className="p-0 z-100">
