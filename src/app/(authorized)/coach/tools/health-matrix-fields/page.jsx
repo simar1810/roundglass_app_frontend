@@ -3,10 +3,10 @@
 import UpdateHealthMatrixModal from "@/components/modals/coach/UpdateHealthMatrixModal";
 import { Badge } from "@/components/ui/badge";
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -49,11 +49,11 @@ function FieldCard({ title, icon, range, isDefault }) {
       {/* Gradient accent bar */}
       <div className={cn(
         "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r",
-        isDefault 
-          ? "from-blue-500 to-blue-400" 
+        isDefault
+          ? "from-blue-500 to-blue-400"
           : "from-purple-500 to-purple-400"
       )} />
-      
+
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3 pt-4">
         <div className="flex-1 min-w-0 pr-3">
           <CardTitle className="text-base font-semibold leading-tight text-slate-800 dark:text-slate-100">
@@ -71,7 +71,7 @@ function FieldCard({ title, icon, range, isDefault }) {
           </div>
         )}
       </CardHeader>
-      
+
       <CardContent className="pt-0 flex-1 flex flex-col justify-end">
         <div className="space-y-2">
           {range && (
@@ -84,8 +84,8 @@ function FieldCard({ title, icon, range, isDefault }) {
           )}
           {isDefault && (
             <div className="flex items-center gap-2 pt-1">
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
               >
                 <Layers className="h-3 w-3 mr-1" />
@@ -95,8 +95,8 @@ function FieldCard({ title, icon, range, isDefault }) {
           )}
           {!isDefault && (
             <div className="flex items-center gap-2 pt-1">
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
@@ -110,8 +110,13 @@ function FieldCard({ title, icon, range, isDefault }) {
   );
 }
 
+const DEFAULT_HEALTH_MATRICES = [
+  "bmi", "muscle", "fat", "rm", "ideal_weight",
+  "bodyAge", "visceral_fat", "weight", "sub_fat"
+]
+
 export default function Page() {
-  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
+  const { coachHealthMatrixFields = { defaultFields: DEFAULT_HEALTH_MATRICES } } = useAppSelector(state => state.coach.data);
 
   if (!coachHealthMatrixFields) {
     return (

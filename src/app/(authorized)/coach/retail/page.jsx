@@ -134,11 +134,18 @@ function RetailContainer({ orders, retails }) {
       </TabsTrigger>
       <TabsTrigger
         className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="purchase-history"
+      >
+        <p className="text-sm md:text-lg">Purchase History</p>
+      </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="inventory"
       >
         <p className="text-sm md:text-lg">Inventory</p>
       </TabsTrigger>
     </TabsList>
+    <PurchaseHistory />
     <Brands brands={retails.brands} />
     <Orders orders={orders} />
     <Inventory />
@@ -149,10 +156,6 @@ function Brands({ brands }) {
   return <TabsContent value="brands">
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
-      {/* <Button variant="wz" size="sm">
-        <Plus />
-        Add New Kit
-      </Button> */}
     </div>
     <div className="mt-4 grid grid-cols-1 md:grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
@@ -635,4 +638,47 @@ function getQuantityStatusColor(quantity) {
   if (quantity === 0) return "w-[8ch] block bg-red-300 text-black px-4 py-1 rounded-[2px] text-center"
   if (quantity <= 3) return "w-[8ch] block bg-yellow-300 text-black px-4 py-1 rounded-[2px] text-center"
   return "w-[8ch] block bg-green-300 text-black px-4 py-1 rounded-[2px] text-center"
+}
+
+
+function PurchaseHistory({ orders }) {
+  const { isLoading, error, data, mutate } = useSWR(
+    "order/history-by-status?orderType=purchase",
+    () => fetchData("app/order/history-by-status?orderType=purchase")
+  );
+
+  if (isLoading) return <ContentLoader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  console.log(data)
+  return <button onClick={mutate}>
+    click
+  </button>
+
+  return <TabsContent value="purchase-history">
+    <ExportOrdersoExcel orders={orders} />
+
+    <div className="flex flex-wrap items-center gap-2 mb-3">
+      {["all", "pending", "completed"].map((item) => (
+        <Button
+          key={item}
+          size="sm"
+          variant={filter === item ? "wz" : "outline"}
+          className="text-xs capitalize"
+          onClick={() => setFilter(item)}
+        >
+          {item}
+        </Button>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {myOrders.map(order => <Order key={order._id} order={order} />)}
+      {myOrders.length === 0 && (
+        <div className="col-span-full">
+          <ContentError title="No orders found for this filter." />
+        </div>
+      )}
+    </div>
+  </TabsContent>
 }
