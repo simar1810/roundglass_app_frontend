@@ -261,7 +261,6 @@ function CurrentChatMessageBox() {
         attachment = uploadResult?.data;
         attachmentType = uploadResult?.fileType;
       }
-
       socket.emit("sendMessage", {
         coachId: currentChat.coachID,
         clientId: currentChat.clientID,
@@ -272,7 +271,7 @@ function CurrentChatMessageBox() {
       });
 
       setMessage("");
-      setFile(null);
+      setFile();
     } catch (error) {
       toast.error(error?.message || "Failed to send the attachment.");
     } finally {
@@ -666,8 +665,22 @@ const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif", "avif", "
 const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "mov", "m4v", "avi", "mkv"]);
 const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "ogg", "m4a"]);
 const PDF_EXTENSIONS = new Set(["pdf"]);
+const FALLBACK_LABELS = {
+  image: "Image attachment",
+  video: "Video attachment",
+  audio: "Audio file",
+  pdf: "PDF Document",
+  default: "File attachment",
+};
+const MEDIA_ERROR_DESCRIPTIONS = {
+  image: "Image preview failed",
+  video: "Video playback failed",
+  audio: "Audio playback failed",
+  pdf: "PDF preview failed",
+};
+const DEFAULT_FALLBACK_DESCRIPTION = "Preview unavailable";
 
-function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) {
+export function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) {
   const url = getAttachmentPreviewUrl(attachment);
   const resolvedType = determineAttachmentType(attachmentType, attachment);
   const label = getAttachmentLabel(attachment);
@@ -675,22 +688,90 @@ function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) 
   if (!url) return null;
 
   const isAccent = variant === "accent";
+  const [hasPreviewError, setHasPreviewError] = useState(false);
+
+  useEffect(() => {
+    setHasPreviewError(false);
+  }, [url]);
+
+  const handleMediaError = () => setHasPreviewError(true);
+
+  const renderFallbackCard = (descriptionOverride) => {
+    const fallbackTitle =
+      label || FALLBACK_LABELS[resolvedType] || FALLBACK_LABELS.default;
+    const description =
+      descriptionOverride || DEFAULT_FALLBACK_DESCRIPTION;
+    const actionLabel = resolvedType === "pdf" ? "Open" : "Download";
+
+    return (
+      <div
+        className={cn(
+          "p-3 rounded-lg border flex items-center gap-3",
+          isAccent
+            ? "bg-white/10 border-white/30"
+            : "bg-white border-slate-200",
+        )}
+      >
+        <FileText
+          className={cn("w-5 h-5", isAccent ? "text-white/80" : "text-slate-600")}
+        />
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              "text-sm font-medium truncate",
+              isAccent ? "text-white" : "text-slate-900",
+            )}
+          >
+            {fallbackTitle}
+          </p>
+          <p
+            className={cn(
+              "text-xs mt-0.5",
+              isAccent ? "text-white/70" : "text-slate-500",
+            )}
+          >
+            {description}
+          </p>
+        </div>
+        {/* <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(
+            "text-xs px-3 py-1 rounded-md font-medium transition-colors",
+            isAccent
+              ? "bg-white/20 text-white hover:bg-white/30"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200",
+          )}
+        >
+          {actionLabel}
+        </a> */}
+      </div>
+    );
+  };
 
   const renderMedia = () => {
+    if (hasPreviewError) {
+      return renderFallbackCard(MEDIA_ERROR_DESCRIPTIONS[resolvedType]);
+    }
+
     switch (resolvedType) {
       case "image":
         return (
-          <img
-            src={url}
-            alt={label || "image attachment"}
-            className={cn(
-              "max-w-full rounded-lg object-contain",
-              isAccent
-                ? "max-h-[240px] border border-white/30"
-                : "max-h-[240px] border border-slate-200",
-            )}
-            loading="lazy"
-          />
+          <div className="relative">
+            <img
+              src={url}
+              alt={label || "image attachment"}
+              className={cn(
+                "max-w-full rounded-lg object-contain",
+                isAccent
+                  ? "max-h-[240px] border border-white/30"
+                  : "max-h-[240px] border border-slate-200",
+              )}
+              loading="lazy"
+              onError={handleMediaError}
+            />
+          </div>
         );
       case "video":
         return (
@@ -703,6 +784,7 @@ function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) 
                 ? "max-h-[240px] border border-white/30"
                 : "max-h-[240px] border border-slate-200 bg-black",
             )}
+            onError={handleMediaError}
           >
             Your browser does not support video playback.
           </video>
@@ -726,7 +808,7 @@ function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) 
                 </p>
               </div>
             </div>
-            <audio controls className="w-full" src={url}>
+            <audio controls className="w-full" src={url} onError={handleMediaError}>
               Your browser does not support audio playback.
             </audio>
           </div>
@@ -776,47 +858,12 @@ function MessageAttachment({ attachment, attachmentType, variant = "neutral" }) 
               src={url}
               title={label || "pdf-attachment"}
               className="w-full h-64 border-0"
+              onError={handleMediaError}
             />
           </div>
         );
       default:
-        return (
-          <div className={cn(
-            "p-3 rounded-lg border flex items-center gap-3",
-            isAccent
-              ? "bg-white/10 border-white/30"
-              : "bg-white border-slate-200",
-          )}>
-            <FileText className={cn("w-5 h-5", isAccent ? "text-white/80" : "text-slate-600")} />
-            <div className="flex-1 min-w-0">
-              <p className={cn(
-                "text-sm font-medium truncate",
-                isAccent ? "text-white" : "text-slate-900",
-              )}>
-                {label || "File attachment"}
-              </p>
-              <p className={cn(
-                "text-xs mt-0.5",
-                isAccent ? "text-white/70" : "text-slate-500",
-              )}>
-                Preview unavailable
-              </p>
-            </div>
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(
-                "text-xs px-3 py-1 rounded-md font-medium transition-colors",
-                isAccent
-                  ? "bg-white/20 text-white hover:bg-white/30"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-              )}
-            >
-              Download
-            </a>
-          </div>
-        );
+        return renderFallbackCard();
     }
   };
 

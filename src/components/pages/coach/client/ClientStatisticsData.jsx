@@ -259,6 +259,7 @@ export default function ClientStatisticsData({ clientData }) {
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
+      {clientStats?.at(selectedDate)?.notes && <p className="px-4 py-2 rounded-[4px] bg-[var(--accent-1)] text-white">{clientStats?.at(selectedDate)?.notes}</p>}
       {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5">
         <HealthMetrics

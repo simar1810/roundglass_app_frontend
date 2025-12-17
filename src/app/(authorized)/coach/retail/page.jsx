@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { parse } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
+import { Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -1066,4 +1066,137 @@ function UpdateOrder({ order }) {
       setOpen={setOpen}
     />
   </div>
+}
+
+function RetailReportGenerator({ orders, period: currentPeriod }) {
+  const [open, setOpen] = useState(false);
+  const [reportType, setReportType] = useState("summary"); // summary, detailed
+  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod || "all");
+  const [pdfData, setPdfData] = useState(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
+
+  const handleGenerateReport = () => {
+    try {
+      if (!orders) {
+        toast.error("No orders data available");
+        return;
+      }
+
+      const stats = calculateFilteredStats(orders, selectedPeriod);
+      const reportData = salesReportPDFData(stats, orders, selectedPeriod, reportType);
+
+      setPdfData(reportData);
+      setOpen(false);
+      // Open PDF after a brief delay to ensure state is updated
+      setTimeout(() => {
+        setPdfOpen(true);
+      }, 100);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error(error.message || "Failed to generate report");
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="wz" size="sm" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Generate Report
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="text-xl font-bold mb-4">Generate Sales Report</DialogTitle>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Report Period</label>
+              <div className="grid grid-cols-2 gap-2">
+                {["all", "weekly", "monthly", "yearly"].map((p) => (
+                  <Button
+                    key={p}
+                    variant={selectedPeriod === p ? "wz" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedPeriod(p)}
+                    className="text-xs capitalize"
+                  >
+                    {p === "all" ? "All Time" : p}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Report Type</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={reportType === "summary" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("summary")}
+                  className="flex-1"
+                >
+                  Summary
+                </Button>
+                <Button
+                  variant={reportType === "detailed" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("detailed")}
+                  className="flex-1"
+                >
+                  Detailed
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Report Includes:</p>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                {reportType === "summary" ? (
+                  <>
+                    <li>Total Sales Amount</li>
+                    <li>Total Orders Count</li>
+                    <li>Volume Points</li>
+                    <li>Average Order Value</li>
+                  </>
+                ) : (
+                  <>
+                    <li>All order details</li>
+                    <li>Client information</li>
+                    <li>Product details</li>
+                    <li>Financial breakdown</li>
+                    <li>Volume points per order</li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            <Button
+              variant="wz"
+              className="w-full gap-2"
+              onClick={handleGenerateReport}
+            >
+              <FileText className="h-4 w-4" />
+              Generate PDF Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {pdfData && (
+        <PDFRenderer
+          pdfTemplate="PDFSalesReport"
+          data={pdfData}
+          open={pdfOpen}
+          onOpenChange={setPdfOpen}
+        >
+          <Button
+            variant="wz"
+            className="hidden"
+          >
+            View Report
+          </Button>
+        </PDFRenderer>
+      )}
+    </>
+  );
 }
