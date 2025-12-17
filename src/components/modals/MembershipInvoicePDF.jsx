@@ -240,6 +240,11 @@ const styles = StyleSheet.create({
     height: 40,
     objectFit: "contain",
     marginTop: 6
+  },
+  qrImage: {
+    height: 100,
+    width: 100,
+    objectFit: "contain"
   }
 });
 
@@ -354,7 +359,10 @@ const formatDate = (value) => {
   });
 };
 
-export default function MembershipInvoicePDF({ data = {} }) {
+export default function MembershipInvoicePDF({
+  brand: { brandLogo } = {},
+  data = {}
+}) {
   const subscriptionSource = data?.subscription ?? data ?? {};
   const clientSource = data?.client ?? {};
   const invoiceMetaData = data?.invoiceMeta ?? {};
@@ -401,14 +409,15 @@ export default function MembershipInvoicePDF({ data = {} }) {
   const bankName = invoiceMeta.bankName;
   const accountNumber = invoiceMeta.accountNumber;
   const ifscCode = invoiceMeta.ifscCode;
-  const branch = invoiceMeta.branch;
+  const branch = invoiceMeta.bankBranch;
+  const qrBase64 = invoiceMeta.qrBase64;
 
   return (
     <PDFViewer style={{ width: "100%", height: "100vh" }}>
       <Document>
         <Page size="A4" style={styles.page}>
           <View style={styles.headerRow}>
-            <Image style={styles.logo} src="/logo_vector.png" />
+            <Image style={styles.logo} src={brandLogo || "/logo_vector.png"} />
             <View style={styles.companyInfo}>
               <Text style={styles.companyName}>{companyName}</Text>
               {companyAddress && <Text style={styles.companyAddress}>{companyAddress}</Text>}
@@ -516,6 +525,9 @@ export default function MembershipInvoicePDF({ data = {} }) {
             <Text>Account #: {accountNumber || "-"}</Text>
             <Text>IFSC Code: {ifscCode || "-"}</Text>
             <Text>Branch: {branch || "-"}</Text>
+            {qrBase64 && (
+              <Image style={styles.qrImage} src={qrBase64} />
+            )}
           </View>
 
           <View style={styles.signature}>

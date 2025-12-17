@@ -107,7 +107,7 @@ export function init(data) {
   }
 }
 
-const fields = ["weightUnit", "height", "heightUnit", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
+const fields = ["weightUnit", "height", "heightUnit", "notes", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
 export function generateRequestPayload(state, forIdealWeight, extraFields = []) {
   const payload = {
     healthMatrix: {}
