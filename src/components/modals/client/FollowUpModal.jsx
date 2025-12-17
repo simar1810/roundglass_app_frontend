@@ -194,13 +194,23 @@ function Stage1({ clientData }) {
   const latestOldWeight = `${extractNumber(latesthealthMatrix?.weight)} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
-    <FormControl
-      label="Date"
-      type="date"
-      className="block w-1/2 [&_.label]:font-[400] [&_.input]:text-[14px]"
-      value={healthMatrix.date}
-      onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
-    />
+    <div className="grid grid-cols-2 gap-4">
+      <FormControl
+        label="Date"
+        type="date"
+        className="block [&_.label]:font-[400] [&_.input]:text-[14px]"
+        value={healthMatrix.date}
+        onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
+      />
+      <FormControl
+        label="Note"
+        type="text"
+        className="block [&_.label]:font-[400] [&_.input]:text-[14px]"
+        value={healthMatrix.notes}
+        onChange={e => dispatch(changeFieldvalue("notes", e.target.value))}
+        placeholder="Enter the notes."
+      />
+    </div>
     {latestOldWeight && <h3 className="mt-4">Latest Old Weight {latestOldWeight}</h3>}
     <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
       <div>

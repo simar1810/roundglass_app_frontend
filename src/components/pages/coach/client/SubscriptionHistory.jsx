@@ -16,6 +16,10 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+function getPaidAmount(item) {
+  return parseInt(item.amount) - parseInt(item.paidAmount ?? item.amount);
+}
+
 export default function SubscriptionHistory({ _id, clientData }) {
   const { invoiceMeta } = useAppSelector(state => state.coach.data)
   const { isLoading, error, data } = useSWR(`getClientSubscriptions/${_id}`, () => getClientSubscriptions(_id));
@@ -47,6 +51,7 @@ export default function SubscriptionHistory({ _id, clientData }) {
           <TableHead>Payment Mode</TableHead>
           <TableHead>Total Amount</TableHead>
           <TableHead>Paid Amount</TableHead>
+          <TableHead>Pending Amount</TableHead>
           <TableHead>Description</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -91,6 +96,7 @@ export default function SubscriptionHistory({ _id, clientData }) {
                   pendingAmount={parseInt(subscription.amount) - parseInt(subscription.paidAmount ?? subscription.amount)} />
               </div>
             </TableCell>
+            <TableCell>{getPaidAmount(subscription)}</TableCell>
             <TableCell>{subscription.description}</TableCell>
             <TableCell className="flex items-center gap-2">
               <UpdateSubscription
@@ -201,7 +207,7 @@ function UpdateSubscription({ subscription = {}, _id }) {
 }
 
 function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmount }) {
-  const [paidAmount, setPaidAmount] = useState(subscription.paidAmount || "");
+  const [paidAmount, setPaidAmount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const closeBtnRef = useRef()
@@ -234,6 +240,7 @@ function UpdatePaymentAmount({ membershipId, clientId, subscription, pendingAmou
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`getClientSubscriptions/${clientId}`)
+      setPaidAmount(0)
       closeBtnRef.current.click()
     } catch (error) {
       toast.error(error.message);

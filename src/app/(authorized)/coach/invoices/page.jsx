@@ -17,15 +17,28 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+function isPaymentCompleted(item) {
+  if (item.paidAmount == null) return true
+  if (item.paidAmount < item.amount) return false
+  return true
+}
+
+function filterBasedOnInvoiceType(invoice, filter) {// filters = completed, pending
+  if (filter.length === 2) return invoice;
+  if (filter.includes("completed")) return isPaymentCompleted(invoice)
+  if (filter.includes("pending")) return !isPaymentCompleted(invoice)
+  return false
+}
+
 export default function Page() {
   const [query, setQuery] = useState("")
   const [activeFields, setActiveFields] = useState(["clientName", "email", "mobileNumber", "invoice", "city", "description"]);
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [invoiceType, setInvoiceType] = useState(["pending", "completed"]) // all, pending, completed
   const { isLoading, error, data } = useSWR(
     "membership/invoices",
     () => fetchData("app/memberships-invoices")
   );
-  const { invoiceMeta } = useAppSelector(state => state.coach.data)
 
   if (isLoading) return <ContentLoader />
 
@@ -43,32 +56,33 @@ export default function Page() {
   }
 
   const regex = new RegExp(query, "i")
-  const filteredMemberships = subscriptions?.filter(membership => {
-    if (paymentFilter !== "all") {
-      const mode = (membership?.paymentMode || "").toString().toLowerCase();
-      if (mode !== paymentFilter) return false;
-    }
+  const filteredMemberships = subscriptions
+    ?.filter(membership => {
+      if (paymentFilter !== "all") {
+        const mode = (membership?.paymentMode || "").toString().toLowerCase();
+        if (mode !== paymentFilter) return false;
+      }
 
-    if (!query) return true;
-    const haystack = [
-      activeFields.includes("clientName") && membership?.clientName,
-      activeFields.includes("email") && membership?.email,
-      activeFields.includes("mobileNumber") && membership?.mobileNumber,
-      activeFields.includes("invoice") && membership?.invoice,
-      activeFields.includes("city") && membership?.city,
-      activeFields.includes("description") && membership?.description
-    ].filter(Boolean).join(" ");
-    return regex.test(haystack);
-  });
+      if (!query) return true;
+      const haystack = [
+        activeFields.includes("clientName") && membership?.clientName,
+        activeFields.includes("email") && membership?.email,
+        activeFields.includes("mobileNumber") && membership?.mobileNumber,
+        activeFields.includes("invoice") && membership?.invoice,
+        activeFields.includes("city") && membership?.city,
+        activeFields.includes("description") && membership?.description
+      ].filter(Boolean).join(" ");
+      return regex.test(haystack);
+    })
+    .filter(item => filterBasedOnInvoiceType(item, invoiceType));
+
+  const invoiceMeta = data?.invoiceMeta
 
   return (
     <div className="content-container content-height-screen space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-slate-200">
         <div className="space-y-1">
           <h4 className="leading-tight">Membership Invoices</h4>
-          {/* <p className="text-sm text-slate-600">
-            Find invoices quickly, see paid vs pending, and export clean PDFs.
-          </p> */}
         </div>
         <div className="flex w-full gap-3 md:w-auto md:items-center">
           <SearchBar
@@ -78,6 +92,8 @@ export default function Page() {
             onToggleField={setActiveFields}
             paymentFilter={paymentFilter}
             onPaymentFilterChange={setPaymentFilter}
+            invoiceType={invoiceType}
+            onInvoiceTypeChange={setInvoiceType}
           />
           <UpdateInvoiceMeta meta={invoiceMeta} />
         </div>
@@ -86,10 +102,6 @@ export default function Page() {
       <InvoiceHighlights stats={stats} total={subscriptions.length} />
 
       <Card className="shadow-sm">
-        {/* <CardHeader className="pb-4 border-b">
-          <CardTitle className="text-base">Invoice list</CardTitle>
-          <CardDescription>Search by client, invoice number, email, or phone.</CardDescription>
-        </CardHeader> */}
         <CardContent className="p-0">
           <Table className="text-sm">
             <TableHeader>
@@ -250,7 +262,7 @@ function formatCurrency(value) {
   }).format(amount);
 }
 
-function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter, onPaymentFilterChange }) {
+function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter, onPaymentFilterChange, invoiceType, onInvoiceTypeChange }) {
   const filterOptions = [
     { id: "clientName", label: "Client name" },
     { id: "email", label: "Email" },
@@ -266,6 +278,11 @@ function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter
       return [...prev, id];
     });
   };
+
+  const toggleInvoiceType = function (type, types) {
+    if (types.includes(type)) return types.filter(item => type !== item)
+    return [...types, type]
+  }
 
   return (
     <div className="flex items-center gap-2 w-full md:w-auto">
@@ -285,23 +302,55 @@ function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter
             Filters
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-56 p-3 space-y-2">
-          <p className="text-xs text-slate-500">Search in fields</p>
-          <div className="grid grid-cols-1 gap-2">
-            {filterOptions.map((item) => {
-              const checked = activeFields.includes(item.id);
-              return (
-                <label key={item.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleField(item.id)}
-                    className="accent-[var(--accent-1)]"
-                  />
-                  <span>{item.label}</span>
-                </label>
-              );
-            })}
+        <PopoverContent className="w-64 p-3 space-y-2 grid grid-cols-2 gap-2 items-start">
+          <div>
+            <p className="text-xs text-slate-500">Search in fields</p>
+            <div className="grid grid-cols-1 gap-2">
+              {filterOptions.map((item) => {
+                const checked = activeFields.includes(item.id);
+                return (
+                  <label key={item.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleField(item.id)}
+                      className="accent-[var(--accent-1)]"
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500">Payment Type</p>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={invoiceType.length === 2}
+                onChange={() => onInvoiceTypeChange(invoiceType.length === 2 ? [] : ["pending", "completed"])}
+                className="accent-[var(--accent-1)]"
+              />
+              <span>All</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={invoiceType.includes("pending")}
+                onChange={() => onInvoiceTypeChange(toggleInvoiceType("pending", invoiceType))}
+                className="accent-[var(--accent-1)]"
+              />
+              <span>Pending</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={invoiceType.includes("completed")}
+                onChange={() => onInvoiceTypeChange(toggleInvoiceType("completed", invoiceType))}
+                className="accent-[var(--accent-1)]"
+              />
+              <span>Completed</span>
+            </label>
           </div>
         </PopoverContent>
       </Popover>
@@ -322,6 +371,7 @@ function SearchBar({ query, onChange, activeFields, onToggleField, paymentFilter
 }
 
 function UpdateInvoiceMeta({ meta } = {}) {
+  return
   const [loading, setLoading] = useState(false);
   const defaultMeta = createInvoiceMetaPayload(meta);
   const [formValues, setFormValues] = useState(defaultMeta);

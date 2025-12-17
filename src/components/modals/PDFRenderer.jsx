@@ -36,10 +36,10 @@ const Templates = {
 export default function PDFRenderer({ children, pdfTemplate, data, open, onOpenChange }) {
   const Component = Templates[pdfTemplate]
   // If open/onOpenChange are provided, use controlled dialog, otherwise uncontrolled
-  const dialogProps = open !== undefined && onOpenChange !== undefined 
+  const dialogProps = open !== undefined && onOpenChange !== undefined
     ? { open, onOpenChange }
     : {};
-  
+
   return <Dialog {...dialogProps}>
     {children}
     <DialogContent className="h-[95vh] min-w-[95vw] border-b-0 p-0 block gap-0 overflow-y-auto">
@@ -61,6 +61,7 @@ function Container({ Component, pdfData }) {
   const [brandLogo, setBrandLogo] = useState("");
   const [coachLogo, setCoachLogo] = useState("");
   const [signatureBase64, setSignatureBase64] = useState("");
+  const [bankQRImage, setBankQRImage] = useState("")
   const { isLoading, error, data } = useSWR("app/personalBranding", getPersonalBranding);
 
   const brands = Array.isArray(data?.data) ? data.data : [];
@@ -69,7 +70,6 @@ function Container({ Component, pdfData }) {
     const signatureUrl = pdfData?.invoiceMeta?.signature;
     if (!signatureUrl) {
       setSignatureBase64("");
-      return;
     }
 
     let cancelled = false;
@@ -85,6 +85,26 @@ function Container({ Component, pdfData }) {
       cancelled = true;
     };
   }, [pdfData?.invoiceMeta?.signature]);
+
+  useEffect(() => {
+    const qrLink = pdfData?.invoiceMeta?.qr;
+    if (!qrLink) {
+      setBankQRImage("");
+    }
+
+    let cancelled = false;
+    getBase64ImageFromUrl(qrLink)
+      .then((base64) => {
+        if (!cancelled) setBankQRImage(base64);
+      })
+      .catch(() => {
+        if (!cancelled) setBankQRImage("");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfData?.invoiceMeta?.qr]);
 
   useEffect(function () {
     const latestBrand = brands.length > 0 ? brands[brands.length - 1] : null;
@@ -111,9 +131,10 @@ function Container({ Component, pdfData }) {
     ...pdfData,
     invoiceMeta: {
       ...(pdfData?.invoiceMeta ?? {}),
-      signatureBase64: signatureBase64 || ""
+      signatureBase64: signatureBase64 || "",
+      qrBase64: bankQRImage || ""
     }
-  }), [pdfData, signatureBase64]);
+  }), [pdfData, signatureBase64, bankQRImage]);
 
   if (isLoading) return <ContentLoader />
 
