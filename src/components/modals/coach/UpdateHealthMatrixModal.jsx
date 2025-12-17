@@ -168,12 +168,12 @@ export default function UpdateHealthMatrixModal({ data }) {
                 {DEFAULT_FIELDS_ENUM.map(field => {
                   const isChecked = defaultFields.includes(field);
                   return (
-                    <div 
-                      key={field} 
+                    <div
+                      key={field}
                       className={cn(
                         "flex items-start gap-2 border-2 rounded-lg p-3 transition-all cursor-pointer min-w-0",
-                        isChecked 
-                          ? "border-primary bg-primary/5 dark:bg-primary/10 shadow-sm" 
+                        isChecked
+                          ? "border-primary bg-primary/5 dark:bg-primary/10 shadow-sm"
                           : "border-border hover:border-primary/50 hover:bg-muted/50"
                       )}
                       onClick={() => handleDefaultFieldToggle(field)}
@@ -184,8 +184,8 @@ export default function UpdateHealthMatrixModal({ data }) {
                         onCheckedChange={() => handleDefaultFieldToggle(field)}
                         className="mt-0.5 shrink-0"
                       />
-                      <Label 
-                        htmlFor={`default-${field}`} 
+                      <Label
+                        htmlFor={`default-${field}`}
                         className="cursor-pointer flex-1 font-medium text-sm leading-snug break-words overflow-wrap-break-word min-w-0"
                         style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                       >
@@ -217,8 +217,8 @@ export default function UpdateHealthMatrixModal({ data }) {
 
               <div className="space-y-4">
                 {coachAddedFields.map((field, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="border-2 border-purple-200 dark:border-purple-800 rounded-xl p-4 sm:p-5 space-y-4 sm:space-y-5 bg-gradient-to-br from-purple-50/50 to-transparent dark:from-purple-950/30 dark:to-transparent relative shadow-sm"
                   >
                     <div className="absolute top-3 right-3 z-10">
@@ -325,6 +325,7 @@ export default function UpdateHealthMatrixModal({ data }) {
     </Dialog>
   );
 }
+
 
 
 
