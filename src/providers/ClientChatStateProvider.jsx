@@ -2,8 +2,8 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { socketInitialState } from "@/config/state-data/chat-scoket";
-import { addNewMessageToCurrentChat, setCurrentUserMessages, socketReducer, storeChats, updateCurrentState } from "@/config/state-reducers/chat-scoket";
-import { createContext, useContext, useEffect, useReducer } from "react"
+import { addNewMessageToCurrentChat, setCurrentUserMessages, socketReducer, storeChats } from "@/config/state-reducers/chat-scoket";
+import { createContext, useContext, useEffect, useReducer } from "react";
 import { io } from "socket.io-client";
 import { useAppSelector } from "./global/hooks";
 
@@ -15,20 +15,31 @@ export function ClientChatStateProvider({ children }) {
 
   useEffect(function () {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_ENDPOINT);
+
     socket.on("chatHistory", (data) => {
-      dispatch(storeChats(data, socket))
-      dispatch(setCurrentUserMessages(data))
+      dispatch(storeChats(data, socket));
+      dispatch(setCurrentUserMessages(data));
     });
+
     socket.on("receiveMessage", (data) => {
-      dispatch(addNewMessageToCurrentChat(data))
+      dispatch(addNewMessageToCurrentChat(data));
     });
+
     const emitData = {
       clientId,
       coachId,
       person: "client"
-    }
+    };
+
     if (socket) socket.emit("joinRoom", emitData);
-  }, [])
+
+    // Cleanup to avoid duplicate listeners/sockets in React strict mode
+    return () => {
+      socket.off("chatHistory");
+      socket.off("receiveMessage");
+      socket.disconnect();
+    };
+  }, [clientId, coachId]);
 
   if (state.state === "connecting") return <ContentLoader />
 

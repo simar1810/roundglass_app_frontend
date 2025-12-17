@@ -3,10 +3,28 @@ import { Button } from "@/components/ui/button";
 import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
+import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-const formFields = [
+const SVG_ICONS = [
+  "/svgs/body.svg",      // 0
+  "/svgs/check.svg",     // 1
+  "/svgs/checklist.svg", // 2
+  "/svgs/bmi.svg",       // 3
+  "/svgs/cutlery.svg",   // 4
+  "/svgs/fat.svg",       // 5
+  "/svgs/fats.svg",      // 6
+  "/svgs/muscle.svg",    // 7
+  "/svgs/meta.svg",      // 8
+  "/svgs/person.svg",    // 9
+  "/svgs/weight.svg",    // 10
+  "/svgs/flame-icon.svg",// 11
+  "/svgs/marathon.svg",  // 12
+  "/svgs/users-icon.svg",// 13
+];
+
+const DEFAULT_FORM_FIELDS = [
   {
     label: "BMI",
     value: "23.4",
@@ -58,10 +76,47 @@ const formFields = [
     icon: "/svgs/body.svg",
     name: "sub_fat"
   },
+  {
+    label: "Visceral Fat",
+    value: "26",
+    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "visceral_fat"
+  },
 ]
 
 export default function CheckupStage2() {
   const { dispatch, ...state } = useCurrentStateContext();
+  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
+
+  const formFields = useMemo(() => {
+    if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
+
+    const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
+
+    // Filter default fields
+    const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
+      defaultFields.includes(field.name) ||
+      // Handle mapping discrepancies if any (e.g., ideal_weight vs idealWeight)
+      (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
+    );
+
+    // Map coach added fields
+    const customFields = coachAddedFields.map(field => ({
+      label: field.title,
+      value: "0", // Default or placeholder
+      info: `Range: ${field.minValue} - ${field.maxValue}`,
+      icon: SVG_ICONS[field.svg] || "/svgs/checklist.svg",
+      name: field.fieldLabel,
+      title: field.title, // For HealthMetrics to use as title
+      id: field._id || field.fieldLabel, // Unique ID
+      getMaxValue: () => field.maxValue,
+      getMinValue: () => field.minValue,
+    }));
+
+    return [...activeDefaultFields, ...customFields];
+  }, [coachHealthMatrixFields]);
+
 
   const age = state.dob
     ? differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))
@@ -78,7 +133,7 @@ export default function CheckupStage2() {
   }
   useEffect(function () {
     dispatch(updateMatrices(formFields, payload));
-  }, []);
+  }, [formFields]); // Depend on formFields to update when they change
 
   return <div className="p-6 pt-0">
     <div className="grid grid-cols-2 sm:grid-cols-2 gap-y-1 text-sm border-b border-gray-200 py-4">
@@ -113,6 +168,8 @@ export default function CheckupStage2() {
           closeBtnRef.current.click()
         }}
         data={{ ...state, age }}
+        fields={formFields}
+        showAll={true}
       />
     </div>
     <div className="mt-10 flex items-center gap-4">

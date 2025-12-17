@@ -2,6 +2,7 @@ export const followUpInitialState = {
   stage: 1,
   healthMatrix: {
     date: "",
+    notes: "",
     weightUnit: "Kg", // e.g. Kg Pounds
     weightInKgs: "",
     weightInPounds: "",

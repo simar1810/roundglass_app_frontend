@@ -1,5 +1,5 @@
-import { differenceInYears, format, isValid, parse } from "date-fns"
-import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics"
+import { differenceInYears, format, isValid, parse } from "date-fns";
+import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "./client/statistics";
 
 function calcAge(data) {
   if (data?.dob?.split("-")[0]?.length === 2) return differenceInYears(new Date(), parse(data.dob, 'dd-MM-yyyy', new Date()));
@@ -9,7 +9,7 @@ function calcAge(data) {
 export function clientStatisticsPDFData(data, statistics, coach, index) {
   return {
     clientName: data.name,
-    age: calcAge(data),
+    age: data?.age || calcAge(data),
     bodyAge: statistics?.at(index)?.bodyAge || 0,
     gender: data.gender,
     joined: statistics?.at(index).createdDate,
@@ -22,7 +22,9 @@ export function clientStatisticsPDFData(data, statistics, coach, index) {
     bodyComposition: statistics?.at(index)?.body_composition,
     coachName: coach.name,
     coachDescription: coach.specialization,
-    coachProfileImage: coach.profilePhoto
+    coachProfileImage: coach.profilePhoto,
+    coachWeightLoss: coach.weightLoss,
+    coachAbout: coach.about,
   }
 }
 
@@ -360,4 +362,124 @@ export function invoicePDFData(order, coach) {
     { productName: 'Total', quantity: "", price: order.sellingPrice || subtotal },
     ]
   }
+}
+
+export function salesReportPDFData(stats, orders, period, reportType) {
+  const allOrders = [...(orders?.myOrder || []), ...(orders?.retailRequest || [])];
+  const saleOrders = allOrders.filter(order => 
+    order && (order.orderType === "sale" || !order.orderType)
+  );
+
+  // Helper function to check if a string looks like an ObjectId
+  function isObjectId(str) {
+    if (typeof str !== "string") return false;
+    // MongoDB ObjectId is 24 hex characters
+    return /^[0-9a-fA-F]{24}$/.test(str.trim());
+  }
+
+  // Helper function to extract clean client name
+  function extractClientName(order) {
+    // Prioritize clientName field first (most common in retail orders)
+    if (order?.clientName && typeof order.clientName === "string") {
+      const name = order.clientName.trim();
+      // Don't return if it's an ObjectId
+      if (name && !isObjectId(name)) {
+        return name;
+      }
+    }
+    
+    // Check if clientId is an object (not a string/ObjectId) with name property
+    if (order?.clientId && typeof order.clientId === "object" && !Array.isArray(order.clientId)) {
+      if (order.clientId.name && typeof order.clientId.name === "string") {
+        const name = order.clientId.name.trim();
+        if (name && !isObjectId(name)) {
+          return name;
+        }
+      }
+      // Try other name fields in clientId object
+      const firstName = order.clientId.firstName?.trim() || "";
+      const lastName = order.clientId.lastName?.trim() || "";
+      if (firstName || lastName) {
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (fullName && !isObjectId(fullName)) {
+          return fullName;
+        }
+      }
+      if (order.clientId.clientName && typeof order.clientId.clientName === "string") {
+        const name = order.clientId.clientName.trim();
+        if (name && !isObjectId(name)) {
+          return name;
+        }
+      }
+    }
+    
+    // Check client object
+    if (order?.client && typeof order.client === "object" && !Array.isArray(order.client)) {
+      if (order.client.name && typeof order.client.name === "string") {
+        const name = order.client.name.trim();
+        if (name && !isObjectId(name)) {
+          return name;
+        }
+      }
+    }
+    
+    return "";
+  }
+
+  // Helper function to extract volume points from an order
+  function extractVolumePoints(order) {
+    // Try order.volumePoints first
+    if (order?.volumePoints !== undefined && order?.volumePoints !== null) {
+      return Number(order.volumePoints) || 0;
+    }
+    // Try order.volume_points (snake_case)
+    if (order?.volume_points !== undefined && order?.volume_points !== null) {
+      return Number(order.volume_points) || 0;
+    }
+    // Try calculating from productModule - products have VP in the product table
+    if (order?.productModule && Array.isArray(order.productModule)) {
+      return order.productModule.reduce((vpSum, product) => {
+        // Check multiple possible VP field names in product
+        const productVP = Number(
+          product?.volumePoints || 
+          product?.volume_points || 
+          product?.VP || 
+          product?.vp ||
+          product?.volumePoint ||
+          product?.volume_point ||
+          0
+        );
+        const quantity = Number(product?.quantity || 1);
+        return vpSum + (productVP * quantity);
+      }, 0);
+    }
+    return 0;
+  }
+
+  const formattedOrders = saleOrders.map(order => {
+    const clientName = extractClientName(order);
+    const volumePoints = extractVolumePoints(order);
+    
+    return {
+      date: order.createdAt || "",
+      invoiceNumber: order?.invoiceNumber || order?.orderId || order?._id || "",
+      clientName: clientName || "-",
+      product: order.productModule?.map(p => p.productName).join(", ") || "",
+      sellingPrice: Number(order?.sellingPrice || 0),
+      volumePoints: volumePoints,
+      status: order?.status || "",
+    };
+  });
+
+  return {
+    period: period || "all",
+    reportType: reportType || "summary",
+    stats: {
+      totalSales: Number(stats?.totalSales || 0),
+      totalOrders: Number(stats?.totalOrders || 0),
+      volumePoints: Number(stats?.volumePoints || 0),
+    },
+    orders: formattedOrders,
+    generatedDate: format(new Date(), 'dd-MM-yyyy'),
+  };
 }

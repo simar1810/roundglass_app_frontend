@@ -1,26 +1,26 @@
 "use client"
-import { Input } from "../ui/input";
-import { ChevronDown, LogOut, Search, Menu } from "lucide-react";
+import useClickOutside from "@/hooks/useClickOutside";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { permit } from "@/lib/permit";
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
+import { destroy } from "@/providers/global/slices/coach";
+import { ChevronDown, LogOut, Menu, Search } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useSWRConfig } from "swr";
+import PersonalBranding from "../modals/app/PersonalBranding";
+import NotificationModal from "../modals/NotificationModal";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage
 } from "../ui/avatar";
-import NotificationModal from "../modals/NotificationModal";
-import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { destroy } from "@/providers/global/slices/coach";
-import { toast } from "sonner";
-import PersonalBranding from "../modals/app/PersonalBranding";
-import { permit } from "@/lib/permit";
-import { useSWRConfig } from "swr";
-import { ClientSearchBar } from "./AppSidebar";
-import useClickOutside from "@/hooks/useClickOutside";
+import { Input } from "../ui/input";
 import { useSidebar } from "../ui/sidebar";
+import { ClientSearchBar } from "./AppSidebar";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
@@ -120,17 +120,17 @@ export function SearchBar() {
 
   return <div className="bg-[var(--dark-4)] px-2 pt-10">
     <div ref={containerRef} className="w-full mx-auto z-[111] relative">
-      <Search className="w-[18px] h-[18px] text-[#808080] absolute left-2 top-1/2 translate-y-[-50%]" />
+      <Search className="w-[18px] h-[18px] text-[#b0b0b0] absolute left-2 top-1/2 translate-y-[-50%]" />
       <Input
         onClick={() => {
-          setOpen(!open);
+          setOpen(true);
         }}
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search Feature..."
-        className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 !focus:outline-none border-1 border-[#808080]/40 focus:bg-black"
+        className="bg-[var(--dark-1)] md:max-w-[450px] pl-8 !focus:outline-none border-1 border-[#808080]/40 focus:bg-black text-white placeholder:text-[#b0b0b0]"
       />
-      {open && <div className="max-w-[450px] w-full bg-black text-white absolute top-12 p-4 rounded-[8px] border-1">
+      {open && <div className="max-w-[450px] w-full bg-[#0f0f0f] text-white absolute top-12 p-4 rounded-[8px] border-1 shadow-lg">
         {queriedFeatures.length > 0 && <h3 className="mb-2">Suggested</h3>}
         {queriedFeatures.map(item => <SearchItem
           key={item.id}
@@ -150,7 +150,7 @@ export function SearchBar() {
         </div>}
       </div>}
     </div>
-    {open && <div className="h-screen w-screen bg-[var(--dark-1)]/20 backdrop-blur-[4px] fixed top-0 left-0 z-[110]" />}
+    {open && <div className="h-screen w-screen bg-black/20 fixed top-0 left-0 z-[110] pointer-events-none" />}
   </div>
 }
 
@@ -161,7 +161,7 @@ function SearchItem({
 }) {
   return <div
     onClick={() => storeInhistory(link, title)}
-    className="text-[var(--primary-1)]/50 hover:text-[var(--primary-1)] text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
+    className="text-white/80 hover:text-white text-[14px] mb-2 flex items-center gap-2 cursor-pointer"
   >
     <Search className="w-[16px] h-[16px]" />
     {title}
@@ -235,13 +235,13 @@ function UserOptions({ profilePhoto, name }) {
             </DropdownMenuLabel>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setOpened(false)}>
+        {/* <DropdownMenuItem onClick={() => setOpened(false)}>
           <Link href="/coach/portfolio" className="w-full">
             <DropdownMenuLabel className="text-[14px] py-0">
               Portfolio
             </DropdownMenuLabel>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem onClick={expireUserSession}>
           <DropdownMenuLabel className="text-[14px] text-[var(--accent-2)] py-0 flex items-center gap-2 cursor-pointer">
             <LogOut className="w-[12px] h-[12px] text-[var(--accent-2)]" />

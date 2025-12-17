@@ -1,6 +1,6 @@
 import { FaFacebookSquare, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
-import { MdContactSupport } from "react-icons/md";
 import { FaSquareInstagram } from "react-icons/fa6";
+import { MdContactSupport } from "react-icons/md";
 
 export const dashboardCards = {
   app: [
@@ -112,14 +112,14 @@ export const linkGeneratorFields = [
     id: 11, label: "Select A Client", inputtype: 7, name: "one_to_one_client_id",
     options: []
   },
-  {
-    id: 12,
-    label: "Allowed Client Roll Nos Series",
-    type: "text",
-    inputtype: 9,
-    placeholder: "Enter roll no series",
-    name: "allowed_client_rollnos"
-  }
+  // {
+  //   id: 12,
+  //   label: "Allowed Client Roll Nos Series",
+  //   type: "text",
+  //   inputtype: 9,
+  //   placeholder: "Enter roll no series",
+  //   name: "allowed_client_rollnos"
+  // }
 ];
 
 export const quickAddClientFormFields = [

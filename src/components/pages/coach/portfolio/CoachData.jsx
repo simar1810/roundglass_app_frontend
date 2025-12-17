@@ -1,5 +1,7 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import ImageSelector from "@/components/common/ImageSelector";
+import Loader from "@/components/common/Loader";
 import FormControl from "@/components/FormControl";
 import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
 import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
@@ -10,13 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
-import { sendData, sendDataWithFormData } from "@/lib/api";
+import { fetchData, sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Link as LucideLink, Award, Users, X, Landmark, Banknote, Pen, Pencil, Dot } from "lucide-react";
+import { Link as LucideLink, Award, Users, X, Landmark, Banknote, Pen, Pencil, Dot, ReceiptIndianRupee } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -31,6 +34,7 @@ export default function CoachData({ awards }) {
       <CoachAwards awards={awards} />
       <CoachClubSettings />
       <BankDetails />
+      <InvoiceDetails />
     </Tabs>
   </div>
 }
@@ -39,6 +43,7 @@ const tabItems = [
   { icon: <Award className="w-[16px] h-[16px]" />, value: "awards", label: "Awards" },
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Landmark className="w-[16px] h-[16px]" />, value: "bank", label: "Bank" },
+  { icon: <ReceiptIndianRupee className="w-[16px] h-[16px]" />, value: "invoice", label: "Invoice" },
 ];
 
 function Header() {
@@ -294,7 +299,6 @@ function UpdateBankDetails({ bank }) {
   return <Dialog>
     <DialogTrigger>
       <Pencil
-        // fill="#67BC2A"
         className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4"
       />
     </DialogTrigger>
@@ -358,6 +362,142 @@ function UpdateBankDetails({ bank }) {
           variant="wz"
         >Save</Button>
         <DialogClose ref={closeBtnRef} />
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function InvoiceDetails() {
+  return <TabsContent value="invoice">
+    <InvoiceDetailsContainer />
+  </TabsContent>
+}
+
+function InvoiceDetailsContainer() {
+  const { isLoading, error, data } = useSWR(
+    "app/memberships-invoices/meta",
+    () => fetchData("app/memberships-invoices/meta")
+  );
+
+  if (isLoading) return <Loader />
+
+  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+
+  const invoiceMeta = data.data
+
+  return <div>
+    <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative">
+      <UpdateInvoiceDetails defaultData={data.data} />
+      <CardHeader className="flex flex-row items-center gap-4">
+        <Image
+          src={invoiceMeta.signature}
+          alt=""
+          height={400}
+          width={400}
+          className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] block mx-auto"
+          onError={e => e.target.src = "/not-found.png"}
+        />
+      </CardHeader>
+
+      <CardContent className="grid gap-3 text-sm">
+        <div className="mb-4">
+          <CardTitle className="text-lg leading-tight">{invoiceMeta.title}</CardTitle>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">GSTIN:</span>
+          <span>{invoiceMeta.gstin}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Address:</span>
+          <span className="max-w-[40ch] text-right">{invoiceMeta.address}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Place Of Supply:</span>
+          <span>{invoiceMeta.placeOfSupply}</span>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+}
+
+
+const invoiceFields = [
+  { name: "title", label: "Company Name" },
+  { name: "address", label: "Address" },
+  { name: "gstin", label: "GSTIN" },
+  { name: "placeOfSupply", label: "Place of Supply" },
+  // { name: "bankName", label: "Bank Name" },
+  // { name: "accountNumber", label: "Account Number" },
+  // { name: "ifscCode", label: "IFSC Code" },
+  // { name: "branch", label: "Branch" }
+];
+
+const createDefaultPayload = (data) => invoiceFields.reduce((acc, curr) => ({
+  ...acc,
+  [curr.name]: data[curr.name] || ""
+}), {})
+
+function UpdateInvoiceDetails({ defaultData }) {
+  const [payload, setPayload] = useState(createDefaultPayload(defaultData));
+  const [loading, setLoading] = useState(false);
+  const [signature, setSignature] = useState()
+
+  async function udpateInvoiceMeta() {
+    const toastId = toast.loading("Please wait...")
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      for (const field of invoiceFields) {
+        formData.append(field.name, payload[field.name]);
+      }
+      if (signature) {
+        formData.append("signature", signature);
+      }
+      const response = await sendDataWithFormData("app/memberships-invoices/meta", formData);
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/memberships-invoices/meta");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      toast.dismiss(toastId)
+    }
+  }
+
+  return <Dialog>
+    <DialogTrigger>
+      <Pencil
+        className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4"
+      />
+    </DialogTrigger>
+    <DialogContent className="p-0 !space-y-0 !gap-0 max-h-[80vh] overflow-y-auto">
+      <DialogTitle className="p-4 border-b-1">Invoice Meta</DialogTitle>
+      <div className="p-4">
+        {invoiceFields.map(field => <div key={field.name}>
+          <h5 className="mb-2">{field.label}</h5>
+          <Input
+            className="mb-4"
+            value={payload[field.name]}
+            onChange={e => setPayload(prev => ({
+              ...prev,
+              [field.name]: e.target.value
+            }))}
+            placeholder={`Enter ${field.label}`}
+          />
+        </div>)}
+        <ImageSelector
+          file={signature}
+          onFileChange={setSignature}
+          label="Upload Signature"
+          defaultImageLink={defaultData.signature}
+        />
+        <Button
+          onClick={udpateInvoiceMeta}
+          disabled={loading}
+          className="w-full mt-4"
+          variant="wz"
+        >Save</Button>
       </div>
     </DialogContent>
   </Dialog>
