@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   calculateBMIFinal,
   calculateBMRFinal,
@@ -10,12 +10,12 @@ import {
   calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import { cn, extractNumber } from "@/lib/utils";
-import Image from "next/image";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Pencil } from "lucide-react";
-import FormControl from "../FormControl";
+import Image from "next/image";
 import { useRef, useState } from "react";
+import FormControl from "../FormControl";
 import { Button } from "../ui/button";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 
 const healtMetrics = [
   {
@@ -178,6 +178,7 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
             <MetricProgress
               key={metric.id || metric.name}
               {...metric}
+              title={metric.title || metric.label}
               value={payload[metric.name] || 0}
               maxPossibleValue={metric.getMaxValue ? metric.getMaxValue({
                 value: payload[metric.name] || 0,
