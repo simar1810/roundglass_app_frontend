@@ -192,7 +192,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       >
         Copy & Edit
       </Link>
-      <AssignMealModal planId={customPlan._id} type="custom" />
+      <AssignMealModal plan={customPlan} planId={customPlan._id} type="custom" />
       {!customPlan.admin && <>
         <Link
           href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}

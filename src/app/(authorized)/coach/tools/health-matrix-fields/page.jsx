@@ -116,6 +116,16 @@ const DEFAULT_HEALTH_MATRICES = [
 ]
 
 export default function Page() {
+  const { features = [] } = useAppSelector(state => state.coach.data)
+
+  if (!features.includes(7)) return <div className="content-container content-height-screen">
+    This feature is not available for the coach.
+  </div>
+
+  return <Container />
+}
+
+function Container() {
   const { coachHealthMatrixFields = { defaultFields: DEFAULT_HEALTH_MATRICES } } = useAppSelector(state => state.coach.data);
 
   if (!coachHealthMatrixFields) {
