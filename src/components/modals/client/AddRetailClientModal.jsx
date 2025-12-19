@@ -98,6 +98,7 @@ function Stage2() {
 function ProductCard({ product }) {
   const { productModule, dispatch } = useCurrentStateContext();
   const quantity = productModule?.find(item => item._id === product._id)?.quantity || 0;
+  const [expanded, setExpanded] = useState(false);
 
   return <div className="bg-[var(--comp-1)] px-4 py-5 md:p-2 flex flex-row md:flex-col gap-5 md:gap-0 rounded-[8px] border-1">
     <Image
@@ -109,7 +110,13 @@ function ProductCard({ product }) {
     />
     <div className="flex flex-col items-start justify-start gap-1">
     <p className="font-[500] md:mt-4">{product.productName}</p>
-    <p className="text-[12px] text-gray-500 leading-[1.2] mb-2">{product.productDescription.slice(0, 100)}</p>
+    <div>
+          <p className={`text-xs text-gray-500 leading-[1.2] mt-2 ${!expanded ? "line-clamp-3" : ""}`}>{product.productDescription}</p>
+          <button
+          onClick={() => setExpanded(!expanded)} className="text-xs text-gray-700 font-medium mt-1 italic underline">
+        {expanded ? "Read less" : "Read more"}
+          </button>
+    </div>
     {quantity === 0
       ? <Button
         onClick={() => dispatch(addProductToProductModule(product))}
@@ -191,7 +198,7 @@ function Stage3() {
 function ProductCardList({ product }) {
   const { productModule, dispatch, coachMargin } = useCurrentStateContext();
   const quantity = productModule.find(item => item._id === product._id)?.quantity || 0
-
+  const [expanded, setExpanded] = useState(false);
   return <div className="flex justify-between items-start gap-2 border-b pb-4">
     <div className="flex gap-4">
       <Image
@@ -203,7 +210,13 @@ function ProductCardList({ product }) {
       />
       <div>
         <h3 className="text-sm font-semibold">{product.productName}</h3>
-        <p className="text-xs text-gray-500 leading-[1.2] mt-2">{product.productDescription}</p>
+        <div>
+          <p className={`text-xs text-gray-500 leading-[1.2] mt-2 ${!expanded ? "line-clamp-3" : ""}`}>{product.productDescription}</p>
+          <button
+          onClick={() => setExpanded(!expanded)} className="text-xs text-gray-700 font-medium mt-1 italic underline">
+        {expanded ? "Read less" : "Read more"}
+          </button>
+        </div>
         <div className="flex items-center gap-2 mt-2">
           <div className="mt-auto flex items-center justify-center gap-4">
             <Button onClick={() => dispatch(setProductAmountQuantity(product._id, quantity + 1))} size="sm" variant="wz_outline">
