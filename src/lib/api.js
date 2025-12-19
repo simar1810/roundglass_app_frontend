@@ -13,6 +13,10 @@ export async function fetchData(endpoint, expireUserSession) {
     const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
       headers: {
         Authorization: `Bearer ${TOKEN}`,
+        "Accept-Encoding": "gzip, deflate, br",
+        'Content-type': 'application/json',
+        'Accept': 'application/json',
+        "Connection": "keep-alive"
       },
       cache: "no-store",
     });
@@ -163,7 +167,7 @@ export async function sendFileWithQuery(endpoint, file, queryText) {
     const response = await fetch(url, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${TOKEN}`, 
+        Authorization: `Bearer ${TOKEN}`,
       },
       body: formData,
     });

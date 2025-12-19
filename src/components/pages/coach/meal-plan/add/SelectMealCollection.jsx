@@ -5,8 +5,10 @@ import RecipeModal from "@/components/modals/RecipeModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import useDebounce from "@/hooks/useDebounce";
+import { fetchData } from "@/lib/api";
 import { getRecipesCalorieCounter } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
@@ -32,12 +34,27 @@ export default function SelectMealCollection({ children, index }) {
   </Dialog>
 }
 
+function getMealsEndpoint(query, showMyMeals) {
+  const endpoint = showMyMeals
+    ? `app/dishes?query=${query}`
+    : `app/recipees?query=${query}`
+  if (query.length <= 3) {
+    toast.error("At least enter 3 characters.");
+    return;
+  }
+  return fetchData(endpoint);
+}
+
 function RecipeesContainer({ index }) {
   const [query, setQuery] = useState("rajma");
+  const [showMyMeals, setShowMyMeals] = useState(false)
   const debouncedSearchQuery = useDebounce(query, 1000);
+  const endpoint = showMyMeals
+    ? `dishes/${debouncedSearchQuery}`
+    : `recipees/${debouncedSearchQuery}`
   const { isLoading, isValidating, error, data } = useSWR(
-    `recipees/${debouncedSearchQuery}`,
-    () => getRecipesCalorieCounter(debouncedSearchQuery)
+    endpoint,
+    () => getMealsEndpoint(debouncedSearchQuery, showMyMeals)
   );
   const [selected, setSelected] = useState();
   const closeRef = useRef();
@@ -52,13 +69,19 @@ function RecipeesContainer({ index }) {
   const showInitialLoader = isLoading && !data;
 
   if (recipees.length === 0) return <div className="p-4">
-    <Input
-      ref={searchInputRef}
-      autoFocus
-      placeholder="Enter Meal Plan"
-      value={query}
-      onChange={e => setQuery(e.target.value)}
-    />
+    <div className="flex items-center gap-4">
+      <Input
+        ref={searchInputRef}
+        autoFocus
+        placeholder="Enter Meal Plan"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+      <ShowMyMealsToggle
+        myMealsSelected={showMyMeals}
+        onChange={setShowMyMeals}
+      />
+    </div>
     <ContentError title="No recipes found!" />
   </div>
 
@@ -70,6 +93,10 @@ function RecipeesContainer({ index }) {
         placeholder="Enter Meal Plan"
         value={query}
         onChange={e => setQuery(e.target.value)}
+      />
+      <ShowMyMealsToggle
+        myMealsSelected={showMyMeals}
+        onChange={setShowMyMeals}
       />
       {(isLoading || isValidating) && <Loader />}
     </div>
@@ -166,3 +193,16 @@ function RecipeCalories({ recipe }) {
 
 const isSameRecipe = (selected, currrent) => selected?._id === currrent?._id ||
   (selected?._id?.$oid === currrent?._id?.$oid && Boolean(selected?._id?.$oid))
+
+function ShowMyMealsToggle({ myMealsSelected, onChange }) {
+  return <div>
+    <p className="mb-1 whitespace-nowrap font-bold text-sm text-[#808080]">My Recipes</p>
+    <Switch
+      checked={myMealsSelected}
+      onCheckedChange={value => {
+        console.log(value)
+        onChange(value)
+      }}
+    />
+  </div>
+}

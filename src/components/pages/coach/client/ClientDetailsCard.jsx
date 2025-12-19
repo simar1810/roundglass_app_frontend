@@ -52,6 +52,12 @@ import { Badge } from "@/components/ui/badge";
 import ClientNudges from "./ClientNudges";
 import { extractNumber } from "@/lib/utils";
 
+function getClientHeightStr(healthMatrix) {
+  if (["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase())) return `${healthMatrix?.height} ${healthMatrix?.heightUnit}`
+  const [feet, inches] = healthMatrix?.height?.split(".")
+  return `${feet} Ft ${inches} In`
+}
+
 export default function ClientDetailsCard({ clientData }) {
   return <div>
     <ClientDetails clientData={clientData} />
@@ -93,7 +99,9 @@ function ClientDetails({ clientData }) {
           clientData={clientData}
         />
       </div>
-      <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>
+      {clientData.goal
+        ? <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>
+        : <p className="text-sm italic text-[#808080]">Please add a goal for the client</p>}
       <ClientCategoriesList clientData={clientData} />
       <div className="flex items-center justify-between">
         <h4>Notes</h4>
@@ -127,7 +135,7 @@ function ClientDetails({ clientData }) {
         </div>} */}
         {clientData?.healthMatrix?.height && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Height</p>
-          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{`${clientData?.healthMatrix?.height} ${clientData?.healthMatrix?.heightUnit}`}</p>
+          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{getClientHeightStr(clientData.healthMatrix)}</p>
         </div>}
         {latestWeight && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
           <p>Latest Weight</p>
