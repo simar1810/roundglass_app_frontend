@@ -127,13 +127,6 @@ const healtMetrics = [
 
 ];
 
-const weightDabba = {
-  title: "Weight",
-  value: "26",
-  icon: "/svgs/body.svg",
-  optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-}
-
 export default function HealthMetrics({ data, onUpdate, fields, showAll = false }) {
   const payload = {
     bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
@@ -162,17 +155,20 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
 
   // Use fields prop if provided, otherwise use default healtMetrics
   const metricsToDisplay = fields || healtMetrics;
-
+  console.log(
+    fields
+  )
   try {
     return (
       <>
         {metricsToDisplay
           .filter((metric) =>
-            showAll || (
-              !isNaN(payload[metric.name]) &&
-              payload[metric.name] !== 0 &&
-              payload[metric.name] !== ""
-            )
+          // showAll || 
+          (
+            !isNaN(payload[metric.name]) &&
+            payload[metric.name] !== 0 &&
+            payload[metric.name] !== ""
+          )
           )
           .map((metric) => (
             <MetricProgress
