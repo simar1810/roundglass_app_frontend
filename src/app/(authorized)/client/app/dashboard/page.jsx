@@ -44,17 +44,17 @@ function Container() {
         <NextMeals nextMeals={nextMeals} />
       </div>
       <div className="flex flex-col justify-start items-start gap-2">
-      <div className="flex flex-col md:flex-row items-center gap-2 justify-between">
-        <MealDetails meal={clientHomeData.meal} />
-        <Sessions meetings={clientHomeData.closestMeeting} />
+        <div className="flex flex-col md:flex-row items-center gap-2 justify-between">
+          <MealDetails meal={clientHomeData.meal} />
+          <Sessions meetings={clientHomeData.closestMeeting} />
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 justify-between">
           <ActivityCard />
-          <WeightLog/>
+          <WeightLog />
         </div>
       </div>
     </div>
-      <Stories stories={clientHomeData.story} />
+    <Stories stories={clientHomeData.story} />
   </div>
 }
 function WeightLog() {
@@ -98,7 +98,7 @@ function WeightLogPopup({ onClose }) {
     const nextFollowUpDate =
       followUpType === "8-day"
         ? new Date(new Date(date).getTime() + 8 * 24 * 60 * 60 * 1000)
-            .toISOString()
+          .toISOString()
         : customDate;
 
     const healthMatrix = {
@@ -226,7 +226,7 @@ function WeightLogPopup({ onClose }) {
 }
 function ActivityCard() {
   const [open, setOpen] = useState(false);
-   const client = useAppSelector(state => state.client.data);
+  const client = useAppSelector(state => state.client.data);
   const token = client?.refreshToken;
   const now = new Date();
   let start = new Date(now.setHours(0, 0, 0, 0));
@@ -258,15 +258,15 @@ function ActivityCard() {
         </div>
         <div className="flex justify-between items-center mt-10">
           <div className="flex flex-col items-center">
-            <Flame className="text-[var(--accent-1)] text-sm"/>
+            <Flame className="text-[var(--accent-1)] text-sm" />
             <p className="text-gray-500 mt-1 text-sm">{stats.totalCalories} <span className="text-xs">KCal</span></p>
           </div>
           <div className="flex flex-col items-center">
-            <Flag className="text-[var(--accent-1)] text-sm"/>
+            <Flag className="text-[var(--accent-1)] text-sm" />
             <p className="text-gray-500 mt-1 text-sm">{stats.totalDistance} <span className="text-xs">Km</span></p>
           </div>
           <div className="flex flex-col items-center">
-            <Footprints className="text-[var(--accent-1)] text-sm"/>
+            <Footprints className="text-[var(--accent-1)] text-sm" />
             <p className="text-gray-500 mt-1 text-sm">{stats.totalSteps} <span className="text-xs">Steps</span></p>
           </div>
         </div>
@@ -341,10 +341,9 @@ function ActivityPopup({ onClose }) {
                 key={t}
                 onClick={() => setActiveTab(t)}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition
-                  ${
-                    active
-                      ? "bg-black text-white shadow-md"
-                      : "bg-gray-100 text-gray-600"
+                  ${active
+                    ? "bg-black text-white shadow-md"
+                    : "bg-gray-100 text-gray-600"
                   }
                 `}
               >
@@ -399,10 +398,10 @@ function WaterIntake({ client }) {
         item.amount !== undefined && item.amount !== null
           ? item.amount
           : item.quantity !== undefined && item.quantity !== null
-          ? item.quantity
-          : item.waterAmount !== undefined && item.waterAmount !== null
-          ? item.waterAmount
-          : 0;
+            ? item.quantity
+            : item.waterAmount !== undefined && item.waterAmount !== null
+              ? item.waterAmount
+              : 0;
       const numeric = Number(raw) || 0;
       return sum + numeric;
     },
@@ -541,29 +540,29 @@ function Sessions({ meetings }) {
       <h3 className="font-semibold text-lg text-gray-800">Upcoming Session</h3>
       <div className="flex  items-center justify-start gap-4">
         <div className="flex items-center justify-between">
-          <Image className="w-38 h-32 rounded-xl" src={meetings?.banner || "/not-found.png"} alt="banner" width={500} height={500}/>
+          <Image className="w-38 h-32 rounded-xl" src={meetings?.banner || "/not-found.png"} alt="banner" width={500} height={500} />
         </div>
         <div className="bg-gray-50 p-3 rounded-xl border space-y-1 w-full">
-        <p className="text-base font-semibold text-gray-700">
-          {meeting.description || "Meeting"}
-        </p>
-
-        <p className="text-sm text-gray-500">
-          {meeting.meetingType === "reocurr" ? "Recurring" : "One-Time"} session
-        </p>
-
-        <p className="text-sm italic text-gray-600">
-          <span className="font-medium">Topics:</span> {meeting.topics || "NA"}
+          <p className="text-base font-semibold text-gray-700">
+            {meeting.description || "Meeting"}
           </p>
-          
-        <p className="text-sm text-gray-700">
-          <span className="font-medium">Next </span>•{" "}
-          {new Date(meeting.nextOccurrence).toLocaleDateString("en-IN")} •{" "}
-          {new Date(meeting.nextOccurrence).toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+
+          <p className="text-sm text-gray-500">
+            {meeting.meetingType === "reocurr" ? "Recurring" : "One-Time"} session
+          </p>
+
+          <p className="text-sm italic text-gray-600">
+            <span className="font-medium">Topics:</span> {meeting.topics || "NA"}
+          </p>
+
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Next </span>•{" "}
+            {new Date(meeting.nextOccurrence).toLocaleDateString("en-IN")} •{" "}
+            {new Date(meeting.nextOccurrence).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
       </div>
       <a
@@ -597,11 +596,10 @@ function NextMeals({ nextMeals }) {
               key={date}
               onClick={() => setActiveDate(date)}
               className={`whitespace-nowrap px-4 py-2 rounded-xl border text-sm font-medium transition-all
-               ${
-                 isActive
-                   ? "bg-[var(--primary-1)] text-black border-[var(--primary-1)] shadow"
-                   : "bg-gray-100 text-gray-600 border-gray-300"
-               }`}
+               ${isActive
+                  ? "bg-[var(--primary-1)] text-black border-[var(--primary-1)] shadow"
+                  : "bg-gray-100 text-gray-600 border-gray-300"
+                }`}
             >
               {date}
             </button>
@@ -635,23 +633,23 @@ function NextMeals({ nextMeals }) {
 function MealDetails({ meal }) {
   if (!meal) return <div className="bg-[var(--primary-1)] h-[305px] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
     <p className="text-normal italic text-sm md:text-base text-center text-gray-400 mt-4">No Current Meal</p>
-    <Image src="/not-found.png" alt="not-found" className="w-full rounded-xl mt-4" width={500} height={500}/>
+    <Image src="/not-found.png" alt="not-found" className="w-full rounded-xl mt-4" width={500} height={500} />
   </div>
   return <div className="bg-[var(--primary-1)] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
     <h1 className="text-gray-800 font-bold text-base mb-4">Current Meal</h1>
     <div className="flex flex-row md:flex-col">
-    <Image
-      alt="img"
-      height={400}
-      width={400}
-      src={meal?.image}
-      className="w-58 h-40 object-contain object-center rounded-xl"
-    />
-    <div>
-      <h3 className="my-2 text-gray-700 font-semibold text-base">{meal?.name || "NA"}</h3>
-      <p className="mb-1 text-gray-400 font-medium text-sm break-all">{meal?.description || "NA"}</p>
-      <p className="text-gray-600 text-sm font-normal">{meal?.meal_time || "NA"}</p>
-    </div>
+      <Image
+        alt="img"
+        height={400}
+        width={400}
+        src={meal?.image}
+        className="w-58 h-40 object-contain object-center rounded-xl"
+      />
+      <div>
+        <h3 className="my-2 text-gray-700 font-semibold text-base">{meal?.name || "NA"}</h3>
+        <p className="mb-1 text-gray-400 font-medium text-sm break-all">{meal?.description || "NA"}</p>
+        <p className="text-gray-600 text-sm font-normal">{meal?.meal_time || "NA"}</p>
+      </div>
     </div>
   </div>
 }
@@ -696,7 +694,7 @@ function MarathonLeaderBoard() {
     </div>
   </div>;
 }
-function GoalsSection({goal}) {
+function GoalsSection({ goal }) {
   return (
     <div className="w-full md:w-[400px] rounded-xl shadow-md bg-white shadow-gray-200 px-5 py-4 pb-6">
       <p className="text-gray-600 text-sm font-medium md:text-base italic"><span className="not-italic font-semibold">GOAL: </span>{goal}</p>
@@ -708,7 +706,7 @@ function NotActivePopup({ onClose }) {
     <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50">
       <div className="bg-white p-6 w-[90%] max-w-lg py-10 text-center shadow-lg rounded-2xl">
         <h2 className="text-2xl md:text-4xl font-semibold text-red-400 ">Woop!</h2>
-        <p className="font-semibold text-base md:text-xl italic text-gray-500 mt-1">You are not active !!</p> 
+        <p className="font-semibold text-base md:text-xl italic text-gray-500 mt-1">You are not active !!</p>
         <p className="text-gray-700 font-bold text-base md:text-lg mt-6">
           Contact your coach for assistance.
         </p>

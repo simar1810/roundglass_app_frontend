@@ -245,7 +245,7 @@ export function getClientWorkouts(id) {
  * Client Fetchers
  */
 
-export function getClientHome(id) {
+export async function getClientHome(id) {
   return fetchData(`app/clientHome/${id}/wellnessz`);
 }
 

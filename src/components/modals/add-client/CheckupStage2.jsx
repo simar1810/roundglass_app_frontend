@@ -1,11 +1,17 @@
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
 import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { useEffect, useMemo } from "react";
+
+function getWeight(state) {
+  if (["kgs", "kg"].includes(state.weightUnit?.toLowerCase())) return `${state.weightInKgs} Kgs`
+  return `${state.weightInPounds} Lbs`
+}
 
 const SVG_ICONS = [
   "/svgs/body.svg",      // 0
@@ -24,67 +30,6 @@ const SVG_ICONS = [
   "/svgs/users-icon.svg",// 13
 ];
 
-const DEFAULT_FORM_FIELDS = [
-  {
-    label: "BMI",
-    value: "23.4",
-    desc: "Healthy",
-    info: "Optimal: 18–23\nOverweight: 23–27\nObese: 27–32",
-    icon: "/svgs/bmi.svg",
-    name: "bmi"
-  },
-  {
-    label: "Muscle",
-    value: "15%",
-    info: "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
-    icon: "/svgs/muscle.svg",
-    name: "muscle"
-  },
-  {
-    label: "Fat",
-    value: "15%",
-    info: "Optimal Range:\n10–20% for Men\n20–30% for Women",
-    icon: "/svgs/fats.svg",
-    name: "fat"
-  },
-  {
-    label: "Resting Metabolism",
-    value: "15%",
-    info: "Optimal Range: Varies by age,\ngender, and activity level",
-    icon: "/svgs/meta.svg",
-    name: "rm"
-  },
-  {
-    label: "Weight",
-    value: "65 Kg",
-    desc: "Ideal 75",
-    info: "Ideal weight Range:\n118. This varies by height and weight",
-    icon: "/svgs/weight.svg",
-    name: "ideal_weight"
-  },
-  {
-    label: "Body Age",
-    value: "26",
-    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-    icon: "/svgs/body.svg",
-    name: "bodyAge"
-  },
-  {
-    label: "Subcuatneous Fat",
-    value: "26",
-    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-    icon: "/svgs/body.svg",
-    name: "sub_fat"
-  },
-  {
-    label: "Visceral Fat",
-    value: "26",
-    info: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-    icon: "/svgs/body.svg",
-    name: "visceral_fat"
-  },
-]
-
 export default function CheckupStage2() {
   const { dispatch, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
@@ -96,7 +41,7 @@ export default function CheckupStage2() {
 
     // Filter default fields
     const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
-      defaultFields.includes(field.name) ||
+      [...defaultFields, "weightInKgs", "weightInPounds"].includes(field.name) ||
       // Handle mapping discrepancies if any (e.g., ideal_weight vs idealWeight)
       (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
     );
@@ -141,6 +86,9 @@ export default function CheckupStage2() {
         Name: <span className="font-semibold">{state.name}</span>
       </div>
       <div>
+        Weight: <span className="font-semibold">{getWeight(state)}</span>
+      </div>
+      <div>
         Height:&nbsp;
         <span className="font-semibold">
           {["cm", "cms"].includes(state.heightUnit.toLowerCase())
@@ -148,14 +96,20 @@ export default function CheckupStage2() {
             : `${state.heightFeet} ft. ${state.heightInches} in`}
         </span>
       </div>
-      <div>
+      {state.dob && <div>
         D.O.B: <span className="font-semibold">
           {state.dob.split("-").reverse().join("-")}
         </span>
-      </div>
-      <div>
-        Age: <span className="font-semibold">{differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))} yrs</span>
-      </div>
+      </div>}
+      {(state.age || state.dob) && <div>
+        Age: <span className="font-semibold">
+          {
+            state.age
+              ? state.age
+              : differenceInYears(new Date(), parse(state.dob, 'yyyy-MM-dd', new Date()))
+          }
+          yrs</span>
+      </div>}
       <div>
         Gender: <span className="font-semibold">{state.gender.split("")[0]?.toUpperCase() + state.gender.slice(1)}</span>
       </div>

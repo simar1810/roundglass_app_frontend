@@ -1,16 +1,17 @@
 import FormControl from "@/components/FormControl";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { sendData } from "@/lib/api";
 import { getClientForMeals, getClientsForCustomMeals } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import ContentError from "../common/ContentError";
@@ -20,8 +21,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import DualOptionActionModal from "./DualOptionActionModal";
+import { isBefore, parse } from "date-fns";
 
 export default function AssignMealModal({
+  plan,
   type,
   planId
 }) {
@@ -43,23 +46,44 @@ export default function AssignMealModal({
         <p id="assign-meal-description" className="sr-only">
           Select a client from the list to assign this meal plan.
         </p>
-        <Component planId={planId} />
+        <Component plan={plan} planId={planId} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function AssignCustomMealPlanContainer({ planId }) {
+function checkIfDatesInPast(plans, setter) {
+  const dates = Object.keys(plans)
+    .map(date => parse(date, "dd-MM-yyyy", new Date()))
+    .sort((dateA, dateB) => isBefore(dateA, dateB) ? 1 : -1)
+  const lastDate = dates?.at(0)
+  if (lastDate < new Date()) {
+    setter(true)
+    return false;
+  }
+  return true;
+}
+
+function AssignCustomMealPlanContainer({ plan, planId }) {
   const { isLoading, error, data, mutate } = useSWR(`getClientForCustomMeals/${planId}`, () => getClientsForCustomMeals(planId));
   const [selectedClient, setSelectedClient] = useState();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showWarning, setShowWarning] = useState(false)
+  const closeRef = useRef()
+
   if (isLoading) return <ContentLoader />
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  async function assignMealPlan() {
+  async function assignMealPlan(needToCheck = false) {
     try {
+      if (needToCheck) {
+        const isAfter = checkIfDatesInPast(plan.plans, setShowWarning)
+        if (!isAfter) return
+      }
+
       const response = await sendData("app/meal-plan/custom/assign", { id: planId, clients: [selectedClient] })
       if (response.status_code !== 200) throw new Error(response.error || response.message);
       toast.success(response.message);
+      closeRef.current.click()
       mutate()
     } catch (error) {
       toast.error(error.message);
@@ -69,16 +93,25 @@ function AssignCustomMealPlanContainer({ planId }) {
   const normalizedQuery = searchQuery.trim();
   const assignedClients = normalizedQuery
     ? data.data.assignedClients.filter(client =>
-        client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
-      )
+      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase()) ||
+      client.clientId?.toLowerCase().includes(normalizedQuery.toLowerCase())
+    )
     : data.data.assignedClients;
   const unassignedClients = normalizedQuery
     ? data.data.notAssignedClients.filter(client =>
-        client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
-      )
+      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase()) ||
+      client.clientId?.toLowerCase().includes(normalizedQuery.toLowerCase())
+    )
     : data.data.notAssignedClients;
 
   return <div className="p-4 mb-auto text-sm space-y-6">
+    <button onClick={mutate}>mutate</button>
+    <DialogClose ref={closeRef} />
+    {showWarning && <div className="z-100 absolute bottom-0 left-[10px] p-4 text-[var(--accent-2)] bg-[var(--comp-1)] border-1 w-[calc(100%-20px)] flex items-end gap-4">
+      <p className="leading-[1.2] font-bold italic text-sm">This meal plan is in the past and will not be visible to the client.
+        Use the “Start from Today” option in the meal plan to make it visible, or press OK to continue.</p>
+      <Button onClick={() => assignMealPlan(false)} variant="wz">OK</Button>
+    </div>}
     <div>
       <FormControl
         placeholder="Search Client here"
@@ -113,8 +146,8 @@ function AssignCustomMealPlanContainer({ planId }) {
         </div>
       </div>
     </div>
-    {selectedClient && <div className="bg-white sticky bottom-0 text-center py-2">
-      <Button onClick={assignMealPlan} variant="wz">
+    {selectedClient && !showWarning && <div className="bg-white sticky bottom-0 text-center py-2">
+      <Button onClick={() => assignMealPlan(true)} variant="wz">
         Assign Meal
       </Button>
     </div>}

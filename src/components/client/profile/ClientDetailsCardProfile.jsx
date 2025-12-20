@@ -27,7 +27,7 @@ export default function ClientDetailsCardProfile({ clientData }) {
           clientData={clientData}
         />
       </div>
-      <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>
+      {clientData.goal && <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>}
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">

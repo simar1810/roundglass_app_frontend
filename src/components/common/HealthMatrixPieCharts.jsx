@@ -16,6 +16,9 @@ import { useRef, useState } from "react";
 import FormControl from "../FormControl";
 import { Button } from "../ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
+
+const defaultFields = DEFAULT_FORM_FIELDS.map(field => field.name)
 
 const healtMetrics = [
   {
@@ -127,13 +130,6 @@ const healtMetrics = [
 
 ];
 
-const weightDabba = {
-  title: "Weight",
-  value: "26",
-  icon: "/svgs/body.svg",
-  optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-}
-
 export default function HealthMetrics({ data, onUpdate, fields, showAll = false }) {
   const payload = {
     bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
@@ -168,11 +164,12 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
       <>
         {metricsToDisplay
           .filter((metric) =>
-            showAll || (
-              !isNaN(payload[metric.name]) &&
-              payload[metric.name] !== 0 &&
-              payload[metric.name] !== ""
-            )
+          (
+            !isNaN(payload[metric.name]) &&
+            payload[metric.name] !== 0 &&
+            payload[metric.name] !== "" ||
+            (showAll && !defaultFields.includes(metric.name))
+          )
           )
           .map((metric) => (
             <MetricProgress
