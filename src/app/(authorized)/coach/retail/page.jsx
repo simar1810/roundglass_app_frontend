@@ -890,7 +890,7 @@ function InventoryContainer() {
   const products = sortedProducts.filter(
     product => regex.test(product.productName)
   ) || []
-
+  const sortedQuantityProducts = products.sort((a, b) => b.quantity - a.quantity);
   return <div>
     <div className="mb-8 flex items-center justify-between">
       <h5>Products</h5>
@@ -913,7 +913,7 @@ function InventoryContainer() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {products.map((product, index) => <TableRow key={product._id}>
+        {sortedQuantityProducts.map((product, index) => <TableRow key={product._id}>
           <TableCell>{index + 1}</TableCell>
           <TableCell>{product.productName}</TableCell>
           <TableCell>
