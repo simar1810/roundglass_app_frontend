@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Shield } from "lucide-react";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { Shield, User } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import UserLoginForm from "./UserLoginForm";
 
@@ -91,6 +91,12 @@ export default function InputMobileNumber() {
                 value={mobileNumber}
                 onChange={handleChange}
                 onBlur={() => setTouched(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && isValid) {
+                    e.preventDefault();
+                    sendOtp();
+                  }
+                }}
                 className={`w-full pl-12 pr-3 py-2 border rounded focus:outline-none ${
                   touched && !isValid
                     ? "border-red-500"
