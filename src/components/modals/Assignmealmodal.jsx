@@ -93,16 +93,19 @@ function AssignCustomMealPlanContainer({ plan, planId }) {
   const normalizedQuery = searchQuery.trim();
   const assignedClients = normalizedQuery
     ? data.data.assignedClients.filter(client =>
-      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
+      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase()) ||
+      client.clientId?.toLowerCase().includes(normalizedQuery.toLowerCase())
     )
     : data.data.assignedClients;
   const unassignedClients = normalizedQuery
     ? data.data.notAssignedClients.filter(client =>
-      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase())
+      client.name?.toLowerCase().includes(normalizedQuery.toLowerCase()) ||
+      client.clientId?.toLowerCase().includes(normalizedQuery.toLowerCase())
     )
     : data.data.notAssignedClients;
 
   return <div className="p-4 mb-auto text-sm space-y-6">
+    <button onClick={mutate}>mutate</button>
     <DialogClose ref={closeRef} />
     {showWarning && <div className="z-100 absolute bottom-0 left-[10px] p-4 text-[var(--accent-2)] bg-[var(--comp-1)] border-1 w-[calc(100%-20px)] flex items-end gap-4">
       <p className="leading-[1.2] font-bold italic text-sm">This meal plan is in the past and will not be visible to the client.
