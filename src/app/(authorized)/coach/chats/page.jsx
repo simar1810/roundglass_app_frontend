@@ -250,7 +250,11 @@ function CurrentChatMessageBox() {
 
   async function sendMessage() {
     if (!message.trim() && !file) return;
-
+    const MAX_FILE_SIZE = 15 * 1024 * 1024;
+    if (file && file.size > MAX_FILE_SIZE) { 
+      toast.error("File size exceeds the maximum limit of 15 MB.");
+      return;
+    }
     setIsSending(true);
     try {
       let attachment;
