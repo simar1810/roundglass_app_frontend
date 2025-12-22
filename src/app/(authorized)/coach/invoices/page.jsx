@@ -16,6 +16,7 @@ import { Download, FileText, Filter, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import { useRouter } from "next/navigation";
 
 function isPaymentCompleted(item) {
   if (item.paidAmount == null) return true
@@ -31,7 +32,8 @@ function filterBasedOnInvoiceType(invoice, filter) {// filters = completed, pend
 }
 
 export default function Page() {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
   const [activeFields, setActiveFields] = useState(["clientName", "email", "mobileNumber", "invoice", "city", "description"]);
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [invoiceType, setInvoiceType] = useState(["pending", "completed"]) // all, pending, completed
@@ -39,7 +41,12 @@ export default function Page() {
     "membership/invoices",
     () => fetchData("app/memberships-invoices")
   );
-
+  const invoiceMeta = data?.invoiceMeta
+useEffect(() => {
+  if (invoiceMeta && !invoiceMeta.gst) {
+    setModalOpen(true);
+  }
+}, [invoiceMeta]);
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
@@ -75,8 +82,6 @@ export default function Page() {
       return regex.test(haystack);
     })
     .filter(item => filterBasedOnInvoiceType(item, invoiceType));
-
-  const invoiceMeta = data?.invoiceMeta
 
   return (
     <div className="content-container content-height-screen space-y-6">
@@ -218,10 +223,44 @@ export default function Page() {
           )}
         </CardContent>
       </Card>
+      <InvoiceMetaModal open={modalOpen} onClose={() => setModalOpen(false)}/>
     </div>
   );
 }
+function InvoiceMetaModal({ open, onClose }) {
+  const router = useRouter();
 
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[999] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-md"
+        onClick={onClose}
+      />
+
+      <div className="relative z-10 w-[90%] max-w-md rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in">
+        <h3 className="text-lg font-semibold text-slate-900">
+          Invoice Details Required
+        </h3>
+
+        <p className="mt-2 text-sm text-slate-600">
+          Please update all invoice-related details (GST, address, etc.)
+          in your portfolio before generating invoices.
+        </p>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose}>
+            Later
+          </Button>
+          <Button onClick={() => router.push("/coach/portfolio")}>
+            Update Now
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 function createSubscriptionList(subscriptions = []) {
   if (!Array.isArray(subscriptions)) return [];
   const result = [];
