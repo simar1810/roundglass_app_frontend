@@ -16,6 +16,9 @@ import { useRef, useState } from "react";
 import FormControl from "../FormControl";
 import { Button } from "../ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
+
+const defaultFields = DEFAULT_FORM_FIELDS.map(field => field.name)
 
 const healtMetrics = [
   {
@@ -155,19 +158,17 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
 
   // Use fields prop if provided, otherwise use default healtMetrics
   const metricsToDisplay = fields || healtMetrics;
-  console.log(
-    fields
-  )
+
   try {
     return (
       <>
         {metricsToDisplay
           .filter((metric) =>
-          // showAll || 
           (
             !isNaN(payload[metric.name]) &&
             payload[metric.name] !== 0 &&
-            payload[metric.name] !== ""
+            payload[metric.name] !== "" ||
+            (showAll && !defaultFields.includes(metric.name))
           )
           )
           .map((metric) => (

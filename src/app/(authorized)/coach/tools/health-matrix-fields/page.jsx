@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Layers, Settings, Sparkles } from "lucide-react";
+import { Layers, Lock, Settings, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const SVG_ICONS = [
   "/svgs/body.svg",      // 0
@@ -116,6 +117,27 @@ const DEFAULT_HEALTH_MATRICES = [
 ]
 
 export default function Page() {
+  const { features = [] } = useAppSelector(state => state.coach.data)
+
+  if (!features.includes(7)) return <div className="content-container content-height-screen flex flex-col items-center justify-center h-full text-center">
+    <Lock className="h-6 w-6 text-gray-400 mb-2" />
+    <p className="text-sm text-gray-500 max-w-[60ch]">
+      This feature is not available for your account. Please contact support for more information.&nbsp;
+      <Link
+        className="font-bold hover:underline hover:text-blue-600"
+        target="_blank"
+        href="https://wa.me/9876543210?text=Hi,%20I%E2%80%99m%20interested%20in%20upgrading%20my%20app.%20Could%20you%20please%20help%20me%20with%20the%20available%20options?"
+      >
+        9876543210
+      </Link>
+    </p>
+
+  </div>
+
+  return <Container />
+}
+
+function Container() {
   const { coachHealthMatrixFields = { defaultFields: DEFAULT_HEALTH_MATRICES } } = useAppSelector(state => state.coach.data);
 
   if (!coachHealthMatrixFields) {

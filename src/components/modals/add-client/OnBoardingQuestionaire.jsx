@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR, { mutate } from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
@@ -16,7 +16,7 @@ import { sendData } from "@/lib/api";
 import { toast } from "sonner";
 import { useAppSelector } from "@/providers/global/hooks";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
-import { clientOnboardingCompleted } from "@/config/state-reducers/add-client-checkup";
+import { clientOnboardingCompleted, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
 import MultipleChoiceDisplay from "@/components/pages/coach/questionaire/display/MultipleChoiceDisplay";
 import MultipleChoiceAnswer from "@/components/pages/coach/questionaire/answers/MultipleChoiceAnswer";
 import CheckboxAnswer from "@/components/pages/coach/questionaire/answers/CheckboxAnswer";
@@ -31,11 +31,16 @@ import { _throwError } from "@/lib/formatter";
 
 export default function OnBoardingQuestionaire() {
   const { isLoading, error, data } = useSWR("app/questionaire", () => retrieveQuestionaire({ person: "coach" }));
+  const { dispatch } = useCurrentStateContext(changeFieldvalue)
+
+  const sections = data?.data?.sections || [];
+  useEffect(function () {
+    if (sections.length === 0) dispatch(changeFieldvalue("stage", 5))
+  }, [isLoading])
 
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const sections = data.data?.sections || [];
 
   return <div>
     <QuestionsContainer sections={sections} />
