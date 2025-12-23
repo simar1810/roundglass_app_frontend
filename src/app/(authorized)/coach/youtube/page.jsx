@@ -32,7 +32,7 @@ export default function Page() {
       }
     )
     copyText(endpoint)
-    console.log(endpoint)
+
     toast.success("Copied")
     // window.location.href = endpoint
   }

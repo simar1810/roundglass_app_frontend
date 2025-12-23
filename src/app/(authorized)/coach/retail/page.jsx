@@ -968,7 +968,14 @@ function PurchaseHistory() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const orders = data.data || []
+  const orders = (data.data || []).sort((a, b) => {
+    const parseDate = (dateStr) => {
+      const [day, month, year] = dateStr.split("-");
+      return new Date(year, month - 1, day);
+    };
+
+    return parseDate(a.createdAt) - parseDate(b.createdAt);
+  });
 
   if (orders.length === 0) return <div className="min-h-[200px] flex items-center justify-center">
     0 orders created
