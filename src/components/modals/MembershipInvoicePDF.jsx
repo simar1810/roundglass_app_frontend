@@ -373,7 +373,7 @@ export default function MembershipInvoicePDF({
   const client = { ...defaultClientData, ...clientSource };
   const invoiceMeta = { ...defaultInvoiceMeta, ...invoiceMetaData };
   const { isLoading, error, data: coachData } = useSWR("coachProfile", () => getCoachProfile(_id));
-  console.log("daaa",invoiceMetaData);
+
   const {
     amount = 1000,
     description = "Membership Subscription",

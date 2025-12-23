@@ -744,7 +744,7 @@ function normalizeBirthdays(birthdays = []) {
       const newDob = isBefore(bday, today)
         ? new Date(addYears(bday, 1))
         : new Date(bday)
-      if (client.clientId === "mry822") console.log(newDob)
+
       return {
         ...client,
         dob: newDob

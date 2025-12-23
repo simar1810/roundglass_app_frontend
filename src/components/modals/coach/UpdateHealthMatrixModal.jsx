@@ -118,7 +118,7 @@ export default function UpdateHealthMatrixModal({ data }) {
       };
 
       const response = await sendData("app/health-matrix/fields-list", payload, "POST");
-      console.log(response)
+
       if (response.status_code !== 200) throw new Error(response.message);
 
       // Update local state and redux

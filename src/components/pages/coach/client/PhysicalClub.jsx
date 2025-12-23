@@ -222,7 +222,7 @@ function ClientDetails({ membership }) {
 }
 
 function SubscriptionHistoryTable({ clientId, history }) {
-  console.log(clientId)
+
   if (!history || history.length === 0) {
     return <p className="text-sm text-muted-foreground">No subscription history found</p>
   }
@@ -639,7 +639,7 @@ function PayPartialAmount({ clientId, membershipId, pendingAmount }) {
         membershipId
       }
       const response = await sendData(`app/physical-club/memberships/partial-payment`, payload);
-      console.log(response)
+
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
       mutate(`app/physical-club/memberships/${clientId}`,);

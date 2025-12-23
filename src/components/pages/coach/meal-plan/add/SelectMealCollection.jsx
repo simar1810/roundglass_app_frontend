@@ -200,7 +200,7 @@ function ShowMyMealsToggle({ myMealsSelected, onChange }) {
     <Switch
       checked={myMealsSelected}
       onCheckedChange={value => {
-        console.log(value)
+
         onChange(value)
       }}
     />
