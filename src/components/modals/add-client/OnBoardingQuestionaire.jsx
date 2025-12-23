@@ -35,8 +35,8 @@ export default function OnBoardingQuestionaire() {
 
   const sections = data?.data?.sections || [];
   useEffect(function () {
-    if (sections.length === 0) dispatch(changeFieldvalue("stage", 5))
-  }, [isLoading])
+    if (!isLoading && data && data.status_code===200 && sections.length === 0) dispatch(changeFieldvalue("stage", 5))
+  }, [isLoading, data, sections.length])
 
   if (isLoading) return <ContentLoader />
 

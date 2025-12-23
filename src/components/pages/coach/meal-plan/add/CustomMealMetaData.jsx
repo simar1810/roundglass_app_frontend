@@ -7,6 +7,7 @@ import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import Image from "next/image";
 import { useRef } from "react";
+import { toast } from "sonner";
 
 export default function CustomMealMetaData() {
   const { dispatch, ...state } = useCurrentStateContext()
@@ -31,7 +32,16 @@ export default function CustomMealMetaData() {
       />
       <input
         type="file"
-        onChange={(e) => dispatch(customWorkoutUpdateField("file", e.target.files[0]))}
+        onChange={(e) => {
+          const MAX_SIZE_LIMIT = 5 * 1024 * 1024;
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file && file.size > MAX_SIZE_LIMIT) {
+            toast.error("File size more than 5MB");
+            return;
+          }
+          dispatch(customWorkoutUpdateField("file", e.target.files[0]))
+        }}
         ref={fileRef}
         hidden
       />

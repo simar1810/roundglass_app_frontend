@@ -49,7 +49,8 @@ function createStyles(brand) {
     },
     coachName: {
       fontSize: 10,
-      color: "#555555"
+      color: "#555555",
+      fontFamily:"Helvetica-Bold"
     },
     tableContainer: {
       border: "1pt solid #f0f0f0",
@@ -233,7 +234,7 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
 
           {data.description && (
             <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Description</Text>
+              <Text style={{ fontSize: 11, fontWeight: "bold",fontFamily:"Helvetica-Bold", marginBottom: 2 }}>Description</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.description}</Text>
             </View>
           )}
@@ -309,14 +310,14 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
           ) : null}
           {data.guidelines && (
             <View style={{ marginBottom: 12, marginTop: 12, }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 11, fontWeight: "bold", fontFamily:"Helvetica-Bold", marginBottom: 2 }}>Guidelines</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
             </View>
           )}
 
           {data.supplements && (
             <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
+              <Text style={{ fontSize: 11, fontWeight: "bold", fontFamily:"Helvetica-Bold", marginBottom: 2 }}>Supplements</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
             </View>
           )}

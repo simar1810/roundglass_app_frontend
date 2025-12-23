@@ -66,7 +66,12 @@ export default function EditSelectedMealDetails({
 
   async function handleImageUpload(e) {
     const file = e.target.files?.[0];
+    const MAX_SIZE_LIMIT = 1 * 1024 * 1024;
     if (!file) return;
+    if (file && file.size > MAX_SIZE_LIMIT) {
+      toast.error("File size more than 1MB");
+      return;
+    }
     const localPreview = URL.createObjectURL(file);
     setPreviewImage(localPreview);
     try {

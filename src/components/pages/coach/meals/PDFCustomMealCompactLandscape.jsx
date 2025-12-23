@@ -48,7 +48,8 @@ function createStyles(brand) {
     },
     coachName: {
       fontSize: 10,
-      color: "#555555"
+      color: "#555555",
+      fontFamily:"Helvetica-Bold"
     },
     cardsContainer: {
       flexDirection: "row",
@@ -269,14 +270,14 @@ export default function PDFCustomMealCompactLandscape({ data = {}, brand = {} })
           ) : null}
           {data.guidelines && (
             <View style={{ marginBottom: 12, marginTop: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 11, fontWeight: "bold",fontFamily:"Helvetica-Bold", marginBottom: 2 }}>Guidelines</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
             </View>
           )}
 
           {data.supplements && (
             <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
+              <Text style={{ fontSize: 11, fontWeight: "bold",fontFamily:"Helvetica-Bold", marginBottom: 2 }}>Supplements</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
             </View>
           )}

@@ -25,11 +25,11 @@ export default function CheckupStage3() {
       const response = await sendDataWithFormData("app/createClient", data);
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
-      dispatch(createdClient(response.data.clientId));
-      mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
       if (secs.length > 0) {
         dispatch(setCurrentStage(4))
       }
+      dispatch(createdClient(response.data.clientId));
+      mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {
       toast.error(error.message);
     }
