@@ -140,20 +140,8 @@ export default function Page() {
 function Container() {
   const { coachHealthMatrixFields = { defaultFields: DEFAULT_HEALTH_MATRICES } } = useAppSelector(state => state.coach.data);
 
-  if (!coachHealthMatrixFields) {
-    return (
-      <div className="content-container content-height-screen flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-            <Settings className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading matrix fields...</p>
-        </div>
-      </div>
-    );
-  }
 
-  const { defaultFields, coachAddedFields } = coachHealthMatrixFields;
+  const { defaultFields = DEFAULT_HEALTH_MATRICES, coachAddedFields = [] } = coachHealthMatrixFields || {};
   const hasDefaultFields = defaultFields && defaultFields.length > 0;
   const hasCustomFields = coachAddedFields && coachAddedFields.length > 0;
   const totalFields = (defaultFields?.length || 0) + (coachAddedFields?.length || 0);
