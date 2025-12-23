@@ -2,6 +2,7 @@ import FormControl from "@/components/FormControl";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { customWorkoutUpdateField } from "@/config/state-reducers/custom-meal";
+import { generateMonthlyDays } from "@/config/state-reducers/custom-meal";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import Image from "next/image";
@@ -69,9 +70,12 @@ export default function CustomMealMetaData() {
       <Label className="font-bold mb-2">Number Of Days</Label>
       <FormControl
         value={state.noOfDays}
-        onChange={e => (parseInt(e.target.value) >= 0 || e.target.value === "") &&
-          dispatch(customWorkoutUpdateField("noOfDays", e.target.value))
-        }
+        onChange={e => {
+          const value = e.target.value;
+          if (value === "" || Number(value) < 0) return;
+          dispatch(customWorkoutUpdateField("noOfDays", value));
+          dispatch(generateMonthlyDays(value));
+        }}
         placeholder="Enter Number of days"
         type="number"
         min={0}

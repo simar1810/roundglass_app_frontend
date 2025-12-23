@@ -77,6 +77,50 @@ export function customMealReducer(state, action) {
         ...state,
         [action.payload.name]: action.payload.value
       }
+    case "GENERATE_MONTHLY_DAYS": {
+      const noOfDays = action.payload;
+      if (!noOfDays || noOfDays <= 0) {
+        return {
+          ...state,
+          selectedPlans: {},
+          selectedPlan: "",
+        };
+      }
+    
+      const startDate = new Date();
+      const newPlans = {};
+    
+      const existingDates = Object.keys(state.selectedPlans);
+      const defaultTimingsMap = {};
+    
+      existingDates.forEach(date => {
+        const plan = state.selectedPlans[date];
+        const meals = Array.isArray(plan) ? plan : plan?.meals || [];
+        meals.forEach(meal => {
+      if (meal.defaultMealTiming && !defaultTimingsMap[meal.mealType]) {
+        defaultTimingsMap[meal.mealType] = meal.defaultMealTiming;
+      }
+        });
+      });
+    
+      for (let i = 0; i < noOfDays; i++) {
+        const dateKey = format(addDays(startDate, i), "dd-MM-yyyy");
+      
+        newPlans[dateKey] = createDefaultMealTypes().map(meal => ({
+          ...meal,
+          defaultMealTiming:
+            defaultTimingsMap[meal.mealType] || meal.defaultMealTiming,
+        }));
+      }
+    
+      return {
+        ...state,
+        selectedPlans: newPlans,
+        selectedPlan: Object.keys(newPlans)[0],
+        selectedMealType: "Breakfast",
+      };
+    }
+
     case "CHANGE_MEAL_PLAN":
       return {
         ...state,
@@ -545,7 +589,12 @@ export function customWorkoutUpdateField(name, value) {
     }
   }
 }
-
+export function generateMonthlyDays(noOfDays) {
+  return {
+    type: "GENERATE_MONTHLY_DAYS",
+    payload: Number(noOfDays),
+  };
+}
 export function changeWorkoutPlans(day, plan) {
   return {
     type: "CHANGE_MEAL_PLAN",

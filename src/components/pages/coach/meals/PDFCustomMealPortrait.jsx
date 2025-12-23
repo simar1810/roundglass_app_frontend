@@ -238,20 +238,6 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
             </View>
           )}
 
-          {data.guidelines && (
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
-              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
-            </View>
-          )}
-
-          {data.supplements && (
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
-              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
-            </View>
-          )}
-
           <View style={styles.tableContainer}>
             <View style={styles.tableHeader}>
               <View style={[styles.headerCell, { flex: 1 }]}>
@@ -321,6 +307,19 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
               ))}
             </View>
           ) : null}
+          {data.guidelines && (
+            <View style={{ marginBottom: 12, marginTop: 12, }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Guidelines</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.guidelines}</Text>
+            </View>
+          )}
+
+          {data.supplements && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "bold", marginBottom: 2 }}>Supplements</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{data.supplements}</Text>
+            </View>
+          )}
         </Page>
       </Document>
     </PDFViewer>
