@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
 import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot
 } from "@/components/ui/input-otp";
 import { changeCurrentStage, coachfirstTimeRegistration } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppDispatch } from "@/providers/global/hooks";
 import { store } from "@/providers/global/slices/coach";
-import { ArrowLeft, MoveLeft } from "lucide-react";
+import { MoveLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function InputOTPContainer() {
@@ -24,9 +25,14 @@ export default function InputOTPContainer() {
 
   const dispatchRedux = useAppDispatch();
 
-  const router = useRouter()
+  const router = useRouter();
+  const isVerifyingRef = useRef(false);
 
-  async function verifyOtp() {
+  const verifyOtp = useCallback(async () => {
+    if (isVerifyingRef.current) return; // Prevent multiple simultaneous calls
+    if (otp.length !== 4) return; // Only verify if OTP is complete
+    
+    isVerifyingRef.current = true;
     try {
       const data = {
         mobileNumber,
@@ -62,8 +68,17 @@ export default function InputOTPContainer() {
       }
     } catch (error) {
       toast.error(error.message || "Please try again Later!");
+    } finally {
+      isVerifyingRef.current = false;
     }
-  }
+  }, [otp, mobileNumber, user, isFirstTime, dispatch, dispatchRedux, router]);
+
+  // Auto-verify when OTP is complete (4 digits)
+  useEffect(() => {
+    if (otp.length === 4 && !isVerifyingRef.current) {
+      verifyOtp();
+    }
+  }, [otp, verifyOtp]);
 
   async function resendOtp() {
     try {
@@ -104,6 +119,12 @@ export default function InputOTPContainer() {
       maxLength={4}
       value={otp}
       onChange={(value) => dispatch({ type: "UPDATE_OTP", payload: value })}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && otp.length === 4 && !isVerifyingRef.current) {
+          e.preventDefault();
+          verifyOtp();
+        }
+      }}
     >
       <InputOTPGroup>
         {Array.from({ length: 4 }, (_, i) => i).map(index => <InputOTPSlot

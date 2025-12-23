@@ -10,14 +10,15 @@ import { mutate } from "swr";
 import { sendData } from "@/lib/api";
 import Image from "next/image";
 
-export default function Stories({ stories }) {
+export default function Stories({ stories, coach=false }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [modalOpened, setModalOpened] = useState(false);
 
   return <div className="bg-[var(--primary-1)] max-h-[80vh] md:max-h-[50vh] mt-2 p-4 shadow-md shadow-zinc-200 rounded-2xl overflow-y-auto">
     <h4 className="mb-4 text-gray-800 font-bold">Results</h4>
     <div className="grid md:grid-cols-7 gap-4 no-scrollbar">
-      {/* <AddStoryModal /> */}
+      {coach && <AddStoryModal />}
+      {/* here is the coach add new story */}
       {stories.map((story, index) => <div
         className="relative"
         key={story._id}

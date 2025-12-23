@@ -1,4 +1,6 @@
 import React from "react";
+import { getCoachProfile } from "@/lib/fetchers/app";
+import useSWR from "swr";
 import {
   Document,
   Page,
@@ -370,6 +372,7 @@ export default function MembershipInvoicePDF({
   const subscription = { ...defaultSubscriptionData, ...subscriptionSource };
   const client = { ...defaultClientData, ...clientSource };
   const invoiceMeta = { ...defaultInvoiceMeta, ...invoiceMetaData };
+  const { isLoading, error, data: coachData } = useSWR("coachProfile", () => getCoachProfile(_id));
 
   const {
     amount = 1000,
@@ -387,10 +390,11 @@ export default function MembershipInvoicePDF({
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
   const pendingAmount = Math.max(totalAmount - safePaidAmount, 0);
-  const taxableAmount = totalAmount / 1.18;
+  const taxableAmount = totalAmount / (Number(invoiceMetaData?.gst));
   const gstAmount = totalAmount - taxableAmount;
-  const cgst = gstAmount / 2;
-  const sgst = gstAmount / 2;
+  const gst = gstAmount / 2;
+  // const cgst = gstAmount / 2;
+  // const sgst = gstAmount / 2;
 
   const billToName = client?.name || subscription?.name || "Client";
   const billToPhone = client?.phone || client?.mobile || subscription?.phone || "";
@@ -422,7 +426,8 @@ export default function MembershipInvoicePDF({
               <Text style={styles.companyName}>{companyName}</Text>
               {companyAddress && <Text style={styles.companyAddress}>{companyAddress}</Text>}
               {companyGSTIN && <Text style={styles.companyAddress}>GSTIN {companyGSTIN}</Text>}
-              <Text style={styles.companyAddress}>Mobile +91 7888624347 Email simarpreet@wellnessz.in</Text>
+              <Text style={styles.companyAddress}>Mobile: {coachData.data?.mobileNumber
+ || "+91 xxxxx-xxxxx"} Email: {coachData.data?.email || "xxxx@gmail.com"}</Text>
             </View>
           </View>
 
@@ -484,12 +489,8 @@ export default function MembershipInvoicePDF({
               <Text>{formatCurrency(taxableAmount)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>CGST 9.0%</Text>
-              <Text>{formatCurrency(cgst)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>SGST 9.0%</Text>
-              <Text>{formatCurrency(sgst)}</Text>
+              <Text style={styles.totalLabel}>GST {invoiceMetaData?.gst || "0.0"}%</Text>
+              <Text>{formatCurrency(Number(gst))}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>

@@ -408,6 +408,10 @@ function InvoiceDetailsContainer() {
           <span>{invoiceMeta.gstin}</span>
         </div>
         <div className="flex justify-between">
+          <span className="font-medium">GST:</span>
+          <span>{invoiceMeta.gst || "0.0"}%</span>
+        </div>
+        <div className="flex justify-between">
           <span className="font-medium">Address:</span>
           <span className="max-w-[40ch] text-right">{invoiceMeta.address}</span>
         </div>
@@ -425,6 +429,7 @@ const invoiceFields = [
   { name: "title", label: "Company Name" },
   { name: "address", label: "Address" },
   { name: "gstin", label: "GSTIN" },
+  { name: "gst", label: "GST" },
   { name: "placeOfSupply", label: "Place of Supply" },
   // { name: "bankName", label: "Bank Name" },
   // { name: "accountNumber", label: "Account Number" },

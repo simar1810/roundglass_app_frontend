@@ -73,7 +73,34 @@ function ChatMessages() {
       : <CompanionUserMessage key={index} message={message} />)}
   </div>
 }
+function UploadProgressBar({ progress }) {
+  if (typeof progress !== "number") return null;
 
+  return (
+    <div className="mt-2 h-1.5 w-full bg-slate-200 rounded">
+      <div
+        className="h-full bg-[var(--accent-1)] rounded transition-all duration-200"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
+function startPreviewProgress(setProgress, onComplete) {
+  let value = 0;
+
+  const interval = setInterval(() => {
+    value += Math.random() * 12;
+    if (value >= 100) {
+      value = 100;
+      clearInterval(interval);
+      onComplete?.();
+    }
+    setProgress(Math.floor(value));
+  }, 150);
+
+  return () => clearInterval(interval);
+}
 function CurrentChatMessageBox() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
@@ -81,11 +108,17 @@ function CurrentChatMessageBox() {
   const { clientId, coachId } = useAppSelector(state => state.client.data);
   const { socket } = useClientChatSocketContext();
   const inputRef = useRef();
+  const [previewProgress, setPreviewProgress] = useState(null);
+  const [isReadyToSend, setIsReadyToSend] = useState(false);
 
   async function sendMessage() {
     if (isSending) return;
     if (!message.trim() && !file) return;
-
+    const MAX_FILE_SIZE = 15 * 1024 * 1024;
+    if (file && file.size > MAX_FILE_SIZE) { 
+      toast.error("File size exceeds the maximum limit of 15 MB.");
+      return;
+    }
     setIsSending(true);
     try {
       let attachment;
@@ -119,7 +152,14 @@ function CurrentChatMessageBox() {
     <div className="mx-4 py-3 mb-3 mt-auto flex flex-col gap-3 border-t border-zinc-100">
       {file && (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <FilePreview file={file} onRemove={() => setFile(null)} />
+          <FilePreview
+            file={file}
+            progress={previewProgress}
+            onRemove={() => {
+              setFile(null)
+              setPreviewProgress(null);
+              setIsReadyToSend(false);
+            }} />
         </div>
       )}
       <div className="flex items-end gap-3">
@@ -128,7 +168,17 @@ function CurrentChatMessageBox() {
           type="file"
           ref={inputRef}
           accept="image/*,audio/*,video/*,application/pdf"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) => {
+            const selectedFile = e.target.files?.[0];
+            if (!selectedFile) return;
+            setFile(e.target.files?.[0] || null)
+            setIsReadyToSend(false);
+            setPreviewProgress(0);
+
+            startPreviewProgress(setPreviewProgress, () => {
+                setIsReadyToSend(true);
+            });
+          }}
         />
         <button
           onClick={() => inputRef.current?.click()}
@@ -152,11 +202,11 @@ function CurrentChatMessageBox() {
         <Button
           variant="wz"
           onClick={sendMessage}
-          disabled={isSending || (!message.trim() && !file)}
+          disabled={isSending || (!message.trim() && !file) || (file && !isReadyToSend) }
           className="flex items-center gap-1 flex-shrink-0 rounded-full px-4 py-3"
         >
           <SendHorizontal className="w-4 h-4" />
-          {isSending ? "Sending..." : "Send"}
+          {file && !isReadyToSend ? "Preparing..." : isSending ? "Sending..." : "Send"}
         </Button>
       </div>
     </div>
@@ -173,7 +223,7 @@ function CurrentUserMessage({ message }) {
       onMouseEnter={() => setShowOptions(true)}
       onMouseLeave={() => setShowOptions(false)}
     >
-      <div className="flex flex-col items-end max-w-[80%]">
+      <div className="flex flex-col items-end md:max-w-[80%]">
         <div className="max-w-[80ch] bg-[var(--accent-1)] text-white text-xs md:text-sm relative px-4 py-2.5 rounded-[20px] rounded-br-md shadow-sm">
           {message.message && (
             <div
@@ -228,7 +278,7 @@ function CompanionUserMessage({ message }) {
           {nameInitials(coachName || "Coach")}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col items-start max-w-[75%]">
+      <div className="flex flex-col items-start md:max-w-[75%]">
         <div
           className="max-w-[40ch] bg-[var(--comp-1)] text-zinc-600 text-xs md:text-sm px-4 py-2.5 rounded-[20px] rounded-bl-md"
         >
@@ -276,7 +326,7 @@ function Options({ user = "companion", message }) {
   );
 }
 
-function FilePreview({ file, onRemove }) {
+function FilePreview({ file, progress, onRemove }) {
   if (!(file instanceof File)) return null;
 
   const previewType = getFilePreviewType(file.type);
@@ -285,12 +335,13 @@ function FilePreview({ file, onRemove }) {
 
   switch (previewType) {
     case "image":
-      return <ImagePreview file={file} fileName={fileName} onRemove={onRemove} />;
+      return <ImagePreview file={file} fileName={fileName} progress={progress} onRemove={onRemove} />;
     case "video":
       return (
         <VideoPreview
           file={file}
           fileName={fileName}
+          progress={progress}
           fileSize={fileSize}
           onRemove={onRemove}
         />
@@ -300,6 +351,7 @@ function FilePreview({ file, onRemove }) {
         <AudioPreview
           file={file}
           fileName={fileName}
+          progress={progress}
           fileSize={fileSize}
           onRemove={onRemove}
         />
@@ -309,6 +361,7 @@ function FilePreview({ file, onRemove }) {
         <PDFPreview
           file={file}
           fileName={fileName}
+          progress={progress}
           fileSize={fileSize}
           onRemove={onRemove}
         />
@@ -318,6 +371,7 @@ function FilePreview({ file, onRemove }) {
         <GenericFilePreview
           file={file}
           fileName={fileName}
+          progress={progress}
           fileSize={fileSize}
           onRemove={onRemove}
         />
@@ -341,7 +395,7 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
-function ImagePreview({ file, fileName, onRemove }) {
+function ImagePreview({ file, fileName, onRemove, progress }) {
   const src = file instanceof File ? getObjectUrl(file) : file;
   return (
     <div className="relative group">
@@ -352,6 +406,7 @@ function ImagePreview({ file, fileName, onRemove }) {
           className="max-h-48 w-auto object-contain mx-auto"
         />
       </div>
+      <UploadProgressBar progress={progress} />
       <div className="absolute top-2 right-2">
         <button
           onClick={onRemove}
@@ -369,7 +424,7 @@ function ImagePreview({ file, fileName, onRemove }) {
   );
 }
 
-function VideoPreview({ file, fileName, fileSize, onRemove }) {
+function VideoPreview({ file, fileName, fileSize, onRemove, progress }) {
   const src = file instanceof File ? getObjectUrl(file) : file;
   return (
     <div className="relative group">
@@ -400,7 +455,7 @@ function VideoPreview({ file, fileName, fileSize, onRemove }) {
   );
 }
 
-function AudioPreview({ file, fileName, fileSize, onRemove }) {
+function AudioPreview({ file, fileName, fileSize, onRemove, progress }) {
   const src = file instanceof File ? getObjectUrl(file) : file;
   return (
     <div className="space-y-2">
@@ -412,6 +467,7 @@ function AudioPreview({ file, fileName, fileSize, onRemove }) {
           <p className="text-sm font-medium text-slate-900 truncate">{fileName}</p>
           {fileSize && <p className="text-xs text-slate-500">{fileSize}</p>}
         </div>
+        <UploadProgressBar progress={progress} />
         <button
           onClick={onRemove}
           className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
@@ -427,7 +483,7 @@ function AudioPreview({ file, fileName, fileSize, onRemove }) {
   );
 }
 
-function PDFPreview({ file, fileName, fileSize, onRemove }) {
+function PDFPreview({ file, fileName, fileSize, onRemove, progress }) {
   const src = file instanceof File ? getObjectUrl(file) : file;
   return (
     <div className="space-y-2">
@@ -439,6 +495,7 @@ function PDFPreview({ file, fileName, fileSize, onRemove }) {
           <p className="text-sm font-medium text-slate-900 truncate">{fileName}</p>
           {fileSize && <p className="text-xs text-slate-500">{fileSize}</p>}
         </div>
+        <UploadProgressBar progress={progress} />
         <button
           onClick={onRemove}
           className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
@@ -460,7 +517,7 @@ function PDFPreview({ file, fileName, fileSize, onRemove }) {
   );
 }
 
-function GenericFilePreview({ file, fileName, fileSize, onRemove }) {
+function GenericFilePreview({ file, fileName, progress, fileSize, onRemove }) {
   return (
     <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
       <div className="p-2 bg-slate-100 rounded-lg">

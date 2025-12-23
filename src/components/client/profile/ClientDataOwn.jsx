@@ -143,7 +143,7 @@ function MarathonData() {
 }
 
 function Header() {
-  return <TabsList className={cn("w-full bg-transparent p-0 mb-4 grid border-b-2 rounded-none", false ? "grid-cols-6" : "grid-cols-5")}>
+  return <TabsList className={cn("w-full bg-transparent p-0 mb-4 grid overflow-x-auto no-scrollbar border-b-2 rounded-none", false ? "grid-cols-6" : "grid-cols-5")}>
     <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="statistics"
@@ -157,7 +157,7 @@ function Header() {
       Meal
     </TabsTrigger>
     <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]  mr-4"
       value="workout"
     >
       Workout
@@ -169,7 +169,7 @@ function Header() {
       Retail
     </TabsTrigger>} */}
     <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)] mr-2"
       value="marathon"
     >
       Marathon

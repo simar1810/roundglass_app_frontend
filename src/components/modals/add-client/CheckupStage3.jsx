@@ -6,22 +6,28 @@ import { sendDataWithFormData } from "@/lib/api";
 import { _throwError } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { onboardingQuestionaire } from "@/lib/fetchers/app";
 import { useAppSelector } from "@/providers/global/hooks";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import useSWR from "swr";
 
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
-
+  const { isLoading, error, data:questionSections } = useSWR("onboarding-questionaire", () => onboardingQuestionaire());
   async function createClient() {
     try {
+      const secs = questionSections.data.sections || [];
       const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
       const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID, extraFields);
       const response = await sendDataWithFormData("app/createClient", data);
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
+      if (secs.length > 0) {
+        dispatch(setCurrentStage(4))
+      }
       dispatch(createdClient(response.data.clientId));
       mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {

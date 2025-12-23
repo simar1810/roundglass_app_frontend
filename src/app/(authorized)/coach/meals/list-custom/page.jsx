@@ -82,6 +82,7 @@ export default function Page() {
         if (excludeAdmin && meal.admin) return false;
         return true;
       })
+      .sort((a, b) => b._id.localeCompare(a._id))
     : data
       .data
       .filter(meal => mealRegex.test(meal.title))
@@ -89,7 +90,7 @@ export default function Page() {
         if (excludeManual && !meal.admin) return false;
         if (excludeAdmin && meal.admin) return false;
         return true;
-      });
+      }).sort((a, b) => b._id.localeCompare(a._id));
   const handleNavigate = (planMode) => {
     if (localStorage.getItem("aiMealPlan")) {
       localStorage.removeItem('aiMealPlan')
