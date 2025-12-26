@@ -247,7 +247,7 @@ function ActivityCard() {
     <>
       <div
         onClick={() => setOpen(true)}
-        className="w-full md:w-[450px] xl:w-[350px] 2xl:w-[450px] bg-white shadow-md shadow-gray-200 rounded-2xl px-5 py-6 cursor-pointer"
+        className="w-[102vw] md:w-[450px] xl:w-[350px] 2xl:w-[450px] bg-white shadow-md shadow-gray-200 rounded-2xl px-5 py-6 cursor-pointer"
       >
         <div className="flex justify-between items-center">
           <h3 className="text-gray-800 text-lg font-semibold flex items-center gap-2">
@@ -510,7 +510,7 @@ function WaterIntake({ client }) {
               <div className="space-y-2 h-[500px] overflow-y-auto no-scrollbar">
                 {intakeList.map((item) => (
                   <div
-                    key={item.id}
+                    key={item._id}
                     className="border rounded-lg p-2 flex justify-between items-center"
                   >
                     <span className="text-gray-700">{item.amount} ml</span>
@@ -631,18 +631,18 @@ function NextMeals({ nextMeals }) {
   );
 }
 function MealDetails({ meal }) {
-  if (!meal) return <div className="bg-[var(--primary-1)] h-[305px] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
+  if (!meal) return <div className="bg-[var(--primary-1)] w-[102vw] h-[305px] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 md:w-[250px]">
     <p className="text-normal italic text-sm md:text-base text-center text-gray-400 mt-4">No Current Meal</p>
     <Image src="/not-found.png" alt="not-found" className="w-full rounded-xl mt-4" width={500} height={500} />
   </div>
-  return <div className="bg-[var(--primary-1)] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-full md:w-[250px]">
+  return <div className="bg-[var(--primary-1)] px-4 py-5 md:py-3 text-left rounded-2xl shadow-md shadow-gray-200 w-[102vw] md:w-[250px]">
     <h1 className="text-gray-800 font-bold text-base mb-4">Current Meal</h1>
     <div className="flex flex-row md:flex-col">
       <Image
         alt="img"
         height={400}
         width={400}
-        src={meal?.image}
+        src={meal?.image || "/not-found.png"}
         className="w-58 h-40 object-contain object-center rounded-xl"
       />
       <div>

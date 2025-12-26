@@ -31,21 +31,23 @@ import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { format } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, TrendingUp, Users, Utensils } from "lucide-react";
+import { format, subMinutes } from "date-fns";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, TrendingUp, Users, Utensils, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
 import AIAgentHistory from "./AIAgentHistory";
 import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -164,6 +166,25 @@ function ClientMealData({ _id, client }) {
 }
 
 export function CustomMealDetails({ meal, client }) {
+  async function unassignClient(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/meal-plan/custom/unassign",
+        { clients: [client._id], id: meal._id },
+        "POST"
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
+      mutate(`app/getClientMealPlanById?clientId=${client._id}`)
+      toast.success(response.message);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message || "Please try again Later!");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (meal.custom) return <div className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Link href={`/coach/meals/list-custom/${meal._id}`} className="block">
       <Image
@@ -184,6 +205,14 @@ export function CustomMealDetails({ meal, client }) {
         </div>
       </div>
       <p>{trimString(meal.description, 80)}</p>
+      <DualOptionActionModal
+        description="Are you sure unassign this client from the meal plan?"
+        action={(setLoading, closeBtnRef) => unassignClient(setLoading, closeBtnRef)}
+      >
+        <AlertDialogTrigger className="ml-auto block" asChild>
+          <Button size="sm" variant="wz">Unassign</Button>
+        </AlertDialogTrigger>
+      </DualOptionActionModal>
     </div>
   </div>
   if (meal?.isRoutine) return <Link href={`/coach/meals/list/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
@@ -649,7 +678,7 @@ function WaterLogData({ clientId }) {
   const dateString = date || null;
 
   // Fetch all records (API might return all regardless of pagination params)
-  const { isLoading, error, data } = useSWR(
+  const { isLoading, error, data, mutate } = useSWR(
     `app/water-log?person=coach&clientId=${clientId}${dateString ? `&date=${dateString}` : ""}`,
     () => getWaterLog(clientId, dateString)
   );
@@ -691,6 +720,7 @@ function WaterLogData({ clientId }) {
   };
 
   return <TabsContent value="water-log">
+    <button onClick={mutate}>mutate</button>
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-[var(--dark-1)] font-semibold text-lg">Water Log</h3>
       <div className="flex items-center gap-2">
@@ -722,6 +752,7 @@ function WaterLogData({ clientId }) {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
+            <TableHead>Time</TableHead>
             <TableHead>Amount (ml)</TableHead>
           </TableRow>
         </TableHeader>
@@ -736,6 +767,7 @@ function WaterLogData({ clientId }) {
             waterLogs.map((item) => (
               <TableRow key={item._id}>
                 <TableCell>{formatDate(item.date || item.createdAt || item.createdDate)}</TableCell>
+                <TableCell>{format(subMinutes(item.date, 330), "hh:mm a")}</TableCell>
                 <TableCell>{item.amount || item.quantity || item.waterAmount} ml</TableCell>
               </TableRow>
             ))

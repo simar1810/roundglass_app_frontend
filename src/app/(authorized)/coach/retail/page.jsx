@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { endOfMonth, endOfWeek, endOfYear, isValid, parse, startOfMonth, startOfWeek, startOfYear } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
+import { ListFilterPlus, Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -864,7 +864,7 @@ function Inventory() {
 function InventoryContainer() {
   const [query, setQuery] = useState("")
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
-
+  const [stockFilter, setStockFilter] = useState("all");
   const { isLoading, error, data, mutate } = useSWR(
     "app/getAllReminder?person=coach",
     () => fetchData(
@@ -874,26 +874,50 @@ function InventoryContainer() {
       )
     )
   );
-
   const sortedProducts = useMemo(() => {
     if (!data?.data || data.status_code !== 200) return [];
     return data.data.length > 0
       ? sortByPriority(data.data || [], isWhitelabel)
       : [];
   }, [data?.data, data?.status_code, isWhitelabel]);
+  const products = useMemo(() => {
+    if (!sortedProducts.length) return [];
+    const regex = new RegExp(query, "i");
+    let filtered = sortedProducts.filter(product =>
+      regex.test(product.productName)
+    );
 
+    if (stockFilter === "in-stock") {
+      filtered = filtered
+      .filter(p => p.quantity > 0)
+      .sort((a, b) => b.quantity - a.quantity);
+    }
+
+    if (stockFilter === "out-of-stock") {
+    filtered = filtered.filter(p => p.quantity === 0);
+    }
+
+    return filtered;
+  }, [sortedProducts, query, stockFilter]);
   if (isLoading) return <ContentLoader />
 
   if (error || data?.status_code !== 200) return <ContentError title={error?.message || data?.message} />
 
-  const regex = new RegExp(query, "i")
-  const products = sortedProducts.filter(
-    product => regex.test(product.productName)
-  ) || []
-
   return <div>
-    <div className="mb-8 flex items-center justify-between">
+    <div className="mb-8 flex flex-wrap gap-4 md:gap-0 items-center justify-between">
       <h5>Products</h5>
+      <div className="flex items-center justify-start md:justify-end gap-1 md:gap-4">
+      <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
+          <ListFilterPlus size={18}/>
+        <select
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+          >
+          <option value="all">All Products</option>
+          <option value="in-stock">In Stock</option>
+          <option value="out-of-stock">Out of Stock</option>
+        </select>
+      </div>
       <Input
         value={query}
         onChange={e => setQuery(e.target.value)}
@@ -902,7 +926,8 @@ function InventoryContainer() {
       />
       <Button onClick={mutate} variant="icon">
         <RefreshCcw />
-      </Button>
+        </Button>
+      </div>
     </div>
     <Table className="border-1">
       <TableHeader>
@@ -943,7 +968,14 @@ function PurchaseHistory() {
 
   if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
 
-  const orders = data.data || []
+  const orders = (data.data || []).sort((a, b) => {
+    const parseDate = (dateStr) => {
+      const [day, month, year] = dateStr.split("-");
+      return new Date(year, month - 1, day);
+    };
+
+    return parseDate(a.createdAt) - parseDate(b.createdAt);
+  });
 
   if (orders.length === 0) return <div className="min-h-[200px] flex items-center justify-center">
     0 orders created

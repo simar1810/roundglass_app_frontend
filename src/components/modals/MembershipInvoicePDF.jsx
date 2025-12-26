@@ -1,4 +1,6 @@
 import React from "react";
+import { getCoachProfile } from "@/lib/fetchers/app";
+import useSWR from "swr";
 import {
   Document,
   Page,
@@ -382,6 +384,7 @@ export default function MembershipInvoicePDF({
   const subscription = { ...defaultSubscriptionData, ...subscriptionSource };
   const client = { ...defaultClientData, ...clientSource };
   const invoiceMeta = { ...defaultInvoiceMeta, ...invoiceMetaData };
+  const { isLoading, error, data: coachData } = useSWR("coachProfile", () => getCoachProfile(_id));
 
   const {
     amount = 1000,
@@ -497,12 +500,8 @@ export default function MembershipInvoicePDF({
               <Text>{formatCurrency(taxableAmount)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>CGST 9.0%</Text>
-              <Text>{formatCurrency(cgst)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>SGST 9.0%</Text>
-              <Text>{formatCurrency(sgst)}</Text>
+              <Text style={styles.totalLabel}>GST {invoiceMetaData?.gst || "0.0"}%</Text>
+              <Text>{formatCurrency(Number(gst))}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>

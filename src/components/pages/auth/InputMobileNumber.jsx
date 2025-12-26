@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Shield } from "lucide-react";
+import { changeCurrentStage } from "@/config/state-reducers/login";
 import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { Shield, User } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import UserLoginForm from "./UserLoginForm";
 
@@ -33,7 +34,30 @@ export default function InputMobileNumber() {
         "app/signin?authMode=mob&clientType=web",
         data
       );
-      if (res.status_code === 400) throw new Error(res.message);
+      if (res.status_code === 400) {
+        // Check if user is not registered
+        const errorMessage = res.message?.toLowerCase() || "";
+        if (errorMessage.includes("not registered") || errorMessage.includes("not found") || errorMessage.includes("does not exist")) {
+          // For unregistered users, still proceed to OTP stage
+          // The API might still send OTP for registration flow
+          if (res.data && res.data.user) {
+            dispatch({
+              type: "UPDATE_CURRENT_STATE",
+              payload: {
+                stage: 2,
+                user: res.data.user,
+                isFirstTime: true,
+              },
+            });
+          } else {
+            // If no user data, redirect to registration
+            dispatch(changeCurrentStage(3));
+            toast.info("Please complete your registration");
+          }
+          return;
+        }
+        throw new Error(res.message);
+      }
       dispatch({
         type: "UPDATE_CURRENT_STATE",
         payload: {
@@ -43,7 +67,15 @@ export default function InputMobileNumber() {
         },
       });
     } catch (err) {
-      toast.error(err.message || "Please try again later!");
+      // Check if error message indicates unregistered user
+      const errorMessage = err.message?.toLowerCase() || "";
+      if (errorMessage.includes("not registered") || errorMessage.includes("not found") || errorMessage.includes("does not exist")) {
+        // Redirect to registration for unregistered users
+        dispatch(changeCurrentStage(3));
+        toast.info("Please complete your registration");
+      } else {
+        toast.error(err.message || "Please try again later!");
+      }
     }
   };
 
@@ -91,6 +123,12 @@ export default function InputMobileNumber() {
                 value={mobileNumber}
                 onChange={handleChange}
                 onBlur={() => setTouched(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && isValid) {
+                    e.preventDefault();
+                    sendOtp();
+                  }
+                }}
                 className={`w-full pl-12 pr-3 py-2 border rounded focus:outline-none ${
                   touched && !isValid
                     ? "border-red-500"

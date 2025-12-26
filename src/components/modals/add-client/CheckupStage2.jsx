@@ -123,7 +123,7 @@ export default function CheckupStage2() {
         }}
         data={{ ...state, age }}
         fields={formFields}
-        showAll={false}
+        showAll={true}
       />
     </div>
     <div className="mt-10 flex items-center gap-4">

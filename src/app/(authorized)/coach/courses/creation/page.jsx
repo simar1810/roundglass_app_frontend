@@ -109,7 +109,7 @@ export default function CourseCreationPage() {
 
     try {
       const response = await sendData("app/courses/create-course", payload);
-      console.log('Course creation response', response);
+
       if (response.status_code !== 200) throw new Error(response.message)
       setCreatedCourseMeta(response.data)
       toast.success(response.message || "Successfully created the course!")

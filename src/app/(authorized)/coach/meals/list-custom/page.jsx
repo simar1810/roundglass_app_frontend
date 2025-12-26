@@ -24,7 +24,7 @@ export default function Page() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "daily";
   const router = useRouter();
-  
+
   const [query, setQuery] = useState("")
   const [excludeManual, setExcludeManual] = useState(searchParams.get("excludeManual") === "true");
   const [excludeAdmin, setExcludeAdmin] = useState(searchParams.get("excludeAdmin") === "true");
@@ -37,7 +37,7 @@ export default function Page() {
   const filterRef = useRef(null);
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
-  
+
   // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -70,7 +70,7 @@ export default function Page() {
   if (error || data?.status_code !== 200)
     return <ContentError title={error || data?.message} />;
 
-  const mealRegex = new RegExp(query, "i") 
+  const mealRegex = new RegExp(query, "i")
 
   const filteredMealPlans = ["daily", "weekly", "monthly"].includes(mode)
     ? data
@@ -82,6 +82,7 @@ export default function Page() {
         if (excludeAdmin && meal.admin) return false;
         return true;
       })
+      .sort((a, b) => b._id.localeCompare(a._id))
     : data
       .data
       .filter(meal => mealRegex.test(meal.title))
@@ -89,7 +90,7 @@ export default function Page() {
         if (excludeManual && !meal.admin) return false;
         if (excludeAdmin && meal.admin) return false;
         return true;
-      });
+      }).sort((a, b) => b._id.localeCompare(a._id));
   const handleNavigate = (planMode) => {
     if (localStorage.getItem("aiMealPlan")) {
       localStorage.removeItem('aiMealPlan')
@@ -291,7 +292,7 @@ export default function Page() {
                     {meal.description}
                   </p>
                 </Link>
-                <AssignMealModal planId={meal._id} type="custom" />
+                <AssignMealModal plan={meal} planId={meal._id} type="custom" />
               </div>
             </div>
           ))}

@@ -294,7 +294,7 @@ function Stage2({
             onUpdate={onUpdateHealthMatrix}
             data={payload}
             fields={formFields}
-            showAll={false}
+            showAll={true}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-10">
