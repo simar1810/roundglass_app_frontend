@@ -598,9 +598,7 @@ function generatePayload(payload, id) {
       schedule_type: "reocurr",
       time: formatTime(payload.time),
       reocurrence: payload.reocurrence,
-      clients: Array.isArray(payload.clients)
-        ? payload.clients[0]
-        : payload.clients,
+      clients: payload.clients,
       isImageRequired: payload.isImageRequired || false
     };
     result.notificationStatus = {
@@ -676,9 +674,7 @@ function generatePayload(payload, id) {
         schedule_type: "schedule",
         date: format(parsedDate, "dd-MM-yyyy"),
         time: formatTime(payload.time),
-        clients: Array.isArray(payload.clients)
-          ? payload.clients[0]
-          : payload.clients,
+        clients: payload.clients,
         isImageRequired: payload.isImageRequired || false
       };
 

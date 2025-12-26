@@ -359,10 +359,22 @@ const formatDate = (value) => {
   });
 };
 
+function calculateTotals(totalAmount, gst) {
+  const totalGSTAmount = totalAmount / (1 + (gst / 100))
+  const CGSTAmount = Math.floor(totalGSTAmount / 2)
+  const SGSTAmount = Math.floor(totalGSTAmount / 2)
+  return {
+    totalGSTAmount,
+    CGSTAmount,
+    SGSTAmount
+  }
+}
+
 export default function MembershipInvoicePDF({
   brand: { brandLogo } = {},
   data = {}
 }) {
+  console.log(data)
   const subscriptionSource = data?.subscription ?? data ?? {};
   const clientSource = data?.client ?? {};
   const invoiceMetaData = data?.invoiceMeta ?? {};
@@ -382,15 +394,16 @@ export default function MembershipInvoicePDF({
     paidAmount: subscriptionPaidAmount = amount
   } = subscription;
 
-  const totalAmount = Number(amount) || 0;
+  const {
+    totalGSTAmount: totalAmount,
+    CGSTAmount: cgst,
+    SGSTAmount: sgst
+  } = calculateTotals(parseInt(amount), parseInt(invoiceMeta.gst || 0))
   const discountValue = Number(subscriptionDiscount) || 0;
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
   const pendingAmount = Math.max(totalAmount - safePaidAmount, 0);
   const taxableAmount = totalAmount / 1.18;
-  const gstAmount = totalAmount - taxableAmount;
-  const cgst = gstAmount / 2;
-  const sgst = gstAmount / 2;
 
   const billToName = client?.name || subscription?.name || "Client";
   const billToPhone = client?.phone || client?.mobile || subscription?.phone || "";
