@@ -9,11 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import useDebounce from "@/hooks/useDebounce";
 import { fetchData } from "@/lib/api";
-import { getRecipesCalorieCounter } from "@/lib/fetchers/app";
+import { getRecipes } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Flame, PlusCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function SelectMealCollection({ children, index }) {
@@ -35,9 +36,12 @@ export default function SelectMealCollection({ children, index }) {
 }
 
 function getMealsEndpoint(query, showMyMeals) {
-  const endpoint = showMyMeals
-    ? `app/dishes?query=${query}`
-    : `app/recipees?query=${query}`
+  // When toggle is ON (showMyMeals = true), fetch all coach recipes
+  if (showMyMeals) {
+    return getRecipes();
+  }
+  // When toggle is OFF, search recipes with query
+  const endpoint = `app/recipees?query=${query}`;
   if (query.length <= 3) {
     toast.error("At least enter 3 characters.");
     return;
@@ -49,8 +53,10 @@ function RecipeesContainer({ index }) {
   const [query, setQuery] = useState("rajma");
   const [showMyMeals, setShowMyMeals] = useState(false)
   const debouncedSearchQuery = useDebounce(query, 1000);
+  // When showMyMeals is true, use a static key to fetch all coach recipes
+  // When false, use query-based key for searching
   const endpoint = showMyMeals
-    ? `dishes/${debouncedSearchQuery}`
+    ? `coach-recipes`
     : `recipees/${debouncedSearchQuery}`
   const { isLoading, isValidating, error, data } = useSWR(
     endpoint,
@@ -64,7 +70,29 @@ function RecipeesContainer({ index }) {
     searchInputRef.current?.focus();
   }, []);
 
-  const recipees = data?.data ?? [];
+  // Handle toggle change - clear query when turning ON to show all recipes
+  const handleToggleChange = (value) => {
+    setShowMyMeals(value);
+    if (value) {
+      // When toggle is turned ON, clear the query to show all coach recipes
+      setQuery("");
+    }
+  };
+
+  // When showMyMeals is true, filter coach recipes client-side based on query
+  // When false, use the data from API search
+  let recipees = data?.data ?? [];
+  if (showMyMeals && recipees.length > 0) {
+    // Filter coach recipes by search query (if query is empty, show all)
+    if (query.trim().length > 0) {
+      const searchLower = query.toLowerCase();
+      recipees = recipees.filter(recipe => 
+        recipe?.title?.toLowerCase()?.includes(searchLower) ||
+        recipe?.dish_name?.toLowerCase()?.includes(searchLower)
+      );
+    }
+  }
+  
   const hasError = Boolean(error) || (data && data?.status_code !== 200);
   const showInitialLoader = isLoading && !data;
 
@@ -79,7 +107,7 @@ function RecipeesContainer({ index }) {
       />
       <ShowMyMealsToggle
         myMealsSelected={showMyMeals}
-        onChange={setShowMyMeals}
+        onChange={handleToggleChange}
       />
     </div>
     <ContentError title="No recipes found!" />
@@ -96,7 +124,7 @@ function RecipeesContainer({ index }) {
       />
       <ShowMyMealsToggle
         myMealsSelected={showMyMeals}
-        onChange={setShowMyMeals}
+        onChange={handleToggleChange}
       />
       {(isLoading || isValidating) && <Loader />}
     </div>
