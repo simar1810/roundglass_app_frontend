@@ -402,6 +402,7 @@ export default function MembershipInvoicePDF({
     CGSTAmount: cgst,
     SGSTAmount: sgst
   } = calculateTotals(parseInt(amount), parseInt(invoiceMeta.gst || 0))
+  const gst = invoiceMeta.gst
   const discountValue = Number(subscriptionDiscount) || 0;
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
