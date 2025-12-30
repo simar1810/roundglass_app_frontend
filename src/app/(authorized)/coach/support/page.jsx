@@ -23,10 +23,10 @@ export default function Page() {
           className="w-full text-black h-auto py-4 flex items-center justify-start gap-3 border-2 hover:bg-[var(--comp-1)] transition-colors"
           asChild
         >
-          <a href="https://wa.me/9876543210" target="_blank" rel="noopener noreferrer">
+          <a href="https://wa.me/9717984990" target="_blank" rel="noopener noreferrer">
             <IoLogoWhatsapp className="text-[var(--accent-1)] text-xl min-w-[24px]" />
             <span className="font-medium">WhatsApp Support</span>
-            <span className="ml-auto text-sm text-gray-600">9876543210</span>
+            <span className="ml-auto text-sm text-gray-600">9717984990</span>
           </a>
         </Button>
         
@@ -35,10 +35,10 @@ export default function Page() {
           className="w-full text-black h-auto py-4 flex items-center justify-start gap-3 border-2 hover:bg-[var(--comp-1)] transition-colors"
           asChild
         >
-          <a href="tel:9876543210">
+          <a href="tel:9717984990">
             <Phone className="text-[var(--accent-1)] min-w-[24px]" fill="#67BC2A" />
             <span className="font-medium">Call Support</span>
-            <span className="ml-auto text-sm text-gray-600">9876543210</span>
+            <span className="ml-auto text-sm text-gray-600">9717984990</span>
           </a>
         </Button>
         

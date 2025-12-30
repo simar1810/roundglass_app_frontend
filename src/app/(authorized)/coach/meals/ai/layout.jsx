@@ -16,9 +16,9 @@ export default function Layout({ children }) {
           <Link
             className="font-bold hover:underline hover:text-blue-600"
             target="_blank"
-            href="https://wa.me/9876543210?text=Hi,%20I%E2%80%99m%20interested%20in%20upgrading%20my%20app.%20Could%20you%20please%20help%20me%20with%20the%20available%20options?"
+            href="https://wa.me/9717984990?text=Hi,%20I%E2%80%99m%20interested%20in%20upgrading%20my%20app.%20Could%20you%20please%20help%20me%20with%20the%20available%20options?"
           >
-            9876543210
+            9717984990
           </Link>
         </p>
       </div>
