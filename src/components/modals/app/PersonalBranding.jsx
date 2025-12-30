@@ -19,10 +19,9 @@ import {
 } from "@/config/state-reducers/personal-branding";
 import { sendDataWithFormData } from "@/lib/api";
 import { getPersonalBranding } from "@/lib/fetchers/app";
-import { _throwError } from "@/lib/formatter";
 import { getObjectUrl, normalizeHexColor } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Pen, X, Upload, Palette } from "lucide-react";
+import { Palette, Pen, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";

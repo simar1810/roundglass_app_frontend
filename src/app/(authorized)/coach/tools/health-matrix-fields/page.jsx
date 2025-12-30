@@ -3,10 +3,10 @@
 import UpdateHealthMatrixModal from "@/components/modals/coach/UpdateHealthMatrixModal";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -126,9 +126,9 @@ export default function Page() {
       <Link
         className="font-bold hover:underline hover:text-blue-600"
         target="_blank"
-        href="https://wa.me/9876543210?text=Hi,%20I%E2%80%99m%20interested%20in%20upgrading%20my%20app.%20Could%20you%20please%20help%20me%20with%20the%20available%20options?"
+        href="https://wa.me/9717984990?text=Hi,%20I%E2%80%99m%20interested%20in%20upgrading%20my%20app.%20Could%20you%20please%20help%20me%20with%20the%20available%20options?"
       >
-        9876543210
+        9717984990
       </Link>
     </p>
 
