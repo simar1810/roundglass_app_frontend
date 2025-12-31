@@ -744,7 +744,6 @@ function normalizeBirthdays(birthdays = []) {
       const newDob = isBefore(bday, today)
         ? new Date(addYears(bday, 1))
         : new Date(bday)
-
       return {
         ...client,
         dob: newDob
@@ -755,7 +754,7 @@ function normalizeBirthdays(birthdays = []) {
 
 function normalizeSubscriptions(subscriptions = []) {
   return subscriptions.map((subscription, index) => {
-    const client = subscription?.client || {};
+    const client = subscription?.user || {};
     const timeline = getSubscriptionTimeline(subscription);
     return {
       id: subscription?._id ?? client?._id ?? index,
