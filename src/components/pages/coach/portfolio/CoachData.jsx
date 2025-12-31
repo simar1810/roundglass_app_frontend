@@ -100,28 +100,32 @@ function CoachSMLinks() {
 
 function CoachAwards({ awards }) {
   return <TabsContent value="awards">
-    <div className="flex items-center gap-2 justify-between">
-      <h4>{awards.length} Awards Available</h4>
+    <div className="flex items-center gap-2 justify-between mb-4">
+      <h4 className="text-lg font-semibold">{awards.length} {awards.length === 1 ? 'Award' : 'Awards'} Available</h4>
       <UpdateCoachAwardModal />
     </div>
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
-      {awards.map(award => <div key={award._id} className="flex items-center gap-4 relative">
-        <Image
-          src={award.image || "/illustrations/award.png"}
-          onError={e => e.target.src = "/illustrations/award.png"}
-          alt=""
-          height={64}
-          width={64}
-          className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)]"
-        />
-        <p className="mr-auto">{award.title}</p>
-        <DeleteAward awardId={award._id} />
-      </div>)}
-    </div>
-    {awards.length === 0 && <div className="h-[200px] flex items-center justify-center">
-      <UpdateCoachAwardModal />
-    </div>
-    }
+    {awards.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {awards.map(award => <div key={award._id} className="flex items-center gap-4 p-3 border-1 rounded-[10px] hover:bg-muted/50 transition-colors relative">
+          <Image
+            src={award.image || "/illustrations/award.png"}
+            onError={e => e.target.src = "/illustrations/award.png"}
+            alt={award.title || "Award"}
+            height={64}
+            width={64}
+            className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
+          />
+          <p className="mr-auto font-medium">{award.title}</p>
+          <DeleteAward awardId={award._id} />
+        </div>)}
+      </div>
+    ) : (
+      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-[10px]">
+        <Award className="w-16 h-16 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground mb-4 text-center">No awards added yet</p>
+        <UpdateCoachAwardModal />
+      </div>
+    )}
   </TabsContent>
 }
 

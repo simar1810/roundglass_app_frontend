@@ -1,50 +1,55 @@
+import FormControl from "@/components/FormControl";
+import UpdateCoachAboutModal from "@/components/modals/coach/UpdateCoachAboutModal";
+import UpdateCoachSpecializationModal from "@/components/modals/coach/UpdateCoachSpecializationModal";
+import UpdatePersonalDetails from "@/components/modals/coach/UpdateDetailsModal";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage
 } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader
 } from "@/components/ui/card";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { coachPortfolioFields } from "@/config/data/ui";
+import { sendData } from "@/lib/api";
+import { _throwError } from "@/lib/formatter";
+import { copyText } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { format, parse } from "date-fns";
 import {
   Clipboard,
   Link2,
 } from "lucide-react";
-import { coachPortfolioFields } from "@/config/data/ui";
-import UpdateCoachAboutModal from "@/components/modals/coach/UpdateCoachAboutModal";
-import UpdateCoachSpecializationModal from "@/components/modals/coach/UpdateCoachSpecializationModal";
 import Link from "next/link";
-import UpdatePersonalDetails from "@/components/modals/coach/UpdateDetailsModal";
-import { Button } from "@/components/ui/button";
-import { copyText } from "@/lib/utils";
-import { useAppSelector } from "@/providers/global/hooks";
-import { toast } from "sonner";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useRef, useState } from "react";
-import { sendData } from "@/lib/api";
+import { toast } from "sonner";
 import { mutate } from "swr";
-import FormControl from "@/components/FormControl";
-import { _throwError } from "@/lib/formatter";
-import { format, parse } from "date-fns";
 import DeleteClientNudges from "../client/DeleteClientNudges";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
 export default function CoachDetailsCard({ coachData }) {
-  const { coachId } = useAppSelector(state => state.coach.data);
+  const { coachId, coachRefUrl } = useAppSelector(state => state.coach.data);
 
   const messageTimings = coachData.messageTimings ?? {};
 
   function copyInviteLink() {
+    // Use coachRefUrl if available, otherwise fallback to wellnessz.in
+    // Remove trailing slashes to avoid double slashes
+    const baseUrl = (coachRefUrl || "https://wellnessz.in/app").replace(/\/+$/, "");
+    const inviteUrl = `${baseUrl}/coachCode?coachID=${coachId}`;
+    
     copyText(`Hey! 👋
 
 I just joined *WellnessZ*, an amazing wellness & coaching app 💚
 
-Register now using my link and let’s begin your health journey together 💪👇
-https://wellnessz.in/app/coachCode?coachID=${coachId}`)
+Register now using my link and let's begin your health journey together 💪👇
+${inviteUrl}`)
     toast.success("Invite Link copied")
   }
 
