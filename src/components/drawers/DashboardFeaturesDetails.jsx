@@ -1,30 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowRight, ChevronLeft, Download, RefreshCcw } from "lucide-react";
-import useSWR from "swr";
-import Link from "next/link";
-import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "../ui/drawer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Button } from "../ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Badge } from "../ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { ScrollArea } from "../ui/scroll-area";
-import ContentLoader from "../common/ContentLoader";
-import ContentError from "../common/ContentError";
-import { DialogTitle } from "../ui/dialog";
-import TopPerformers from "../pages/coach/dashboard/TopPerformers";
-import FollowUpList from "../pages/coach/dashboard/FollowUpList";
+import { ddMMyyyy } from "@/config/data/regex";
 import { fetchData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
-import { normalizeMealPlansSorting } from "../pages/coach/dashboard/feature-statistics/ClientPlansExpiry";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import {
   addDays, addYears, differenceInCalendarDays, format,
-  isBefore, isValid, parse, setDate, setMonth, startOfDay
+  isBefore, isValid, parse, setDate,
+  startOfDay
 } from "date-fns";
-import { ddMMyyyy } from "@/config/data/regex";
+import { ArrowRight, ChevronLeft, Download, RefreshCcw, Search, X } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
+import ContentError from "../common/ContentError";
+import ContentLoader from "../common/ContentLoader";
+import { normalizeMealPlansSorting } from "../pages/coach/dashboard/feature-statistics/ClientPlansExpiry";
+import FollowUpList from "../pages/coach/dashboard/FollowUpList";
+import TopPerformers from "../pages/coach/dashboard/TopPerformers";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { DialogTitle } from "../ui/dialog";
+import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "../ui/drawer";
+import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ScrollArea } from "../ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 const DATE_FORMATS = ["dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd"];
 const TONE_CLASSES = {
@@ -85,7 +87,13 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
   });
   const [filters, setFilters] = useState({
     plans: "all"
-  })
+  });
+  const [searchQueries, setSearchQueries] = useState({
+    plans: "",
+    incomplete: "",
+    birthdays: "",
+    subscriptions: ""
+  });
 
   const { birthdays = [], subscriptions = [], plans = [] } = data?.data || {};
   const normalizedBirthdays = useMemo(() => normalizeBirthdays(birthdays), [birthdays])
@@ -104,7 +112,8 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
         plans,
         normalizedPlans,
         incompletePlans: normalizedIncompletePlans,
-        filters
+        filters,
+        searchQueries
       }),
     [
       birthdays,
@@ -114,7 +123,13 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
       plans,
       normalizedPlans,
       normalizedIncompletePlans,
-      filters.plans
+      filters.plans,
+      filters.subscriptions,
+      filters.birthdays,
+      searchQueries.plans,
+      searchQueries.incomplete,
+      searchQueries.birthdays,
+      searchQueries.subscriptions
     ]
   );
 
@@ -191,6 +206,9 @@ function Container({ topPerformers, clientFollowUps, missingFollowups }) {
                       onExport={() => exportRowsAsCSV(tabItem.exportFileName, tabItem.columns, tableRows)}
                       filter={filters}
                       onFilterChange={setFilters}
+                      searchQuery={searchQueries[tabItem.value] || ""}
+                      onSearchChange={(value) => setSearchQueries(prev => ({ ...prev, [tabItem.value]: value }))}
+                      tabValue={tabItem.value}
                     />
                   </TabsContent>
                 );
@@ -215,7 +233,7 @@ function ActivitiesHeader({ onRefresh, isRefreshing }) {
         <DrawerClose>
           <ArrowRight />
         </DrawerClose>
-        <h2 className="text-lg md:text-3xl font-semibold text-slate-900">Activities</h2>
+        <h2 className="text-lg md:text-3xl font-semibold text-slate-900">Statistics</h2>
       </div>
       <Button
         variant="outline"
@@ -244,7 +262,10 @@ function DataCard({
   onPageChange,
   onExport,
   filter,
-  onFilterChange
+  onFilterChange,
+  searchQuery = "",
+  onSearchChange,
+  selectedTab: tabValue
 }) {
   const hasData = rows.length > 0;
 
@@ -255,21 +276,30 @@ function DataCard({
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
           {description ? <p className="text-sm text-slate-500">{description}</p> : null}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onExport}
-          disabled={totalRows === 0}
-          className="flex items-center gap-2 ml-auto"
-        >
-          <Download className="h-4 w-4" />
-          Export table
-        </Button>
-        <FilterOptions
-          selectedTab={selectedTab}
-          filter={filter}
-          onFilterChange={onFilterChange}
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <SearchBar
+            value={searchQuery}
+            onChange={onSearchChange}
+            placeholder={getSearchPlaceholder(tabValue)}
+            className="w-full md:w-64"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            disabled={totalRows === 0}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export table
+          </Button>
+          <FilterOptions
+            selectedTab={selectedTab}
+            filter={filter}
+            onFilterChange={onFilterChange}
+            tabValue={tabValue}
+          />
+        </div>
       </div>
       <div className="overflow-x-auto">
         <Table className="min-w-full">
@@ -440,7 +470,8 @@ function createTabsConfig({
   plans,
   normalizedPlans,
   incompletePlans,
-  filters
+  filters,
+  searchQueries = { plans: "", incomplete: "", birthdays: "", subscriptions: "" }
 }) {
   const birthdayColumns = [
     {
@@ -599,7 +630,7 @@ function createTabsConfig({
       title: "Meal Plans About to Expire",
       description: null,
       columns: mealPlanColumns,
-      rows: renderMealPlanRows(normalizedPlans, filters),
+      rows: renderMealPlanRows(normalizedPlans, filters, searchQueries.plans),
       rawRows: plans,
       exportFileName: "meal-plans-expiring",
     },
@@ -609,7 +640,7 @@ function createTabsConfig({
       title: "Incomplete Meal Plans",
       description: null,
       columns: incompletePlanColumns,
-      rows: incompletePlans,
+      rows: filterIncompletePlans(incompletePlans, searchQueries.incomplete),
       rawRows: incompletePlans,
       exportFileName: "incomplete-plans",
     },
@@ -619,7 +650,7 @@ function createTabsConfig({
       title: "Upcoming Birthdays",
       description: null,
       columns: birthdayColumns,
-      rows: normalizedBirthdays,
+      rows: renderBirthdayRows(normalizedBirthdays, filters, searchQueries.birthdays),
       rawRows: birthdays,
       exportFileName: "upcoming-birthdays",
     },
@@ -629,7 +660,7 @@ function createTabsConfig({
       title: "Club Subscriptions & Validity",
       description: null,
       columns: subscriptionColumns,
-      rows: normalizedSubscriptions,
+      rows: renderSubscriptionRows(normalizedSubscriptions, filters, searchQueries.subscriptions),
       rawRows: subscriptions,
       exportFileName: "club-subscriptions",
     },
@@ -744,7 +775,6 @@ function normalizeBirthdays(birthdays = []) {
       const newDob = isBefore(bday, today)
         ? new Date(addYears(bday, 1))
         : new Date(bday)
-
       return {
         ...client,
         dob: newDob
@@ -755,7 +785,7 @@ function normalizeBirthdays(birthdays = []) {
 
 function normalizeSubscriptions(subscriptions = []) {
   return subscriptions.map((subscription, index) => {
-    const client = subscription?.client || {};
+    const client = subscription?.user || {};
     const timeline = getSubscriptionTimeline(subscription);
     return {
       id: subscription?._id ?? client?._id ?? index,
@@ -1083,39 +1113,246 @@ function calculateMissingDates(startDate, availableDates, totalDays) {
 function FilterOptions({
   selectedTab,
   filter,
-  onFilterChange
+  onFilterChange,
+  tabValue
 }) {
-  if (selectedTab == "plans") return <ExpiringMealPlanFilterOptions
-    filter={filter}
-    onFilterChange={onFilterChange}
-  />
+  if (tabValue === "plans") {
+    return <ExpiringMealPlanFilterOptions
+      filter={filter}
+      onFilterChange={onFilterChange}
+    />
+  }
+  if (tabValue === "subscriptions") {
+    return <SubscriptionFilterOptions
+      filter={filter}
+      onFilterChange={onFilterChange}
+    />
+  }
+  if (tabValue === "birthdays") {
+    return <BirthdayFilterOptions
+      filter={filter}
+      onFilterChange={onFilterChange}
+    />
+  }
   return <></>
+}
+
+function SubscriptionFilterOptions({ filter, onFilterChange }) {
+  const subscriptionFilter = filter.subscriptions || "all";
+  return (
+    <Select
+      value={subscriptionFilter}
+      onValueChange={(value) => onFilterChange(prev => ({ ...prev, subscriptions: value }))}
+    >
+      <SelectTrigger className="w-[140px]">
+        <SelectValue placeholder="Filter" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        <SelectItem value="expiring">Expiring Soon (≤7 days)</SelectItem>
+        <SelectItem value="expired">Expired</SelectItem>
+        <SelectItem value="active">Active</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
+function BirthdayFilterOptions({ filter, onFilterChange }) {
+  const birthdayFilter = filter.birthdays || "all";
+  return (
+    <Select
+      value={birthdayFilter}
+      onValueChange={(value) => onFilterChange(prev => ({ ...prev, birthdays: value }))}
+    >
+      <SelectTrigger className="w-[140px]">
+        <SelectValue placeholder="Filter" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        <SelectItem value="thisWeek">This Week</SelectItem>
+        <SelectItem value="thisMonth">This Month</SelectItem>
+        <SelectItem value="nextMonth">Next Month</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 }
 
 function ExpiringMealPlanFilterOptions({
   filter,
   onFilterChange
 }) {
-  const planFilter = filter.plans || "all"
-  return <Select
-    value={planFilter}
-    onValueChange={(value) => onFilterChange(prev => ({ ...prev, plans: value }))}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder="Select" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="active">Active</SelectItem>
-      <SelectItem value="expired">Expired</SelectItem>
-      <SelectItem value="all">All</SelectItem>
-    </SelectContent>
-  </Select>
+  const planFilter = filter.plans || "all";
+  return (
+    <Select
+      value={planFilter}
+      onValueChange={(value) => onFilterChange(prev => ({ ...prev, plans: value }))}
+    >
+      <SelectTrigger className="w-[140px]">
+        <SelectValue placeholder="Filter" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        <SelectItem value="active">Active</SelectItem>
+        <SelectItem value="expired">Expired</SelectItem>
+        <SelectItem value="expiring">Expiring Soon (≤7 days)</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 }
 
-function renderMealPlanRows(plans, { plans: plansFilter } = {}) {
-  if (plansFilter === "active") return plans
-    .filter(plan => plan.remainingDays > 0);
-  if (plansFilter === "expired") return plans
-    .filter(plan => plan.remainingDays <= 0);
-  return plans;
+function renderMealPlanRows(plans, { plans: plansFilter } = {}, searchQuery = "") {
+  let filtered = plans;
+  
+  // Apply status filter
+  if (plansFilter === "active") {
+    filtered = filtered.filter(plan => plan.remainingDays > 0);
+  } else if (plansFilter === "expired") {
+    filtered = filtered.filter(plan => plan.remainingDays <= 0);
+  } else if (plansFilter === "expiring") {
+    filtered = filtered.filter(plan => plan.remainingDays > 0 && plan.remainingDays <= 7);
+  }
+  
+  // Apply search filter
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(plan => {
+      const name = (plan.user?.name || "").toLowerCase();
+      const clientId = (plan.clientId || "").toLowerCase();
+      const mobileNumber = (plan.mobileNumber || "").toLowerCase();
+      return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query);
+    });
+  }
+  
+  return filtered;
+}
+
+function filterIncompletePlans(plans, searchQuery = "") {
+  if (!searchQuery.trim()) return plans;
+  
+  const query = searchQuery.toLowerCase().trim();
+  return plans.filter(plan => {
+    const title = (plan.title || "").toLowerCase();
+    const lastDate = (plan.lastDate || "").toLowerCase();
+    return title.includes(query) || lastDate.includes(query);
+  });
+}
+
+function renderBirthdayRows(birthdays, { birthdays: birthdayFilter } = {}, searchQuery = "") {
+  let filtered = birthdays;
+  
+  // Apply date filter
+  if (birthdayFilter === "thisWeek") {
+    const today = startOfDay(new Date());
+    const nextWeek = addDays(today, 7);
+    filtered = filtered.filter(birthday => {
+      if (!birthday.dob) return false;
+      return !isBefore(birthday.dob, today) && isBefore(birthday.dob, nextWeek);
+    });
+  } else if (birthdayFilter === "thisMonth") {
+    const today = startOfDay(new Date());
+    const nextMonth = addDays(today, 30);
+    filtered = filtered.filter(birthday => {
+      if (!birthday.dob) return false;
+      return !isBefore(birthday.dob, today) && isBefore(birthday.dob, nextMonth);
+    });
+  } else if (birthdayFilter === "nextMonth") {
+    const today = startOfDay(new Date());
+    const nextMonth = addDays(today, 30);
+    const monthAfter = addDays(today, 60);
+    filtered = filtered.filter(birthday => {
+      if (!birthday.dob) return false;
+      return !isBefore(birthday.dob, nextMonth) && isBefore(birthday.dob, monthAfter);
+    });
+  }
+  
+  // Apply search filter
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(birthday => {
+      const name = (birthday.name || "").toLowerCase();
+      const clientId = (birthday.clientId || "").toLowerCase();
+      const mobileNumber = (birthday.mobileNumber || "").toLowerCase();
+      const dob = birthday.dob ? format(birthday.dob, "dd-MM-yyyy").toLowerCase() : "";
+      return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query) || dob.includes(query);
+    });
+  }
+  
+  return filtered;
+}
+
+function renderSubscriptionRows(subscriptions, { subscriptions: subscriptionFilter } = {}, searchQuery = "") {
+  let filtered = subscriptions;
+  
+  // Apply status filter
+  if (subscriptionFilter === "expiring") {
+    filtered = filtered.filter(sub => {
+      const days = sub.daysRemaining?.value;
+      return days !== null && days > 0 && days <= 7;
+    });
+  } else if (subscriptionFilter === "expired") {
+    filtered = filtered.filter(sub => {
+      const days = sub.daysRemaining?.value;
+      return days !== null && days <= 0;
+    });
+  } else if (subscriptionFilter === "active") {
+    filtered = filtered.filter(sub => {
+      const days = sub.daysRemaining?.value;
+      return days !== null && days > 0;
+    });
+  }
+  
+  // Apply search filter
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(sub => {
+      const name = (sub.user?.name || "").toLowerCase();
+      const clientId = (sub.clientId || "").toLowerCase();
+      const mobileNumber = (sub.mobileNumber || "").toLowerCase();
+      const validFrom = (sub.validFrom || "").toLowerCase();
+      const validTill = (sub.validTill || "").toLowerCase();
+      return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query) || 
+             validFrom.includes(query) || validTill.includes(query);
+    });
+  }
+  
+  return filtered;
+}
+
+function getSearchPlaceholder(tabValue) {
+  switch (tabValue) {
+    case "plans":
+      return "Search by name, client ID, or mobile...";
+    case "incomplete":
+      return "Search by title or date...";
+    case "birthdays":
+      return "Search by name, client ID, mobile, or date...";
+    case "subscriptions":
+      return "Search by name, client ID, mobile, or dates...";
+    default:
+      return "Search...";
+  }
+}
+
+function SearchBar({ value, onChange, placeholder, className }) {
+  return (
+    <div className={cn("relative", className)}>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <Input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="pl-9 pr-9 h-9"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
 }

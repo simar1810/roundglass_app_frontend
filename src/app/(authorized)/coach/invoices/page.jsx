@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fetchData, sendDataWithFormData } from "@/lib/api";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Download, FileText, Filter, Search } from "lucide-react";
+import { Download, FileText, Filter, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -32,8 +32,8 @@ function filterBasedOnInvoiceType(invoice, filter) {// filters = completed, pend
 }
 
 export default function Page() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
   const [activeFields, setActiveFields] = useState(["clientName", "email", "mobileNumber", "invoice", "city", "description"]);
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [invoiceType, setInvoiceType] = useState(["pending", "completed"]) // all, pending, completed
@@ -41,12 +41,29 @@ export default function Page() {
     "membership/invoices",
     () => fetchData("app/memberships-invoices")
   );
-  const invoiceMeta = data?.invoiceMeta
-useEffect(() => {
-  if (invoiceMeta && !invoiceMeta.gst) {
-    setModalOpen(true);
-  }
-}, [invoiceMeta]);
+  const invoiceMeta = data?.invoiceMeta || {};
+  
+  // Check which invoice fields are missing
+  const getMissingFields = (meta) => {
+    const missing = [];
+    if (!meta?.title?.trim()) missing.push("Company Name");
+    if (!meta?.gstin?.trim()) missing.push("GSTIN");
+    if (!meta?.address?.trim()) missing.push("Address");
+    // Check if GST is missing - it can be 0, so we check for null/undefined/empty string
+    // Also check if it's a valid number (including 0)
+    const gstValue = meta?.gst;
+    const gstNum = gstValue !== null && gstValue !== undefined && gstValue !== "" 
+      ? parseFloat(String(gstValue)) 
+      : null;
+    // GST is missing if it's null/undefined/empty OR if it's not a valid number
+    if (gstNum === null || isNaN(gstNum)) {
+      missing.push("GST Percentage");
+    }
+    return missing;
+  };
+
+  const missingFields = getMissingFields(invoiceMeta);
+  const hasMissingFields = missingFields.length > 0;
   if (isLoading) return <ContentLoader />
 
   if (error || data.status_code !== 200) return <ContentError title={error?.message || data.message} />
@@ -105,6 +122,13 @@ useEffect(() => {
       </div>
 
       <InvoiceHighlights stats={stats} total={subscriptions.length} />
+
+      {hasMissingFields && (
+        <InvoiceInfoNotification 
+          missingFields={missingFields} 
+          onUpdate={() => router.push("/coach/portfolio")}
+        />
+      )}
 
       <Card className="shadow-sm">
         <CardContent className="p-0">
@@ -223,41 +247,79 @@ useEffect(() => {
           )}
         </CardContent>
       </Card>
-      <InvoiceMetaModal open={modalOpen} onClose={() => setModalOpen(false)}/>
     </div>
   );
 }
-function InvoiceMetaModal({ open, onClose }) {
-  const router = useRouter();
 
-  if (!open) return null;
+function InvoiceInfoNotification({ missingFields, onUpdate }) {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+
+  const handleDismiss = () => {
+    setDismissed(true);
+  };
+
+  const handleUpdate = () => {
+    onUpdate?.();
+  };
+
+  const missingCount = missingFields.length;
+  const missingText = missingCount === 1 
+    ? missingFields[0]
+    : missingCount === 2
+    ? `${missingFields[0]} and ${missingFields[1]}`
+    : `${missingFields.slice(0, -1).join(", ")}, and ${missingFields[missingFields.length - 1]}`;
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      <div className="relative z-10 w-[90%] max-w-md rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Invoice Details Required
-        </h3>
-
-        <p className="mt-2 text-sm text-slate-600">
-          Please update all invoice-related details (GST, address, etc.)
-          in your portfolio before generating invoices.
-        </p>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
-            Later
-          </Button>
-          <Button onClick={() => router.push("/coach/portfolio")}>
-            Update Now
-          </Button>
-        </div>
-      </div>
+    <div className="relative">
+      <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-amber-600" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                Invoice Information Incomplete
+              </h4>
+              <p className="text-sm text-amber-800 mb-3">
+                {missingCount === 1 
+                  ? `Please add your ${missingText.toLowerCase()} to generate invoices.`
+                  : `Please add the following to generate invoices: ${missingText.toLowerCase()}.`
+                }
+              </p>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUpdate}
+                  className="h-8 text-xs border-amber-300 hover:bg-amber-100"
+                >
+                  Update Now
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleDismiss}
+                  className="h-8 text-xs text-amber-700 hover:bg-amber-100"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="flex-shrink-0 text-amber-600 hover:text-amber-800 transition-colors"
+              aria-label="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

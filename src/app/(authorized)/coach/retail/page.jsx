@@ -29,8 +29,9 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
 import { endOfMonth, endOfWeek, endOfYear, isValid, parse, startOfMonth, startOfWeek, startOfYear } from "date-fns";
 import { ListFilterPlus, Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
+import DateRangePicker from "@/components/common/DateRangePicker";
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -122,55 +123,37 @@ function parseOrderDate(dateString) {
   }
 }
 
-// Helper function to get date range based on period
-function getDateRange(period) {
+// Helper function to normalize date range
+function normalizeDateRange(dateRange) {
+  if (!dateRange || (!dateRange.from && !dateRange.to)) {
+    return null; // All time
+  }
+  
   try {
-    const now = new Date();
-    if (!isValid(now)) {
-      console.error("Invalid date");
-      return null;
+    const start = dateRange.from ? new Date(dateRange.from) : null;
+    const end = dateRange.to ? new Date(dateRange.to) : null;
+    
+    if (start && isValid(start)) {
+      start.setHours(0, 0, 0, 0);
     }
-
-    // Create a new date to avoid mutating the original
-    const currentDate = new Date(now);
-    currentDate.setHours(23, 59, 59, 999);
-
-    switch (period) {
-      case "weekly": {
-        const start = startOfWeek(currentDate, { weekStartsOn: 1 });
-        const end = endOfWeek(currentDate, { weekStartsOn: 1 });
-        if (!isValid(start) || !isValid(end)) return null;
-        // Ensure end time is end of day
-        end.setHours(23, 59, 59, 999);
-        return { start, end };
-      }
-      case "monthly": {
-        const start = startOfMonth(currentDate);
-        const end = endOfMonth(currentDate);
-        if (!isValid(start) || !isValid(end)) return null;
-        // Ensure end time is end of day
-        end.setHours(23, 59, 59, 999);
-        return { start, end };
-      }
-      case "yearly": {
-        const start = startOfYear(currentDate);
-        const end = endOfYear(currentDate);
-        if (!isValid(start) || !isValid(end)) return null;
-        // Ensure end time is end of day
-        end.setHours(23, 59, 59, 999);
-        return { start, end };
-      }
-      default:
-        return null; // All time
+    if (end && isValid(end)) {
+      end.setHours(23, 59, 59, 999);
     }
+    
+    if (start && end && start > end) {
+      // Swap if start is after end
+      return { start: end, end: start };
+    }
+    
+    return { start, end };
   } catch (error) {
-    console.error("Error getting date range:", error);
+    console.error("Error normalizing date range:", error);
     return null;
   }
 }
 
 // Calculate filtered stats
-function calculateFilteredStats(orders, period) {
+function calculateFilteredStats(orders, dateRange) {
   try {
     if (!orders) {
       return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
@@ -181,7 +164,9 @@ function calculateFilteredStats(orders, period) {
       order && (order.orderType === "sale" || !order.orderType)
     );
 
-    if (period === "all") {
+    // If no date range provided, return all orders
+    const normalizedRange = normalizeDateRange(dateRange);
+    if (!normalizedRange || (!normalizedRange.start && !normalizedRange.end)) {
       const totalSales = saleOrders.reduce((sum, order) =>
         sum + (Number(order?.sellingPrice) || 0), 0
       );
@@ -218,17 +203,10 @@ function calculateFilteredStats(orders, period) {
       return { totalSales, totalOrders, volumePoints };
     }
 
-    const dateRange = getDateRange(period);
-    if (!dateRange || !dateRange.start || !dateRange.end) {
+    const { start: startDate, end: endDate } = normalizedRange;
+    if (!startDate || !endDate) {
       return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
     }
-
-    // Normalize date range
-    const startDate = new Date(dateRange.start);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(dateRange.end);
-    endDate.setHours(23, 59, 59, 999);
 
     const filteredOrders = saleOrders.filter(order => {
       try {
@@ -305,11 +283,12 @@ function RetailStatisticsCards({
   orders = null
 }) {
   const [hide, setHide] = useState(true);
-  const [period, setPeriod] = useState("all"); // all, weekly, monthly, yearly
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
 
   const filteredStats = useMemo(() => {
     try {
-      if (period === "all") {
+      // If no date range selected, return all time stats
+      if (!dateRange.from && !dateRange.to) {
         return {
           totalSales: Number(totalSales || 0),
           totalOrders: Number(totalOrders || 0),
@@ -322,7 +301,7 @@ function RetailStatisticsCards({
       if (!orders || typeof orders !== 'object') {
         return { totalSales: 0, totalOrders: 0, volumePoints: 0, sales: 0, orders: 0 };
       }
-      const result = calculateFilteredStats(orders, period);
+      const result = calculateFilteredStats(orders, dateRange);
       // Add aliases for consistency
       return {
         ...result,
@@ -333,26 +312,19 @@ function RetailStatisticsCards({
       console.error("Error in filteredStats useMemo:", error);
       return { sales: 0, orders: 0, volumePoints: 0 };
     }
-  }, [period, totalSales, totalOrders, acumulatedVP, orders]);
+  }, [dateRange, totalSales, totalOrders, acumulatedVP, orders]);
 
   return <div className="space-y-4">
-    {/* Period Filter */}
+    {/* Date Range Filter */}
     <div className="flex items-center justify-between flex-wrap gap-2">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-medium">Period:</span>
-        {["all", "weekly", "monthly", "yearly"].map((p) => (
-          <Button
-            key={p}
-            size="sm"
-            variant={period === p ? "wz" : "outline"}
-            className="text-xs capitalize"
-            onClick={() => setPeriod(p)}
-          >
-            {p === "all" ? "All Time" : p}
-          </Button>
-        ))}
+        <span className="text-sm font-medium">Date Range:</span>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
       </div>
-      <RetailReportGenerator orders={orders} period={period} />
+      <RetailReportGenerator orders={orders} dateRange={dateRange} />
     </div>
 
     {/* Statistics Cards */}
@@ -374,7 +346,7 @@ function RetailStatisticsCards({
         </CardHeader>
         <CardContent className="p-0">
           <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>
-            ₹ {period === "all"
+            ₹ {(!dateRange.from && !dateRange.to)
               ? Number(totalSales || 0).toFixed(2)
               : Number(filteredStats?.totalSales || filteredStats?.sales || 0).toFixed(2)}
           </h4>
@@ -386,7 +358,7 @@ function RetailStatisticsCards({
         </CardHeader>
         <CardContent className="p-0">
           <h4 className="text-base md:!text-[28px]">
-            {period === "all"
+            {(!dateRange.from && !dateRange.to)
               ? totalOrders
               : Number(filteredStats?.totalOrders || filteredStats?.orders || 0)}
           </h4>
@@ -398,7 +370,7 @@ function RetailStatisticsCards({
         </CardHeader>
         <CardContent className="p-0">
           <h4 className="text-[10px] md:!text-[28px]">
-            {period === "all"
+            {(!dateRange.from && !dateRange.to)
               ? Number(acumulatedVP || 0).toFixed(2)
               : Number(filteredStats?.volumePoints || 0).toFixed(2)}
           </h4>
@@ -866,7 +838,7 @@ function InventoryContainer() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
   const [stockFilter, setStockFilter] = useState("all");
   const { isLoading, error, data, mutate } = useSWR(
-    "app/getAllReminder?person=coach",
+    "app/inventory",
     () => fetchData(
       buildUrlWithQueryParams(
         "app/inventory",
@@ -889,12 +861,12 @@ function InventoryContainer() {
 
     if (stockFilter === "in-stock") {
       filtered = filtered
-      .filter(p => p.quantity > 0)
-      .sort((a, b) => b.quantity - a.quantity);
+        .filter(p => p.quantity > 0)
+        .sort((a, b) => b.quantity - a.quantity);
     }
 
     if (stockFilter === "out-of-stock") {
-    filtered = filtered.filter(p => p.quantity === 0);
+      filtered = filtered.filter(p => p.quantity === 0);
     }
 
     return filtered;
@@ -907,26 +879,27 @@ function InventoryContainer() {
     <div className="mb-8 flex flex-wrap gap-4 md:gap-0 items-center justify-between">
       <h5>Products</h5>
       <div className="flex items-center justify-start md:justify-end gap-1 md:gap-4">
-      <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
-          <ListFilterPlus size={18}/>
-        <select
-          value={stockFilter}
-          onChange={(e) => setStockFilter(e.target.value)}
+        <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
+          <ListFilterPlus size={18} />
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
           >
-          <option value="all">All Products</option>
-          <option value="in-stock">In Stock</option>
-          <option value="out-of-stock">Out of Stock</option>
-        </select>
-      </div>
-      <Input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Product Name..."
-        className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
-      />
-      <Button onClick={mutate} variant="icon">
-        <RefreshCcw />
+            <option value="all">All Products</option>
+            <option value="in-stock">In Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+        <Input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Product Name..."
+          className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
+        />
+        <Button onClick={mutate} variant="icon">
+          <RefreshCcw />
         </Button>
+        <ResetInventory />
       </div>
     </div>
     <Table className="border-1">
@@ -1100,10 +1073,17 @@ function UpdateOrder({ order }) {
   </div>
 }
 
-function RetailReportGenerator({ orders, period: currentPeriod }) {
+function RetailReportGenerator({ orders, dateRange: currentDateRange }) {
   const [open, setOpen] = useState(false);
   const [reportType, setReportType] = useState("summary"); // summary, detailed
-  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod || "all");
+  const [selectedDateRange, setSelectedDateRange] = useState(currentDateRange || { from: null, to: null });
+
+  // Sync with parent dateRange when it changes
+  useEffect(() => {
+    if (currentDateRange) {
+      setSelectedDateRange(currentDateRange);
+    }
+  }, [currentDateRange]);
   const [pdfData, setPdfData] = useState(null);
   const [pdfOpen, setPdfOpen] = useState(false);
 
@@ -1114,8 +1094,10 @@ function RetailReportGenerator({ orders, period: currentPeriod }) {
         return;
       }
 
-      const stats = calculateFilteredStats(orders, selectedPeriod);
-      const reportData = salesReportPDFData(stats, orders, selectedPeriod, reportType);
+      const stats = calculateFilteredStats(orders, selectedDateRange);
+      // Convert date range to period string for PDF data (for backward compatibility)
+      const periodString = (!selectedDateRange.from && !selectedDateRange.to) ? "all" : "custom";
+      const reportData = salesReportPDFData(stats, orders, periodString, reportType);
 
       setPdfData(reportData);
       setOpen(false);
@@ -1142,20 +1124,11 @@ function RetailReportGenerator({ orders, period: currentPeriod }) {
           <DialogTitle className="text-xl font-bold mb-4">Generate Sales Report</DialogTitle>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Report Period</label>
-              <div className="grid grid-cols-2 gap-2">
-                {["all", "weekly", "monthly", "yearly"].map((p) => (
-                  <Button
-                    key={p}
-                    variant={selectedPeriod === p ? "wz" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPeriod(p)}
-                    className="text-xs capitalize"
-                  >
-                    {p === "all" ? "All Time" : p}
-                  </Button>
-                ))}
-              </div>
+              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <DateRangePicker
+                dateRange={selectedDateRange}
+                onDateRangeChange={setSelectedDateRange}
+              />
             </div>
 
             <div>
@@ -1231,4 +1204,32 @@ function RetailReportGenerator({ orders, period: currentPeriod }) {
       )}
     </>
   );
+}
+
+function ResetInventory() {
+  async function resetInventory(setLoading, btnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/reset-inventory", {}, "POST");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/inventory");
+      btnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure of reseting your inventory!"
+    action={(setLoading, btnRef) => resetInventory(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      <Button size="sm" variant="destructive">
+        <Trash2 className="w-[28px] h-[28px] text-white" />
+        Reset
+      </Button>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }
