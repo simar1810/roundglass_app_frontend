@@ -124,8 +124,8 @@ const healtMetrics = [
     icon: "/svgs/body.svg",
     name: "sub_fat",
     id: 9,
-    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
-    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+    getMaxValue: () => 20,
+    getMinValue: () => 15,
   },
 
 ];
