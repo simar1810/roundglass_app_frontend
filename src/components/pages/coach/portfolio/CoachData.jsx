@@ -6,23 +6,22 @@ import FormControl from "@/components/FormControl";
 import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
 import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import UploadImage from "@/components/modals/UploadImage";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
 import { fetchData, sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Link as LucideLink, Award, Users, X, Landmark, Banknote, Pen, Pencil, Dot, ReceiptIndianRupee } from "lucide-react";
+import { Award, Dot, Landmark, Link as LucideLink, Pencil, ReceiptIndianRupee, Settings, Users, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -35,6 +34,7 @@ export default function CoachData({ awards }) {
       <CoachClubSettings />
       <BankDetails />
       <InvoiceDetails />
+      <CoachToggleSettings />
     </Tabs>
   </div>
 }
@@ -44,6 +44,7 @@ const tabItems = [
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Landmark className="w-[16px] h-[16px]" />, value: "bank", label: "Bank" },
   { icon: <ReceiptIndianRupee className="w-[16px] h-[16px]" />, value: "invoice", label: "Invoice" },
+  { icon: <Settings className="w-[16px] h-[16px]" />, value: "settings", label: "Settings" },
 ];
 
 function Header() {
@@ -506,4 +507,95 @@ function UpdateInvoiceDetails({ defaultData }) {
       </div>
     </DialogContent>
   </Dialog>
+}
+
+function CoachToggleSettings() {
+  const coach = useAppSelector(state => state.coach.data);
+  const [onboardingMode, setOnboardingMode] = useState(coach?.onboardingMode || false);
+  const [membershipCoreMode, setMembershipCoreMode] = useState(coach?.membershipCoreMode || false);
+  const [loading, setLoading] = useState(false);
+
+  // Update local state when coach data changes
+  useEffect(() => {
+    if (coach) {
+      setOnboardingMode(coach.onboardingMode || false);
+      setMembershipCoreMode(coach.membershipCoreMode || false);
+    }
+  }, [coach]);
+
+  async function updateToggle(toggleName, value) {
+    try {
+      setLoading(true);
+      const payload = {
+        onboardingMode: toggleName === "onboardingMode" ? value : onboardingMode,
+        membershipCoreMode: toggleName === "membershipCoreMode" ? value : membershipCoreMode,
+      };
+      
+      const response = await sendData("app/update-coach-toggle-field", payload, "PUT");
+      
+      // Handle 401 unauthorized (sendData returns null on 401)
+      if (!response) {
+        throw new Error("Unauthorized. Please log in again.");
+      }
+      
+      // Handle error responses
+      if (response.status_code !== 200 && response.status !== true) {
+        throw new Error(response.message || "Failed to update toggle");
+      }
+      
+      toast.success(response.message || "Toggle updated successfully");
+      
+      // Update local state
+      if (toggleName === "onboardingMode") {
+        setOnboardingMode(value);
+      } else {
+        setMembershipCoreMode(value);
+      }
+      
+      // Refresh coach profile
+      mutate("coachProfile");
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+      // Revert the toggle on error
+      if (toggleName === "onboardingMode") {
+        setOnboardingMode(!value);
+      } else {
+        setMembershipCoreMode(!value);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <TabsContent value="settings" className="space-y-6">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+        <div className="flex-1">
+          <h4 className="font-semibold text-base mb-1">Onboarding Mode</h4>
+          <p className="text-sm text-muted-foreground">
+            Makes the sign up questionnaire more informative for the client
+          </p>
+        </div>
+        <Switch
+          checked={onboardingMode}
+          onCheckedChange={(checked) => updateToggle("onboardingMode", checked)}
+          disabled={loading}
+        />
+      </div>
+      
+      <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+        <div className="flex-1">
+          <h4 className="font-semibold text-base mb-1">Coach Core Membership Mode</h4>
+          <p className="text-sm text-muted-foreground">
+            Allows the coach to inactive the client after its club membership has ended
+          </p>
+        </div>
+        <Switch
+          checked={membershipCoreMode}
+          onCheckedChange={(checked) => updateToggle("membershipCoreMode", checked)}
+          disabled={loading}
+        />
+      </div>
+    </div>
+  </TabsContent>
 }

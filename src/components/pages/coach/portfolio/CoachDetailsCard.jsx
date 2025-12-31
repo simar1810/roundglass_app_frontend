@@ -108,14 +108,14 @@ https://wellnessz.in/app/coachCode?coachID=${coachId}`)
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <h4>Personal Portfolio</h4>
+        <h4>Portfolio Website</h4>
         <Link
           target="_blank"
           href={`${COACH_WEBSITE_BASE_LINK}/${coachData.coachId}`}
           className="bg-[var(--accent-1)] text-white text-[14px] font-bold px-3 py-1 flex items-center gap-2 rounded-[4px]"
         >
           <Link2 />
-          Go To Store
+          Explore Portfolio
         </Link>
       </div>
       <div className="mt-4 flex items-center justify-between">
