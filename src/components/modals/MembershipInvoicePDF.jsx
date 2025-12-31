@@ -397,12 +397,18 @@ export default function MembershipInvoicePDF({
     paidAmount: subscriptionPaidAmount = amount
   } = subscription;
 
+  // Parse GST value - handle string, number, or null/undefined
+  const gstValue = invoiceMeta?.gst;
+  const gstPercentage = gstValue !== null && gstValue !== undefined && gstValue !== "" 
+    ? parseFloat(String(gstValue)) || 0 
+    : 0;
+  
   const {
     totalGSTAmount: totalAmount,
     CGSTAmount: cgst,
     SGSTAmount: sgst
-  } = calculateTotals(parseInt(amount), parseInt(invoiceMeta.gst || 0))
-  const gst = invoiceMeta.gst
+  } = calculateTotals(parseInt(amount), gstPercentage)
+  const gst = gstPercentage
   const discountValue = Number(subscriptionDiscount) || 0;
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
@@ -501,8 +507,8 @@ export default function MembershipInvoicePDF({
               <Text>{formatCurrency(taxableAmount)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>GST {invoiceMetaData?.gst || "0.0"}%</Text>
-              <Text>{formatCurrency(Number(gst))}</Text>
+              <Text style={styles.totalLabel}>GST {gstPercentage > 0 ? `${gstPercentage}%` : "0.0%"}</Text>
+              <Text>{formatCurrency(Number(cgst) + Number(sgst))}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
