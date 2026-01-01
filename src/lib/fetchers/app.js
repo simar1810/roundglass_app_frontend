@@ -25,7 +25,7 @@ export function getCoachProfile(_id) {
 
 export const getCoachHome = withClientFilter(async (router, cache) => {
   const response = await fetchData("app/coachHomeTrial");
-  await logoutUser(response, router, cache);
+  // await logoutUser(response, router, cache);
   return response;
 });
 

@@ -361,10 +361,22 @@ const formatDate = (value) => {
   });
 };
 
+function calculateTotals(totalAmount, gst) {
+  const totalGSTAmount = totalAmount / (1 + (gst / 100))
+  const CGSTAmount = Math.floor(totalGSTAmount / 2)
+  const SGSTAmount = Math.floor(totalGSTAmount / 2)
+  return {
+    totalGSTAmount,
+    CGSTAmount,
+    SGSTAmount
+  }
+}
+
 export default function MembershipInvoicePDF({
   brand: { brandLogo } = {},
   data = {}
 }) {
+  console.log(data)
   const subscriptionSource = data?.subscription ?? data ?? {};
   const clientSource = data?.client ?? {};
   const invoiceMetaData = data?.invoiceMeta ?? {};
@@ -385,16 +397,17 @@ export default function MembershipInvoicePDF({
     paidAmount: subscriptionPaidAmount = amount
   } = subscription;
 
-  const totalAmount = Number(amount) || 0;
+  const {
+    totalGSTAmount: totalAmount,
+    CGSTAmount: cgst,
+    SGSTAmount: sgst
+  } = calculateTotals(parseInt(amount), parseInt(invoiceMeta.gst || 0))
+  const gst = invoiceMeta.gst
   const discountValue = Number(subscriptionDiscount) || 0;
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
   const pendingAmount = Math.max(totalAmount - safePaidAmount, 0);
-  const taxableAmount = totalAmount / (Number(invoiceMetaData?.gst));
-  const gstAmount = totalAmount - taxableAmount;
-  const gst = gstAmount / 2;
-  // const cgst = gstAmount / 2;
-  // const sgst = gstAmount / 2;
+  const taxableAmount = totalAmount / 1.18;
 
   const billToName = client?.name || subscription?.name || "Client";
   const billToPhone = client?.phone || client?.mobile || subscription?.phone || "";
@@ -426,8 +439,7 @@ export default function MembershipInvoicePDF({
               <Text style={styles.companyName}>{companyName}</Text>
               {companyAddress && <Text style={styles.companyAddress}>{companyAddress}</Text>}
               {companyGSTIN && <Text style={styles.companyAddress}>GSTIN {companyGSTIN}</Text>}
-              <Text style={styles.companyAddress}>Mobile: {coachData.data?.mobileNumber
- || "+91 xxxxx-xxxxx"} Email: {coachData.data?.email || "xxxx@gmail.com"}</Text>
+              <Text style={styles.companyAddress}>Mobile +91 7888624347 Email simarpreet@wellnessz.in</Text>
             </View>
           </View>
 

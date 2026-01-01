@@ -866,7 +866,7 @@ function InventoryContainer() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
   const [stockFilter, setStockFilter] = useState("all");
   const { isLoading, error, data, mutate } = useSWR(
-    "app/getAllReminder?person=coach",
+    "app/inventory",
     () => fetchData(
       buildUrlWithQueryParams(
         "app/inventory",
@@ -889,12 +889,12 @@ function InventoryContainer() {
 
     if (stockFilter === "in-stock") {
       filtered = filtered
-      .filter(p => p.quantity > 0)
-      .sort((a, b) => b.quantity - a.quantity);
+        .filter(p => p.quantity > 0)
+        .sort((a, b) => b.quantity - a.quantity);
     }
 
     if (stockFilter === "out-of-stock") {
-    filtered = filtered.filter(p => p.quantity === 0);
+      filtered = filtered.filter(p => p.quantity === 0);
     }
 
     return filtered;
@@ -907,26 +907,27 @@ function InventoryContainer() {
     <div className="mb-8 flex flex-wrap gap-4 md:gap-0 items-center justify-between">
       <h5>Products</h5>
       <div className="flex items-center justify-start md:justify-end gap-1 md:gap-4">
-      <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
-          <ListFilterPlus size={18}/>
-        <select
-          value={stockFilter}
-          onChange={(e) => setStockFilter(e.target.value)}
+        <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
+          <ListFilterPlus size={18} />
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
           >
-          <option value="all">All Products</option>
-          <option value="in-stock">In Stock</option>
-          <option value="out-of-stock">Out of Stock</option>
-        </select>
-      </div>
-      <Input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Product Name..."
-        className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
-      />
-      <Button onClick={mutate} variant="icon">
-        <RefreshCcw />
+            <option value="all">All Products</option>
+            <option value="in-stock">In Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+        <Input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Product Name..."
+          className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
+        />
+        <Button onClick={mutate} variant="icon">
+          <RefreshCcw />
         </Button>
+        <ResetInventory />
       </div>
     </div>
     <Table className="border-1">
@@ -1231,4 +1232,32 @@ function RetailReportGenerator({ orders, period: currentPeriod }) {
       )}
     </>
   );
+}
+
+function ResetInventory() {
+  async function resetInventory(setLoading, btnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/reset-inventory", {}, "POST");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/inventory");
+      btnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure of reseting your inventory!"
+    action={(setLoading, btnRef) => resetInventory(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      <Button size="sm" variant="destructive">
+        <Trash2 className="w-[28px] h-[28px] text-white" />
+        Reset
+      </Button>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }
