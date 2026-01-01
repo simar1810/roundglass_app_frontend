@@ -720,7 +720,6 @@ function WaterLogData({ clientId }) {
   };
 
   return <TabsContent value="water-log">
-    <button onClick={mutate}>mutate</button>
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-[var(--dark-1)] font-semibold text-lg">Water Log</h3>
       <div className="flex items-center gap-2">

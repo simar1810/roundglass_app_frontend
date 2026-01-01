@@ -8,8 +8,20 @@ import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocial
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -19,121 +31,182 @@ import { fetchData, sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
 import { cn, getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Award, Dot, Image as ImageIcon, Landmark, Link as LucideLink, Pencil, ReceiptIndianRupee, Settings, Users, X } from "lucide-react";
+import {
+  Link as LucideLink,
+  Award,
+  Users,
+  X,
+  Landmark,
+  Banknote,
+  Pen,
+  Pencil,
+  Dot,
+  ReceiptIndianRupee,
+  Settings,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import UpdateCoachSecrets from "./UpdateCoachSecrets";
 
 export default function CoachData({ awards }) {
-  return <div className="bg-white p-4 rounded-[18px] border-1">
-    <Tabs defaultValue="links">
-      <Header />
-      <CoachSMLinks />
-      <CoachAwards awards={awards} />
-      <CoachClubSettings />
-      <BankDetails />
-      <InvoiceDetails />
-      <CoachToggleSettings />
-    </Tabs>
-  </div>
+  return (
+    <div className="bg-white p-4 rounded-[18px] border-1">
+      <Tabs defaultValue="links">
+        <Header />
+        <CoachSMLinks />
+        <CoachAwards awards={awards} />
+        <CoachClubSettings />
+        <BankDetails />
+        <InvoiceDetails />
+        <SettingsTab />
+      </Tabs>
+    </div>
+  );
 }
 const tabItems = [
-  { icon: <LucideLink className="w-[16px] h-[16px]" />, value: "links", label: "Links" },
-  { icon: <Award className="w-[16px] h-[16px]" />, value: "awards", label: "Awards" },
-  { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
-  { icon: <Landmark className="w-[16px] h-[16px]" />, value: "bank", label: "Bank" },
-  { icon: <ReceiptIndianRupee className="w-[16px] h-[16px]" />, value: "invoice", label: "Invoice" },
-  { icon: <Settings className="w-[16px] h-[16px]" />, value: "settings", label: "Settings" },
+  {
+    icon: <LucideLink className="w-[16px] h-[16px]" />,
+    value: "links",
+    label: "Links",
+  },
+  {
+    icon: <Award className="w-[16px] h-[16px]" />,
+    value: "awards",
+    label: "Awards",
+  },
+  {
+    icon: <Users className="w-[16px] h-[16px]" />,
+    value: "club",
+    label: "Club",
+  },
+  {
+    icon: <Landmark className="w-[16px] h-[16px]" />,
+    value: "bank",
+    label: "Bank",
+  },
+  {
+    icon: <ReceiptIndianRupee className="w-[16px] h-[16px]" />,
+    value: "invoice",
+    label: "Invoice",
+  },
+  {
+    icon: <Settings className="w-[16px] h-[16px]" />,
+    value: "settings",
+    label: "Settings",
+  },
 ];
 
 function Header() {
-  const { organisation } = useAppSelector(state => state.coach.data);
-  return <TabsList className="w-full h-auto bg-transparent p-0 mb-10 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
-    {tabItems.map(({ icon, value, label, showIf }) => {
-      if (showIf && !showIf(organisation)) return null;
-      return (
-        <TabsTrigger
-          key={value}
-          className="min-w-[100px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+  const { organisation } = useAppSelector((state) => state.coach.data);
+  return (
+    <TabsList className="w-full h-auto bg-transparent p-0 mb-10 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
+      {tabItems.map(({ icon, value, label, showIf }) => {
+        if (showIf && !showIf(organisation)) return null;
+        return (
+          <TabsTrigger
+            key={value}
+            className="min-w-[140px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
              data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
              data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
-          value={value}
-        >
-          {icon}
-          {label}
-        </TabsTrigger>
-      );
-    })}
-  </TabsList>
+            value={value}
+          >
+            {icon}
+            {label}
+          </TabsTrigger>
+        );
+      })}
+    </TabsList>
+  );
 }
 
 function CoachSMLinks() {
-  const { isLoading, error, data } = useSWR("getCoachSocialLinks", () => getCoachSocialLinks());
+  const { isLoading, error, data } = useSWR("getCoachSocialLinks", () =>
+    getCoachSocialLinks(),
+  );
 
-  if (isLoading) return <TabsContent value="links">
-    <ContentLoader />
-  </TabsContent>
+  if (isLoading)
+    return (
+      <TabsContent value="links">
+        <ContentLoader />
+      </TabsContent>
+    );
 
-  if (error || data.status_code !== 200) return <TabsContent value="links">
-    <p className="text-center mt-4">{error || data.message} </p>
-    <UpdateCoachSocialsModal socialLinks={{}} />
-  </TabsContent>
+  if (error || data.status_code !== 200)
+    return (
+      <TabsContent value="links">
+        <p className="text-center mt-4">{error || data.message} </p>
+        <UpdateCoachSocialsModal socialLinks={{}} />
+      </TabsContent>
+    );
 
   const socialLinks = data.data;
 
-  return <TabsContent value="links">
-    <div>
-      {coachPortfolioSocialLinks.map(social =>
-        socialLinks[social.name]
-        && <div
-          key={social.id}
-          className="px-4 mb-2 flex items-center gap-4"
-        >
-          {social.icon}
-          <Link target="_blank" href={socialLinks[social.name]} className="w-full md:text-xs lg:text-base break-all">{socialLinks[social.name]}</Link>
-        </div>)}
-    </div>
-    <UpdateCoachSocialsModal socialLinks={socialLinks} />
-  </TabsContent>
+  return (
+    <TabsContent value="links">
+      <div>
+        {coachPortfolioSocialLinks.map(
+          (social) =>
+            socialLinks[social.name] && (
+              <div
+                key={social.id}
+                className="px-4 mb-2 flex items-center gap-4"
+              >
+                {social.icon}
+                <Link
+                  target="_blank"
+                  href={socialLinks[social.name]}
+                  className="w-full md:text-xs lg:text-base break-all"
+                >
+                  {socialLinks[social.name]}
+                </Link>
+              </div>
+            ),
+        )}
+      </div>
+      <UpdateCoachSocialsModal socialLinks={socialLinks} />
+    </TabsContent>
+  );
 }
 
 function CoachAwards({ awards }) {
-  return <TabsContent value="awards">
-    <div className="flex items-center gap-2 justify-between mb-4">
-      <h4 className="text-lg font-semibold">{awards.length} {awards.length === 1 ? 'Award' : 'Awards'} Available</h4>
-      <UpdateCoachAwardModal />
-    </div>
-    {awards.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {awards.map(award => <div key={award._id} className="flex items-center gap-4 p-3 border-1 rounded-[10px] hover:bg-muted/50 transition-colors relative">
-          <Image
-            src={award.image || "/illustrations/award.png"}
-            onError={e => e.target.src = "/illustrations/award.png"}
-            alt={award.title || "Award"}
-            height={64}
-            width={64}
-            className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
-          />
-          <p className="mr-auto font-medium">{award.title}</p>
-          <DeleteAward awardId={award._id} />
-        </div>)}
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-[10px]">
-        <Award className="w-16 h-16 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground mb-4 text-center">No awards added yet</p>
+  return (
+    <TabsContent value="awards">
+      <div className="flex items-center gap-2 justify-between">
+        <h4>{awards.length} Awards Available</h4>
         <UpdateCoachAwardModal />
       </div>
-    )}
-  </TabsContent>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
+        {awards.map((award) => (
+          <div key={award._id} className="flex items-center gap-4 relative">
+            <Image
+              src={award.image || "/illustrations/award.png"}
+              onError={(e) => (e.target.src = "/illustrations/award.png")}
+              alt=""
+              height={64}
+              width={64}
+              className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)]"
+            />
+            <p className="mr-auto">{award.title}</p>
+            <DeleteAward awardId={award._id} />
+          </div>
+        ))}
+      </div>
+      {awards.length === 0 && (
+        <div className="h-[200px] flex items-center justify-center">
+          <UpdateCoachAwardModal />
+        </div>
+      )}
+    </TabsContent>
+  );
 }
 
 const clubFreeTrialSettings = [
   { id: 1, label: "Free Trial Days", name: "freeTrialVPDays" },
   { id: 2, label: "Roll Number Initials", name: "rollNumberInitials" },
-]
+];
 
 const clubSubscriptionSettings = [
   { id: 1, label: "Free Trial Days", name: "freeTrialVPDays" },
@@ -144,8 +217,7 @@ const clubVolumeSettings = [
   { id: 1, label: "Volume Point Deduction", name: "monthlyVpDeduction" },
   { id: 2, label: "No Of Free Trial Days", name: "freeTrialVPDays" },
   { id: 3, label: "Roll Number Initials", name: "rollNumberInitials" },
-]
-
+];
 
 const ClubSettingsMap = new Map();
 ClubSettingsMap.set(0, clubFreeTrialSettings);
@@ -156,13 +228,17 @@ function CoachClubSettings() {
   const [formData, setFormData] = useState({ file: undefined });
   const [loading, setLoading] = useState(false);
 
-  const coach = useAppSelector(state => state.coach.data);
+  const coach = useAppSelector((state) => state.coach.data);
   const fields = ClubSettingsMap.get(coach.clubSystem);
 
   async function udpateDetails() {
     try {
-      setLoading(true)
-      const response = await sendData(`updateProfileDetails?id=${coach._id}`, formData, "PUT");
+      setLoading(true);
+      const response = await sendData(
+        `updateProfileDetails?id=${coach._id}`,
+        formData,
+        "PUT",
+      );
       if (!response.status) throw new Error(response.message);
       toast.success(response.message);
       mutate("coachProfile");
@@ -173,34 +249,44 @@ function CoachClubSettings() {
     }
   }
 
-  return <TabsContent value="club">
-    {fields.map(field => <FormControl
-      key={field.id}
-      defaultValue={coach[field.name] || ""}
-      onChange={e => setFormData({ ...formData, [field.name]: e.target.value })}
-      placeholder="Please enter value"
-      className="block mb-4"
-      {...field}
-    />)}
-    <Button
-      className="block mt-10 mx-auto"
-      variant="wz"
-      onClick={udpateDetails}
-      disabled={loading}
-    >
-      Save
-    </Button>
-  </TabsContent>
+  return (
+    <TabsContent value="club">
+      {fields.map((field) => (
+        <FormControl
+          key={field.id}
+          defaultValue={coach[field.name] || ""}
+          onChange={(e) =>
+            setFormData({ ...formData, [field.name]: e.target.value })
+          }
+          placeholder="Please enter value"
+          className="block mb-4"
+          {...field}
+        />
+      ))}
+      <Button
+        className="block mt-10 mx-auto"
+        variant="wz"
+        onClick={udpateDetails}
+        disabled={loading}
+      >
+        Save
+      </Button>
+    </TabsContent>
+  );
 }
 
 function DeleteAward({ awardId }) {
   async function deleteNote(setLoading, closeBtnRef) {
     try {
       setLoading(true);
-      const response = await sendData("app/coach/delete-award", { awardId }, "DELETE");
+      const response = await sendData(
+        "app/coach/delete-award",
+        { awardId },
+        "DELETE",
+      );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      location.reload()
+      location.reload();
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -208,91 +294,95 @@ function DeleteAward({ awardId }) {
       setLoading(false);
     }
   }
-  return <DualOptionActionModal
-    description="You are deleting an award. Are you sure?"
-    action={(setLoading, btnRef) => deleteNote(setLoading, btnRef)}
-  >
-    <AlertDialogTrigger>
-      <X strokeWidth={3} className="w-[20px] h-[20px] text-white bg-[var(--accent-2)] p-[2px] rounded-[4px]" />
-    </AlertDialogTrigger>
-  </DualOptionActionModal>
+  return (
+    <DualOptionActionModal
+      description="You are deleting an award. Are you sure?"
+      action={(setLoading, btnRef) => deleteNote(setLoading, btnRef)}
+    >
+      <AlertDialogTrigger>
+        <X
+          strokeWidth={3}
+          className="w-[20px] h-[20px] text-white bg-[var(--accent-2)] p-[2px] rounded-[4px]"
+        />
+      </AlertDialogTrigger>
+    </DualOptionActionModal>
+  );
 }
 
 function BankDetails() {
-  const { isLoading, error, data } = useSWR("bank/details", () => retrieveBankDetails({ person: "coach" }));
+  const { isLoading, error, data } = useSWR("bank/details", () =>
+    retrieveBankDetails({ person: "coach" }),
+  );
 
-  if (isLoading) return <TabsContent value="bank">
-    <ContentLoader />
-  </TabsContent>
+  if (isLoading)
+    return (
+      <TabsContent value="bank">
+        <ContentLoader />
+      </TabsContent>
+    );
 
-  if (error || data.status_code !== 200) return <TabsContent value="bank">
-    <ContentError title={error || data.message} />
-  </TabsContent>
-  const bank = data.data || {}
-  const hasBankData = bank.accountNumber || bank.accountName || bank.bankName;
-  
-  return <TabsContent value="bank" className="space-y-4">
-    {hasBankData ? (
+  if (error || data.status_code !== 200)
+    return (
+      <TabsContent value="bank">
+        <ContentError title={error || data.message} />
+      </TabsContent>
+    );
+  const bank = data.data || {};
+  return (
+    <TabsContent value="bank" className="space-y-4">
       <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative">
         <UpdateBankDetails bank={bank} />
-        <CardHeader className="flex flex-col items-center gap-4 pb-4">
-          {bank.qr && (
-            <Image
-              src={bank.qr}
-              alt="QR Code"
-              height={200}
-              width={200}
-              className="bg-white h-[200px] w-[200px] object-contain border-2 border-muted rounded-[16px]"
-              onError={e => e.target.src = "/not-found.png"}
-            />
-          )}
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Image
+            src={bank.qr}
+            alt=""
+            height={400}
+            width={400}
+            className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] block mx-auto"
+            onError={(e) => (e.target.src = "/not-found.png")}
+          />
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="text-center pb-4 border-b">
-            <CardTitle className="text-xl font-semibold mb-2">{bank.accountName || "—"}</CardTitle>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <span>{bank.bankName || "—"}</span>
-              {bank.bankName && bank.accountNumber && <Dot className="w-4 h-4" />}
-              <span>{bank.accountNumber || "—"}</span>
+        <CardContent className="grid gap-3 text-sm">
+          <div className="mb-4">
+            <CardTitle className="text-lg leading-tight">
+              {bank.accountName}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">{bank.bankName}</p>
+              <Dot />
+              <p className="text-sm text-muted-foreground">
+                {bank.accountNumber}
+              </p>
             </div>
           </div>
-          <div className="grid gap-3">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="font-medium text-sm">Bank Branch</span>
-              <span className="text-sm text-muted-foreground">{bank.bankBranch || "—"}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="font-medium text-sm">IFSC Code</span>
-              <span className="text-sm text-muted-foreground font-mono">{bank.ifscCode || "—"}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="font-medium text-sm">Account Holder</span>
-              <span className="text-sm text-muted-foreground">{bank.accountName || "—"}</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Bank Branch:</span>
+            <span>{bank.bankBranch}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">IFSC Code:</span>
+            <span>{bank.ifscCode}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Account Holder:</span>
+            <span>{bank.accountName}</span>
           </div>
         </CardContent>
       </Card>
-    ) : (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-[10px]">
-        <Landmark className="w-16 h-16 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground mb-4 text-center">No bank details added yet</p>
-        <UpdateBankDetails bank={bank} />
-      </div>
-    )}
-  </TabsContent>
+    </TabsContent>
+  );
 }
 
 function UpdateBankDetails({ bank }) {
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const [payload, setPayload] = useState({
-    accountNumber: bank?.accountNumber || "",
-    accountName: bank?.accountName || "",
-    bankName: bank?.bankName || "",
-    bankBranch: bank?.bankBranch || "",
-    ifscCode: bank?.ifscCode || "",
-    file: null
+    accountNumber: bank.accountNumber || "",
+    accountName: bank.accountName || "",
+    bankName: bank.bankName || "",
+    bankBranch: bank.bankBranch || "",
+    ifscCode: bank.ifscCode || "",
+    file: "",
   });
 
   const fileRef = useRef();
@@ -338,15 +428,10 @@ function UpdateBankDetails({ bank }) {
 
       setLoading(true);
       const formData = new FormData();
-      formData.append("accountNumber", payload.accountNumber);
-      formData.append("accountName", payload.accountName);
-      formData.append("bankName", payload.bankName);
-      formData.append("bankBranch", payload.bankBranch || "");
-      formData.append("ifscCode", payload.ifscCode);
-      if (payload.file) {
-        formData.append("file", payload.file);
+      for (const field in payload) {
+        if (Boolean(field)) formData.append(field, payload[field]);
       }
-      
+
       const response = await sendDataWithFormData("app/bank", formData);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Bank details saved successfully");
@@ -359,249 +444,162 @@ function UpdateBankDetails({ bank }) {
     }
   }
 
-  return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild>
-      {bank?.accountNumber ? (
-        <Button variant="outline" size="sm" className="absolute top-4 right-4">
-          <Pencil className="w-4 h-4 mr-2" />
-          Edit
-        </Button>
-      ) : (
-        <Button variant="wz" size="sm">
-          <Landmark className="w-4 h-4 mr-2" />
-          Add Bank Details
-        </Button>
-      )}
-    </DialogTrigger>
-    <DialogContent className="max-w-[600px] p-0 gap-0">
-      <div className="p-6 border-b">
-        <DialogTitle className="text-xl font-semibold">Bank Details</DialogTitle>
-        <p className="text-sm text-muted-foreground mt-1">Enter your bank account information and upload QR code</p>
-      </div>
-      
-      <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-        {/* QR Code Upload Section */}
-        <div className="space-y-2">
-          <Label htmlFor="qr-code" className="text-sm font-medium">
-            QR Code Image
-          </Label>
-          <div 
-            onClick={() => fileRef.current?.click()} 
-            className={cn(
-              "h-[200px] flex flex-col items-center justify-center border-2 border-dashed rounded-[10px] cursor-pointer transition-colors relative overflow-hidden",
-              (payload.file || bank?.qr) ? "border-primary" : "border-muted hover:border-primary/50"
-            )}
-          >
-            <input
-              type="file"
-              id="qr-code"
-              ref={fileRef}
-              className="hidden"
-              accept="image/*"
-              onChange={e => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setPayload(prev => ({ ...prev, file }));
-                }
-              }}
+  return (
+    <Dialog>
+      <DialogTrigger>
+        <Pencil className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4" />
+      </DialogTrigger>
+      <DialogContent className="p-0 max-h-[70vh] overflow-y-auto">
+        <DialogTitle className="p-4 border-b-1">Bank Details</DialogTitle>
+        <div className="p-4 relative">
+          <Image
+            src={
+              Boolean(payload.file)
+                ? getObjectUrl(payload.file)
+                : bank.qr || "/not-found.png"
+            }
+            height={400}
+            width={400}
+            className="w-full bg-[var(--comp-1)] max-h-[250px] object-contain rounded-[10px] border-1 mb-4"
+            alt=""
+            onClick={() => fileRef.current.click()}
+          />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, file: e.target.files[0] }))
+            }
+          />
+          {payload.file && (
+            <X
+              className="absolute top-[24px] right-[24px] cursor-pointer"
+              onClick={() => setPayload((prev) => ({ ...prev, file: "" }))}
             />
-            {!payload.file && !bank?.qr ? (
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Click to upload QR code</p>
-                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <Image
-                  src={payload.file ? getObjectUrl(payload.file) : bank?.qr || "/not-found.png"}
-                  height={200}
-                  width={200}
-                  alt="QR Code"
-                  className="object-contain p-4"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPayload(prev => ({ ...prev, file: null }));
-                    if (fileRef.current) fileRef.current.value = "";
-                  }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90 transition-colors z-10"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Form Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="account-name" className="text-sm font-medium">
-              Account Holder Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="account-name"
-              value={payload.accountName}
-              onChange={e => setPayload(prev => ({ ...prev, accountName: e.target.value }))}
-              placeholder="Enter account holder name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="account-number" className="text-sm font-medium">
-              Account Number <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="account-number"
-              value={payload.accountNumber}
-              onChange={e => setPayload(prev => ({ ...prev, accountNumber: e.target.value }))}
-              placeholder="Enter account number"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bank-name" className="text-sm font-medium">
-              Bank Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="bank-name"
-              value={payload.bankName}
-              onChange={e => setPayload(prev => ({ ...prev, bankName: e.target.value }))}
-              placeholder="Enter bank name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bank-branch" className="text-sm font-medium">
-              Bank Branch
-            </Label>
-            <Input
-              id="bank-branch"
-              value={payload.bankBranch}
-              onChange={e => setPayload(prev => ({ ...prev, bankBranch: e.target.value }))}
-              placeholder="Enter bank branch"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="ifsc-code" className="text-sm font-medium">
-              IFSC Code <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="ifsc-code"
-              value={payload.ifscCode}
-              onChange={e => setPayload(prev => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))}
-              placeholder="Enter IFSC code"
-              className="font-mono"
-              maxLength={11}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
+          )}
+          <FormControl
+            value={payload.accountNumber}
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, accountNumber: e.target.value }))
+            }
+            placeholder="Account Number"
+            label="Account Number"
+            className="block mb-2"
+          />
+          <FormControl
+            value={payload.accountName}
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, accountName: e.target.value }))
+            }
+            label="Account Name"
+            className="block mb-2"
+          />
+          <FormControl
+            value={payload.bankName}
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, bankName: e.target.value }))
+            }
+            label="Bank Name"
+            className="block mb-2"
+          />
+          <FormControl
+            value={payload.bankBranch}
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, bankBranch: e.target.value }))
+            }
+            label="Bank Branch"
+            className="block mb-2"
+          />
+          <FormControl
+            value={payload.ifscCode}
+            onChange={(e) =>
+              setPayload((prev) => ({ ...prev, ifscCode: e.target.value }))
+            }
+            label="IFSC Code"
+            className="block mb-2"
+          />
           <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={loading}
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="wz"
+            className="max-w-xs w-full mt-8 mx-auto block"
             onClick={saveBankDetails}
             disabled={loading}
-            className="flex-1"
+            variant="wz"
           >
-            {loading ? "Saving..." : "Save Details"}
+            Save
           </Button>
+          <DialogClose ref={closeBtnRef} />
         </div>
-      </div>
-      <DialogClose ref={closeBtnRef} className="hidden" />
-    </DialogContent>
-  </Dialog>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function InvoiceDetails() {
-  return <TabsContent value="invoice">
-    <InvoiceDetailsContainer />
-  </TabsContent>
+  return (
+    <TabsContent value="invoice">
+      <InvoiceDetailsContainer />
+    </TabsContent>
+  );
 }
 
 function InvoiceDetailsContainer() {
   const { isLoading, error, data } = useSWR(
     "app/memberships-invoices/meta",
-    () => fetchData("app/memberships-invoices/meta")
+    () => fetchData("app/memberships-invoices/meta"),
   );
 
-  if (isLoading) return <Loader />
+  if (isLoading) return <Loader />;
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
+  if (error || data.status_code !== 200)
+    return <ContentError title={error || data.message} />;
 
-  const invoiceMeta = data.data || {};
-  const hasInvoiceData = invoiceMeta.title || invoiceMeta.gstin || invoiceMeta.address;
+  const invoiceMeta = data.data;
 
-  return <TabsContent value="invoice" className="space-y-4">
-    {hasInvoiceData ? (
+  return (
+    <div>
       <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative">
         <UpdateInvoiceDetails defaultData={data.data} />
-        <CardHeader className="flex flex-col items-center gap-4 pb-4">
-          {invoiceMeta.signature && (
-            <Image
-              src={invoiceMeta.signature}
-              alt="Signature"
-              height={200}
-              width={200}
-              className="bg-white h-[200px] w-[200px] object-contain border-2 border-muted rounded-[16px]"
-              onError={e => e.target.src = "/not-found.png"}
-            />
-          )}
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Image
+            src={invoiceMeta.signature}
+            alt=""
+            height={400}
+            width={400}
+            className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] block mx-auto"
+            onError={(e) => (e.target.src = "/not-found.png")}
+          />
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="text-center pb-4 border-b">
-            <CardTitle className="text-xl font-semibold">{invoiceMeta.title || "—"}</CardTitle>
+        <CardContent className="grid gap-3 text-sm">
+          <div className="mb-4">
+            <CardTitle className="text-lg leading-tight">
+              {invoiceMeta.title}
+            </CardTitle>
           </div>
-          <div className="grid gap-3">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="font-medium text-sm">GSTIN</span>
-              <span className="text-sm text-muted-foreground font-mono">{invoiceMeta.gstin || "—"}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="font-medium text-sm">GST Percentage</span>
-              <span className="text-sm text-muted-foreground">{invoiceMeta.gst || "0.0"}%</span>
-            </div>
-            <div className="flex justify-between items-start py-2 border-b">
-              <span className="font-medium text-sm">Address</span>
-              <span className="text-sm text-muted-foreground text-right max-w-[60%]">{invoiceMeta.address || "—"}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="font-medium text-sm">Place Of Supply</span>
-              <span className="text-sm text-muted-foreground">{invoiceMeta.placeOfSupply || "—"}</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="font-medium">GSTIN:</span>
+            <span>{invoiceMeta.gstin}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">GST:</span>
+            <span>{invoiceMeta.gst || "0.0"}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Address:</span>
+            <span className="max-w-[40ch] text-right">
+              {invoiceMeta.address}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Place Of Supply:</span>
+            <span>{invoiceMeta.placeOfSupply}</span>
           </div>
         </CardContent>
       </Card>
-    ) : (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted rounded-[10px]">
-        <ReceiptIndianRupee className="w-16 h-16 text-muted-foreground mb-4" />
-        <p className="text-muted-foreground mb-4 text-center">No invoice details added yet</p>
-        <UpdateInvoiceDetails defaultData={data.data} />
-      </div>
-    )}
-  </TabsContent>
+    </div>
+  );
 }
-
 
 const invoiceFields = [
   { name: "title", label: "Company Name" },
@@ -615,44 +613,23 @@ const invoiceFields = [
   // { name: "branch", label: "Branch" }
 ];
 
-const createDefaultPayload = (data) => invoiceFields.reduce((acc, curr) => {
-  const value = data[curr.name];
-  // For GST, preserve numeric values including 0, only use empty string if truly missing
-  if (curr.name === "gst") {
-    acc[curr.name] = value !== null && value !== undefined && value !== "" ? String(value) : "";
-  } else {
-    acc[curr.name] = value || "";
-  }
-  return acc;
-}, {})
+const createDefaultPayload = (data) =>
+  invoiceFields.reduce(
+    (acc, curr) => ({
+      ...acc,
+      [curr.name]: data[curr.name] || "",
+    }),
+    {},
+  );
 
 function UpdateInvoiceDetails({ defaultData }) {
   const [payload, setPayload] = useState(createDefaultPayload(defaultData || {}));
   const [loading, setLoading] = useState(false);
-  const [signature, setSignature] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [signature, setSignature] = useState();
 
-  const resetForm = () => {
-    setPayload(createDefaultPayload(defaultData || {}));
-    setSignature(null);
-  };
-
-  const handleClose = () => {
-    resetForm();
-    setOpen(false);
-  };
-
-  async function updateInvoiceMeta() {
+  async function udpateInvoiceMeta() {
+    const toastId = toast.loading("Please wait...");
     try {
-      if (!payload.title?.trim()) {
-        toast.error("Please enter company name");
-        return;
-      }
-      if (!payload.gstin?.trim()) {
-        toast.error("Please enter GSTIN");
-        return;
-      }
-
       setLoading(true);
       const formData = new FormData();
       for (const field of invoiceFields) {
@@ -667,7 +644,10 @@ function UpdateInvoiceDetails({ defaultData }) {
       if (signature) {
         formData.append("signature", signature);
       }
-      const response = await sendDataWithFormData("app/memberships-invoices/meta", formData);
+      const response = await sendDataWithFormData(
+        "app/memberships-invoices/meta",
+        formData,
+      );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message || "Invoice details saved successfully");
       mutate("app/memberships-invoices/meta");
@@ -676,143 +656,102 @@ function UpdateInvoiceDetails({ defaultData }) {
       toast.error(error.message || "Failed to save invoice details");
     } finally {
       setLoading(false);
+      toast.dismiss(toastId);
     }
   }
 
-  const hasData = defaultData?.title || defaultData?.gstin;
-
-  return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild>
-      {hasData ? (
-        <Button variant="outline" size="sm" className="absolute top-4 right-4">
-          <Pencil className="w-4 h-4 mr-2" />
-          Edit
-        </Button>
-      ) : (
-        <Button variant="wz" size="sm">
-          <ReceiptIndianRupee className="w-4 h-4 mr-2" />
-          Add Invoice Details
-        </Button>
-      )}
-    </DialogTrigger>
-    <DialogContent className="max-w-[600px] p-0 gap-0">
-      <div className="p-6 border-b">
-        <DialogTitle className="text-xl font-semibold">Invoice Details</DialogTitle>
-        <p className="text-sm text-muted-foreground mt-1">Enter your company information for invoice generation</p>
-      </div>
-      
-      <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-        {/* Signature Upload */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Signature</Label>
+  return (
+    <Dialog>
+      <DialogTrigger>
+        <Pencil className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4" />
+      </DialogTrigger>
+      <DialogContent className="p-0 !space-y-0 !gap-0 max-h-[80vh] overflow-y-auto">
+        <DialogTitle className="p-4 border-b-1">Invoice Meta</DialogTitle>
+        <div className="p-4">
+          {invoiceFields.map((field) => (
+            <div key={field.name}>
+              <h5 className="mb-2">{field.label}</h5>
+              <Input
+                className="mb-4"
+                value={payload[field.name]}
+                onChange={(e) =>
+                  setPayload((prev) => ({
+                    ...prev,
+                    [field.name]: e.target.value,
+                  }))
+                }
+                placeholder={`Enter ${field.label}`}
+              />
+            </div>
+          ))}
           <ImageSelector
             file={signature}
             onFileChange={setSignature}
             label="Upload Signature"
-            defaultImageLink={defaultData?.signature}
+            defaultImageLink={defaultData.signature}
           />
-        </div>
-
-        {/* Form Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="company-name" className="text-sm font-medium">
-              Company Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="company-name"
-              value={payload.title}
-              onChange={e => setPayload(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter company name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="gstin" className="text-sm font-medium">
-              GSTIN <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="gstin"
-              value={payload.gstin}
-              onChange={e => setPayload(prev => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
-              placeholder="Enter GSTIN"
-              className="font-mono"
-              maxLength={15}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="gst" className="text-sm font-medium">
-              GST Percentage
-            </Label>
-            <Input
-              id="gst"
-              type="number"
-              value={payload.gst}
-              onChange={e => setPayload(prev => ({ ...prev, gst: e.target.value }))}
-              placeholder="0.0"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="address" className="text-sm font-medium">
-              Address
-            </Label>
-            <Input
-              id="address"
-              value={payload.address}
-              onChange={e => setPayload(prev => ({ ...prev, address: e.target.value }))}
-              placeholder="Enter company address"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="place-of-supply" className="text-sm font-medium">
-              Place Of Supply
-            </Label>
-            <Input
-              id="place-of-supply"
-              value={payload.placeOfSupply}
-              onChange={e => setPayload(prev => ({ ...prev, placeOfSupply: e.target.value }))}
-              placeholder="Enter place of supply"
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
           <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
+            onClick={udpateInvoiceMeta}
             disabled={loading}
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
+            className="w-full mt-4"
             variant="wz"
-            onClick={updateInvoiceMeta}
-            disabled={loading}
-            className="flex-1"
           >
-            {loading ? "Saving..." : "Save Details"}
+            Save
           </Button>
         </div>
-      </div>
-    </DialogContent>
-  </Dialog>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
-function CoachToggleSettings() {
+function SettingsTab() {
+  return (
+    <TabsContent value="settings">
+      <SettingsTabContainer />
+    </TabsContent>
+  );
+}
+
+function SettingsTabContainer() {
+  const { isLoading, error, data, mutate } = useSWR("coach/secrets", () =>
+    fetchData("app/secrets?service=razorpay"),
+  );
+
+  if (isLoading)
+    return (
+      <div className="min-h-[200px] flex items-center justify-center border-1 bg-[var(--comp-1)]">
+        <Loader />
+      </div>
+    );
+
+  const razorpay = data.data;
+  if (error || data.status_code !== 200)
+    return <ContentError title={error || data.message} />;
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold">Payment Gateway</h3>
+        <UpdateCoachSecrets initialData={razorpay} onRefresh={mutate} />
+      </div>
+      <div className="flex items-center">
+        <p className="font-bold min-w-[10ch]">Client ID</p>
+        <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpayClientId}</p>
+      </div>
+      <div className="mb-8 flex items-center">
+        <p className="font-bold min-w-[10ch]">Secret</p>
+        <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpaySecret}</p>
+      </div>
+      <RaghavComponent />
+    </div>
+  );
+}
+
+function RaghavComponent() {
   const coach = useAppSelector(state => state.coach.data);
   const [onboardingMode, setOnboardingMode] = useState(coach?.onboardingMode || false);
   const [membershipCoreMode, setMembershipCoreMode] = useState(coach?.membershipCoreMode || false);
   const [loading, setLoading] = useState(false);
 
-  // Update local state when coach data changes
   useEffect(() => {
     if (coach) {
       setOnboardingMode(coach.onboardingMode || false);
@@ -827,33 +766,28 @@ function CoachToggleSettings() {
         onboardingMode: toggleName === "onboardingMode" ? value : onboardingMode,
         membershipCoreMode: toggleName === "membershipCoreMode" ? value : membershipCoreMode,
       };
-      
+
       const response = await sendData("app/update-coach-toggle-field", payload, "PUT");
-      
-      // Handle 401 unauthorized (sendData returns null on 401)
+
       if (!response) {
         throw new Error("Unauthorized. Please log in again.");
       }
-      
-      // Handle error responses
+
       if (response.status_code !== 200 && response.status !== true) {
         throw new Error(response.message || "Failed to update toggle");
       }
-      
+
       toast.success(response.message || "Toggle updated successfully");
-      
-      // Update local state
+
       if (toggleName === "onboardingMode") {
         setOnboardingMode(value);
       } else {
         setMembershipCoreMode(value);
       }
-      
-      // Refresh coach profile
+
       mutate("coachProfile");
     } catch (error) {
       toast.error(error.message || "Please try again later!");
-      // Revert the toggle on error
       if (toggleName === "onboardingMode") {
         setOnboardingMode(!value);
       } else {
@@ -863,36 +797,33 @@ function CoachToggleSettings() {
       setLoading(false);
     }
   }
-
-  return <TabsContent value="settings" className="space-y-6">
-    <div className="space-y-4">
-      <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
-        <div className="flex-1">
-          <h4 className="font-semibold text-base mb-1">Onboarding Mode</h4>
-          <p className="text-sm text-muted-foreground">
-            Makes the sign up questionnaire more informative for the client
-          </p>
-        </div>
-        <Switch
-          checked={onboardingMode}
-          onCheckedChange={(checked) => updateToggle("onboardingMode", checked)}
-          disabled={loading}
-        />
+  return <div className="space-y-4">
+    <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+      <div className="flex-1">
+        <h4 className="font-semibold text-base mb-1">Onboarding Mode</h4>
+        <p className="text-sm text-muted-foreground">
+          Makes the sign up questionnaire more informative for the client
+        </p>
       </div>
-      
-      <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
-        <div className="flex-1">
-          <h4 className="font-semibold text-base mb-1">Coach Core Membership Mode</h4>
-          <p className="text-sm text-muted-foreground">
-            Allows the coach to inactive the client after its club membership has ended
-          </p>
-        </div>
-        <Switch
-          checked={membershipCoreMode}
-          onCheckedChange={(checked) => updateToggle("membershipCoreMode", checked)}
-          disabled={loading}
-        />
-      </div>
+      <Switch
+        checked={onboardingMode}
+        onCheckedChange={(checked) => updateToggle("onboardingMode", checked)}
+        disabled={loading}
+      />
     </div>
-  </TabsContent>
+
+    <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+      <div className="flex-1">
+        <h4 className="font-semibold text-base mb-1">Coach Core Membership Mode</h4>
+        <p className="text-sm text-muted-foreground">
+          Allows the coach to inactive the client after its club membership has ended
+        </p>
+      </div>
+      <Switch
+        checked={membershipCoreMode}
+        onCheckedChange={(checked) => updateToggle("membershipCoreMode", checked)}
+        disabled={loading}
+      />
+    </div>
+  </div>
 }
