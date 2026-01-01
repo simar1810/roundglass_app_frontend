@@ -299,6 +299,7 @@ function ScheduleNotification({
         getNormalizedPayloadForSave(payload),
         defaultPayload._id,
       );
+      console.log(formData)
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
@@ -598,7 +599,9 @@ function generatePayload(payload, id) {
       schedule_type: "reocurr",
       time: formatTime(payload.time),
       reocurrence: payload.reocurrence,
-      clients: payload.clients,
+      clients: Array.isArray(payload.clients)
+        ? payload.clients
+        : payload.clients,
       isImageRequired: payload.isImageRequired || false
     };
     result.notificationStatus = {
@@ -674,7 +677,9 @@ function generatePayload(payload, id) {
         schedule_type: "schedule",
         date: format(parsedDate, "dd-MM-yyyy"),
         time: formatTime(payload.time),
-        clients: payload.clients,
+        clients: Array.isArray(payload.clients)
+          ? payload.clients
+          : payload.clients,
         isImageRequired: payload.isImageRequired || false
       };
 

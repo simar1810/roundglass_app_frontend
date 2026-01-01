@@ -361,14 +361,26 @@ const formatDate = (value) => {
   });
 };
 
-function calculateTotals(totalAmount, gst) {
-  const totalGSTAmount = totalAmount / (1 + (gst / 100))
-  const CGSTAmount = Math.floor(totalGSTAmount / 2)
-  const SGSTAmount = Math.floor(totalGSTAmount / 2)
+function calculateTotals(totalAmount, gstPercentage) {
+  // totalAmount is the final amount including GST
+  // Calculate taxable amount (base amount before GST)
+  const taxableAmount = gstPercentage > 0 
+    ? totalAmount / (1 + (gstPercentage / 100))
+    : totalAmount;
+  
+  // Calculate GST amount
+  const gstAmount = taxableAmount * (gstPercentage / 100);
+  
+  // Split GST into CGST and SGST (50% each)
+  const CGSTAmount = gstAmount / 2;
+  const SGSTAmount = gstAmount / 2;
+  
   return {
-    totalGSTAmount,
+    taxableAmount,
+    gstAmount,
     CGSTAmount,
-    SGSTAmount
+    SGSTAmount,
+    totalAmount // This is the original total (taxable + GST)
   }
 }
 
@@ -397,17 +409,26 @@ export default function MembershipInvoicePDF({
     paidAmount: subscriptionPaidAmount = amount
   } = subscription;
 
+  // Parse GST value - handle string, number, or null/undefined
+  const gstValue = invoiceMeta?.gst;
+  const gstPercentage = gstValue !== null && gstValue !== undefined && gstValue !== "" 
+    ? parseFloat(String(gstValue)) || 0 
+    : 0;
+  
+  // Calculate all amounts
+  // amount is the total amount including GST
   const {
-    totalGSTAmount: totalAmount,
+    taxableAmount,
+    gstAmount,
     CGSTAmount: cgst,
-    SGSTAmount: sgst
-  } = calculateTotals(parseInt(amount), parseInt(invoiceMeta.gst || 0))
-  const gst = invoiceMeta.gst
+    SGSTAmount: sgst,
+    totalAmount
+  } = calculateTotals(Number(amount) || 0, gstPercentage);
+  
   const discountValue = Number(subscriptionDiscount) || 0;
   const paidAmount = Number(subscriptionPaidAmount);
   const safePaidAmount = Number.isFinite(paidAmount) ? paidAmount : totalAmount;
   const pendingAmount = Math.max(totalAmount - safePaidAmount, 0);
-  const taxableAmount = totalAmount / 1.18;
 
   const billToName = client?.name || subscription?.name || "Client";
   const billToPhone = client?.phone || client?.mobile || subscription?.phone || "";
@@ -501,8 +522,8 @@ export default function MembershipInvoicePDF({
               <Text>{formatCurrency(taxableAmount)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>GST {invoiceMetaData?.gst || "0.0"}%</Text>
-              <Text>{formatCurrency(Number(gst))}</Text>
+              <Text style={styles.totalLabel}>GST {gstPercentage > 0 ? `${gstPercentage}%` : "0.0%"}</Text>
+              <Text>{formatCurrency(gstAmount)}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>

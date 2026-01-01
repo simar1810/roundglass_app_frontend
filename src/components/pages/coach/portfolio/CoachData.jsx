@@ -6,9 +6,7 @@ import FormControl from "@/components/FormControl";
 import UpdateCoachAwardModal from "@/components/modals/coach/UpdateCoachAwardModal";
 import UpdateCoachSocialsModal from "@/components/modals/coach/UpdateCoachSocialsModal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import UploadImage from "@/components/modals/UploadImage";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,11 +23,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
 import { fetchData, sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
-import { getObjectUrl } from "@/lib/utils";
+import { cn, getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import {
   Link as LucideLink,
@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import UpdateCoachSecrets from "./UpdateCoachSecrets";
@@ -388,20 +388,57 @@ function UpdateBankDetails({ bank }) {
   const fileRef = useRef();
   const closeBtnRef = useRef();
 
+  const resetForm = () => {
+    setPayload({
+      accountNumber: bank?.accountNumber || "",
+      accountName: bank?.accountName || "",
+      bankName: bank?.bankName || "",
+      bankBranch: bank?.bankBranch || "",
+      ifscCode: bank?.ifscCode || "",
+      file: null
+    });
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpen(false);
+  };
+
   async function saveBankDetails() {
     try {
+      if (!payload.accountNumber.trim()) {
+        toast.error("Please enter account number");
+        return;
+      }
+      if (!payload.accountName.trim()) {
+        toast.error("Please enter account name");
+        return;
+      }
+      if (!payload.bankName.trim()) {
+        toast.error("Please enter bank name");
+        return;
+      }
+      if (!payload.ifscCode.trim()) {
+        toast.error("Please enter IFSC code");
+        return;
+      }
+
       setLoading(true);
       const formData = new FormData();
       for (const field in payload) {
         if (Boolean(field)) formData.append(field, payload[field]);
       }
+
       const response = await sendDataWithFormData("app/bank", formData);
       if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
+      toast.success(response.message || "Bank details saved successfully");
       mutate("bank/details");
-      closeBtnRef.current.click();
+      handleClose();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to save bank details");
     } finally {
       setLoading(false);
     }
@@ -568,7 +605,7 @@ const invoiceFields = [
   { name: "title", label: "Company Name" },
   { name: "address", label: "Address" },
   { name: "gstin", label: "GSTIN" },
-  { name: "gst", label: "GST" },
+  { name: "gst", label: "GST Percentage" },
   { name: "placeOfSupply", label: "Place of Supply" },
   // { name: "bankName", label: "Bank Name" },
   // { name: "accountNumber", label: "Account Number" },
@@ -586,7 +623,7 @@ const createDefaultPayload = (data) =>
   );
 
 function UpdateInvoiceDetails({ defaultData }) {
-  const [payload, setPayload] = useState(createDefaultPayload(defaultData));
+  const [payload, setPayload] = useState(createDefaultPayload(defaultData || {}));
   const [loading, setLoading] = useState(false);
   const [signature, setSignature] = useState();
 
@@ -596,7 +633,13 @@ function UpdateInvoiceDetails({ defaultData }) {
       setLoading(true);
       const formData = new FormData();
       for (const field of invoiceFields) {
-        formData.append(field.name, payload[field.name]);
+        // For GST, allow 0 as a valid value, only use empty string if truly empty
+        const value = payload[field.name];
+        if (field.name === "gst") {
+          formData.append(field.name, value !== null && value !== undefined && value !== "" ? value : "");
+        } else {
+          formData.append(field.name, value || "");
+        }
       }
       if (signature) {
         formData.append("signature", signature);
@@ -606,10 +649,11 @@ function UpdateInvoiceDetails({ defaultData }) {
         formData,
       );
       if (response.status_code !== 200) throw new Error(response.message);
-      toast.success(response.message);
+      toast.success(response.message || "Invoice details saved successfully");
       mutate("app/memberships-invoices/meta");
+      handleClose();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to save invoice details");
     } finally {
       setLoading(false);
       toast.dismiss(toastId);
@@ -685,19 +729,101 @@ function SettingsTabContainer() {
     return <ContentError title={error || data.message} />;
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">Payment Gateway</h3>
         <UpdateCoachSecrets initialData={razorpay} onRefresh={mutate} />
       </div>
-      <button onClick={mutate}>mutate</button>
       <div className="flex items-center">
         <p className="font-bold min-w-[10ch]">Client ID</p>
         <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpayClientId}</p>
       </div>
-      <div className="flex items-center">
+      <div className="mb-8 flex items-center">
         <p className="font-bold min-w-[10ch]">Secret</p>
         <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpaySecret}</p>
       </div>
+      <RaghavComponent />
     </div>
   );
+}
+
+function RaghavComponent() {
+  const coach = useAppSelector(state => state.coach.data);
+  const [onboardingMode, setOnboardingMode] = useState(coach?.onboardingMode || false);
+  const [membershipCoreMode, setMembershipCoreMode] = useState(coach?.membershipCoreMode || false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (coach) {
+      setOnboardingMode(coach.onboardingMode || false);
+      setMembershipCoreMode(coach.membershipCoreMode || false);
+    }
+  }, [coach]);
+
+  async function updateToggle(toggleName, value) {
+    try {
+      setLoading(true);
+      const payload = {
+        onboardingMode: toggleName === "onboardingMode" ? value : onboardingMode,
+        membershipCoreMode: toggleName === "membershipCoreMode" ? value : membershipCoreMode,
+      };
+
+      const response = await sendData("app/update-coach-toggle-field", payload, "PUT");
+
+      if (!response) {
+        throw new Error("Unauthorized. Please log in again.");
+      }
+
+      if (response.status_code !== 200 && response.status !== true) {
+        throw new Error(response.message || "Failed to update toggle");
+      }
+
+      toast.success(response.message || "Toggle updated successfully");
+
+      if (toggleName === "onboardingMode") {
+        setOnboardingMode(value);
+      } else {
+        setMembershipCoreMode(value);
+      }
+
+      mutate("coachProfile");
+    } catch (error) {
+      toast.error(error.message || "Please try again later!");
+      if (toggleName === "onboardingMode") {
+        setOnboardingMode(!value);
+      } else {
+        setMembershipCoreMode(!value);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <div className="space-y-4">
+    <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+      <div className="flex-1">
+        <h4 className="font-semibold text-base mb-1">Onboarding Mode</h4>
+        <p className="text-sm text-muted-foreground">
+          Makes the sign up questionnaire more informative for the client
+        </p>
+      </div>
+      <Switch
+        checked={onboardingMode}
+        onCheckedChange={(checked) => updateToggle("onboardingMode", checked)}
+        disabled={loading}
+      />
+    </div>
+
+    <div className="flex items-center justify-between p-4 border-1 rounded-[10px]">
+      <div className="flex-1">
+        <h4 className="font-semibold text-base mb-1">Coach Core Membership Mode</h4>
+        <p className="text-sm text-muted-foreground">
+          Allows the coach to inactive the client after its club membership has ended
+        </p>
+      </div>
+      <Switch
+        checked={membershipCoreMode}
+        onCheckedChange={(checked) => updateToggle("membershipCoreMode", checked)}
+        disabled={loading}
+      />
+    </div>
+  </div>
 }
