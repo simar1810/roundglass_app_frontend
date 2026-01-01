@@ -10,10 +10,9 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -22,27 +21,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachPortfolioSocialLinks } from "@/config/data/ui";
 import { fetchData, sendData, sendDataWithFormData } from "@/lib/api";
 import { getCoachSocialLinks, retrieveBankDetails } from "@/lib/fetchers/app";
-import { cn, getObjectUrl } from "@/lib/utils";
+import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import {
-  Link as LucideLink,
   Award,
-  Users,
-  X,
-  Landmark,
-  Banknote,
-  Pen,
-  Pencil,
   Dot,
+  Landmark,
+  Link as LucideLink,
+  Pencil,
   ReceiptIndianRupee,
   Settings,
+  Users,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -137,65 +132,102 @@ function CoachSMLinks() {
   if (error || data.status_code !== 200)
     return (
       <TabsContent value="links">
-        <p className="text-center mt-4">{error || data.message} </p>
-        <UpdateCoachSocialsModal socialLinks={{}} />
+        <div className="text-center py-12 border-1 border-dashed rounded-2xl bg-[var(--comp-1)]">
+          <LucideLink className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground mb-4">{error || data.message}</p>
+          <UpdateCoachSocialsModal socialLinks={{}} />
+        </div>
       </TabsContent>
     );
 
   const socialLinks = data.data;
+  const activeLinks = coachPortfolioSocialLinks.filter(
+    (social) => socialLinks[social.name]
+  );
 
   return (
-    <TabsContent value="links">
-      <div>
-        {coachPortfolioSocialLinks.map(
-          (social) =>
-            socialLinks[social.name] && (
+    <TabsContent value="links" className="space-y-4">
+      {activeLinks.length > 0 ? (
+        <Card className="bg-[var(--comp-1)] w-full shadow-none rounded-2xl border-1">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold">Social Media Links</CardTitle>
+              <UpdateCoachSocialsModal socialLinks={socialLinks} />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {activeLinks.map((social) => (
               <div
                 key={social.id}
-                className="px-4 mb-2 flex items-center gap-4"
+                className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors"
               >
-                {social.icon}
+                <div className="flex-shrink-0 text-[var(--accent-1)]">
+                  {social.icon}
+                </div>
                 <Link
                   target="_blank"
                   href={socialLinks[social.name]}
-                  className="w-full md:text-xs lg:text-base break-all"
+                  className="flex-1 text-sm md:text-base break-all hover:text-[var(--accent-1)] transition-colors"
                 >
                   {socialLinks[social.name]}
                 </Link>
               </div>
-            ),
-        )}
-      </div>
-      <UpdateCoachSocialsModal socialLinks={socialLinks} />
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="text-center py-12 border-1 border-dashed rounded-2xl bg-[var(--comp-1)]">
+          <LucideLink className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground mb-4">No social media links added yet</p>
+          <UpdateCoachSocialsModal socialLinks={socialLinks} />
+        </div>
+      )}
     </TabsContent>
   );
 }
 
 function CoachAwards({ awards }) {
   return (
-    <TabsContent value="awards">
-      <div className="flex items-center gap-2 justify-between">
-        <h4>{awards.length} Awards Available</h4>
-        <UpdateCoachAwardModal />
-      </div>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
-        {awards.map((award) => (
-          <div key={award._id} className="flex items-center gap-4 relative">
-            <Image
-              src={award.image || "/illustrations/award.png"}
-              onError={(e) => (e.target.src = "/illustrations/award.png")}
-              alt=""
-              height={64}
-              width={64}
-              className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)]"
-            />
-            <p className="mr-auto">{award.title}</p>
-            <DeleteAward awardId={award._id} />
-          </div>
-        ))}
-      </div>
-      {awards.length === 0 && (
-        <div className="h-[200px] flex items-center justify-center">
+    <TabsContent value="awards" className="space-y-6">
+      {awards.length > 0 ? (
+        <Card className="bg-[var(--comp-1)] w-full shadow-none rounded-2xl border-1">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold">Awards</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {awards.length} {awards.length === 1 ? "award" : "awards"} available
+                </p>
+              </div>
+              <UpdateCoachAwardModal />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {awards.map((award) => (
+                <div
+                  key={award._id}
+                  className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors relative"
+                >
+                  <Image
+                    src={award.image || "/illustrations/award.png"}
+                    onError={(e) => (e.target.src = "/illustrations/award.png")}
+                    alt={award.title}
+                    height={64}
+                    width={64}
+                    className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
+                  />
+                  <p className="flex-1 font-medium">{award.title}</p>
+                  <DeleteAward awardId={award._id} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="text-center py-12 border-1 border-dashed rounded-2xl bg-[var(--comp-1)]">
+          <Award className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground mb-4">No awards added yet</p>
           <UpdateCoachAwardModal />
         </div>
       )}
@@ -231,7 +263,7 @@ function CoachClubSettings() {
   const coach = useAppSelector((state) => state.coach.data);
   const fields = ClubSettingsMap.get(coach.clubSystem);
 
-  async function udpateDetails() {
+  async function updateDetails() {
     try {
       setLoading(true);
       const response = await sendData(
@@ -250,27 +282,39 @@ function CoachClubSettings() {
   }
 
   return (
-    <TabsContent value="club">
-      {fields.map((field) => (
-        <FormControl
-          key={field.id}
-          defaultValue={coach[field.name] || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, [field.name]: e.target.value })
-          }
-          placeholder="Please enter value"
-          className="block mb-4"
-          {...field}
-        />
-      ))}
-      <Button
-        className="block mt-10 mx-auto"
-        variant="wz"
-        onClick={udpateDetails}
-        disabled={loading}
-      >
-        Save
-      </Button>
+    <TabsContent value="club" className="space-y-6">
+      <Card className="bg-[var(--comp-1)] w-full shadow-none rounded-2xl border-1">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold">Club Settings</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Configure your club membership settings
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {fields.map((field) => (
+            <FormControl
+              key={field.id}
+              defaultValue={coach[field.name] || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, [field.name]: e.target.value })
+              }
+              placeholder={`Enter ${field.label.toLowerCase()}`}
+              className="block"
+              {...field}
+            />
+          ))}
+          <div className="flex gap-3 pt-4 border-t-1">
+            <Button
+              variant="wz"
+              onClick={updateDetails}
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? "Saving..." : "Save Settings"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </TabsContent>
   );
 }
@@ -328,61 +372,73 @@ function BankDetails() {
       </TabsContent>
     );
   const bank = data.data || {};
+  const hasBankData = bank.accountNumber || bank.accountName;
+  
   return (
-    <TabsContent value="bank" className="space-y-4">
-      <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative">
-        <UpdateBankDetails bank={bank} />
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Image
-            src={bank.qr}
-            alt=""
-            height={400}
-            width={400}
-            className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] block mx-auto"
-            onError={(e) => (e.target.src = "/not-found.png")}
-          />
-        </CardHeader>
-
-        <CardContent className="grid gap-3 text-sm">
-          <div className="mb-4">
-            <CardTitle className="text-lg leading-tight">
-              {bank.accountName}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">{bank.bankName}</p>
-              <Dot />
-              <p className="text-sm text-muted-foreground">
-                {bank.accountNumber}
-              </p>
+    <TabsContent value="bank" className="space-y-6">
+      {hasBankData ? (
+        <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative border-1">
+          <UpdateBankDetails bank={bank} />
+          <CardHeader className="pb-4">
+            <div className="flex flex-col items-center gap-4">
+              {bank.qr && (
+                <Image
+                  src={bank.qr}
+                  alt="QR Code"
+                  height={200}
+                  width={200}
+                  className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] shadow-sm"
+                  onError={(e) => (e.target.src = "/not-found.png")}
+                />
+              )}
             </div>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Bank Branch:</span>
-            <span>{bank.bankBranch}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">IFSC Code:</span>
-            <span>{bank.ifscCode}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Account Holder:</span>
-            <span>{bank.accountName}</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+
+          <CardContent className="space-y-4 px-6 pb-6">
+            <div className="text-center border-b-1 pb-4">
+              <CardTitle className="text-xl font-bold mb-2">
+                {bank.accountName || "N/A"}
+              </CardTitle>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span>{bank.bankName || "N/A"}</span>
+                {bank.bankName && bank.accountNumber && <Dot className="w-4 h-4" />}
+                <span>{bank.accountNumber || ""}</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Branch</span>
+                <p className="text-sm font-medium">{bank.bankBranch || "N/A"}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">IFSC Code</span>
+                <p className="text-sm font-medium font-mono">{bank.ifscCode || "N/A"}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="text-center py-12 border-1 border-dashed rounded-2xl bg-[var(--comp-1)]">
+          <Landmark className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground mb-4">No bank details added yet</p>
+          <UpdateBankDetails bank={{}} />
+        </div>
+      )}
     </TabsContent>
   );
 }
 
 function UpdateBankDetails({ bank }) {
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const [payload, setPayload] = useState({
-    accountNumber: bank.accountNumber || "",
-    accountName: bank.accountName || "",
-    bankName: bank.bankName || "",
-    bankBranch: bank.bankBranch || "",
-    ifscCode: bank.ifscCode || "",
-    file: "",
+    accountNumber: bank?.accountNumber || "",
+    accountName: bank?.accountName || "",
+    bankName: bank?.bankName || "",
+    bankBranch: bank?.bankBranch || "",
+    ifscCode: bank?.ifscCode || "",
+    file: null,
   });
 
   const fileRef = useRef();
@@ -429,7 +485,11 @@ function UpdateBankDetails({ bank }) {
       setLoading(true);
       const formData = new FormData();
       for (const field in payload) {
-        if (Boolean(field)) formData.append(field, payload[field]);
+        if (field === "file" && payload[field]) {
+          formData.append(field, payload[field]);
+        } else if (field !== "file" && payload[field]) {
+          formData.append(field, payload[field]);
+        }
       }
 
       const response = await sendDataWithFormData("app/bank", formData);
@@ -445,102 +505,182 @@ function UpdateBankDetails({ bank }) {
   }
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <Pencil className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4" />
-      </DialogTrigger>
-      <DialogContent className="p-0 max-h-[70vh] overflow-y-auto">
-        <DialogTitle className="p-4 border-b-1">Bank Details</DialogTitle>
-        <div className="p-4 relative">
-          <Image
-            src={
-              Boolean(payload.file)
-                ? getObjectUrl(payload.file)
-                : bank.qr || "/not-found.png"
-            }
-            height={400}
-            width={400}
-            className="w-full bg-[var(--comp-1)] max-h-[250px] object-contain rounded-[10px] border-1 mb-4"
-            alt=""
-            onClick={() => fileRef.current.click()}
-          />
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, file: e.target.files[0] }))
-            }
-          />
-          {payload.file && (
-            <X
-              className="absolute top-[24px] right-[24px] cursor-pointer"
-              onClick={() => setPayload((prev) => ({ ...prev, file: "" }))}
-            />
-          )}
-          <FormControl
-            value={payload.accountNumber}
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, accountNumber: e.target.value }))
-            }
-            placeholder="Account Number"
-            label="Account Number"
-            className="block mb-2"
-          />
-          <FormControl
-            value={payload.accountName}
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, accountName: e.target.value }))
-            }
-            label="Account Name"
-            className="block mb-2"
-          />
-          <FormControl
-            value={payload.bankName}
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, bankName: e.target.value }))
-            }
-            label="Bank Name"
-            className="block mb-2"
-          />
-          <FormControl
-            value={payload.bankBranch}
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, bankBranch: e.target.value }))
-            }
-            label="Bank Branch"
-            className="block mb-2"
-          />
-          <FormControl
-            value={payload.ifscCode}
-            onChange={(e) =>
-              setPayload((prev) => ({ ...prev, ifscCode: e.target.value }))
-            }
-            label="IFSC Code"
-            className="block mb-2"
-          />
-          <Button
-            className="max-w-xs w-full mt-8 mx-auto block"
-            onClick={saveBankDetails}
-            disabled={loading}
-            variant="wz"
-          >
-            Save
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {bank?.accountNumber ? (
+          <Button variant="outline" size="sm" className="absolute top-4 right-4 gap-2">
+            <Pencil className="w-4 h-4" />
+            Edit
           </Button>
-          <DialogClose ref={closeBtnRef} />
+        ) : (
+          <Button variant="wz" className="mx-auto">
+            <Landmark className="w-4 h-4 mr-2" />
+            Add Bank Details
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <div className="sticky top-0 bg-white z-10 border-b-1 px-6 py-4">
+          <DialogTitle className="text-xl font-semibold">Bank Details</DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">Update your bank account information</p>
         </div>
+        
+        <div className="p-6 space-y-6">
+          {/* QR Code Upload Section */}
+          <div className="space-y-3">
+            <label className="text-sm font-semibold">QR Code / UPI ID Image</label>
+            <div className="relative group">
+              <div
+                className="border-2 border-dashed rounded-xl p-6 cursor-pointer hover:border-[var(--accent-1)] transition-colors bg-[var(--comp-1)]"
+                onClick={() => fileRef.current?.click()}
+              >
+                {payload.file || bank?.qr ? (
+                  <div className="relative">
+                    <Image
+                      src={
+                        payload.file
+                          ? getObjectUrl(payload.file)
+                          : bank.qr || "/not-found.png"
+                      }
+                      height={300}
+                      width={300}
+                      className="w-full max-h-[300px] object-contain rounded-lg mx-auto"
+                      alt="QR Code Preview"
+                      onError={(e) => (e.target.src = "/not-found.png")}
+                    />
+                    {payload.file && (
+                      <div className="absolute top-2 right-2">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPayload((prev) => ({ ...prev, file: null }));
+                            if (fileRef.current) fileRef.current.value = "";
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Landmark className="w-12 h-12 mb-3 text-muted-foreground" />
+                    <p className="text-sm font-medium mb-1">Click to upload QR Code</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) =>
+                  setPayload((prev) => ({ ...prev, file: e.target.files[0] || null }))
+                }
+              />
+            </div>
+          </div>
+
+          {/* Account Information Section */}
+          <div className="space-y-4">
+            <div className="border-t-1 pt-4">
+              <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wide">Account Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormControl
+                  value={payload.accountNumber}
+                  onChange={(e) =>
+                    setPayload((prev) => ({ ...prev, accountNumber: e.target.value }))
+                  }
+                  placeholder="Enter account number"
+                  label="Account Number"
+                  required
+                  className="block"
+                />
+                <FormControl
+                  value={payload.accountName}
+                  onChange={(e) =>
+                    setPayload((prev) => ({ ...prev, accountName: e.target.value }))
+                  }
+                  placeholder="Enter account holder name"
+                  label="Account Holder Name"
+                  required
+                  className="block"
+                />
+              </div>
+            </div>
+
+            {/* Bank Information Section */}
+            <div className="border-t-1 pt-4">
+              <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wide">Bank Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormControl
+                  value={payload.bankName}
+                  onChange={(e) =>
+                    setPayload((prev) => ({ ...prev, bankName: e.target.value }))
+                  }
+                  placeholder="Enter bank name"
+                  label="Bank Name"
+                  required
+                  className="block"
+                />
+                <FormControl
+                  value={payload.bankBranch}
+                  onChange={(e) =>
+                    setPayload((prev) => ({ ...prev, bankBranch: e.target.value }))
+                  }
+                  placeholder="Enter bank branch"
+                  label="Bank Branch"
+                  className="block"
+                />
+                <FormControl
+                  value={payload.ifscCode}
+                  onChange={(e) =>
+                    setPayload((prev) => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))
+                  }
+                  placeholder="Enter IFSC code"
+                  label="IFSC Code"
+                  required
+                  maxLength={11}
+                  className="block md:col-span-2"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={saveBankDetails}
+              disabled={loading}
+              variant="wz"
+              className="flex-1"
+            >
+              {loading ? "Saving..." : "Save Bank Details"}
+            </Button>
+          </div>
+        </div>
+        <DialogClose ref={closeBtnRef} className="hidden" />
       </DialogContent>
     </Dialog>
   );
 }
 
 function InvoiceDetails() {
-  return (
-    <TabsContent value="invoice">
-      <InvoiceDetailsContainer />
-    </TabsContent>
-  );
+  return <InvoiceDetailsContainer />;
 }
 
 function InvoiceDetailsContainer() {
@@ -549,55 +689,77 @@ function InvoiceDetailsContainer() {
     () => fetchData("app/memberships-invoices/meta"),
   );
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return (
+    <TabsContent value="invoice">
+      <Loader />
+    </TabsContent>
+  );
 
   if (error || data.status_code !== 200)
-    return <ContentError title={error || data.message} />;
+    return (
+      <TabsContent value="invoice">
+        <ContentError title={error || data.message} />
+      </TabsContent>
+    );
 
-  const invoiceMeta = data.data;
+  const invoiceMeta = data.data || {};
+  const hasInvoiceData = invoiceMeta.title || invoiceMeta.gstin;
 
   return (
-    <div>
-      <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative">
-        <UpdateInvoiceDetails defaultData={data.data} />
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Image
-            src={invoiceMeta.signature}
-            alt=""
-            height={400}
-            width={400}
-            className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] block mx-auto"
-            onError={(e) => (e.target.src = "/not-found.png")}
-          />
-        </CardHeader>
+    <TabsContent value="invoice" className="space-y-6">
+      {hasInvoiceData ? (
+        <Card className="bg-[var(--comp-1)] w-full mx-auto shadow-none rounded-2xl relative border-1">
+          <UpdateInvoiceDetails defaultData={invoiceMeta} />
+          <CardHeader className="pb-4">
+            <div className="flex flex-col items-center gap-4">
+              {invoiceMeta.signature && (
+                <Image
+                  src={invoiceMeta.signature}
+                  alt="Signature"
+                  height={200}
+                  width={200}
+                  className="bg-white h-[200px] w-[200px] object-contain border-1 rounded-[16px] shadow-sm"
+                  onError={(e) => (e.target.src = "/not-found.png")}
+                />
+              )}
+            </div>
+          </CardHeader>
 
-        <CardContent className="grid gap-3 text-sm">
-          <div className="mb-4">
-            <CardTitle className="text-lg leading-tight">
-              {invoiceMeta.title}
-            </CardTitle>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">GSTIN:</span>
-            <span>{invoiceMeta.gstin}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">GST:</span>
-            <span>{invoiceMeta.gst || "0.0"}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Address:</span>
-            <span className="max-w-[40ch] text-right">
-              {invoiceMeta.address}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Place Of Supply:</span>
-            <span>{invoiceMeta.placeOfSupply}</span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          <CardContent className="space-y-4 px-6 pb-6">
+            <div className="text-center border-b-1 pb-4">
+              <CardTitle className="text-xl font-bold mb-2">
+                {invoiceMeta.title || "N/A"}
+              </CardTitle>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GSTIN</span>
+                <p className="text-sm font-medium font-mono">{invoiceMeta.gstin || "N/A"}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GST Percentage</span>
+                <p className="text-sm font-medium">{invoiceMeta.gst || "0.0"}%</p>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Address</span>
+                <p className="text-sm font-medium">{invoiceMeta.address || "N/A"}</p>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Place Of Supply</span>
+                <p className="text-sm font-medium">{invoiceMeta.placeOfSupply || "N/A"}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="text-center py-12 border-1 border-dashed rounded-2xl bg-[var(--comp-1)]">
+          <ReceiptIndianRupee className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground mb-4">No invoice details added yet</p>
+          <UpdateInvoiceDetails defaultData={{}} />
+        </div>
+      )}
+    </TabsContent>
   );
 }
 
@@ -623,20 +785,42 @@ const createDefaultPayload = (data) =>
   );
 
 function UpdateInvoiceDetails({ defaultData }) {
+  const [open, setOpen] = useState(false);
   const [payload, setPayload] = useState(createDefaultPayload(defaultData || {}));
   const [loading, setLoading] = useState(false);
   const [signature, setSignature] = useState();
 
-  async function udpateInvoiceMeta() {
-    const toastId = toast.loading("Please wait...");
+  const resetForm = () => {
+    setPayload(createDefaultPayload(defaultData || {}));
+    setSignature(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpen(false);
+  };
+
+  async function updateInvoiceMeta() {
     try {
+      if (!payload.title?.trim()) {
+        toast.error("Please enter company name");
+        return;
+      }
+      if (!payload.gstin?.trim()) {
+        toast.error("Please enter GSTIN");
+        return;
+      }
+      if (payload.gst && (isNaN(payload.gst) || parseFloat(payload.gst) < 0 || parseFloat(payload.gst) > 100)) {
+        toast.error("GST percentage must be between 0 and 100");
+        return;
+      }
+
       setLoading(true);
       const formData = new FormData();
       for (const field of invoiceFields) {
-        // For GST, allow 0 as a valid value, only use empty string if truly empty
         const value = payload[field.name];
         if (field.name === "gst") {
-          formData.append(field.name, value !== null && value !== undefined && value !== "" ? value : "");
+          formData.append(field.name, value !== null && value !== undefined && value !== "" ? value : "0");
         } else {
           formData.append(field.name, value || "");
         }
@@ -656,48 +840,135 @@ function UpdateInvoiceDetails({ defaultData }) {
       toast.error(error.message || "Failed to save invoice details");
     } finally {
       setLoading(false);
-      toast.dismiss(toastId);
     }
   }
 
+  const hasInvoiceData = defaultData?.title || defaultData?.gstin;
+
   return (
-    <Dialog>
-      <DialogTrigger>
-        <Pencil className="absolute w-[20px] h-[20px] text-[var(--accent-1)] top-4 right-4" />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {hasInvoiceData ? (
+          <Button variant="outline" size="sm" className="absolute top-4 right-4 gap-2">
+            <Pencil className="w-4 h-4" />
+            Edit
+          </Button>
+        ) : (
+          <Button variant="wz" className="mx-auto">
+            <ReceiptIndianRupee className="w-4 h-4 mr-2" />
+            Add Invoice Details
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="p-0 !space-y-0 !gap-0 max-h-[80vh] overflow-y-auto">
-        <DialogTitle className="p-4 border-b-1">Invoice Meta</DialogTitle>
-        <div className="p-4">
-          {invoiceFields.map((field) => (
-            <div key={field.name}>
-              <h5 className="mb-2">{field.label}</h5>
-              <Input
-                className="mb-4"
-                value={payload[field.name]}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <div className="sticky top-0 bg-white z-10 border-b-1 px-6 py-4">
+          <DialogTitle className="text-xl font-semibold">Invoice Details</DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">Update your invoice and tax information</p>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          {/* Company Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Company Information</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <FormControl
+                value={payload.title}
                 onChange={(e) =>
-                  setPayload((prev) => ({
-                    ...prev,
-                    [field.name]: e.target.value,
-                  }))
+                  setPayload((prev) => ({ ...prev, title: e.target.value }))
                 }
-                placeholder={`Enter ${field.label}`}
+                placeholder="Enter company/business name"
+                label="Company Name"
+                required
+                className="block"
+              />
+              <FormControl
+                value={payload.address}
+                onChange={(e) =>
+                  setPayload((prev) => ({ ...prev, address: e.target.value }))
+                }
+                placeholder="Enter business address"
+                label="Address"
+                className="block"
               />
             </div>
-          ))}
-          <ImageSelector
-            file={signature}
-            onFileChange={setSignature}
-            label="Upload Signature"
-            defaultImageLink={defaultData.signature}
-          />
-          <Button
-            onClick={udpateInvoiceMeta}
-            disabled={loading}
-            className="w-full mt-4"
-            variant="wz"
-          >
-            Save
-          </Button>
+          </div>
+
+          {/* Tax Information Section */}
+          <div className="space-y-4 border-t-1 pt-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tax Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormControl
+                value={payload.gstin}
+                onChange={(e) =>
+                  setPayload((prev) => ({ ...prev, gstin: e.target.value.toUpperCase() }))
+                }
+                placeholder="Enter GSTIN (15 characters)"
+                label="GSTIN"
+                required
+                maxLength={15}
+                className="block"
+              />
+              <FormControl
+                type="number"
+                value={payload.gst}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "" || (!isNaN(value) && parseFloat(value) >= 0 && parseFloat(value) <= 100)) {
+                    setPayload((prev) => ({ ...prev, gst: value }));
+                  }
+                }}
+                placeholder="0.0"
+                label="GST Percentage"
+                min="0"
+                max="100"
+                step="0.01"
+                className="block"
+              />
+              <FormControl
+                value={payload.placeOfSupply}
+                onChange={(e) =>
+                  setPayload((prev) => ({ ...prev, placeOfSupply: e.target.value }))
+                }
+                placeholder="Enter place of supply"
+                label="Place Of Supply"
+                className="block md:col-span-2"
+              />
+            </div>
+          </div>
+
+          {/* Signature Upload Section */}
+          <div className="space-y-3 border-t-1 pt-4">
+            <ImageSelector
+              file={signature}
+              onFileChange={setSignature}
+              label="Digital Signature"
+              defaultImageLink={defaultData?.signature}
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload your digital signature that will appear on invoices
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={updateInvoiceMeta}
+              disabled={loading}
+              variant="wz"
+              className="flex-1"
+            >
+              {loading ? "Saving..." : "Save Invoice Details"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -719,7 +990,7 @@ function SettingsTabContainer() {
 
   if (isLoading)
     return (
-      <div className="min-h-[200px] flex items-center justify-center border-1 bg-[var(--comp-1)]">
+      <div className="min-h-[200px] flex items-center justify-center border-1 bg-[var(--comp-1)] rounded-2xl">
         <Loader />
       </div>
     );
@@ -728,19 +999,38 @@ function SettingsTabContainer() {
   if (error || data.status_code !== 200)
     return <ContentError title={error || data.message} />;
   return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold">Payment Gateway</h3>
-        <UpdateCoachSecrets initialData={razorpay} onRefresh={mutate} />
-      </div>
-      <div className="flex items-center">
-        <p className="font-bold min-w-[10ch]">Client ID</p>
-        <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpayClientId}</p>
-      </div>
-      <div className="mb-8 flex items-center">
-        <p className="font-bold min-w-[10ch]">Secret</p>
-        <p className="italic text-[#808080] text-sm select-none">{razorpay.razorpaySecret}</p>
-      </div>
+    <div className="space-y-6">
+      <Card className="bg-[var(--comp-1)] w-full shadow-none rounded-2xl border-1">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-bold">Payment Gateway</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Razorpay integration credentials
+              </p>
+            </div>
+            <UpdateCoachSecrets initialData={razorpay} onRefresh={mutate} />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client ID</span>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-white border-1">
+              <p className="text-sm font-mono text-muted-foreground select-all break-all flex-1">
+                {razorpay.razorpayClientId || "Not configured"}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Secret Key</span>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-white border-1">
+              <p className="text-sm font-mono text-muted-foreground select-all break-all flex-1">
+                {razorpay.razorpaySecret ? "•".repeat(20) + razorpay.razorpaySecret.slice(-4) : "Not configured"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <RaghavComponent />
     </div>
   );

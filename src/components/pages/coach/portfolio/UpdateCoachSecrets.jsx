@@ -52,7 +52,7 @@ export default function UpdateCoachSecrets({ initialData, onRefresh }) {
       setOpen(false);
       if (onRefresh) onRefresh();
     } catch (err) {
-      setErrors({ api: "Failed to update keys. Please try again." });
+      setErrors({ api:err.message ||"Failed to update keys. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
