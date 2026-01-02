@@ -68,8 +68,9 @@ function Container({ Component, pdfData }) {
 
   useEffect(() => {
     const signatureUrl = pdfData?.invoiceMeta?.signature;
-    if (!signatureUrl) {
+    if (!signatureUrl || signatureUrl.trim() === '') {
       setSignatureBase64("");
+      return;
     }
 
     let cancelled = false;
@@ -88,8 +89,9 @@ function Container({ Component, pdfData }) {
 
   useEffect(() => {
     const qrLink = pdfData?.invoiceMeta?.qr;
-    if (!qrLink) {
+    if (!qrLink || qrLink.trim() === '') {
       setBankQRImage("");
+      return;
     }
 
     let cancelled = false;
@@ -109,16 +111,20 @@ function Container({ Component, pdfData }) {
   useEffect(function () {
     const latestBrand = brands.length > 0 ? brands[brands.length - 1] : null;
 
-    if (latestBrand?.brandLogo) {
+    if (latestBrand?.brandLogo && latestBrand.brandLogo.trim() !== '') {
       getBase64ImageFromUrl(latestBrand.brandLogo)
         .then(setBrandLogo)
         .catch(() => setBrandLogo(""));
+    } else {
+      setBrandLogo("");
     }
 
-    if (finalProfilePhoto) {
+    if (finalProfilePhoto && finalProfilePhoto.trim() !== '') {
       getBase64ImageFromUrl(finalProfilePhoto)
         .then(setCoachLogo)
         .catch(() => setCoachLogo(""));
+    } else {
+      setCoachLogo("");
     }
   }, [brands, finalProfilePhoto])
 

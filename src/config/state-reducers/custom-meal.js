@@ -241,8 +241,11 @@ export function customMealReducer(state, action) {
       const dishesPayload = !isNew
         ? {
           ...recipe,
-          dish_name: recipe.dish_name || recipe.title,
+          dish_name: recipe.dish_name || recipe.title || recipe.name,
           image: recipe.image,
+          description: recipe.description || "",
+          ingredients: recipe.ingredients || "",
+          method: recipe.method || "",
           fats: recipe.fats || recipe?.calories?.fats,
           calories: recipe?.calories?.total || recipe.calories,
           protein: recipe.protein || recipe?.calories?.proteins,
@@ -252,7 +255,11 @@ export function customMealReducer(state, action) {
         }
         : {
           ...recipe,
+          dish_name: recipe.dish_name || recipe.title || recipe.name,
           image: recipe.image,
+          description: recipe.description || "",
+          ingredients: recipe.ingredients || "",
+          method: recipe.method || "",
           time: recipe.time ?? defaultMealTiming,
           isNew: false,
         };
@@ -288,7 +295,10 @@ export function customMealReducer(state, action) {
               ...(mealType.meals || []),
               {
                 ...recipe,
-                dish_name: recipe.dish_name || recipe.name,
+                dish_name: recipe.dish_name || recipe.title || recipe.name,
+                description: recipe.description || "",
+                ingredients: recipe.ingredients || "",
+                method: recipe.method || "",
                 fats: recipe.fats || recipe?.calories?.fats,
                 calories: recipe.calories || recipe?.calories?.total,
                 protein: recipe.protein || recipe?.calories?.proteins,

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import { uploadImage } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
@@ -181,13 +182,36 @@ export default function EditSelectedMealDetails({
           placeholder="Dish Name"
           className="block mb-4"
         />
-        <FormControl
-          value={formData.description || ""}
-          name="description"
-          onChange={onChangeHandler}
-          placeholder="Description"
-          className="block mb-4"
-        />
+        <div>
+          <label className="text-sm font-medium mb-2 block">Description</label>
+          <Textarea
+            value={formData.description || ""}
+            name="description"
+            onChange={onChangeHandler}
+            placeholder="Description"
+            className="min-h-[80px] mb-4"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-2 block">Ingredients</label>
+          <Textarea
+            value={formData.ingredients || ""}
+            name="ingredients"
+            onChange={onChangeHandler}
+            placeholder="Enter ingredients (e.g., 2 eggs, 1 cup flour, etc.)"
+            className="min-h-[100px] mb-4"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-2 block">Method</label>
+          <Textarea
+            value={formData.method || ""}
+            name="method"
+            onChange={onChangeHandler}
+            placeholder="Enter cooking method/instructions"
+            className="min-h-[100px] mb-4"
+          />
+        </div>
         <FormControl
           type="time"
           value={formData.time || ""}

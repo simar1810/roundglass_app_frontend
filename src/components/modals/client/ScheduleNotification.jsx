@@ -510,6 +510,7 @@ function ScheduleNotification({
               onChange={value => setPayload(prev => ({ ...prev, clients: value }))}
               className="[&_.option]:px-4 [&_.option]:py-2"
               selectAll={true}
+              searchable={true}
             />
           </div>
         )}

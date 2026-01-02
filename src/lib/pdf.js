@@ -213,9 +213,21 @@ function buildMealItemsForPDF(mealEntry, { includeMacros = true, includeDescript
       if (macroParts.length) detailsParts.push(macroParts.join(", "));
     }
 
+    // Include recipe details (ingredients and method) if includeDescription is enabled
+    const recipeDetails = {};
+    if (includeDescription) {
+      if (dish?.ingredients) {
+        recipeDetails.ingredients = dish.ingredients;
+      }
+      if (dish?.method) {
+        recipeDetails.method = dish.method;
+      }
+    }
+
     return {
       title,
-      details: detailsParts.filter(Boolean).join(" | ")
+      details: detailsParts.filter(Boolean).join(" | "),
+      ...(Object.keys(recipeDetails).length > 0 && { recipeDetails })
     };
   });
 }
