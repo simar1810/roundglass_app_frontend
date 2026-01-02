@@ -183,10 +183,34 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
         );
       }
 
+      const hasRecipe = item?.recipeDetails && (item.recipeDetails.ingredients || item.recipeDetails.method);
+
       return (
-        <Text key={`meal-item-${idx}`} style={styles.mealItem}>
-          - {item?.title || `Item ${idx + 1}`} {item?.details ? `: ${item.details}` : ""}
-        </Text>
+        <View key={`meal-item-${idx}`} style={{ marginBottom: hasRecipe ? 8 : 2 }}>
+          <Text style={styles.mealItem}>
+            - {item?.title || `Item ${idx + 1}`} {item?.details ? `: ${item.details}` : ""}
+          </Text>
+          {hasRecipe && (
+            <View style={{ marginLeft: 8, marginTop: 4 }}>
+              {item.recipeDetails.ingredients && (
+                <View style={{ marginBottom: 4 }}>
+                  <Text style={[styles.notesHeading, { fontSize: 9, fontWeight: "bold" }]}>Ingredients:</Text>
+                  <Text style={[styles.noteText, { fontSize: 8, marginLeft: 4 }]}>
+                    {item.recipeDetails.ingredients}
+                  </Text>
+                </View>
+              )}
+              {item.recipeDetails.method && (
+                <View>
+                  <Text style={[styles.notesHeading, { fontSize: 9, fontWeight: "bold" }]}>Method:</Text>
+                  <Text style={[styles.noteText, { fontSize: 8, marginLeft: 4 }]}>
+                    {item.recipeDetails.method}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       );
     });
   };

@@ -152,11 +152,45 @@ export default function PDFCustomMealCompactPortrait({ data = {}, brand = {} }) 
       return <Text style={styles.placeholder}>-</Text>;
     }
 
-    return meal.items.map((item, idx) => (
-      <Text key={`meal-item-${idx}`} style={styles.mealItem}>
-        - {typeof item === "string" ? item : `${item?.title || `Item ${idx + 1}`}${item?.details ? `: ${item.details}` : ""}`}
-      </Text>
-    ));
+    return meal.items.map((item, idx) => {
+      const hasRecipe = item?.recipeDetails && (item.recipeDetails.ingredients || item.recipeDetails.method);
+      
+      if (typeof item === "string") {
+        return (
+          <Text key={`meal-item-${idx}`} style={styles.mealItem}>
+            - {item}
+          </Text>
+        );
+      }
+
+      return (
+        <View key={`meal-item-${idx}`} style={{ marginBottom: hasRecipe ? 6 : 2 }}>
+          <Text style={styles.mealItem}>
+            - {item?.title || `Item ${idx + 1}`}{item?.details ? `: ${item.details}` : ""}
+          </Text>
+          {hasRecipe && (
+            <View style={{ marginLeft: 6, marginTop: 3 }}>
+              {item.recipeDetails.ingredients && (
+                <View style={{ marginBottom: 3 }}>
+                  <Text style={[styles.notesHeading, { fontSize: 8, marginBottom: 1, fontWeight: "bold" }]}>Ingredients:</Text>
+                  <Text style={[styles.noteText, { fontSize: 7, marginLeft: 3 }]}>
+                    {item.recipeDetails.ingredients}
+                  </Text>
+                </View>
+              )}
+              {item.recipeDetails.method && (
+                <View>
+                  <Text style={[styles.notesHeading, { fontSize: 8, marginBottom: 1, fontWeight: "bold" }]}>Method:</Text>
+                  <Text style={[styles.noteText, { fontSize: 7, marginLeft: 3 }]}>
+                    {item.recipeDetails.method}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      );
+    });
   };
 
   return (

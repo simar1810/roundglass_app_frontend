@@ -8,7 +8,6 @@ import {
   startOfDay
 } from "date-fns";
 import { ArrowRight, ChevronLeft, Download, RefreshCcw, Search, X } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import ContentError from "../common/ContentError";
@@ -373,13 +372,6 @@ function ClientsSidebar({
     <aside className="flex min-w-0 flex-col gap-4 px-2 md:px-0">
       <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900">Clients</h3>
-        <Button
-          asChild
-          size="sm"
-          className="bg-[var(--accent-1)] px-4 py-2 text-white hover:bg-[var(--accent-1)]/90 border border-[var(--accent-1)]"
-        >
-          <Link href="/coach/add-client">+ Add Clients</Link>
-        </Button>
       </div>
 
       {hasTopPerformers ? (

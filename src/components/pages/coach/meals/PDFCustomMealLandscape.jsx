@@ -186,11 +186,36 @@ export default function PDFCustomMealLandscape({ data = {}, brand = {} }) {
       <View>
         {meal.timeWindow ? <Text style={styles.mealTime}>{meal.timeWindow}</Text> : null}
         {Array.isArray(meal.items) && meal.items.length > 0
-          ? meal.items.map((item, idx) => (
-            <Text key={`meal-${plan?.key}-${type}-${idx}`} style={styles.mealItem}>
-              - {typeof item === "string" ? item : `${item?.title || `Item ${idx + 1}`}${item?.details ? `: ${item.details}` : ""}`}
-            </Text>
-          ))
+          ? meal.items.map((item, idx) => {
+              const hasRecipe = item?.recipeDetails && (item.recipeDetails.ingredients || item.recipeDetails.method);
+              return (
+                <View key={`meal-${plan?.key}-${type}-${idx}`} style={{ marginBottom: hasRecipe ? 6 : 2 }}>
+                  <Text style={styles.mealItem}>
+                    - {typeof item === "string" ? item : `${item?.title || `Item ${idx + 1}`}${item?.details ? `: ${item.details}` : ""}`}
+                  </Text>
+                  {hasRecipe && (
+                    <View style={{ marginLeft: 6, marginTop: 3 }}>
+                      {item.recipeDetails.ingredients && (
+                        <View style={{ marginBottom: 3 }}>
+                          <Text style={[styles.mealItem, { fontSize: 8, fontWeight: "bold" }]}>Ingredients:</Text>
+                          <Text style={[styles.mealItem, { fontSize: 7, marginLeft: 3 }]}>
+                            {item.recipeDetails.ingredients}
+                          </Text>
+                        </View>
+                      )}
+                      {item.recipeDetails.method && (
+                        <View>
+                          <Text style={[styles.mealItem, { fontSize: 8, fontWeight: "bold" }]}>Method:</Text>
+                          <Text style={[styles.mealItem, { fontSize: 7, marginLeft: 3 }]}>
+                            {item.recipeDetails.method}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })
           : <Text style={styles.placeholder}>-</Text>}
       </View>
     );

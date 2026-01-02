@@ -27,8 +27,8 @@ import { sortByPriority } from "@/lib/retail";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
-import { endOfMonth, endOfWeek, endOfYear, isValid, parse, startOfMonth, startOfWeek, startOfYear } from "date-fns";
-import { ListFilterPlus, Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
+import { endOfDay, endOfMonth, endOfWeek, endOfYear, format, isValid, parse, startOfDay, startOfMonth, startOfWeek, startOfYear } from "date-fns";
+import { ListFilterPlus, Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, Search, ShoppingCart, Trash2 } from "lucide-react";
 import DateRangePicker from "@/components/common/DateRangePicker";
 import Image from "next/image";
 import { useMemo, useRef, useState, useEffect } from "react";
@@ -553,9 +553,42 @@ function Order({ order }) {
 
 function PurchaseOrder({ order }) {
   const coach = useAppSelector(state => state.coach.data);
-  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
-    <CardHeader className="px-0">
-      <div className="flex justify-between items-center">
+  
+  // Calculate total quantity of products
+  const totalQuantity = (order.productModule || []).reduce((sum, product) => {
+    return sum + (Number(product.quantity) || 1);
+  }, 0);
+  
+  // Format date and time
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const parsedDate = parseOrderDate(dateString);
+      if (!parsedDate || !isValid(parsedDate)) return dateString;
+      
+      // Check if createdAt includes time information
+      if (order.createdAt && order.createdAt.includes(" ")) {
+        // If it has time, format both date and time
+        return format(new Date(parsedDate), "dd-MM-yyyy HH:mm");
+      }
+      // Otherwise just format date
+      return format(parsedDate, "dd-MM-yyyy");
+    } catch {
+      return dateString;
+    }
+  };
+  
+  // Get total amount (prefer sellingPrice, fallback to totalAmount or calculate from products)
+  const totalAmount = order.sellingPrice || order.totalAmount || 
+    (order.productModule || []).reduce((sum, product) => {
+      const price = Number(product.sellingPrice || product.price || 0);
+      const qty = Number(product.quantity || 1);
+      return sum + (price * qty);
+    }, 0);
+
+  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-3 rounded-[4px]">
+    <CardHeader className="px-0 pb-2">
+      <div className="flex justify-between items-start">
         <div className="text-yellow-600 text-[14px] font-bold flex items-center gap-1">
           <ShoppingCart className="bg-yellow-600 text-white w-[28px] h-[28px] p-1 rounded-full" />
           <p>Purchase Order</p>
@@ -567,22 +600,84 @@ function PurchaseOrder({ order }) {
         </div>
       </div>
     </CardHeader>
-    <CardContent className="px-0">
+    <CardContent className="px-0 space-y-3">
+      {/* Brand Name */}
+      {order.brand?.name && (
+        <div className="text-xs text-gray-600">
+          <span className="font-semibold">Brand:</span> {order.brand.name}
+        </div>
+      )}
+      
+      {/* Products */}
       <div className="flex gap-4">
         <Image
           height={100}
           width={100}
           unoptimized
-          src={order.productModule?.at(0)?.productImage}
+          src={order.productModule?.at(0)?.productImage || "/not-found.png"}
           alt=""
-          className="bg-black w-[64px] h-[64px] object-cover rounded-md"
+          className="bg-black w-[80px] h-[80px] object-cover rounded-md"
         />
-        <div>
-          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
-          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
-          {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
+        <div className="flex-1">
+          <h4 className="text-sm font-bold mb-1">
+            {order.productModule?.length > 0 
+              ? order.productModule.map(product => product.productName).join(", ")
+              : "No products"}
+          </h4>
+          
+          {/* Product Details */}
+          {order.productModule && order.productModule.length > 0 && (
+            <div className="space-y-1 mb-2">
+              {order.productModule.map((product, index) => (
+                <div key={index} className="text-xs text-[var(--dark-1)]/70">
+                  {product.productName}
+                  {product.quantity && (
+                    <span className="ml-2 font-semibold">× {product.quantity}</span>
+                  )}
+                  {product.sellingPrice && (
+                    <span className="ml-2">@ ₹{Number(product.sellingPrice || product.price || 0).toFixed(2)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Total Quantity */}
+          {totalQuantity > 0 && (
+            <div className="text-xs text-gray-600 mb-1">
+              <span className="font-semibold">Total Items:</span> {totalQuantity}
+            </div>
+          )}
+          
+          {/* Total Amount */}
+          {totalAmount > 0 && (
+            <div className="text-[20px] text-nowrap font-bold text-yellow-700 mt-2">
+              ₹ {Number(totalAmount).toFixed(2)}
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* Date and Time */}
+      <div className="pt-2 border-t border-gray-200 space-y-1">
+        {order.createdAt && (
+          <div className="text-xs text-[var(--dark-1)]/60">
+            <span className="font-semibold">Purchase Date:</span> {formatDateTime(order.createdAt)}
+          </div>
+        )}
+        {order.updatedAt && order.updatedAt !== order.createdAt && (
+          <div className="text-xs text-[var(--dark-1)]/60">
+            <span className="font-semibold">Last Updated:</span> {formatDateTime(order.updatedAt)}
+          </div>
+        )}
+      </div>
+      
+      {/* Order ID */}
+      {order._id && (
+        <div className="text-xs text-gray-500 font-mono">
+          Order ID: {order._id.slice(-8)}
+        </div>
+      )}
     </CardContent>
   </Card>
 }
@@ -932,37 +1027,134 @@ function getQuantityStatusColor(quantity) {
 
 
 function PurchaseHistory() {
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const { isLoading, error, data, mutate } = useSWR(
     "order/history-by-status?orderType=purchase",
     () => fetchData("app/order/history-by-status?orderType=purchase")
   );
 
+  // Filter and sort orders - must be called before conditional returns
+  const filteredOrders = useMemo(() => {
+    if (!data?.data || isLoading || error || data?.status_code !== 200) {
+      return [];
+    }
+    
+    let orders = data.data || [];
+    
+    // Apply date range filter
+    if (dateRange.from || dateRange.to) {
+      const startDate = dateRange.from ? startOfDay(new Date(dateRange.from)) : null;
+      const endDate = dateRange.to ? endOfDay(new Date(dateRange.to)) : null;
+      
+      orders = orders.filter(order => {
+        try {
+          if (!order.createdAt) return false;
+          
+          const orderDate = parseOrderDate(order.createdAt);
+          if (!orderDate || !isValid(orderDate)) return false;
+          
+          const orderDateNormalized = new Date(orderDate);
+          orderDateNormalized.setHours(0, 0, 0, 0);
+          
+          if (startDate && orderDateNormalized < startDate) return false;
+          if (endDate && orderDateNormalized > endDate) return false;
+          
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    }
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      orders = orders.filter(order => {
+        const productNames = (order.productModule || [])
+          .map(p => (p.productName || "").toLowerCase())
+          .join(" ");
+        const brandName = (order.brand?.name || "").toLowerCase();
+        const orderId = (order._id || "").toLowerCase();
+        const totalAmount = String(order.sellingPrice || order.totalAmount || "").toLowerCase();
+        
+        return productNames.includes(query) ||
+               brandName.includes(query) ||
+               orderId.includes(query) ||
+               totalAmount.includes(query);
+      });
+    }
+    
+    // Sort by date (newest first)
+    return orders.sort((a, b) => {
+      try {
+        const dateA = parseOrderDate(a.createdAt);
+        const dateB = parseOrderDate(b.createdAt);
+        if (!dateA || !dateB) return 0;
+        return dateB - dateA;
+      } catch {
+        return 0;
+      }
+    });
+  }, [data, isLoading, error, dateRange, searchQuery]);
+
   if (isLoading) return <Loader />
 
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-
-  const orders = (data.data || []).sort((a, b) => {
-    const parseDate = (dateStr) => {
-      const [day, month, year] = dateStr.split("-");
-      return new Date(year, month - 1, day);
-    };
-
-    return parseDate(a.createdAt) - parseDate(b.createdAt);
-  });
-
-  if (orders.length === 0) return <div className="min-h-[200px] flex items-center justify-center">
-    0 orders created
-  </div>
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
 
   return <TabsContent value="purchase-history">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {orders.map(order => <Order key={order._id} order={order} />)}
-      {orders.length === 0 && (
-        <div className="col-span-full">
-          <ContentError title="0 orders created" />
-        </div>
+    {/* Filters */}
+    <div className="mb-6 flex flex-wrap items-center gap-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium">Date Range:</span>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
+      </div>
+      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+        <Search className="h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search by product name, brand, order ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-[var(--comp-1)]"
+        />
+      </div>
+      {(dateRange.from || dateRange.to || searchQuery) && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDateRange({ from: null, to: null });
+            setSearchQuery("");
+          }}
+        >
+          Clear Filters
+        </Button>
       )}
     </div>
+    
+    {/* Results count */}
+    {filteredOrders.length > 0 && (
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {filteredOrders.length} purchase{filteredOrders.length !== 1 ? 's' : ''}
+        {(dateRange.from || dateRange.to || searchQuery) && ` (filtered from ${(data.data || []).length} total)`}
+      </div>
+    )}
+
+    {/* Orders Grid */}
+    {filteredOrders.length === 0 ? (
+      <div className="min-h-[200px] flex items-center justify-center">
+        <ContentError title={searchQuery || dateRange.from || dateRange.to ? "No purchases found matching your filters" : "0 orders created"} />
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {filteredOrders.map(order => <Order key={order._id} order={order} />)}
+      </div>
+    )}
   </TabsContent>
 }
 
