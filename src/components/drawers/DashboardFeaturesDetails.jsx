@@ -1202,7 +1202,7 @@ function ExpiringMealPlanFilterOptions({
 
 function renderMealPlanRows(plans, { plans: plansFilter } = {}, searchQuery = "") {
   let filtered = plans;
-  
+
   // Apply status filter
   if (plansFilter === "active") {
     filtered = filtered.filter(plan => plan.remainingDays > 0);
@@ -1211,7 +1211,7 @@ function renderMealPlanRows(plans, { plans: plansFilter } = {}, searchQuery = ""
   } else if (plansFilter === "expiring") {
     filtered = filtered.filter(plan => plan.remainingDays > 0 && plan.remainingDays <= 7);
   }
-  
+
   // Apply search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
@@ -1222,13 +1222,13 @@ function renderMealPlanRows(plans, { plans: plansFilter } = {}, searchQuery = ""
       return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query);
     });
   }
-  
+
   return filtered;
 }
 
 function filterIncompletePlans(plans, searchQuery = "") {
   if (!searchQuery.trim()) return plans;
-  
+
   const query = searchQuery.toLowerCase().trim();
   return plans.filter(plan => {
     const title = (plan.title || "").toLowerCase();
@@ -1239,7 +1239,7 @@ function filterIncompletePlans(plans, searchQuery = "") {
 
 function renderBirthdayRows(birthdays, { birthdays: birthdayFilter } = {}, searchQuery = "") {
   let filtered = birthdays;
-  
+
   // Apply date filter
   if (birthdayFilter === "thisWeek") {
     const today = startOfDay(new Date());
@@ -1264,7 +1264,7 @@ function renderBirthdayRows(birthdays, { birthdays: birthdayFilter } = {}, searc
       return !isBefore(birthday.dob, nextMonth) && isBefore(birthday.dob, monthAfter);
     });
   }
-  
+
   // Apply search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
@@ -1276,13 +1276,13 @@ function renderBirthdayRows(birthdays, { birthdays: birthdayFilter } = {}, searc
       return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query) || dob.includes(query);
     });
   }
-  
+
   return filtered;
 }
 
 function renderSubscriptionRows(subscriptions, { subscriptions: subscriptionFilter } = {}, searchQuery = "") {
   let filtered = subscriptions;
-  
+
   // Apply status filter
   if (subscriptionFilter === "expiring") {
     filtered = filtered.filter(sub => {
@@ -1300,7 +1300,7 @@ function renderSubscriptionRows(subscriptions, { subscriptions: subscriptionFilt
       return days !== null && days > 0;
     });
   }
-  
+
   // Apply search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
@@ -1310,11 +1310,11 @@ function renderSubscriptionRows(subscriptions, { subscriptions: subscriptionFilt
       const mobileNumber = (sub.mobileNumber || "").toLowerCase();
       const validFrom = (sub.validFrom || "").toLowerCase();
       const validTill = (sub.validTill || "").toLowerCase();
-      return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query) || 
-             validFrom.includes(query) || validTill.includes(query);
+      return name.includes(query) || clientId.includes(query) || mobileNumber.includes(query) ||
+        validFrom.includes(query) || validTill.includes(query);
     });
   }
-  
+
   return filtered;
 }
 
