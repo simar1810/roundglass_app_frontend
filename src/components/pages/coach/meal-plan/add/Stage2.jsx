@@ -1,22 +1,22 @@
-import useCurrentStateContext from "@/providers/CurrentStateContext";
-import MonthlyMealCreation from "./MonthlyMealCreation";
+import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
-	customWorkoutUpdateField,
-	dailyMealRP,
-	mealPlanCreationRP,
+    customWorkoutUpdateField,
+    dailyMealRP,
+    mealPlanCreationRP,
 } from "@/config/state-reducers/custom-meal";
-import WeeklyMealCreation from "./WeeklyMealCreation";
-import CustomMealMetaData from "./CustomMealMetaData";
-import SelectMeals from "./SelectMeals";
+import { sendData, uploadImage } from "@/lib/api";
+import { _throwError, format24hr_12hr } from "@/lib/formatter";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { SquarePen } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
-import { useRouter } from "next/navigation";
-import { _throwError, format24hr_12hr } from "@/lib/formatter";
-import { SquarePen } from "lucide-react";
-import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
+import CustomMealMetaData from "./CustomMealMetaData";
+import MonthlyMealCreation from "./MonthlyMealCreation";
+import SelectMeals from "./SelectMeals";
+import WeeklyMealCreation from "./WeeklyMealCreation";
 
 export default function Stage2() {
 	const [loading, setLoading] = useState(false);
@@ -204,9 +204,40 @@ export default function Stage2() {
 			let toastId;
 			for (const key in state.selectedPlans) {
 				toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+				
+				// Normalize the plan data to ensure it's in the correct format
+				let planData = state.selectedPlans[key];
+				if (!Array.isArray(planData)) {
+					// If it's an object with meals property, use that
+					if (Array.isArray(planData?.meals)) {
+						planData = planData.meals;
+					} else {
+						// If it's an object with meal type keys (breakfast, lunch, etc.), transform it
+						const mealTypes = [];
+						const mealTypeKeys = ["breakfast", "lunch", "dinner", "snacks", "morning snacks", "evening snacks"];
+						mealTypeKeys.forEach(mealKey => {
+							const meals = planData[mealKey];
+							if (Array.isArray(meals) && meals.length > 0) {
+								const mealTypeName = mealKey.charAt(0).toUpperCase() + mealKey.slice(1);
+								mealTypes.push({
+									mealType: mealTypeName === "Snacks" ? "Morning Snacks" : mealTypeName,
+									meals: meals
+								});
+							}
+						});
+						planData = mealTypes.length > 0 ? mealTypes : [];
+					}
+				}
+				
+				// Ensure planData is an array before passing to mealPlanCreationRP
+				if (!Array.isArray(planData) || planData.length === 0) {
+					toast.dismiss(toastId);
+					_throwError(`No meals found for ${key}. Please add at least one meal.`);
+				}
+				
 				const createdMealPlan = await sendData(
 					"app/create-custom-plan",
-					mealPlanCreationRP(Array.isArray(state.selectedPlans[key]) ? state.selectedPlans[key] : state.selectedPlans[key]?.meals)
+					mealPlanCreationRP(planData)
 				);
 				if (createdMealPlan.status_code !== 200) {
 					toast.dismiss(toastId);

@@ -84,6 +84,7 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
 function AddClientCheckupContainer({ clientDetails, type, clientName }) {
   const { stage, name } = useCurrentStateContext();
   const Component = selectComponent(stage);
+  const closeRef = useRef();
 
   const displayName = name || clientName;
   const showClientDetails = type === "add-details" && clientDetails && clientDetails.mobileNumber;
