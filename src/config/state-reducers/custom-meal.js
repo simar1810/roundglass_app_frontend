@@ -498,30 +498,201 @@ export function customMealReducer(state, action) {
         selectedPlan: action.payload.new,
       };
     case "LOAD_AI_MEAL_PLAN": {
-      const ai = action.payload.mealPlan;
+      const ai = action.payload.mealPlan || action.payload;
+      const mode = ai.mode || "daily";
+      
+      // Map AI meal type keys to standard meal type names
+      const mealTypeMapping = {
+        breakfast: "Breakfast",
+        lunch: "Lunch",
+        dinner: "Dinner",
+        snacks: "Morning Snacks", // Default to Morning Snacks for snacks
+        "morning snacks": "Morning Snacks",
+        "evening snacks": "Evening Snacks",
+      };
+
+      // Transform AI plan structure to match expected format
+      // AI only generates breakfast, lunch, dinner (no snacks)
+      const transformAiPlan = (dayData, dayKey) => {
+        if (!dayData || typeof dayData !== "object") return [];
+        
+        // Check if it's already in the correct format (array of meal types)
+        if (Array.isArray(dayData)) {
+          // Filter to only include breakfast, lunch, dinner
+          return dayData.filter(mealType => 
+            ["Breakfast", "Lunch", "Dinner"].includes(mealType.mealType) &&
+            Array.isArray(mealType.meals) && mealType.meals.length > 0
+          );
+        }
+        if (Array.isArray(dayData.meals)) {
+          return dayData.meals.filter(mealType => 
+            ["Breakfast", "Lunch", "Dinner"].includes(mealType.mealType) &&
+            Array.isArray(mealType.meals) && mealType.meals.length > 0
+          );
+        }
+        
+        // Transform from AI format (breakfast, lunch, dinner keys) to array format
+        // AI only generates breakfast, lunch, dinner - no snacks
+        const mealTypes = [];
+        // Only check for breakfast, lunch, dinner (AI doesn't generate snacks)
+        const mealTypeOrder = ["breakfast", "lunch", "dinner"];
+        
+        mealTypeOrder.forEach(mealKey => {
+          const meals = dayData[mealKey];
+          if (Array.isArray(meals) && meals.length > 0) {
+            const standardMealType = mealTypeMapping[mealKey.toLowerCase()] || mealKey;
+            mealTypes.push({
+              mealType: standardMealType,
+              meals: meals.map(meal => ({
+                ...meal,
+                dish_name: meal.dish_name || meal.name || meal.dishName || "",
+                meal_time: meal.meal_time || meal.time || meal.mealTime || "",
+                calories: String(meal.calories || "0"),
+                protein: String(meal.protein || "0"),
+                carbohydrates: String(meal.carbohydrates || meal.carbs || "0"),
+                fats: String(meal.fats || "0"),
+                image: meal.image || "",
+                description: meal.description || "",
+              })),
+              defaultMealTiming: "",
+            });
+          }
+        });
+        
+        // Only return meal types that have actual data - don't create empty defaults
+        return mealTypes;
+      };
+
+      // Map day keys for daily vs weekly
+      const mapDayKey = (dayKey, mode) => {
+        if (mode === "daily") {
+          // For daily, map day_1, day_2, etc. to "daily"
+          if (dayKey.startsWith("day_")) return "daily";
+          return "daily";
+        } else if (mode === "weekly") {
+          // Map full day names to short names
+          const dayMapping = {
+            monday: "mon",
+            tuesday: "tue",
+            wednesday: "wed",
+            thursday: "thu",
+            friday: "fri",
+            saturday: "sat",
+            sunday: "sun",
+          };
+          const lowerKey = dayKey.toLowerCase();
+          return dayMapping[lowerKey] || lowerKey;
+        }
+        return dayKey;
+      };
+
+      const transformedPlans = {};
+      const planEntries = Object.entries(ai.plan || {});
+      
+      // Don't create default meal types for AI plans - only include what AI generated
+      if (planEntries.length === 0) {
+        // If no plan data, return empty structure (don't create defaults)
+        if (mode === "daily") {
+          transformedPlans.daily = [];
+        } else if (mode === "weekly") {
+          DAYS.forEach(day => {
+            transformedPlans[day] = [];
+          });
+        }
+      } else {
+        // For daily mode, merge all day entries into a single "daily" plan
+        if (mode === "daily") {
+          const allMealTypes = {};
+          planEntries.forEach(([dayKey, dayData]) => {
+            const transformed = transformAiPlan(dayData, dayKey);
+            // Merge meal types from all days - only include meal types with actual meals
+            transformed.forEach(mealType => {
+              if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return;
+              const key = mealType.mealType;
+              if (!allMealTypes[key]) {
+                allMealTypes[key] = {
+                  mealType: key,
+                  meals: [],
+                  defaultMealTiming: mealType.defaultMealTiming || "",
+                };
+              }
+              allMealTypes[key].meals.push(...mealType.meals);
+            });
+          });
+          // Only include meal types that have meals
+          transformedPlans.daily = Object.values(allMealTypes).filter(
+            mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
+          );
+        } else {
+          // For weekly mode, map each day separately
+          planEntries.forEach(([dayKey, dayData]) => {
+            const mappedKey = mapDayKey(dayKey, mode);
+            // If multiple days map to the same key, merge them
+            if (transformedPlans[mappedKey]) {
+              const existing = transformedPlans[mappedKey];
+              const newData = transformAiPlan(dayData, dayKey);
+              // Merge meal types - only include meal types with actual meals
+              const merged = {};
+              [...existing, ...newData].forEach(mealType => {
+                if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return;
+                const key = mealType.mealType;
+                if (!merged[key]) {
+                  merged[key] = {
+                    mealType: key,
+                    meals: [],
+                    defaultMealTiming: mealType.defaultMealTiming || "",
+                  };
+                }
+                merged[key].meals.push(...mealType.meals);
+              });
+              // Only include meal types that have meals
+              transformedPlans[mappedKey] = Object.values(merged).filter(
+                mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
+              );
+            } else {
+              const transformed = transformAiPlan(dayData, dayKey);
+              // Filter out empty meal types
+              transformedPlans[mappedKey] = transformed.filter(
+                mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
+              );
+            }
+          });
+        }
+      }
+
+      // Determine initial selected plan and meal type
+      let initialPlan = "daily";
+      let initialMealType = "Breakfast";
+      
+      if (mode === "weekly") {
+        initialPlan = DAYS[0] || "sun";
+        const firstPlan = transformedPlans[initialPlan];
+        if (Array.isArray(firstPlan) && firstPlan.length > 0) {
+          initialMealType = firstPlan[0].mealType || "Breakfast";
+        }
+      } else {
+        const firstPlan = transformedPlans.daily || transformedPlans[Object.keys(transformedPlans)[0]];
+        if (Array.isArray(firstPlan) && firstPlan.length > 0) {
+          initialMealType = firstPlan[0].mealType || "Breakfast";
+        }
+      }
 
       return {
         ...state,
-        title: ai.title,
-        description: ai.description,
-        guidelines: ai.guidelines,
-        supplements: ai.supplements,
-        mode: ai.mode || "daily",
-        creationType: "new",
+        title: ai.title || "",
+        description: ai.description || "",
+        guidelines: ai.guidelines || "",
+        supplements: ai.supplements || "",
+        mode: mode,
+        creationType: "new", // Always treat AI plans as new, even if backend returns an ID
         stage: 2,
-        selectedPlan: "daily",
-        selectedMealType:
-          ai.plan?.day_1?.meals?.[0]?.mealType || "Breakfast",
-        selectedPlans: Object.fromEntries(
-          Object.entries(ai.plan || {}).map(([day, data]) => [
-            day,
-            {
-              ...data,
-              meals: Array.isArray(data.meals) ? data.meals : [],
-            },
-          ])
-        ),
+        selectedPlan: initialPlan,
+        selectedMealType: initialMealType,
+        selectedPlans: transformedPlans,
         isAiGenerated: true,
+        // Explicitly don't set id - force new creation even if backend returned an ID
+        id: undefined,
+        editPlans: undefined,
       };
     }
     case "REORDER_MEAL_TYPES": {

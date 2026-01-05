@@ -1,16 +1,16 @@
-import React from "react";
 import { getCoachProfile } from "@/lib/fetchers/app";
-import useSWR from "swr";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
   Document,
+  Font,
+  Image,
   Page,
   PDFViewer,
   StyleSheet,
   Text,
-  View,
-  Font,
-  Image
+  View
 } from "@react-pdf/renderer";
+import useSWR from "swr";
 
 Font.register({
   family: "Roboto",
@@ -396,7 +396,32 @@ export default function MembershipInvoicePDF({
   const subscription = { ...defaultSubscriptionData, ...subscriptionSource };
   const client = { ...defaultClientData, ...clientSource };
   const invoiceMeta = { ...defaultInvoiceMeta, ...invoiceMetaData };
-  const { isLoading, error, data: coachData } = useSWR("coachProfile", () => getCoachProfile(_id));
+  const _id = useAppSelector(state => state.coach.data._id);
+  const { isLoading, error, data: coachProfileResponse } = useSWR(
+    _id ? "coachProfile" : null,
+    () => getCoachProfile(_id)
+  );
+  
+  // Extract coach profile data
+  const coachProfile = coachProfileResponse?.status_code === 200 ? coachProfileResponse?.data : null;
+  const coachMobile = coachProfile?.mobileNumber || "";
+  const coachEmail = coachProfile?.email || "";
+  
+  // Format mobile number (add +91 prefix if it's a 10-digit number)
+  const formatMobile = (mobile) => {
+    if (!mobile) return "";
+    const cleaned = mobile.replace(/\D/g, ""); // Remove non-digits
+    if (cleaned.length === 10) {
+      return `+91 ${cleaned}`;
+    } else if (cleaned.length > 10 && cleaned.startsWith("91")) {
+      return `+${cleaned}`;
+    } else if (cleaned.startsWith("+")) {
+      return mobile;
+    }
+    return mobile;
+  };
+  
+  const formattedMobile = formatMobile(coachMobile);
 
   const {
     amount = 1000,
@@ -460,7 +485,13 @@ export default function MembershipInvoicePDF({
               <Text style={styles.companyName}>{companyName}</Text>
               {companyAddress && <Text style={styles.companyAddress}>{companyAddress}</Text>}
               {companyGSTIN && <Text style={styles.companyAddress}>GSTIN {companyGSTIN}</Text>}
-              <Text style={styles.companyAddress}>Mobile +91 7888624347 Email simarpreet@wellnessz.in</Text>
+              {!isLoading && (formattedMobile || coachEmail) && (
+                <Text style={styles.companyAddress}>
+                  {formattedMobile && `Mobile ${formattedMobile}`}
+                  {formattedMobile && coachEmail && " "}
+                  {coachEmail && `Email ${coachEmail}`}
+                </Text>
+              )}
             </View>
           </View>
 
