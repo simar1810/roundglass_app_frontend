@@ -1,16 +1,17 @@
 import ContentLoader from "@/components/common/ContentLoader";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { addClientCheckupReducer, init } from "@/config/state-reducers/add-client-checkup";
 import { fetchData } from "@/lib/api";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Phone } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Phone, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import CheckupStage1 from "../add-client/CheckupStage1";
 import CheckupStage2 from "../add-client/CheckupStage2";
@@ -31,18 +32,18 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
           mobileNumber: data.mobileNumber
         });
       }
-      
+
       if (Boolean(data?._id)) {
         ; (async function () {
           try {
             const response = await fetchData(`app/clientProfile?id=${data._id}`);
             if (response.status_code !== 200) throw new Error(response.message);
-            
+
             // Update client details with API response data, but keep initial data as fallback
             setClientDetails(prev => ({
               mobileNumber: response.data.mobileNumber || prev?.mobileNumber || data.mobileNumber
             }));
-            
+
             setInitialState(prev => ({
               ...prev,
               mobileNumber: response.data.mobileNumber,
@@ -83,6 +84,7 @@ export default function AddClientWithCheckup({ children, type, data, setModal })
 function AddClientCheckupContainer({ clientDetails, type, clientName }) {
   const { stage, name } = useCurrentStateContext();
   const Component = selectComponent(stage);
+  const closeRef = useRef();
 
   const displayName = name || clientName;
   const showClientDetails = type === "add-details" && clientDetails && clientDetails.mobileNumber;
@@ -92,6 +94,9 @@ function AddClientCheckupContainer({ clientDetails, type, clientName }) {
       <DialogTitle className="bg-white p-4 text-left text-black text-lg font-semibold">
         Client Details
       </DialogTitle>
+      <DialogClose ref={closeRef} onClick={() => console.log("condition hti")} className="absolute w-5 h-5 top-4 right-4 bg-white z-100 cursor-pointer">
+        <X />
+      </DialogClose>
       {showClientDetails && (
         <div className="bg-gray-50 border-b border-gray-200 px-6 py-5">
           <div className="flex items-start justify-between gap-6">
