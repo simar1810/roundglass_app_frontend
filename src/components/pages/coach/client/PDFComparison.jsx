@@ -1,14 +1,13 @@
 "use client";
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyFatFinal, calculateSMPFinal } from "@/lib/client/statistics";
-import { getBase64ImageFromUrl } from "@/lib/image";
 import {
+  Document,
+  Image,
   Page,
+  PDFViewer,
+  StyleSheet,
   Text,
   View,
-  Document,
-  StyleSheet,
-  Image,
-  PDFViewer,
 } from "@react-pdf/renderer";
 
 // Create styles
@@ -872,7 +871,8 @@ function Comparison7({ brand, styles, data }) {
     coachName,
     coachDescription,
     coachProfileImage,
-    coachWeightLoss
+    coachWeightLoss,
+    weight
   } = data;
   const { coachLogo } = brand
   return (
@@ -888,14 +888,14 @@ function Comparison7({ brand, styles, data }) {
     >
       <View style={styles.container}>
         {/* Top Section: Key Highlights and Health Tips */}
-        <Text style={styles.sectionTitle}>Your Coach</Text>
+        {/* <Text style={styles.sectionTitle}>Your Coach</Text> */}
         <View style={styles.divider} />
         <View style={styles.topSection}>
           {/* Left - Key Highlights */}
           <View style={styles.highlightBox}>
             <Text style={styles.highlightTitle}>Key Highlights</Text>
             <View style={styles.weightLossBox}>
-              <Text style={styles.weightText}>39.0 KG.</Text>
+              <Text style={styles.weightText}>{weight} KG.</Text>
               <Text style={styles.weightSubText}>{coachDescription}</Text>
             </View>
             <Text style={styles.highlightContent}>
