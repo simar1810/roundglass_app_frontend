@@ -144,7 +144,7 @@
   }
 
   .content-height-screen {
-    @apply md:min-h-[calc(100vh-200px)];
+    @apply md:min-h-[calc(100vh-120px)];
   }
 
   .bordered-table {
@@ -364,11 +364,15 @@ a {
 
 /* Hide scrollbar utility */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+  display: none;
+  /* Safari and Chrome */
 }
 
 @keyframes spin-slow {
