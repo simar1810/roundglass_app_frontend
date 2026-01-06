@@ -1,9 +1,9 @@
 import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
-    customWorkoutUpdateField,
-    dailyMealRP,
-    mealPlanCreationRP,
+	customWorkoutUpdateField,
+	dailyMealRP,
+	mealPlanCreationRP,
 } from "@/config/state-reducers/custom-meal";
 import { sendData, uploadImage } from "@/lib/api";
 import { _throwError, format24hr_12hr } from "@/lib/formatter";
@@ -202,8 +202,13 @@ export default function Stage2() {
 			setLoading(true);
 			const plans = {};
 			let toastId;
+			
+			// Check if this is an AI-generated meal plan that already exists
+			const aiMealPlanId = state.aiMealPlanId;
+			const isUpdatingAiPlan = Boolean(aiMealPlanId);
+			
 			for (const key in state.selectedPlans) {
-				toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+				toastId = toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} Meal Plan - ${key}...`);
 				
 				// Normalize the plan data to ensure it's in the correct format
 				let planData = state.selectedPlans[key];
@@ -235,6 +240,8 @@ export default function Stage2() {
 					_throwError(`No meals found for ${key}. Please add at least one meal.`);
 				}
 				
+				// For AI plans, the day plans might already exist, but we'll still create/update them
+				// The backend will handle updating existing plans if needed
 				const createdMealPlan = await sendData(
 					"app/create-custom-plan",
 					mealPlanCreationRP(planData)
@@ -255,20 +262,43 @@ export default function Stage2() {
 				toast.dismiss(uploadToastId);
 			}
 
-			toastId = toast.loading("Creating The Custom Meal Plan...");
+			toastId = toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} The Custom Meal Plan...`);
 			const formData = dailyMealRP(state);
-			const response = await sendData(`app/meal-plan/custom`, {
-				...formData,
-				image: thumbnail?.img || state.thumbnail,
-				plans,
-				draft
-			});
-			toast.dismiss(toastId);
-			if (response.status_code !== 200) _throwError(response.message);
-			cache.delete("custom-meal-plans");
-			toast.success(response.message);
-			localStorage.removeItem("aiMealPlan");
-			router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			
+			// If this is an AI-generated plan with an ID, use PUT to update instead of POST to create
+			if (isUpdatingAiPlan) {
+				const response = await sendData(
+					`app/meal-plan/custom`,
+					{
+						...formData,
+						image: thumbnail?.img || state.thumbnail,
+						plans: state.selectedPlans,
+						id: aiMealPlanId,
+						planIds: plans,
+						draft
+					},
+					"PUT"
+				);
+				toast.dismiss(toastId);
+				if (response.status_code !== 200) _throwError(response.message);
+				cache.delete("custom-meal-plans");
+				toast.success(response.message);
+				localStorage.removeItem("aiMealPlan");
+				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			} else {
+				const response = await sendData(`app/meal-plan/custom`, {
+					...formData,
+					image: thumbnail?.img || state.thumbnail,
+					plans,
+					draft
+				});
+				toast.dismiss(toastId);
+				if (response.status_code !== 200) _throwError(response.message);
+				cache.delete("custom-meal-plans");
+				toast.success(response.message);
+				localStorage.removeItem("aiMealPlan");
+				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			}
 		} catch (error) {
 			toast.error(error.message || "Something went wrong!");
 		} finally {
