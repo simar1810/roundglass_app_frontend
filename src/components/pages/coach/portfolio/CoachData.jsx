@@ -294,7 +294,7 @@ function CoachClubSettings() {
           {fields.map((field) => (
             <FormControl
               key={field.id}
-              defaultValue={coach[field.name] || ""}
+              defaultValue={(!coach[field.name] || !isNaN(coach[field.name])) ? coach[field.name] : ""}
               onChange={(e) =>
                 setFormData({ ...formData, [field.name]: e.target.value })
               }
@@ -373,7 +373,7 @@ function BankDetails() {
     );
   const bank = data.data || {};
   const hasBankData = bank.accountNumber || bank.accountName;
-  
+
   return (
     <TabsContent value="bank" className="space-y-6">
       {hasBankData ? (
@@ -405,7 +405,7 @@ function BankDetails() {
                 <span>{bank.accountNumber || ""}</span>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Branch</span>
@@ -524,7 +524,7 @@ function UpdateBankDetails({ bank }) {
           <DialogTitle className="text-xl font-semibold">Bank Details</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">Update your bank account information</p>
         </div>
-        
+
         <div className="p-6 space-y-6">
           {/* QR Code Upload Section */}
           <div className="space-y-3">
@@ -731,7 +731,7 @@ function InvoiceDetailsContainer() {
                 {invoiceMeta.title || "N/A"}
               </CardTitle>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GSTIN</span>
@@ -865,7 +865,7 @@ function UpdateInvoiceDetails({ defaultData }) {
           <DialogTitle className="text-xl font-semibold">Invoice Details</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">Update your invoice and tax information</p>
         </div>
-        
+
         <div className="p-6 space-y-6">
           {/* Company Information Section */}
           <div className="space-y-4">
