@@ -31,10 +31,12 @@ export default function ListExerciseToSelectFrom() {
         filters={filters}
         onChange={(key, value) => setFilters({ ...filters, [key]: value })}
       />
-
-      <div className="grid grid-cols-4 gap-3 max-h-[80vh] overflow-y-auto">
+      <div className="grid grid-cols-4 gap-3 max-h-[70vh] overflow-y-auto p-1">
         {exercises.map((exercise) => (
-          <ExerciseCard key={exercise._id} exercise={exercise} />
+          <ExerciseCard
+            key={exercise._id}
+            exercise={exercise}
+          />
         ))}
       </div>
     </div>
@@ -42,21 +44,27 @@ export default function ListExerciseToSelectFrom() {
 }
 
 function ExerciseCard({ exercise }) {
-  const { name, target } = exercise
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: exercise._id,
     data: exercise,
   });
-  const style = {
-    transform: CSS.Translate.toString(transform),
-  };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
+      className={isDragging ? "opacity-50" : ""}
+    >
+      <ExerciseCardVisual exercise={exercise} />
+    </div>
+  )
+}
+
+export function ExerciseCardVisual({ exercise }) {
+  const { name, target } = exercise
+  return (
+    <div
       className="h-full bg-white border rounded-md shadow-none overflow-hidden cursor-pointer
                     hover:border-foreground transition-colors p-2 flex flex-col gap-2"
     >

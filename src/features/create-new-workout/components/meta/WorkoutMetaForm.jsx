@@ -16,7 +16,7 @@ export default function WorkoutMetaForm() {
   function updateField(key, value) {
     setFormData(m => ({ ...m, [key]: value }));
   }
-  console.log("THIS IS MAIN FORMDATA", formData)
+
   function handleNext() {
     const validationErrors = validateMetaPayload(formData);
     setErrors(validationErrors);

@@ -43,7 +43,7 @@ export default function ListDayExercisesForDay({ day }) {
           <div className="text-sm text-gray-500 mt-4">Get Started by Adding Exercises</div>
         </div>
       </div>}
-      <div className="space-y-2 max-h-[80vh] overflow-y-auto">
+      <div className="space-y-2 max-h-[70vh] overflow-y-auto">
         {exercisesForDay.map((exercise, index) => (
           <ExerciseDetails
             key={index}

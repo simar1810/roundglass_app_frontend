@@ -2,7 +2,7 @@ import { format } from "date-fns"
 import { WORKOUT_WEEKLY_DAYS } from "../utils/config"
 
 const meta = {
-  stage: 2, // 1 = meta, 2 = selecting exercises
+  stage: 1, // 1 = meta, 2 = selecting exercises
   title: "",
   description: "",
   guidelines: "",
