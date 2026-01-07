@@ -13,6 +13,20 @@ export default function newWorkoutReducer(state, action) {
           [action.payload.day]: action.payload.exercises
         }
       };
+    case "ADD_NEW_DAY":
+      return {
+        ...state,
+        exercises: {
+          ...state.exercises,
+          [action.payload]: []
+        }
+      };
+    case "REMOVE_DAY":
+      const { [action.payload]: _, ...rest } = state.exercises;
+      return {
+        ...state,
+        exercises: rest
+      };
     default:
       return state
   }

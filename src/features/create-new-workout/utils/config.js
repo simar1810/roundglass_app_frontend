@@ -1,4 +1,11 @@
 export const WORKOUT_EXERCISE = {
+  sets: [], // { weight: number, reps: number }[]
+  exercise: "", // mongodb object._id
+  restTime: 60, // default value is 60 mins
+  name: "",
+  description: "",
+  guidelines: "",
+  category: "",
 
 }
 

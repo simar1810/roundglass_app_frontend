@@ -10,7 +10,7 @@ import ExerciseList from "./ExerciseList";
 import ExerciseFilters from "./ExerciseFilters";
 import Loader from "@/components/common/Loader";
 
-export default function SelectExercise({ saveExercisesForDay }) {
+export default function SelectExercise({ children, saveExercisesForDay }) {
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [filters, setFilters] = useState(DEFAULT_EXERCISE_FILTERS);
 
@@ -34,10 +34,11 @@ export default function SelectExercise({ saveExercisesForDay }) {
   const exercises = data.data.results || [];
 
   return (
-    <Dialog>
-      <DialogTrigger>
+    <Dialog className="z-[10000000]">
+      {!children && <DialogTrigger>
         <Plus size={18} />
-      </DialogTrigger>
+      </DialogTrigger>}
+      {children}
 
       <DialogContent className="p-0 max-h-[75vh] overflow-y-auto overflow-x-hidden max-w-[900px]">
         <DialogTitle className="px-5 py-4 border-b">

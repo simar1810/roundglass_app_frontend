@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import ExerciseCard from "./ExerciseCard";
+import { useRef } from "react";
+import { DialogClose } from "@/components/ui/dialog";
 
 export default function ExerciseList({
   exercises,
@@ -7,8 +9,10 @@ export default function ExerciseList({
   onSelect,
   saveExercisesForDay,
 }) {
+  const closeRef = useRef(null);
   return (
     <div className="flex flex-col h-full">
+      <DialogClose ref={closeRef} />
       <div className="flex-1 overflow-y-auto p-5 space-y-3">
         {exercises.map(exercise => (
           <ExerciseCard
@@ -24,7 +28,10 @@ export default function ExerciseList({
         <Button
           className="w-full"
           disabled={!selectedExercise}
-          onClick={saveExercisesForDay}
+          onClick={() => {
+            saveExercisesForDay()
+            closeRef.current.click()
+          }}
         >
           Save Exercise
         </Button>
