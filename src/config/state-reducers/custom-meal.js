@@ -721,6 +721,9 @@ export function customMealReducer(state, action) {
         }
       }
 
+      // Extract the meal plan ID from the AI response
+      const mealPlanId = action.payload.mealPlan?.id || action.payload.mealPlan?._id || action.payload.id;
+
       return {
         ...state,
         title: ai.title || "",
@@ -728,14 +731,14 @@ export function customMealReducer(state, action) {
         guidelines: ai.guidelines || "",
         supplements: ai.supplements || "",
         mode: mode,
-        creationType: "new", // Always treat AI plans as new, even if backend returns an ID
+        creationType: "new", // Keep as "new" but we'll check for ID in save function
         stage: 2,
         selectedPlan: initialPlan,
         selectedMealType: initialMealType,
         selectedPlans: transformedPlans,
         isAiGenerated: true,
-        // Explicitly don't set id - force new creation even if backend returned an ID
-        id: undefined,
+        aiMealPlanId: mealPlanId, // Store the AI meal plan ID separately to use for PUT request
+        id: undefined, // Don't set id to avoid conflicts with edit flow
         editPlans: undefined,
       };
     }
