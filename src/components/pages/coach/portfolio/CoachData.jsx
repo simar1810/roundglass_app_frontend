@@ -187,6 +187,14 @@ function CoachSMLinks() {
 }
 
 function CoachAwards({ awards }) {
+  const [selectedAward, setSelectedAward] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleAwardClick = (award) => {
+    setSelectedAward(award);
+    setModalOpen(true);
+  };
+
   return (
     <TabsContent value="awards" className="space-y-6">
       {awards.length > 0 ? (
@@ -203,22 +211,25 @@ function CoachAwards({ awards }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {awards.map((award) => (
                 <div
                   key={award._id}
-                  className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors relative"
+                  onClick={() => handleAwardClick(award)}
+                  className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors relative cursor-pointer"
                 >
                   <Image
                     src={award.image || "/illustrations/award.png"}
                     onError={(e) => (e.target.src = "/illustrations/award.png")}
                     alt={award.title}
-                    height={64}
-                    width={64}
-                    className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
+                    height={48}
+                    width={48}
+                    className="w-[40px] h-[40px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
                   />
-                  <p className="flex-1 font-medium">{award.title}</p>
-                  <DeleteAward awardId={award._id} />
+                  <p className="flex-1 font-medium text-sm md:text-base">{award.title}</p>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DeleteAward awardId={award._id} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -231,6 +242,34 @@ function CoachAwards({ awards }) {
           <UpdateCoachAwardModal />
         </div>
       )}
+
+      {/* Award Detail Modal */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <div className="sticky top-0 bg-white z-10 border-b-1 px-6 py-4">
+            <DialogTitle className="text-xl font-semibold">Award Details</DialogTitle>
+          </div>
+          {selectedAward && (
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col items-center gap-6">
+                <div className="relative w-full max-w-md">
+                  <Image
+                    src={selectedAward.image || "/illustrations/award.png"}
+                    onError={(e) => (e.target.src = "/illustrations/award.png")}
+                    alt={selectedAward.title}
+                    height={400}
+                    width={400}
+                    className="w-full h-auto max-h-[400px] object-contain rounded-lg border-1 bg-[var(--comp-1)] p-4"
+                  />
+                </div>
+                <div className="text-center w-full">
+                  <h3 className="text-2xl font-bold text-gray-900">{selectedAward.title}</h3>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </TabsContent>
   );
 }
