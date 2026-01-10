@@ -385,7 +385,7 @@ function RetailOrderDetailCard({ order }) {
         className="bg-black w-[64px] h-[64px] object-cover rounded-md"
       />
       <div>
-        <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+        <h4>{order.productModule.map(product => `${product.productName} (x${product.quantity || 1})`).join(", ")}</h4>
         <p className="text-[12px] text-[var(--dark-1)]/25">{order.productModule?.at(0)?.productDescription}</p>
       </div>
       <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>
@@ -407,7 +407,7 @@ function RetailOrderDetailCard({ order }) {
   </Card>
 }
 
-export function UpdateClientOrderAmount({ order }) {
+export function UpdateClientOrderAmount({ order, swrKey }) {
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState("");
 
@@ -421,7 +421,8 @@ export function UpdateClientOrderAmount({ order }) {
       );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      location.reload()
+      if(typeof swrKey !== "string") location.reload()
+      mutate(swrKey)
     } catch (error) {
       toast.error(error.message);
     } finally {

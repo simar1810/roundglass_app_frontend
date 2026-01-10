@@ -9,6 +9,7 @@ import Link from "next/link";
 import AssignWorkout from "@/components/pages/coach/new-workout/Assign";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function Page() {
   const [filters, setFilters] = useState({
@@ -88,8 +89,11 @@ function WorkoutCard({ workout }) {
     <div className="border border-black/15 rounded-md bg-[var(--comp-1)] overflow-hidden flex flex-col">
       <Link href={`/coach/workouts/new/${_id}`}>
         <div className="relative h-36 w-full overflow-hidden cursor-pointer">
-          <img
-            src={image}
+          <Image
+            height={100}
+            width={100}
+            src={image || "/not-found.png"}
+            onError={e => e.target.src = "/not-found.png"}
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
           />
@@ -160,7 +164,6 @@ function Pagination({ page, totalPages, onPageChange }) {
     </div>
   );
 }
-
 
 function CreationOptions() {
   const dropdownRef = useRef(null);

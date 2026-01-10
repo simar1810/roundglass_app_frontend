@@ -6,7 +6,6 @@ export const WORKOUT_EXERCISE = {
   description: "",
   guidelines: "",
   category: "",
-
 }
 
 export const WORKOUT_WEEKLY_DAYS = [

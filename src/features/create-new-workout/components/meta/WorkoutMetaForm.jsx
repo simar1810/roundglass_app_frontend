@@ -63,7 +63,7 @@ export default function WorkoutMetaForm() {
         file={formData.file}
         onFileChange={value => updateField("file", value)}
         label="Thumbnail"
-        defaultImageLink=""
+        defaultImageLink={meta.image}
         className="[&_.label]:font-medium [&_.label]:text-sm [&_.label]:text-gray-700"
       />
 

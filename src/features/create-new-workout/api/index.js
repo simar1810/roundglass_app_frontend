@@ -1,22 +1,20 @@
-import { sendDataWithFormData } from "@/lib/api";
+import { fetchData, sendDataWithFormData } from "@/lib/api";
+import { buildUrlWithQueryParams } from "@/lib/formatter";
 
 export async function saveNewWorkoutBackend(state) {
   const creationType = state.config.creationType;
-
-  const payload = generateRequestPayload(state)
+  const payload = generateRequestPayload(state);
   if (creationType === "edit") {
-    const endpoint = buildUpdateEndpoint(
+    const endpoint = buildUrlWithQueryParams(
       "app/newWorkout/new-workout",
-      { id: state.config.id },
-      "PUT"
-    )
-    const response = await sendDataWithFormData(endpoint, payload);
+      { id: state.config.id }
+    );
+    const response = await sendDataWithFormData(endpoint, payload, "PUT");
     return {
       success: response.status_code === 200,
       message: response.message,
     };
   }
-
 
   if (creationType === "new") {
     const endpoint = "app/newWorkout/new-workout"
@@ -29,8 +27,6 @@ export async function saveNewWorkoutBackend(state) {
 
   throw new Error("Invalid creation type");
 }
-
-async function creationTypeHandler(state) { }
 
 function generateRequestPayload(state) {
   const exercises = buildExercisesPayload(state.exercises);
@@ -62,8 +58,65 @@ function buildExercisesForDayPayload(exercises) {
   // {"exercise":mongodb object._id,"reps":number,"sets":number,"restTime":number}
   return exercises.map(exercise => ({
     exercise: exercise._id,
-    reps: exercise.reps,
     sets: exercise.sets,
     restTime: exercise.restTime
   }));
+}
+
+export async function initializeWorkoutCreation(searchParams) {
+  const creationType = searchParams.get("creationType") ?? "new";
+  const workoutId = searchParams.get("workoutId");
+  if (creationType === "new") return {
+    success: true,
+    errors: [],
+    config: {
+      creationType
+    }
+  }
+  if (creationType === "edit" && !workoutId) {
+    return {
+      success: false,
+      errors: ["Workout ID is required For Creation Type Edit"],
+      config: {
+        creationType
+      }
+    }
+  }
+  const { success, message, workout } = await retrieveNewWorkoutDetails(workoutId);
+  if (!success) return {
+    success: false,
+    errors: [message],
+    config: {
+      creationType
+    }
+  }
+  return {
+    success: true,
+    workout,
+    errors: [],
+    config: {
+      creationType,
+      id: workoutId
+    }
+  }
+}
+
+async function retrieveNewWorkoutDetails(workoutId) {
+  try {
+    const response = await fetchData(`app/newWorkout/workout/${workoutId}`)
+
+    if (response.status_code !== 200) return {
+      success: false,
+      message: response.message,
+    }
+    return {
+      success: true,
+      workout: response.data,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    }
+  }
 }
