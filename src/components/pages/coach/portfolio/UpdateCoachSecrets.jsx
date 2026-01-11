@@ -22,6 +22,7 @@ export default function UpdateCoachSecrets({ initialData, onRefresh }) {
   const [formData, setFormData] = useState({
     razorpayClientId: initialData?.razorpayClientId || "",
     razorpaySecret: initialData?.razorpaySecret || "",
+    openAIApiKey: initialData?.openAIApiKey || "",
   });
 
   const [errors, setErrors] = useState({});
@@ -100,6 +101,23 @@ export default function UpdateCoachSecrets({ initialData, onRefresh }) {
             />
             {errors.razorpaySecret && (
               <p className="text-xs text-red-500">{errors.razorpaySecret}</p>
+            )}
+          </div>
+
+    
+          <div className="space-y-2">
+            <Label htmlFor="openAIApiKey">Open AI API Key</Label>
+            <Input
+              id="openAIApiKey"
+              name="openAIApiKey"
+              type="password"
+              value={formData.openAIApiKey}
+              onChange={handleChange}
+              className={errors.openAIApiKey ? "border-red-500" : ""}
+              placeholder="••••••••••••"
+            />
+            {errors.openAIApiKey && (
+              <p className="text-xs text-red-500">{errors.openAIApiKey}</p>
             )}
           </div>
 

@@ -1068,6 +1068,14 @@ function SettingsTabContainer() {
               </p>
             </div>
           </div>
+          <div className="space-y-1">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open AI API Key</span>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-white border-1">
+              <p className="text-sm font-mono text-muted-foreground select-all break-all flex-1">
+                {razorpay.openAIApiKey ? "•".repeat(20) + razorpay.openAIApiKey.slice(-4) : "Not configured"}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
       <RaghavComponent />

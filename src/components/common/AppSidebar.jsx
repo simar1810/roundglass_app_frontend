@@ -53,25 +53,35 @@ export default function AppSidebar() {
   }
 
   // Filter sidebar items based on user permissions
+  const userType = getUserType();
+  const userPermissions = getUserPermissions();
+
   sidebarItems = sidebarItems.filter(item => {
     // If no permission specified, always show
-    if (!item.permission) return true;
+    if (!item.permission || item.permission === "user-nested") return true;
 
     // If permission is "coach", only show for coaches
     if (item.permission === "coach") return isCoach();
 
     // If permission is a number, check if user has that permission
     if (typeof item.permission === "number") {
-      const userType = getUserType();
       if (userType === "coach") return true; // Coaches see everything
       if (userType === "user") {
-        const userPermissions = getUserPermissions();
         return userPermissions.includes(item.permission);
       }
     }
 
     return false;
-  });
+  }).map(item => item.permission !== "user-nested"
+    ? item
+    : ({
+      ...item,
+      items: item
+      .items
+      .filter(option => !option.permission ||
+          (option.permission === "user" && userPermissions.includes(9))
+        )
+    }));
   if (!features.includes(3)) sidebarItems = sidebarItems.filter(item => item.id !== 13);
   if (!features.includes(6)) sidebarItems = sidebarItems.filter(item => item.id !== 15);
 
