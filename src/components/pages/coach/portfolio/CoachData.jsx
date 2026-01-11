@@ -187,6 +187,14 @@ function CoachSMLinks() {
 }
 
 function CoachAwards({ awards }) {
+  const [selectedAward, setSelectedAward] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleAwardClick = (award) => {
+    setSelectedAward(award);
+    setModalOpen(true);
+  };
+
   return (
     <TabsContent value="awards" className="space-y-6">
       {awards.length > 0 ? (
@@ -203,22 +211,25 @@ function CoachAwards({ awards }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {awards.map((award) => (
                 <div
                   key={award._id}
-                  className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors relative"
+                  onClick={() => handleAwardClick(award)}
+                  className="flex items-center gap-4 p-3 rounded-lg border-1 bg-white hover:bg-[var(--comp-1)] transition-colors relative cursor-pointer"
                 >
                   <Image
                     src={award.image || "/illustrations/award.png"}
                     onError={(e) => (e.target.src = "/illustrations/award.png")}
                     alt={award.title}
-                    height={64}
-                    width={64}
-                    className="w-[56px] h-[56px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
+                    height={48}
+                    width={48}
+                    className="w-[40px] h-[40px] object-contain rounded-full border-2 border-[var(--accent-1)] flex-shrink-0"
                   />
-                  <p className="flex-1 font-medium">{award.title}</p>
-                  <DeleteAward awardId={award._id} />
+                  <p className="flex-1 font-medium text-sm md:text-base">{award.title}</p>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DeleteAward awardId={award._id} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -231,6 +242,34 @@ function CoachAwards({ awards }) {
           <UpdateCoachAwardModal />
         </div>
       )}
+
+      {/* Award Detail Modal */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <div className="sticky top-0 bg-white z-10 border-b-1 px-6 py-4">
+            <DialogTitle className="text-xl font-semibold">Award Details</DialogTitle>
+          </div>
+          {selectedAward && (
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col items-center gap-6">
+                <div className="relative w-full max-w-md">
+                  <Image
+                    src={selectedAward.image || "/illustrations/award.png"}
+                    onError={(e) => (e.target.src = "/illustrations/award.png")}
+                    alt={selectedAward.title}
+                    height={400}
+                    width={400}
+                    className="w-full h-auto max-h-[400px] object-contain rounded-lg border-1 bg-[var(--comp-1)] p-4"
+                  />
+                </div>
+                <div className="text-center w-full">
+                  <h3 className="text-2xl font-bold text-gray-900">{selectedAward.title}</h3>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </TabsContent>
   );
 }
@@ -294,7 +333,7 @@ function CoachClubSettings() {
           {fields.map((field) => (
             <FormControl
               key={field.id}
-              defaultValue={coach[field.name] || ""}
+              defaultValue={(!coach[field.name] || !isNaN(coach[field.name])) ? coach[field.name] : ""}
               onChange={(e) =>
                 setFormData({ ...formData, [field.name]: e.target.value })
               }
@@ -373,7 +412,7 @@ function BankDetails() {
     );
   const bank = data.data || {};
   const hasBankData = bank.accountNumber || bank.accountName;
-  
+
   return (
     <TabsContent value="bank" className="space-y-6">
       {hasBankData ? (
@@ -405,7 +444,7 @@ function BankDetails() {
                 <span>{bank.accountNumber || ""}</span>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bank Branch</span>
@@ -524,7 +563,7 @@ function UpdateBankDetails({ bank }) {
           <DialogTitle className="text-xl font-semibold">Bank Details</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">Update your bank account information</p>
         </div>
-        
+
         <div className="p-6 space-y-6">
           {/* QR Code Upload Section */}
           <div className="space-y-3">
@@ -731,7 +770,7 @@ function InvoiceDetailsContainer() {
                 {invoiceMeta.title || "N/A"}
               </CardTitle>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GSTIN</span>
@@ -865,7 +904,7 @@ function UpdateInvoiceDetails({ defaultData }) {
           <DialogTitle className="text-xl font-semibold">Invoice Details</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">Update your invoice and tax information</p>
         </div>
-        
+
         <div className="p-6 space-y-6">
           {/* Company Information Section */}
           <div className="space-y-4">
@@ -1026,6 +1065,14 @@ function SettingsTabContainer() {
             <div className="flex items-center gap-2 p-3 rounded-lg bg-white border-1">
               <p className="text-sm font-mono text-muted-foreground select-all break-all flex-1">
                 {razorpay.razorpaySecret ? "•".repeat(20) + razorpay.razorpaySecret.slice(-4) : "Not configured"}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-1">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open AI API Key</span>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-white border-1">
+              <p className="text-sm font-mono text-muted-foreground select-all break-all flex-1">
+                {razorpay.openAIApiKey ? "•".repeat(20) + razorpay.openAIApiKey.slice(-4) : "Not configured"}
               </p>
             </div>
           </div>

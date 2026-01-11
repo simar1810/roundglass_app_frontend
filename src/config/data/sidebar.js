@@ -75,7 +75,7 @@ export const sidebar__coachContent = [
     title: "Clients",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
-    permission: null, // Always visible
+    permission: "user-nested", // Always visible
     items: [
       {
         id: 1,
@@ -107,7 +107,8 @@ export const sidebar__coachContent = [
         id: 5,
         icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,
         title: "Invoices",
-        url: "/coach/invoices"
+        url: "/coach/invoices",
+        permission: "user"
       }
     ],
   },
@@ -343,6 +344,12 @@ export const sidebar__coachContent = [
           },
         ],
       },
+      // {
+      //   id: 1.5,
+      //   icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "New Workout",
+      //   url: "/coach/workouts/new",
+      // },
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,

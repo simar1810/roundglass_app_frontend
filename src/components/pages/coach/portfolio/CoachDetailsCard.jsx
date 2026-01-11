@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { coachPortfolioFields } from "@/config/data/ui";
+import { getPersonalBranding } from "@/lib/fetchers/app";
 import { sendData } from "@/lib/api";
 import { _throwError } from "@/lib/formatter";
 import { copyText } from "@/lib/utils";
@@ -28,13 +29,16 @@ import {
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
 import DeleteClientNudges from "../client/DeleteClientNudges";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
 export default function CoachDetailsCard({ coachData }) {
   const { coachId, coachRefUrl } = useAppSelector(state => state.coach.data);
+  const { data: brandData } = useSWR("app/personalBranding", getPersonalBranding);
+
+  const brandName = brandData?.data?.[0]?.brandName || "WellnessZ";
 
   const messageTimings = coachData.messageTimings ?? {};
 
@@ -43,10 +47,10 @@ export default function CoachDetailsCard({ coachData }) {
     // Remove trailing slashes to avoid double slashes
     const baseUrl = (coachRefUrl || "https://wellnessz.in/app").replace(/\/+$/, "");
     const inviteUrl = `${baseUrl}/coachCode?coachID=${coachId}`;
-    
+
     copyText(`Hey! 👋
 
-I just joined *WellnessZ*, an amazing wellness & coaching app 💚
+I just joined *${brandName}*, an amazing wellness & coaching app 💚
 
 Register now using my link and let's begin your health journey together 💪👇
 ${inviteUrl}`)

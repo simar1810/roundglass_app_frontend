@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 export default function Page() {
-  return <div className="content-container">
+  return <div className="content-container content-height-screen">
     <CurrentStateProvider
       state={customMealIS("new")}
       reducer={customMealReducer}

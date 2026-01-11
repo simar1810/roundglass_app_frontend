@@ -34,6 +34,7 @@ import Image from "next/image";
 import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
+import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
 
 export default function Page() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
@@ -147,7 +148,6 @@ function normalizeDateRange(dateRange) {
     
     return { start, end };
   } catch (error) {
-    console.error("Error normalizing date range:", error);
     return null;
   }
 }
@@ -271,7 +271,6 @@ function calculateFilteredStats(orders, dateRange) {
 
     return { totalSales, totalOrders, volumePoints };
   } catch (error) {
-    console.error("Error calculating filtered stats:", error);
     return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
   }
 }
@@ -309,7 +308,6 @@ function RetailStatisticsCards({
         orders: result.totalOrders
       };
     } catch (error) {
-      console.error("Error in filteredStats useMemo:", error);
       return { sales: 0, orders: 0, volumePoints: 0 };
     }
   }, [dateRange, totalSales, totalOrders, acumulatedVP, orders]);
@@ -380,8 +378,25 @@ function RetailStatisticsCards({
   </div>
 }
 
+const tabs = [
+  
+]
+const tabItems = [
+   { id: 1, name: "New Order", value: "brands" },
+   { id: 2, name: "Order History", value: "order-history" },
+   { id: 3, name: "Purchase History", value: "purchase-history" },
+   { id: 4, name: "Inventory", value: "inventory" },
+];
+
 function RetailContainer({ orders, retails }) {
-  return <Tabs defaultValue="brands">
+  const { selectedTab, tabChange } = useTabsContentNavigation(
+    "brands",
+    tabItems.map(item => item.value)
+  );
+  return <Tabs
+      value={selectedTab}
+      onValueChange={tabChange}
+    >
     <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
       <TabsTrigger
         className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
@@ -505,8 +520,6 @@ function Orders({ orders }) {
     });
 
   return <TabsContent value="order-history">
-    <ExportOrdersoExcel orders={orders} />
-
     <div className="flex flex-wrap items-center gap-2 mb-3">
       {["all", "pending", "completed", "cancelled"].map((item) => (
         <Button
@@ -519,8 +532,8 @@ function Orders({ orders }) {
           {item}
         </Button>
       ))}
+      <ExportOrdersoExcel orders={orders} />
     </div>
-
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
       {myOrders.length === 0 && (
@@ -738,7 +751,7 @@ function SaleOrder({ order }) {
         <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {paidAmount}</span></p>
       </div>
       {pendingAmount > 0
-        ? <UpdateClientOrderAmount order={order} />
+        ? <UpdateClientOrderAmount swrKey={"app/order-history"} order={order} />
         : status === "pending"
           ? <RetailPendingLabel status={order.status} />
           : <Badge variant="wz">Paid</Badge>}
@@ -817,7 +830,7 @@ function ExportOrdersoExcel({ orders }) {
     <DialogTrigger asChild>
       <Button
         variant="wz"
-        className="block mb-4 ml-auto"
+        className="block ml-auto"
       >Export</Button>
     </DialogTrigger>
     <DialogContent className="p-0">
@@ -1298,7 +1311,6 @@ function RetailReportGenerator({ orders, dateRange: currentDateRange }) {
         setPdfOpen(true);
       }, 100);
     } catch (error) {
-      console.error("Error generating report:", error);
       toast.error(error.message || "Failed to generate report");
     }
   };
