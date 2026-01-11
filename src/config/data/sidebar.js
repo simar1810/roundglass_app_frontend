@@ -344,12 +344,12 @@ export const sidebar__coachContent = [
           },
         ],
       },
-      {
-        id: 1.5,
-        icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
-        title: "New Workout",
-        url: "/coach/workouts/new",
-      },
+      // {
+      //   id: 1.5,
+      //   icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "New Workout",
+      //   url: "/coach/workouts/new",
+      // },
       {
         id: 2,
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
