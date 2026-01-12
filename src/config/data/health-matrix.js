@@ -21,6 +21,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 2,
     getMaxValue: () => 45,
     getMinValue: () => 30,
+    type: "default-hide"
   },
   {
     label: "Fat",
@@ -32,6 +33,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 3,
     getMaxValue: () => 20,
     getMinValue: () => 10,
+    type: "default-hide"
   },
   {
     label: "Resting Metabolism",
@@ -43,6 +45,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 4,
     getMaxValue: () => 3000,
     getMinValue: () => 1500,
+    type: "default-hide"
   },
   {
     label: "Weight",
@@ -66,6 +69,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 6,
     getMaxValue: () => 67,
     getMinValue: () => 33,
+    type: "default-hide"
   },
   {
     label: "Subcuatneous Fat",
@@ -77,6 +81,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 7,
     getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
     getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+    type: "default-hide"
   },
   {
     label: "Visceral Fat",
@@ -88,6 +93,7 @@ export const DEFAULT_FORM_FIELDS = [
     id: 8,
     getMaxValue: () => 12,
     getMinValue: () => 1,
+    type: "default-hide"
   },
   {
     title: "Weight In KGs",

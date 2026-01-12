@@ -48,13 +48,11 @@ export default function ClientStatisticsData({ clientData }) {
 
       const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
 
-      // Filter default fields
       const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
         [...defaultFields, "weightInKgs", "weightInPounds"].includes(field.name) ||
         (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
       );
 
-      // Map coach added fields
       const customFields = coachAddedFields.map(field => ({
         label: field.title,
         value: "0",
@@ -174,6 +172,7 @@ export default function ClientStatisticsData({ clientData }) {
           onUpdate={onUpdateHealthMatrix}
           data={payload}
           fields={formFields}
+          calculateByFormulaes={false}
         />
       </div>
     </TabsContent>

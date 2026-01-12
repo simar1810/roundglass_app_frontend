@@ -1,17 +1,17 @@
 "use client";
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarGroup,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    useSidebar,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
-    sidebar__coachContent,
-    sidebar__coachFooter,
+  sidebar__coachContent,
+  sidebar__coachFooter,
 } from "@/config/data/sidebar";
 import useClickOutside from "@/hooks/useClickOutside";
 import useDebounce from "@/hooks/useDebounce";
@@ -26,13 +26,13 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import AddClientWithCheckup from "../modals/add-client/AddClientWithCheckup";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { SearchBar } from "./AppNavbar";
@@ -77,8 +77,10 @@ export default function AppSidebar() {
     : ({
       ...item,
       items: item
-      .items
-      .filter(option => !option.permission ||
+        .items
+        .filter(option =>
+          !option.permission ||
+          userType === "coach" ||
           (option.permission === "user" && userPermissions.includes(9))
         )
     }));

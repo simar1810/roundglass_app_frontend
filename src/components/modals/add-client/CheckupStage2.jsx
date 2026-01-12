@@ -1,7 +1,8 @@
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
-import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
+import { setCurrentStage, updateMatrices, changeFieldvalue, toggleHideHealthMatrices } from "@/config/state-reducers/add-client-checkup";
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
 import { useAppSelector } from "@/providers/global/hooks";
@@ -31,7 +32,7 @@ const SVG_ICONS = [
 ];
 
 export default function CheckupStage2() {
-  const { dispatch, ...state } = useCurrentStateContext();
+  const { dispatch, hideHealthMatrices, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
 
   const formFields = useMemo(() => {
@@ -114,13 +115,25 @@ export default function CheckupStage2() {
         Gender: <span className="font-semibold">{state.gender.split("")[0]?.toUpperCase() + state.gender.slice(1)}</span>
       </div>
     </div>
-    <h3 className="font-semibold my-4">Statistics</h3>
+    <div className="flex items-center justify-between">
+      <h3 className="font-semibold my-4">Statistics</h3>
+      <label>
+        <div className="select-none cursor-pointer flex items-center gap-2 px-4 pt-4">
+          Hide Body Metrics
+          <Switch
+            checked={hideHealthMatrices}
+            onCheckedChange={value => dispatch(toggleHideHealthMatrices(value))}
+          />
+        </div>
+      </label>
+    </div>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <HealthMetrics
         onUpdate={(payload, fieldName, closeBtnRef) => {
           dispatch(changeFieldvalue(fieldName, payload[fieldName]));
           closeBtnRef.current.click()
         }}
+        hideHealthMatrices={hideHealthMatrices}
         data={{ ...state, age }}
         fields={formFields}
         showAll={true}
