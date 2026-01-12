@@ -164,10 +164,7 @@ export function generateRequestPayload(state, coachId, existingClientID, extraFi
   const formData = new FormData();
 
   // Add hardcoded fields
-  for (const field of fields.requestFields.filter(item => state.hideHealthMatrices
-    ? ["bmi", "heightUnit", "weightUnit"].includes(item)
-    : true)
-  ) {
+  for (const field of state.hideHealthMatrices ? fields.hideHealthMatrixFields : fields.requestFields) {
     formData.append(field, state[field]);
   }
 
