@@ -61,6 +61,11 @@ export function addClientCheckupReducer(state, action) {
         ...state,
         stage: 5
       }
+    case "TOGGLE_HIDE_HEALTHMATRICES":
+      return {
+        ...state,
+        hideHealthMatrices: action.payload
+      }
     default:
       return state;
   }
@@ -154,7 +159,10 @@ export function generateRequestPayload(state, coachId, existingClientID, extraFi
   const formData = new FormData();
 
   // Add hardcoded fields
-  for (const field of fields.requestFields) {
+  for (const field of fields.requestFields.filter(item => state.hideHealthMatrices
+    ? ["bmi", "heightUnit", "weightUnit"].includes(item)
+    : true)
+  ) {
     formData.append(field, state[field]);
   }
 
@@ -210,5 +218,12 @@ export function init(type, data) {
 export function clientOnboardingCompleted() {
   return {
     type: "CLIENT_ONBOARDING_COMPLETED"
+  }
+}
+
+export function toggleHideHealthMatrices(payload) {
+  return {
+    type: "TOGGLE_HIDE_HEALTHMATRICES",
+    payload
   }
 }

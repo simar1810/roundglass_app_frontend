@@ -17,6 +17,7 @@ import {
   setHealthMatrices,
   setNextFollowUpDate,
   stage1Completed,
+  toggleHideHealthMatrices,
 } from "@/config/state-reducers/follow-up";
 import {
   calculateBMIFinal,
@@ -39,6 +40,7 @@ import { extractNumber } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo } from "react";
 import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
+import { Switch } from "@/components/ui/switch";
 
 const SVG_ICONS = [
   "/svgs/body.svg",      // 0
@@ -205,7 +207,7 @@ function Stage2({
   heightUnit,
   clientId
 }) {
-  const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
+  const { healthMatrix, hideHealthMatrices, dispatch, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
 
   const closeBtnRef = useRef();
@@ -266,7 +268,7 @@ function Stage2({
   async function createFollowUp() {
     try {
       const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
-      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj }, extraFields)
+      const data = generateRequestPayload({ healthMatrix, hideHealthMatrices, ...state }, { ...payload, ...statObj }, extraFields)
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
       if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
@@ -288,6 +290,15 @@ function Stage2({
 
   return (
     <div>
+      <label>
+        <div className="select-none cursor-pointer flex items-center gap-2 px-4 pt-4">
+          Hide Body Metrics
+          <Switch
+            checked={hideHealthMatrices}
+            onCheckedChange={value => dispatch(toggleHideHealthMatrices(value))}
+          />
+        </div>
+      </label>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-6">
           <HealthMetrics
@@ -295,6 +306,7 @@ function Stage2({
             data={payload}
             fields={formFields}
             showAll={true}
+            hideHealthMatrices={hideHealthMatrices}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-10">
