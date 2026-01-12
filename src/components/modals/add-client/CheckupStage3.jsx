@@ -16,7 +16,7 @@ import useSWR from "swr";
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
-  const { isLoading, error, data:questionSections } = useSWR("onboarding-questionaire", () => onboardingQuestionaire());
+  const { isLoading, error, data: questionSections } = useSWR("onboarding-questionaire", () => onboardingQuestionaire());
   async function createClient() {
     try {
       const secs = questionSections.data.sections || [];

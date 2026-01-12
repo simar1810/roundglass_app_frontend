@@ -507,7 +507,7 @@ export function calculateBodyAge({
 export function calculateSubcutaneousFat(data) {
   const { age = 1, gender = "male", bodyComposition = "Medium" } = data
   const bmi = calculateBMIFinal(data)
-  const g = gender.toLowerCase();
+  const g = !["male", "female"].includes(gender.toLowerCase()) ? "male" : gender.toLowerCase();
   if (g !== "male" && g !== "female") {
     throw new Error('gender must be "male" or "female"');
   }

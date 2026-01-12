@@ -44,6 +44,11 @@ export function followUpReducer(state, action) {
           ...action.payload
         }
       }
+    case "TOGGLE_HIDE_HEALTHMATRICES":
+      return {
+        ...state,
+        hideHealthMatrices: action.payload
+      }
     default:
       return state;
   }
@@ -122,11 +127,11 @@ export function generateRequestPayload(state, forIdealWeight, extraFields = []) 
   } else {
     payload.healthMatrix.height = String(`${state.healthMatrix["heightFeet"]}.${state.healthMatrix["heightInches"]}`);
   }
-  for (const field of fields) {
+  for (const field of fields.filter(metric => state.hideHealthMatrices ? ["heightUnit", "bmi", "weightUnit"].includes(metric) : true)) {
     if (Boolean(state.healthMatrix[field])) payload.healthMatrix[field] = String(state.healthMatrix[field]);
   }
   payload.healthMatrix.ideal_weight = String(calculateIdealWeightFinal(forIdealWeight))
-  payload.healthMatrix.sub_fat = String(calculateSubcutaneousFat({
+  if (!state.hideHealthMatrices) payload.healthMatrix.sub_fat = String(calculateSubcutaneousFat({
     ...state,
     ...state.healthMatrix
   })?.subcutaneousPercent)
@@ -157,4 +162,11 @@ export function stage1Completed(data) {
   };
   if (!data.nextFollowUpDate && data.healthMatrix.followUpType === "custom") return { success: false, field: "nextFollowUpDate" }
   return { success: true };
+}
+
+export function toggleHideHealthMatrices(payload) {
+  return {
+    type: "TOGGLE_HIDE_HEALTHMATRICES",
+    payload
+  }
 }

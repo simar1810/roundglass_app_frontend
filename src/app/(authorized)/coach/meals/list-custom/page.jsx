@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
+import { SquarePen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -277,6 +278,15 @@ export default function Page() {
               >
                 {meal.admin ? "Admin" : "Manual"}
               </Badge>
+              {meal.draft && <Badge
+                className={cn(
+                  "absolute top-3 left-20 text-xs font-normal text-white px-3"
+                )}
+                variant="wz_fill"
+              >
+                <SquarePen />
+                Draft
+              </Badge>}
               {!meal.admin && (
                 <button
                   onClick={() => handleDeleteMeal(meal._id)}

@@ -42,6 +42,7 @@ const healtMetrics = [
     id: 2,
     getMaxValue: () => 45,
     getMinValue: () => 30,
+    type: "default-hide"
   },
   {
     title: "Fat",
@@ -52,6 +53,7 @@ const healtMetrics = [
     id: 3,
     getMaxValue: () => 20,
     getMinValue: () => 10,
+    type: "default-hide"
   },
   {
     title: "Resting Metabolism",
@@ -63,6 +65,7 @@ const healtMetrics = [
     id: 4,
     getMaxValue: () => 3000,
     getMinValue: () => 1500,
+    type: "default-hide"
   },
   {
     title: "Ideal Weight",
@@ -86,6 +89,7 @@ const healtMetrics = [
     id: 6,
     getMaxValue: () => 67,
     getMinValue: () => 33,
+    type: "default-hide"
   },
   {
     title: "Visceral Fat",
@@ -96,6 +100,7 @@ const healtMetrics = [
     id: 7,
     getMaxValue: () => 12,
     getMinValue: () => 1,
+    type: "default-hide"
   },
   {
     title: "Weight In KGs",
@@ -126,18 +131,30 @@ const healtMetrics = [
     id: 9,
     getMaxValue: () => 20,
     getMinValue: () => 15,
+    type: "default-hide"
   },
-
 ];
 
-export default function HealthMetrics({ data, onUpdate, fields, showAll = false }) {
+export default function HealthMetrics({ calculateByFormulaes = true, hideHealthMatrices, data, onUpdate, fields, showAll = false }) {
   const payload = {
-    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
-    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
-    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
-    rm: extractNumber(data.rm) || calculateBMRFinal(data),
-    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
-    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
+    bmi: calculateByFormulaes
+      ? extractNumber(data.bmi) || calculateBMIFinal(data)
+      : extractNumber(data.bmi),
+    muscle: calculateByFormulaes
+      ? extractNumber(data.muscle) || calculateSMPFinal(data)
+      : extractNumber(data.muscle),
+    fat: calculateByFormulaes
+      ? extractNumber(data.fat) || calculateBodyFatFinal(data)
+      : extractNumber(data.fat),
+    rm: calculateByFormulaes
+      ? extractNumber(data.rm) || calculateBMRFinal(data)
+      : extractNumber(data.rm),
+    idealWeight: calculateByFormulaes
+      ? extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data)
+      : extractNumber(data.idealWeight) || data.ideal_weight,
+    bodyAge: calculateByFormulaes
+      ? extractNumber(data.bodyAge) || calculateBodyAgeFinal(data)
+      : extractNumber(data.bodyAge),
     visceral_fat: extractNumber(data.visceral_fat),
     weightInKgs: updateWeightField() === "weightInKgs"
       ? extractNumber(data.weightInKgs)
@@ -145,8 +162,9 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
     weightInPounds: updateWeightField() === "weightInPounds"
       ? extractNumber(data.weightInPounds)
       : undefined,
-    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent,
-    // Add support for custom fields dynamically if needed
+    sub_fat: calculateByFormulaes
+      ? extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
+      : extractNumber(data.sub_fat),
     ...data
   };
 
@@ -163,13 +181,16 @@ export default function HealthMetrics({ data, onUpdate, fields, showAll = false 
     return (
       <>
         {metricsToDisplay
-          .filter((metric) =>
-          (
+          .filter((metric) => (
             !isNaN(payload[metric.name]) &&
             payload[metric.name] !== 0 &&
             payload[metric.name] !== "" ||
             (showAll && !defaultFields.includes(metric.name))
+          ) &&
+            (!calculateByFormulaes ? ![null, undefined, ""].includes(payload[metric.name]) : true)
           )
+          .filter(item =>
+            hideHealthMatrices ? item.type !== "default-hide" : true
           )
           .map((metric) => (
             <MetricProgress

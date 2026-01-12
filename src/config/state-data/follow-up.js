@@ -1,5 +1,6 @@
 export const followUpInitialState = {
   stage: 1,
+  hideHealthMatrices: false,
   healthMatrix: {
     date: "",
     notes: "",
@@ -20,7 +21,7 @@ export const followUpInitialState = {
     ideal_weight: "",
     bodyAge: "",
     gender: "male",
-    followUpType: "8day"
+    followUpType: "8day",
   },
-  nextFollowUpDate: ""
-}
+  nextFollowUpDate: "",
+};
