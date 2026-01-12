@@ -132,6 +132,11 @@ const fields = {
     "visceral_fat", "activeType", "rm", "muscle",
     "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "sub_fat"
   ],
+  hideHealthMatrixFields: [
+    "name", "email", "mobileNumber", "notes", "gender",
+    "heightUnit", "weightUnit", "file", "bmi",
+    "activeType","ideal_weight", "pendingCustomer", "existingClientID",
+  ]
 }
 
 export function stage1Completed(state, stage) {
