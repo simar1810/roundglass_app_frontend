@@ -3,15 +3,16 @@ import SelectControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { clientOwnDetailsFields } from "@/config/data/ui";
-import { sendDataWithFormData } from "@/lib/api";
+import { sendDataWithFormData, sendData, fetchData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
 import { format, parse } from "date-fns";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { Image as ImageIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const formFields = ["name", "email", "mobileNumber", "age", "gender"];
 
@@ -25,6 +26,12 @@ function generateDefaultPayload(obj) {
   } else {
     payload.dob = obj.dob
   }
+
+  // Initialize health information fields (will be loaded from roundglass/client-preference endpoint)
+  payload.allergiesDietaryRestrictions = "";
+  payload.medicalHistory = "";
+  payload.familyHistory = "";
+
   return payload;
 }
 
@@ -35,6 +42,46 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
   const closeBtnRef = useRef();
   const fileRef = useRef();
 
+  // Load health preferences from the new endpoint
+  useEffect(() => {
+    async function loadHealthPreferences() {
+      try {
+        const response = await fetchData(`app/roundglass/client-preference?person=client`);
+        if (response?.data) {
+          setFormData(prev => ({
+            ...prev,
+            allergiesDietaryRestrictions: response.data.allergies || "",
+            medicalHistory: response.data.medicalHistory || "",
+            familyHistory: response.data.familyHistory || "",
+          }));
+        }
+      } catch (error) {
+        // Silently fail if preferences don't exist yet
+        console.log("No health preferences found");
+      }
+    }
+    loadHealthPreferences();
+  }, []);
+
+  async function updateHealthPreferences() {
+    try {
+      const response = await sendData(
+        `app/roundglass/client-preference?person=client`,
+        {
+          clientId: clientData._id,
+          allergies: formData.allergiesDietaryRestrictions || "",
+          medicalHistory: formData.medicalHistory || "",
+          familyHistory: formData.familyHistory || "",
+        },
+        "PUT"
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Failed to update health preferences");
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async function updateClientDetails() {
     try {
       const data = new FormData();
@@ -42,10 +89,20 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
         data.append(field, formData[field])
       }
       data.append("dob", format(parse(formData.dob, 'yyyy-MM-dd', new Date()), "dd-MM-yyyy"));
+      
+      // Update personal information (excluding health fields)
       const response = await sendDataWithFormData("app/updateClientOwn", data, "PUT");
       if (!response.data) throw new Error(response.message);
-      toast.success(response.message);
+      
+      // Update health preferences separately using the new endpoint
+      await updateHealthPreferences();
+      
+      toast.success("Details updated successfully");
+      
+      // Refresh data
       mutate("clientProfile");
+      mutate(`app/roundglass/client-preference?person=client`);
+      
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -58,7 +115,7 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
     <DialogTrigger className="text-[var(--accent-1)] text-[14px] font-semibold pr-3">
       Edit
     </DialogTrigger>
-    <DialogContent className="!max-w-[650px] text-center border-0 px-4 lg:px-10 overflow-auto gap-0">
+    <DialogContent className="!max-w-[650px] max-h-[90vh] text-center border-0 px-4 lg:px-10 overflow-y-auto gap-0">
       <DialogTitle>Personal Information</DialogTitle>
       <div className="mt-4">
         <ProfilePhoto
@@ -120,8 +177,22 @@ function Component({ field, formData, setFormData }) {
     case 4:
       return <SelectControl
         key={field.id}
+        value={formData[field.name]}
+        onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
         {...field}
       />;
+    case 5:
+      return <div key={field.id} className="col-span-2">
+        <label className="block">
+          <span className="label font-[600] text-[14px]">{field.label}</span>
+          <Textarea
+            value={formData[field.name]}
+            onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+            placeholder={field.placeholder || "Please enter the value."}
+            className="w-full mt-1 min-h-[100px] px-4 py-2 rounded-[8px] focus:outline-none border-1 border-[#D6D6D6] placeholder:text-[#1C1B1F]/25"
+          />
+        </label>
+      </div>;
     default:
       return <FormControl
         key={field.id}

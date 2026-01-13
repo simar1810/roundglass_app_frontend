@@ -4,9 +4,11 @@ import ContentLoader from "@/components/common/ContentLoader";
 import Loader from "@/components/common/Loader";
 import YouTubeEmbed from "@/components/common/YoutubeEmbed";
 import FormControl from "@/components/FormControl";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import Paginate from "@/components/Paginate";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -32,7 +34,7 @@ import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format, subMinutes } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, TrendingUp, Users, Utensils, X } from "lucide-react";
+import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, TrendingUp, Users, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -46,8 +48,6 @@ import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },

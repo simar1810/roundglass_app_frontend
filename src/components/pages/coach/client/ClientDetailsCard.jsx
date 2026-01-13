@@ -1,44 +1,54 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import DeleteClientModal from "@/components/modals/client/DeleteClientModal";
+import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
+import FollowUpModal from "@/components/modals/client/FollowUpModal";
+import UpdateClientDetailsModal from "@/components/modals/client/UpdateClientDetailsModal";
+import UpdateClientGoalModal from "@/components/modals/client/UpdateClientGoalModal";
+import UpdateClientInjuryLogModal from "@/components/modals/client/UpdateClientInjuryLogModal";
+import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotesModal";
+import UpdateClientSupplementIntakeModal from "@/components/modals/client/UpdateClientSupplementIntakeModal";
+import UpdateClientTrainingInfoModal from "@/components/modals/client/UpdateClientTrainingInfoModal";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import {
-  Menubar,
-  MenubarContent,
-  MenubarMenu,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
-import { ChevronDown, Copy, EllipsisVertical, Plus } from "lucide-react";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { nameInitials } from "@/lib/formatter";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import { notesColors } from "@/config/data/other-tools";
 import { clientPortfolioFields } from "@/config/data/ui";
-import UpdateClientGoalModal from "@/components/modals/client/UpdateClientGoalModal";
-import UpdateClientDetailsModal from "@/components/modals/client/UpdateClientDetailsModal";
-import DeleteClientModal from "@/components/modals/client/DeleteClientModal";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import useClickOutside from "@/hooks/useClickOutside";
+import { sendData } from "@/lib/api";
+import { generateWeightStandard } from "@/lib/client/statistics";
+import { nameInitials } from "@/lib/formatter";
+import { permit } from "@/lib/permit";
+import { extractNumber } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { isBefore, parse } from "date-fns";
+import { ChevronDown, Copy, EllipsisVertical, Plus } from "lucide-react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import { sendData } from "@/lib/api";
-import FollowUpModal from "@/components/modals/client/FollowUpModal";
-import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotesModal";
-import { useRef, useState } from "react";
-import EditClientRollnoModal from "@/components/modals/client/EditClientRollnoModal";
-import useClickOutside from "@/hooks/useClickOutside";
-import { useAppSelector } from "@/providers/global/hooks";
-import { permit } from "@/lib/permit";
-import { generateWeightStandard } from "@/lib/client/statistics";
-import ClientUpdateCategories from "./ClientUpdateCategories";
-import { notesColors } from "@/config/data/other-tools";
-import { Badge } from "@/components/ui/badge";
 import ClientNudges from "./ClientNudges";
-import { extractNumber } from "@/lib/utils";
-import { isBefore, parse } from "date-fns";
+import ClientUpdateCategories from "./ClientUpdateCategories";
+import InjuryAnalyticsDashboard from "./InjuryAnalyticsDashboard";
 
 function getClientHeightStr(healthMatrix) {
   if (["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase()))
@@ -96,80 +106,318 @@ function ClientDetails({ clientData }) {
   return (
     <Card className="bg-white rounded-[18px] shadow-none w-[90vw] md:w-auto">
       <Header clientData={clientData} />
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <h4>Goal</h4>
-          <UpdateClientGoalModal id={clientData._id} clientData={clientData} />
+      <CardContent className="space-y-6">
+        {/* Goal Section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4>Goal</h4>
+            <UpdateClientGoalModal id={clientData._id} clientData={clientData} />
+          </div>
+          {clientData.goal ? (
+            <p className="text-[14px] text-[var(--dark-2)] leading-[1.5]">
+              {clientData.goal}
+            </p>
+          ) : (
+            <p className="text-sm italic text-[#808080]">
+              Please add a goal for the client
+            </p>
+          )}
         </div>
-        {clientData.goal ? (
-          <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">
-            {clientData.goal}
-          </p>
-        ) : (
-          <p className="text-sm italic text-[#808080]">
-            Please add a goal for the client
-          </p>
-        )}
+
+        {/* Categories Section */}
         <ClientCategoriesList clientData={clientData} />
-        <div className="flex items-center justify-between">
-          <h4>Notes</h4>
-          <UpdateClientNotesModal
-            id={clientData._id}
-            defaultValue={clientData.notes}
-          />
-        </div>
-        <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">
-          {clientData.notes}
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3">
           <FollowUpModal clientData={clientData} />
           <Button
             onClick={sendAnalysis}
             variant="wz"
-            className="w-full mx-auto block text-xs"
+            className="w-full text-xs"
           >
             Analysis Reminder
           </Button>
         </div>
+
+        {/* Activities Section */}
         {Boolean(activities) && <ClientActivities activities={activities} />}
-        <div className="mt-4 flex items-center justify-between">
-          <h4>Personal Information</h4>
-          <UpdateClientDetailsModal clientData={clientData} />
+
+        {/* Notes Section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4>Notes</h4>
+            <UpdateClientNotesModal
+              id={clientData._id}
+              defaultValue={clientData.notes}
+            />
+          </div>
+          <p className="text-[14px] text-[var(--dark-2)] leading-[1.5]">
+            {clientData.notes || (
+              <span className="text-sm italic text-[#808080]">No notes added yet</span>
+            )}
+          </p>
         </div>
-        <div className="mt-4 pl-4">
-          {clientPortfolioFields.map((field) => (
-            <div
-              key={field.id}
-              className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2"
-              {...field}
-            >
-              <p>{field.title}</p>
-              <p className="text-[var(--dark-2)] col-span-2">
-                :&nbsp;{clientData[field.name]}
-              </p>
+
+        {/* Accordion for Detailed Sections */}
+        <Accordion type="multiple" className="w-full" defaultValue={["personal-info"]}>
+          {/* Personal Information */}
+          <AccordionItem value="personal-info" className="border-1 rounded-lg px-4 mb-2">
+            <div className="flex items-center justify-between py-2">
+              <AccordionTrigger className="hover:no-underline flex-1">
+                <h4 className="font-semibold">Personal Information</h4>
+              </AccordionTrigger>
+              <div onClick={(e) => e.stopPropagation()}>
+                <UpdateClientDetailsModal clientData={clientData} />
+              </div>
             </div>
-          ))}
-          {/* {weightLoss && <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
-          <p>Weight Lost Till Date</p>
-          <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{weightLoss * -1} Pounds</p>
-        </div>} */}
-          {clientData?.healthMatrix?.height && (
-            <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
-              <p>Height</p>
-              <p className="text-[var(--dark-2)] col-span-2">
-                :&nbsp;{getClientHeightStr(clientData.healthMatrix)}
-              </p>
+            <AccordionContent>
+              <div className="space-y-3 pt-2">
+                {clientPortfolioFields.map((field) => (
+                  <div
+                    key={field.id}
+                    className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3"
+                    {...field}
+                  >
+                    <p className="font-medium">{field.title}</p>
+                    <p className="text-[var(--dark-2)]">
+                      {clientData[field.name] || "-"}
+                    </p>
+                  </div>
+                ))}
+                {clientData?.healthMatrix?.height && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Height</p>
+                    <p className="text-[var(--dark-2)]">
+                      {getClientHeightStr(clientData.healthMatrix)}
+                    </p>
+                  </div>
+                )}
+                {latestWeight && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Latest Weight</p>
+                    <p className="text-[var(--dark-2)]">{latestWeight}</p>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Training Information */}
+          <AccordionItem value="training-info" className="border-1 rounded-lg px-4 mb-2">
+            <div className="flex items-center justify-between py-2">
+              <AccordionTrigger className="hover:no-underline flex-1">
+                <h4 className="font-semibold">Training Information</h4>
+              </AccordionTrigger>
+              <div onClick={(e) => e.stopPropagation()}>
+                <UpdateClientTrainingInfoModal 
+                  id={clientData._id} 
+                  clientData={clientData}
+                />
+              </div>
             </div>
-          )}
-          {latestWeight && (
-            <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
-              <p>Latest Weight</p>
-              <p className="text-[var(--dark-2)] col-span-2">
-                :&nbsp;{latestWeight}
-              </p>
+            <AccordionContent>
+              <div className="space-y-3 pt-2">
+                {clientData?.trainingInfo?.trainingFrequency && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Training Frequency</p>
+                    <p className="text-[var(--dark-2)]">
+                      {clientData.trainingInfo.trainingFrequency}
+                    </p>
+                  </div>
+                )}
+                {clientData?.trainingInfo?.trainingDuration && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Duration</p>
+                    <p className="text-[var(--dark-2)]">
+                      {clientData.trainingInfo.trainingDuration}
+                    </p>
+                  </div>
+                )}
+                {clientData?.trainingInfo?.trainingIntensity && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Intensity</p>
+                    <p className="text-[var(--dark-2)]">
+                      {clientData.trainingInfo.trainingIntensity}
+                    </p>
+                  </div>
+                )}
+                {clientData?.trainingInfo?.conditioningDays && (
+                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                    <p className="font-medium">Conditioning Days</p>
+                    <p className="text-[var(--dark-2)]">
+                      {clientData.trainingInfo.conditioningDays}
+                    </p>
+                  </div>
+                )}
+                {!clientData?.trainingInfo && (
+                  <p className="text-sm italic text-[#808080]">
+                    No training information added yet
+                  </p>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Supplement Intake */}
+          <AccordionItem value="supplement-intake" className="border-1 rounded-lg px-4 mb-2">
+            <div className="flex items-center justify-between py-2">
+              <AccordionTrigger className="hover:no-underline flex-1">
+                <h4 className="font-semibold">Supplement Intake Tracker</h4>
+              </AccordionTrigger>
+              <div onClick={(e) => e.stopPropagation()}>
+                <UpdateClientSupplementIntakeModal 
+                  id={clientData._id} 
+                  clientData={clientData}
+                />
+              </div>
             </div>
-          )}
-        </div>
+            <AccordionContent>
+              <div className="pt-2">
+                {clientData?.supplementIntake && clientData.supplementIntake.length > 0 ? (
+                  <div className="space-y-3">
+                    {clientData.supplementIntake.map((supplement, index) => (
+                      <div
+                        key={index}
+                        className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2"
+                      >
+                        {supplement.brand && (
+                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                            <p className="font-semibold">Brand</p>
+                            <p className="text-[var(--dark-2)]">{supplement.brand}</p>
+                          </div>
+                        )}
+                        {supplement.dosage && (
+                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                            <p className="font-semibold">Dosage</p>
+                            <p className="text-[var(--dark-2)]">{supplement.dosage}</p>
+                          </div>
+                        )}
+                        {supplement.frequency && (
+                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                            <p className="font-semibold">Frequency</p>
+                            <p className="text-[var(--dark-2)]">{supplement.frequency}</p>
+                          </div>
+                        )}
+                        {supplement.source && (
+                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                            <p className="font-semibold">Source</p>
+                            <p className="text-[var(--dark-2)]">{supplement.source}</p>
+                          </div>
+                        )}
+                        {supplement.purpose && (
+                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                            <p className="font-semibold">Purpose</p>
+                            <p className="text-[var(--dark-2)]">{supplement.purpose}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm italic text-[#808080]">
+                    No supplement information added yet
+                  </p>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Injury Log */}
+          <AccordionItem value="injury-log" className="border-1 rounded-lg px-4 mb-2">
+            <div className="flex items-center justify-between py-2">
+              <AccordionTrigger className="hover:no-underline flex-1">
+                <h4 className="font-semibold">Injury Log</h4>
+              </AccordionTrigger>
+              <div onClick={(e) => e.stopPropagation()}>
+                <UpdateClientInjuryLogModal 
+                  id={clientData._id} 
+                  clientData={clientData}
+                />
+              </div>
+            </div>
+            <AccordionContent>
+              <div className="pt-2">
+                {clientData?.injuryLog && clientData.injuryLog.length > 0 ? (
+                  <div className="space-y-3">
+                    {clientData.injuryLog.map((injury, index) => (
+                      <div
+                        key={index}
+                        className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2"
+                      >
+                        {injury.injuryType && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-semibold">Injury Type</p>
+                            <p className="text-[var(--dark-2)]">{injury.injuryType}</p>
+                          </div>
+                        )}
+                        {injury.bodyPart && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-semibold">Body Part</p>
+                            <p className="text-[var(--dark-2)]">{injury.bodyPart}</p>
+                          </div>
+                        )}
+                        {injury.incidentDate && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-semibold">Incident Date</p>
+                            <p className="text-[var(--dark-2)]">
+                              {new Date(injury.incidentDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
+                        {injury.rehabProgress && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
+                            <p className="font-semibold">Rehab Progress</p>
+                            <p className="text-[var(--dark-2)]">{injury.rehabProgress}</p>
+                          </div>
+                        )}
+                        {injury.physiotherapistAssignment && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-semibold">Physiotherapist</p>
+                            <p className="text-[var(--dark-2)]">
+                              {injury.physiotherapistAssignment}
+                            </p>
+                          </div>
+                        )}
+                        {injury.files && injury.files.length > 0 && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
+                            <p className="font-semibold">Files</p>
+                            <div className="space-y-1">
+                              {injury.files.map((file, fileIndex) => (
+                                <p key={fileIndex} className="text-[var(--dark-2)]">
+                                  • {typeof file === 'string' ? file : file.name || file.url}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm italic text-[#808080]">
+                    No injury log entries added yet
+                  </p>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Injury Analytics Dashboard */}
+          <AccordionItem value="injury-analytics" className="border-1 rounded-lg px-4 mb-2">
+            <AccordionTrigger className="hover:no-underline">
+              <h4 className="font-semibold">Injury Analytics Dashboard</h4>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="pt-2">
+                <InjuryAnalyticsDashboard 
+                  clientData={clientData} 
+                  clientId={clientData._id}
+                  useDemoData={!clientData?.injuryLog || clientData.injuryLog.length === 0}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );
@@ -177,24 +425,24 @@ function ClientDetails({ clientData }) {
 
 function ClientActivities({ activities }) {
   return (
-    <div className="mt-4 p-4 rounded-[10px] border-1">
-      <div className="font-semibold pb-2 flex items-center gap-6 border-b-1">
+    <div className="p-4 rounded-lg border-1 bg-[var(--comp-1)]">
+      <div className="font-semibold pb-3 flex items-center gap-6 border-b-1">
         <div>
-          <p className="text-[var(--accent-1)]">
+          <p className="text-[var(--accent-1)] text-xl font-bold">
             {activities.dailyActivities.reduce(
               (acc, activity) => acc + activity.steps,
               0,
             )}
           </p>
-          <p>Steps</p>
+          <p className="text-sm text-[var(--dark-2)]">Steps</p>
         </div>
         <div>
-          <p className="text-[var(--accent-1)]">
+          <p className="text-[var(--accent-1)] text-xl font-bold">
             {activities.dailyActivities
               .reduce((acc, activity) => acc + activity.calories, 0)
               .toFixed(2)}
           </p>
-          <p>Calories</p>
+          <p className="text-sm text-[var(--dark-2)]">Calories</p>
         </div>
         <Image
           src="/svgs/circle-embedded.svg"
@@ -204,7 +452,7 @@ function ClientActivities({ activities }) {
           className="ml-auto"
         />
       </div>
-      <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-2">
+      <p className="text-[var(--dark-1)]/25 text-[12px] font-semibold mt-3">
         Last 7 Days
       </p>
     </div>
@@ -462,24 +710,28 @@ function ClientCategoriesList({ clientData }) {
     set.has(category._id),
   );
   return (
-    <div className="my-8">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h4>Categories</h4>
         <ClientUpdateCategories clientData={clientData} />
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-1">
-        {selectedCategories.map((category, index) => (
-          <Badge
-            key={category._id}
-            style={{
-              backgroundColor: notesColors[index % 5],
-              color: "#000000",
-              fontWeight: "bold",
-            }}
-          >
-            {category.name}
-          </Badge>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        {selectedCategories.length > 0 ? (
+          selectedCategories.map((category, index) => (
+            <Badge
+              key={category._id}
+              style={{
+                backgroundColor: notesColors[index % 5],
+                color: "#000000",
+                fontWeight: "bold",
+              }}
+            >
+              {category.name}
+            </Badge>
+          ))
+        ) : (
+          <p className="text-sm italic text-[#808080]">No categories assigned</p>
+        )}
       </div>
     </div>
   );

@@ -78,6 +78,10 @@ export function getAppClientPortfolioDetails(_id) {
   return fetchData(`app/clientProfile?id=` + _id);
 }
 
+export function getClientPreferences(clientId) {
+  return fetchData(`app/roundglass/client-preference?person=coach&clientId=${clientId}`);
+}
+
 export function getClientStatsForCoach(clientId) {
   return fetchData(`app/clientStatsCoach?clientId=${clientId}`);
 }

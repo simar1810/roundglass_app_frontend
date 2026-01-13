@@ -371,7 +371,7 @@ function ClientsSidebar({
   return (
     <aside className="flex min-w-0 flex-col gap-4 px-2 md:px-0">
       <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">Clients</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Players</h3>
       </div>
 
       {hasTopPerformers ? (
@@ -480,7 +480,7 @@ function createTabsConfig({
     // },
     {
       key: "clientId",
-      label: "Client ID",
+      label: "PLAYER ID",
       render: (row) =>
         row.clientId ? <span className="font-semibold text-slate-700">#{row.clientId}</span> : <EmptyCell />,
       exportValue: (row) => row.clientId ?? "",
@@ -507,7 +507,7 @@ function createTabsConfig({
     },
     {
       key: "clientId",
-      label: "Client ID",
+      label: "PLAYER ID",
       render: (row) =>
         row.clientId ? <span className="font-semibold text-slate-700">#{row.clientId}</span> : <EmptyCell />,
       exportValue: (row) => row.clientId ?? "",
@@ -546,7 +546,7 @@ function createTabsConfig({
     },
     {
       key: "clientId",
-      label: "Client ID",
+      label: "PLAYER ID",
       render: (row) =>
         row.clientId ? <span className="font-semibold text-slate-700">#{row.clientId}</span> : <EmptyCell />,
       exportValue: (row) => row.clientId ?? "",
@@ -1313,13 +1313,13 @@ function renderSubscriptionRows(subscriptions, { subscriptions: subscriptionFilt
 function getSearchPlaceholder(tabValue) {
   switch (tabValue) {
     case "plans":
-      return "Search by name, client ID, or mobile...";
+      return "Search by name, PLAYER ID, or mobile...";
     case "incomplete":
       return "Search by title or date...";
     case "birthdays":
-      return "Search by name, client ID, mobile, or date...";
+      return "Search by name, PLAYER ID, mobile, or date...";
     case "subscriptions":
-      return "Search by name, client ID, mobile, or dates...";
+      return "Search by name, PLAYER ID, mobile, or dates...";
     default:
       return "Search...";
   }

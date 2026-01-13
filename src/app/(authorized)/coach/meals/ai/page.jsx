@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import useSWR from "swr";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
-import { getAppClients } from "@/lib/fetchers/app";
+import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
+import { getAppClients } from "@/lib/fetchers/app";
 import Image from "next/image";
-import { PiSparkleFill } from "react-icons/pi";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { FiSearch } from "react-icons/fi";
+import { PiSparkleFill } from "react-icons/pi";
+import { toast } from "sonner";
+import useSWR from "swr";
 
 export default function Page() {
   const router = useRouter();
@@ -591,7 +591,7 @@ const foodExclusionOptions = [
 
           {filteredClients.length === 0 && (
             <p className="text-gray-500 text-center col-span-full">
-              No clients found.
+              No Players Found.
             </p>
           )}
         </div>

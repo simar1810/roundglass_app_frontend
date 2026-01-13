@@ -72,7 +72,7 @@ export const sidebar__coachContent = [
   },
   {
     id: 3,
-    title: "Clients",
+    title: "Players",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
     permission: "user-nested", // Always visible
@@ -80,7 +80,7 @@ export const sidebar__coachContent = [
       {
         id: 1,
         icon: <Users className="icon min-w-[20px] min-h-[20px]" />,
-        title: "All Clients",
+        title: "All Players",
         url: "/coach/clients",
       },
       {
@@ -92,7 +92,7 @@ export const sidebar__coachContent = [
       {
         id: 3,
         icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Clients with Checkup",
+        title: "Add Players with Checkup",
         type: "modal",
         Component: AddClientWithCheckup,
       },

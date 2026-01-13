@@ -92,7 +92,7 @@ function AddClientCheckupContainer({ clientDetails, type, clientName }) {
   return <DialogContent className="w-[600px] md:!max-w-[800px] max-h-[85vh] h-full border-0 p-0 overflow-y-auto block">
     <DialogHeader className="!p-0 !h-auto border-b-2 border-[var(--dark-1)]/25 z-[100]">
       <DialogTitle className="bg-white p-4 text-left text-black text-lg font-semibold">
-        Client Details
+        Player Details
       </DialogTitle>
       <DialogClose ref={closeRef} onClick={() => console.log("condition hti")} className="absolute w-5 h-5 top-4 right-4 bg-white z-100 cursor-pointer">
         <X />

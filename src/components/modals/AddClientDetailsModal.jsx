@@ -14,13 +14,13 @@ export default function AddClientDetailsModal() {
   return (
     <Dialog>
       <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
-        Add Client details
+        Add Player details
       </DialogTrigger>
 
       <DialogContent className="!max-w-[656px] h-[600px] border-0 p-0 overflow-auto">
         <DialogHeader className="bg-gray-300 py-6 h-[56px]">
           <DialogTitle className="text-black text-sm ml-5">
-            Add Client
+            Add Player
           </DialogTitle>
         </DialogHeader>
 
@@ -33,7 +33,7 @@ export default function AddClientDetailsModal() {
 
           <div className="flex items-center gap-6 mb-6">
             <div>
-              <p className="font-semibold text-sm">Select Customer type</p>
+              <p className="font-semibold text-sm">Select Player type</p>
               <label className="flex items-center gap-2">
                 <input type="radio" name="type" value="New" />
                 New

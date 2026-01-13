@@ -1,42 +1,39 @@
 "use client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import React, { useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { nameInitials } from "@/lib/formatter";
-import { useState } from "react";
-import FormControl from "@/components/FormControl";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { sendData, fetchData } from "@/lib/api";
-import { toast } from "sonner";
-import { useAppSelector } from "@/providers/global/hooks";
 import ContentError from "@/components/common/ContentError";
-import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
-import {
-	retrieveClientList,
-	retrieveDownlineCoaches,
-	retrieveDownlineRequests,
-} from "@/lib/fetchers/app";
-import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
-import HierarchicalCoachTable from "@/components/pages/coach/downline/HierarchicalCoachTable";
-import { PlusCircle, Edit, Trash2, Eye, ChevronDown } from "lucide-react";
+import FormControl from "@/components/FormControl";
 import { ManageCategoryModal } from "@/components/modals/coach/ManageCategoryModal";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import HierarchicalCoachTable from "@/components/pages/coach/downline/HierarchicalCoachTable";
+import TreeVisualizer from "@/components/pages/coach/downline/Visualizer";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DialogTrigger } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
+import { fetchData, sendData } from "@/lib/api";
+import {
+    retrieveClientList,
+    retrieveDownlineCoaches,
+    retrieveDownlineRequests,
+} from "@/lib/fetchers/app";
+import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { ChevronDown, Edit, Eye, PlusCircle, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
 
 const categoriesFetcher = () =>
 	fetchData("app/coach-categories").then((res) => {
@@ -604,7 +601,7 @@ function DownlineClientList() {
 				{clients.length === 0 && (
 					<TableRow>
 						<TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-							No clients found
+							No Players Found
 						</TableCell>
 					</TableRow>
 				)}
