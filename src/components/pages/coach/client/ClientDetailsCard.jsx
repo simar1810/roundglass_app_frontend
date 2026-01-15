@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +42,7 @@ import { permit } from "@/lib/permit";
 import { extractNumber } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { isBefore, parse } from "date-fns";
-import { ChevronDown, Copy, EllipsisVertical, Plus } from "lucide-react";
+import { ChevronDown, Copy, EllipsisVertical, Plus, Trash2, Eye } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -82,6 +83,8 @@ function findClientLatestWeight(matrices = []) {
 
 function ClientDetails({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
+  const [accordionValue, setAccordionValue] = useState(["personal-info", "training-info", "supplement-intake", "injury-log"]);
+  
   async function sendAnalysis() {
     try {
       const response = await sendData(
@@ -91,6 +94,76 @@ function ClientDetails({ clientData }) {
       toast.success(response.message);
     } catch (error) {
       toast.error(error.message || "Please try again later!");
+    }
+  }
+
+  async function deleteTrainingEntry(index, entryId) {
+    try {
+      const trainingModules = clientData?.clientPreferences?.trainingModule || 
+        (clientData?.trainingInfo ? [clientData.trainingInfo] : []);
+      const updatedModules = trainingModules.filter((_, i) => i !== index);
+      
+      const response = await sendData(
+        `app/roundglass/client-preference?person=coach`,
+        {
+          clientId: clientData._id,
+          trainingModule: updatedModules,
+        },
+        "PUT"
+      );
+      
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success("Training entry deleted successfully");
+      mutate(`clientDetails/${clientData._id}`, undefined, { revalidate: true });
+      mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`, undefined, { revalidate: true });
+    } catch (error) {
+      toast.error(error.message || "Failed to delete training entry");
+    }
+  }
+
+  async function deleteSupplementEntry(index, entryId) {
+    try {
+      const supplements = clientData?.clientPreferences?.supplements || clientData?.supplementIntake || [];
+      const updatedSupplements = supplements.filter((_, i) => i !== index);
+      
+      const response = await sendData(
+        `app/roundglass/client-preference?person=coach`,
+        {
+          clientId: clientData._id,
+          supplements: updatedSupplements,
+        },
+        "PUT"
+      );
+      
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success("Supplement entry deleted successfully");
+      mutate(`clientDetails/${clientData._id}`, undefined, { revalidate: true });
+      mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`, undefined, { revalidate: true });
+    } catch (error) {
+      toast.error(error.message || "Failed to delete supplement entry");
+    }
+  }
+
+  async function deleteInjuryEntry(index, entryId) {
+    try {
+      const injuries = clientData?.clientPreferences?.injuries || clientData?.injuryLog || [];
+      const updatedInjuries = injuries.filter((_, i) => i !== index);
+      
+      const response = await sendData(
+        `app/roundglass/client-preference?person=coach`,
+        {
+          clientId: clientData._id,
+          injuries: updatedInjuries,
+        },
+        "PUT"
+      );
+      
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success("Injury entry deleted successfully");
+      mutate(`clientDetails/${clientData._id}`, undefined, { revalidate: true });
+      mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`, undefined, { revalidate: true });
+    } catch (error) {
+      toast.error(error.message || "Failed to delete injury entry");
     }
   }
   const clienthealthMatrix = clientData?.healthMatrix?.healthMatrix || [{}];
@@ -159,7 +232,7 @@ function ClientDetails({ clientData }) {
         </div>
 
         {/* Accordion for Detailed Sections */}
-        <Accordion type="multiple" className="w-full" defaultValue={["personal-info"]}>
+        <Accordion type="multiple" className="w-full" value={accordionValue} onValueChange={setAccordionValue}>
           {/* Personal Information */}
           <AccordionItem value="personal-info" className="border-1 rounded-lg px-4 mb-2">
             <div className="flex items-center justify-between py-2">
@@ -198,6 +271,43 @@ function ClientDetails({ clientData }) {
                     <p className="text-[var(--dark-2)]">{latestWeight}</p>
                   </div>
                 )}
+                
+                {/* Health Information Fields */}
+                {(() => {
+                  // Get health info from clientPreferences or fallback
+                  const allergies = clientData?.clientPreferences?.allergies || "";
+                  const medicalHistory = clientData?.clientPreferences?.medicalHistory || "";
+                  const familyHistory = clientData?.clientPreferences?.familyHistory || "";
+                  
+                  return (
+                    <>
+                      {allergies && (
+                        <div className="text-[13px] grid grid-cols-[120px_1fr] gap-3">
+                          <p className="font-medium">Allergies, dietary restrictions</p>
+                          <p className="text-[var(--dark-2)] break-words whitespace-pre-wrap">
+                            {allergies}
+                          </p>
+                        </div>
+                      )}
+                      {medicalHistory && (
+                        <div className="text-[13px] grid grid-cols-[120px_1fr] gap-3">
+                          <p className="font-medium">Medical history</p>
+                          <p className="text-[var(--dark-2)] break-words whitespace-pre-wrap">
+                            {medicalHistory}
+                          </p>
+                        </div>
+                      )}
+                      {familyHistory && (
+                        <div className="text-[13px] grid grid-cols-[120px_1fr] gap-3">
+                          <p className="font-medium">Family history</p>
+                          <p className="text-[var(--dark-2)] break-words whitespace-pre-wrap">
+                            {familyHistory}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -217,43 +327,59 @@ function ClientDetails({ clientData }) {
             </div>
             <AccordionContent>
               <div className="space-y-3 pt-2">
-                {clientData?.trainingInfo?.trainingFrequency && (
-                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                    <p className="font-medium">Training Frequency</p>
-                    <p className="text-[var(--dark-2)]">
-                      {clientData.trainingInfo.trainingFrequency}
+                {(() => {
+                  // Get training modules from clientPreferences or fallback to trainingInfo
+                  const trainingModules = clientData?.clientPreferences?.trainingModule || 
+                    (clientData?.trainingInfo ? [clientData.trainingInfo] : []);
+                  
+                  return trainingModules.length > 0 ? (
+                    trainingModules.map((module, index) => (
+                      <div
+                        key={index}
+                        className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 relative"
+                      >
+                        {trainingModules.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => deleteTrainingEntry(index, module._id)}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {module.trainingFrequency && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-medium">Training Frequency</p>
+                            <p className="text-[var(--dark-2)]">{module.trainingFrequency}</p>
+                          </div>
+                        )}
+                        {module.duration && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-medium">Duration</p>
+                            <p className="text-[var(--dark-2)]">{module.duration}</p>
+                          </div>
+                        )}
+                        {module.intensity && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-medium">Intensity</p>
+                            <p className="text-[var(--dark-2)]">{module.intensity}</p>
+                          </div>
+                        )}
+                        {module.conditioningDays && (
+                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                            <p className="font-medium">Conditioning Days</p>
+                            <p className="text-[var(--dark-2)]">{module.conditioningDays}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm italic text-[#808080]">
+                      No training information added yet
                     </p>
-                  </div>
-                )}
-                {clientData?.trainingInfo?.trainingDuration && (
-                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                    <p className="font-medium">Duration</p>
-                    <p className="text-[var(--dark-2)]">
-                      {clientData.trainingInfo.trainingDuration}
-                    </p>
-                  </div>
-                )}
-                {clientData?.trainingInfo?.trainingIntensity && (
-                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                    <p className="font-medium">Intensity</p>
-                    <p className="text-[var(--dark-2)]">
-                      {clientData.trainingInfo.trainingIntensity}
-                    </p>
-                  </div>
-                )}
-                {clientData?.trainingInfo?.conditioningDays && (
-                  <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                    <p className="font-medium">Conditioning Days</p>
-                    <p className="text-[var(--dark-2)]">
-                      {clientData.trainingInfo.conditioningDays}
-                    </p>
-                  </div>
-                )}
-                {!clientData?.trainingInfo && (
-                  <p className="text-sm italic text-[#808080]">
-                    No training information added yet
-                  </p>
-                )}
+                  );
+                })()}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -273,51 +399,66 @@ function ClientDetails({ clientData }) {
             </div>
             <AccordionContent>
               <div className="pt-2">
-                {clientData?.supplementIntake && clientData.supplementIntake.length > 0 ? (
-                  <div className="space-y-3">
-                    {clientData.supplementIntake.map((supplement, index) => (
-                      <div
-                        key={index}
-                        className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2"
-                      >
-                        {supplement.brand && (
-                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
-                            <p className="font-semibold">Brand</p>
-                            <p className="text-[var(--dark-2)]">{supplement.brand}</p>
-                          </div>
-                        )}
-                        {supplement.dosage && (
-                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
-                            <p className="font-semibold">Dosage</p>
-                            <p className="text-[var(--dark-2)]">{supplement.dosage}</p>
-                          </div>
-                        )}
-                        {supplement.frequency && (
-                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
-                            <p className="font-semibold">Frequency</p>
-                            <p className="text-[var(--dark-2)]">{supplement.frequency}</p>
-                          </div>
-                        )}
-                        {supplement.source && (
-                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
-                            <p className="font-semibold">Source</p>
-                            <p className="text-[var(--dark-2)]">{supplement.source}</p>
-                          </div>
-                        )}
-                        {supplement.purpose && (
-                          <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
-                            <p className="font-semibold">Purpose</p>
-                            <p className="text-[var(--dark-2)]">{supplement.purpose}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm italic text-[#808080]">
-                    No supplement information added yet
-                  </p>
-                )}
+                {(() => {
+                  // Get supplements from clientPreferences or fallback to supplementIntake
+                  const supplements = clientData?.clientPreferences?.supplements || clientData?.supplementIntake || [];
+                  
+                  return supplements.length > 0 ? (
+                    <div className="space-y-3">
+                      {supplements.map((supplement, index) => (
+                        <div
+                          key={supplement._id || index}
+                          className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 relative"
+                        >
+                          {supplements.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => deleteSupplementEntry(index, supplement._id)}
+                              className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {supplement.brand && (
+                            <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                              <p className="font-semibold">Brand</p>
+                              <p className="text-[var(--dark-2)]">{supplement.brand}</p>
+                            </div>
+                          )}
+                          {supplement.dosage && (
+                            <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                              <p className="font-semibold">Dosage</p>
+                              <p className="text-[var(--dark-2)]">{supplement.dosage}</p>
+                            </div>
+                          )}
+                          {supplement.frequency && (
+                            <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                              <p className="font-semibold">Frequency</p>
+                              <p className="text-[var(--dark-2)]">{supplement.frequency}</p>
+                            </div>
+                          )}
+                          {supplement.source && (
+                            <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                              <p className="font-semibold">Source</p>
+                              <p className="text-[var(--dark-2)]">{supplement.source}</p>
+                            </div>
+                          )}
+                          {supplement.purpose && (
+                            <div className="text-[13px] grid grid-cols-[100px_1fr] items-center gap-3">
+                              <p className="font-semibold">Purpose</p>
+                              <p className="text-[var(--dark-2)]">{supplement.purpose}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm italic text-[#808080]">
+                      No supplement information added yet
+                    </p>
+                  );
+                })()}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -337,67 +478,99 @@ function ClientDetails({ clientData }) {
             </div>
             <AccordionContent>
               <div className="pt-2">
-                {clientData?.injuryLog && clientData.injuryLog.length > 0 ? (
-                  <div className="space-y-3">
-                    {clientData.injuryLog.map((injury, index) => (
-                      <div
-                        key={index}
-                        className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2"
-                      >
-                        {injury.injuryType && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                            <p className="font-semibold">Injury Type</p>
-                            <p className="text-[var(--dark-2)]">{injury.injuryType}</p>
-                          </div>
-                        )}
-                        {injury.bodyPart && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                            <p className="font-semibold">Body Part</p>
-                            <p className="text-[var(--dark-2)]">{injury.bodyPart}</p>
-                          </div>
-                        )}
-                        {injury.incidentDate && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                            <p className="font-semibold">Incident Date</p>
-                            <p className="text-[var(--dark-2)]">
-                              {new Date(injury.incidentDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                        )}
-                        {injury.rehabProgress && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
-                            <p className="font-semibold">Rehab Progress</p>
-                            <p className="text-[var(--dark-2)]">{injury.rehabProgress}</p>
-                          </div>
-                        )}
-                        {injury.physiotherapistAssignment && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
-                            <p className="font-semibold">Physiotherapist</p>
-                            <p className="text-[var(--dark-2)]">
-                              {injury.physiotherapistAssignment}
-                            </p>
-                          </div>
-                        )}
-                        {injury.files && injury.files.length > 0 && (
-                          <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
-                            <p className="font-semibold">Files</p>
-                            <div className="space-y-1">
-                              {injury.files.map((file, fileIndex) => (
-                                <p key={fileIndex} className="text-[var(--dark-2)]">
-                                  • {typeof file === 'string' ? file : file.name || file.url}
-                                </p>
-                              ))}
+                {(() => {
+                  // Get injuries from clientPreferences or fallback to injuryLog
+                  const injuries = clientData?.clientPreferences?.injuries || clientData?.injuryLog || [];
+                  
+                  return injuries.length > 0 ? (
+                    <div className="space-y-3">
+                      {injuries.map((injury, index) => (
+                        <div
+                          key={injury._id || index}
+                          className="p-4 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 relative"
+                        >
+                          {injuries.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => deleteInjuryEntry(index, injury._id)}
+                              className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {injury.injuryType && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                              <p className="font-semibold">Injury Type</p>
+                              <p className="text-[var(--dark-2)]">{injury.injuryType}</p>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm italic text-[#808080]">
-                    No injury log entries added yet
-                  </p>
-                )}
+                          )}
+                          {injury.bodyPart && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                              <p className="font-semibold">Body Part</p>
+                              <p className="text-[var(--dark-2)]">{injury.bodyPart}</p>
+                            </div>
+                          )}
+                          {injury.incidentDate && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                              <p className="font-semibold">Incident Date</p>
+                              <p className="text-[var(--dark-2)]">
+                                {new Date(injury.incidentDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
+                          {injury.rehabProgress && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
+                              <p className="font-semibold">Rehab Progress</p>
+                              <p className="text-[var(--dark-2)]">{injury.rehabProgress}</p>
+                            </div>
+                          )}
+                          {injury.physiotherapistAssignment && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                              <p className="font-semibold">Physiotherapist</p>
+                              <p className="text-[var(--dark-2)]">
+                                {injury.physiotherapistAssignment}
+                              </p>
+                            </div>
+                          )}
+                          {injury.fileUpload && (
+                            <div className="text-[13px] grid grid-cols-[120px_1fr] items-start gap-3">
+                              <p className="font-semibold">File</p>
+                              <div className="text-[var(--dark-2)]">
+                                {injury.fileUpload.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                  <ImagePreviewDialog imageUrl={injury.fileUpload}>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                      View Image
+                                    </Button>
+                                  </ImagePreviewDialog>
+                                ) : (
+                                  <a
+                                    href={injury.fileUpload}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline break-all"
+                                  >
+                                    {injury.fileUpload}
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm italic text-[#808080]">
+                      No injury log entries added yet
+                    </p>
+                  );
+                })()}
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -412,7 +585,10 @@ function ClientDetails({ clientData }) {
                 <InjuryAnalyticsDashboard 
                   clientData={clientData} 
                   clientId={clientData._id}
-                  useDemoData={!clientData?.injuryLog || clientData.injuryLog.length === 0}
+                  useDemoData={(() => {
+                    const injuries = clientData?.clientPreferences?.injuries || clientData?.injuryLog || [];
+                    return injuries.length === 0;
+                  })()}
                 />
               </div>
             </AccordionContent>
@@ -734,5 +910,29 @@ function ClientCategoriesList({ clientData }) {
         )}
       </div>
     </div>
+  );
+}
+
+function ImagePreviewDialog({ imageUrl, children }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="max-w-[90vw] md:max-w-4xl max-h-[80vh] overflow-auto">
+        <DialogTitle>Image Preview</DialogTitle>
+        <div className="relative w-full h-[70vh] flex items-center justify-center">
+          <Image
+            src={imageUrl}
+            alt="Image preview"
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

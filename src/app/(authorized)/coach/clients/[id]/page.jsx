@@ -22,10 +22,37 @@ export default function Page() {
     if (!data?.data) return null;
     const merged = { ...data.data };
     merged.weightLoss = data.weightLost;
+    
     // Handle both success (200) and not found (200 with null data) responses
     if (preferencesData?.status_code === 200 && preferencesData?.data) {
       merged.clientPreferences = preferencesData.data;
+      
+      // Map new structure to old structure for backward compatibility
+      // Training Info
+      if (preferencesData.data.trainingModule && preferencesData.data.trainingModule.length > 0) {
+        const firstTraining = preferencesData.data.trainingModule[0];
+        merged.trainingInfo = {
+          trainingFrequency: firstTraining.trainingFrequency,
+          trainingDuration: firstTraining.duration,
+          trainingIntensity: firstTraining.intensity,
+          conditioningDays: firstTraining.conditioningDays,
+        };
+      }
+      
+      // Supplements
+      if (preferencesData.data.supplements) {
+        merged.supplementIntake = preferencesData.data.supplements;
+      }
+      
+      // Injuries
+      if (preferencesData.data.injuries) {
+        merged.injuryLog = preferencesData.data.injuries.map(injury => ({
+          ...injury,
+          files: injury.fileUpload ? [injury.fileUpload] : [],
+        }));
+      }
     }
+    
     return merged;
   }, [data, preferencesData]);
 

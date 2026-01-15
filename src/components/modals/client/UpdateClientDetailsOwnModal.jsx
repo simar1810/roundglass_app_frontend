@@ -38,6 +38,7 @@ function generateDefaultPayload(obj) {
 export default function UpdateClientDetailsOwnModal({ clientData }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => generateDefaultPayload(clientData));
+  const [preferencesExist, setPreferencesExist] = useState(false);
 
   const closeBtnRef = useRef();
   const fileRef = useRef();
@@ -48,15 +49,19 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
       try {
         const response = await fetchData(`app/roundglass/client-preference?person=client`);
         if (response?.data) {
+          setPreferencesExist(true);
           setFormData(prev => ({
             ...prev,
             allergiesDietaryRestrictions: response.data.allergies || "",
             medicalHistory: response.data.medicalHistory || "",
             familyHistory: response.data.familyHistory || "",
           }));
+        } else {
+          setPreferencesExist(false);
         }
       } catch (error) {
         // Silently fail if preferences don't exist yet
+        setPreferencesExist(false);
         console.log("No health preferences found");
       }
     }
@@ -65,6 +70,8 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
 
   async function updateHealthPreferences() {
     try {
+      // Use POST (upsert) if preferences don't exist, PUT if they do
+      const method = preferencesExist ? "PUT" : "POST";
       const response = await sendData(
         `app/roundglass/client-preference?person=client`,
         {
@@ -73,9 +80,13 @@ export default function UpdateClientDetailsOwnModal({ clientData }) {
           medicalHistory: formData.medicalHistory || "",
           familyHistory: formData.familyHistory || "",
         },
-        "PUT"
+        method
       );
       if (response.status_code !== 200) throw new Error(response.message || "Failed to update health preferences");
+      // Update state after successful creation
+      if (!preferencesExist && response.data) {
+        setPreferencesExist(true);
+      }
       return response;
     } catch (error) {
       throw error;
