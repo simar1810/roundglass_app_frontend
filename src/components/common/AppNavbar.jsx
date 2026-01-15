@@ -216,7 +216,7 @@ function UserOptions({ profilePhoto, name }) {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent ref={dropDownContentRef}>
-        {personalizationpermitted && <DropdownMenuItem
+        {/* {personalizationpermitted && <DropdownMenuItem
           onClick={() => setModal(<PersonalBranding
             onClose={() => {
               setModal()
@@ -227,7 +227,7 @@ function UserOptions({ profilePhoto, name }) {
           <DropdownMenuLabel className="text-[14px] py-0">
             App personalisation
           </DropdownMenuLabel>
-        </DropdownMenuItem>}
+        </DropdownMenuItem>} */}
         <DropdownMenuItem onClick={() => setOpened(false)}>
           <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
             <DropdownMenuLabel className="text-[14px] py-0">

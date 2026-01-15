@@ -58,7 +58,7 @@ const tabItems = [
   { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
-  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Player Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },

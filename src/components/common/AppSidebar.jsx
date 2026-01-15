@@ -35,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
-import { SearchBar } from "./AppNavbar";
 import ContentError from "./ContentError";
 import Loader from "./Loader";
 
@@ -90,21 +89,19 @@ export default function AppSidebar() {
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
       {Modal || <></>}
-      <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive">
+      <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive pb-6 pt-6">
         <Image
           src="/wellnessz-white.png"
           alt="wellnessZ logo"
           width={659}
           height={125}
-          className="max-w-[10ch] mx-auto mt-4"
+          className="max-w-[10ch] mx-auto"
         />
       </SidebarHeader>
 
-      <SearchBar />
-
-      <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
-        <SidebarGroup>
-          <SidebarMenu className="px-0">
+      <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 pt-2 no-scrollbar">
+        <SidebarGroup className="space-y-2 px-2">
+          <SidebarMenu className="px-0 space-y-2">
             {sidebarItems.map((item) =>
               item.items && item.items.length > 0 ? (
                 <MainMenuItemWithDropdown
@@ -125,8 +122,8 @@ export default function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarMenu className="px-0">
+        <SidebarGroup className="mt-4 px-2">
+          <SidebarMenu className="px-0 space-y-2">
             {sidebar__coachFooter.map((item) =>
               item.items && item.items.length > 0 ? (
                 <MainMenuItemWithDropdown

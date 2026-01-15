@@ -6,7 +6,9 @@ import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
 import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import Stories from "@/components/pages/coach/dashboard/Stories";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getCoachHome, getMarathonLeaderBoard } from "@/lib/fetchers/app";
+import { getCoachHome } from "@/lib/fetchers/app";
+import Link from "next/link";
+import { Trophy, Users } from "lucide-react";
 import { nameInitials } from "@/lib/formatter";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
@@ -31,7 +33,7 @@ function Container() {
     <StatisticsCards />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Stories stories={coachHomeData.story} coach={true} />
-      <MarathonLeaderBoard />
+      <TopPerformersPreview topPerformers={coachHomeData.topPerformers} />
     </div>
     <DashboardFeaturesDetails
       topPerformers={coachHomeData.topPerformers}
@@ -41,45 +43,60 @@ function Container() {
   </>
 }
 
-function getBgColor(index) {
-  switch (index) {
-    case 0:
-      return "bg-[#FFDA47]";
-    case 1:
-      return "bg-[#F1EAEA]";
-    case 2:
-      return "bg-[#D7A07C]";
-
-    default:
-      return "bg-[var(--comp-1)]";
-  }
-}
-
-function MarathonLeaderBoard() {
+function TopPerformersPreview({ topPerformers = [] }) {
   const router = useRouter();
-  const { cache } = useSWRConfig();
-  const { isLoading, error, data } = useSWR(`app/marathon-points/monthly`, () => getMarathonLeaderBoard(null, router, cache));
+  const topThree = Array.isArray(topPerformers) ? topPerformers.slice(0, 3) : [];
 
-  if (isLoading) return <ContentLoader />
-
-  if (error || data.status_code !== 200) return <ContentError title={error || data.message} />
-  const clients = data.data;
-  return <div className="content-container max-h-[50vh] overflow-y-auto">
-    <div className="flex items-center gap-4">
-      <h4 className="leading-[1] mb-4 mr-auto">Marathon Leaderboard</h4>
+  return (
+    <div className="content-container max-h-[50vh] overflow-y-auto">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-[var(--accent-1)]" />
+          <h4 className="leading-[1]">Top Performers</h4>
+        </div>
+        {topPerformers.length > 3 && (
+          <Link
+            href="/coach/clients"
+            className="text-sm text-[var(--accent-1)] hover:underline font-semibold"
+          >
+            View All
+          </Link>
+        )}
+      </div>
+      {topThree.length > 0 ? (
+        <div className="space-y-3">
+          {topThree.map((client, index) => (
+            <Link
+              key={client.clientId || index}
+              href={`/coach/clients/${client._id || client.clientId}`}
+              className="block"
+            >
+              <div className="p-4 flex items-center gap-4 border-1 rounded-[10px] bg-[var(--comp-1)] hover:bg-[var(--comp-2)] transition-colors cursor-pointer">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--accent-1)] text-white font-bold text-sm">
+                  {index + 1}
+                </div>
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={client.profilePhoto} />
+                  <AvatarFallback>{nameInitials(client.name)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm truncate">{client.name}</h3>
+                  {client.clientId && (
+                    <p className="text-xs text-[var(--dark-2)]">ID: {client.clientId}</p>
+                  )}
+                </div>
+                <Trophy className={`w-5 h-5 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Users className="w-12 h-12 text-[var(--dark-2)]/30 mb-2" />
+          <p className="text-sm text-[var(--dark-2)]">No top performers yet</p>
+          <p className="text-xs text-[var(--dark-2)]/70 mt-1">Start tracking client progress to see top performers</p>
+        </div>
+      )}
     </div>
-    <div>
-      {clients.map((client, index) => <div
-        className={`mb-4 p-4 flex items-center gap-4 border-1 rounded-[10px] ${getBgColor(index)}`}
-        key={index}>
-        <span>{index + 1}</span>
-        <Avatar>
-          <AvatarImage src={client.client.profilePhoto} />
-          <AvatarFallback>{nameInitials(client.client.name)}</AvatarFallback>
-        </Avatar>
-        <h3>{client.client.name}</h3>
-        <p className="ml-auto">{client.totalPointsInRange}&nbsp;pts</p>
-      </div>)}
-    </div>
-  </div>;
+  );
 }

@@ -53,7 +53,7 @@ export default function CoachData({ awards }) {
         <Header />
         <CoachSMLinks />
         <CoachAwards awards={awards} />
-        <CoachClubSettings />
+        {/* <CoachClubSettings /> */}
         <BankDetails />
         <InvoiceDetails />
         <SettingsTab />
@@ -72,11 +72,11 @@ const tabItems = [
     value: "awards",
     label: "Awards",
   },
-  {
-    icon: <Users className="w-[16px] h-[16px]" />,
-    value: "club",
-    label: "Club",
-  },
+  // {
+  //   icon: <Users className="w-[16px] h-[16px]" />,
+  //   value: "club",
+  //   label: "Club",
+  // },
   {
     icon: <Landmark className="w-[16px] h-[16px]" />,
     value: "bank",

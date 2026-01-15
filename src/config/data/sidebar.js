@@ -1,67 +1,49 @@
-import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
+import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
+import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import {
-  IndianRupee,
-  Award,
   CalendarDays,
   CalendarRange,
-  CircleDollarSign,
-  ClipboardCheck,
   ClipboardPlus,
   Clock,
   Clock12,
-  ContactRound,
-  CreditCard,
   Dumbbell,
   FileChartColumn,
   FileCheck,
-  FileText,
   Flame,
-  Footprints,
-  ForkKnife,
   Globe,
   Headset,
   Home,
   Hourglass,
-  BadgeCheck,
-  LayoutDashboard,
-  Library,
-  Link,
-  List,
+  IndianRupee,
   ListTodo,
   Logs,
   MapPin,
   MessageCircle,
   Newspaper,
   PersonStanding,
-  Plus,
+  Play,
   PlusCircle,
-  Projector,
+  Salad,
   Settings,
   Soup,
-  Store,
   Sun,
   Tags,
-  TrendingUp,
-  Unlink,
   User,
   UserPlus,
-  Users,
-  Video,
-  QrCode,
-  Salad,
-  Play
+  Users
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
-import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 
 export const sidebar__coachContent = [
+  // Main Navigation
   {
     id: 1,
     title: "Home",
     icon: <Home className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/dashboard",
     permission: null, // Always visible
+    group: "main",
   },
   {
     id: 2,
@@ -69,6 +51,7 @@ export const sidebar__coachContent = [
     icon: <User className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/portfolio",
     permission: 100, // Always visible
+    group: "main",
   },
   {
     id: 3,
@@ -76,6 +59,7 @@ export const sidebar__coachContent = [
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
     permission: "user-nested", // Always visible
+    group: "main",
     items: [
       {
         id: 1,
@@ -118,13 +102,17 @@ export const sidebar__coachContent = [
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/users",
     permission: "coach", // Only coaches can see this
+    group: "main",
   },
+  
+  // Content Management
   {
     id: 4,
     title: "Meals & Recipes",
     icon: <Soup className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/meals",
     permission: 1, // Permission 1 = Meal Plan
+    group: "content",
     items: [
       // {
       //   id: 1,
@@ -238,78 +226,86 @@ export const sidebar__coachContent = [
     icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/feed",
     permission: 2, // Permission 2 = Feed
+    group: "content",
   },
-  {
-    id: 6,
-    title: "Wallet",
-    icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/wallet",
-    permission: 3, // Permission 3 = Wallet
-    items: [
-      {
-        id: 1,
-        icon: <CircleDollarSign className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Overview",
-        url: "/coach/wallet",
-      },
-      {
-        id: 2,
-        icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Transactions",
-        url: "/coach/wallet/transactions",
-      },
-      {
-        id: 3,
-        icon: <TrendingUp className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Analytics",
-        url: "/coach/wallet/analytics",
-      },
-      {
-        id: 4,
-        icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Create Payment Link",
-        url: "/coach/payments/create",
-      },
-      {
-        id: 5,
-        icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Manage Payments",
-        url: "/coach/payments/manage",
-      },
-      {
-        id: 6,
-        icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Discount Vouchers",
-        url: "/coach/payments/vouchers",
-      },
-      {
-        id: 7,
-        icon: <Award className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Rewards",
-        url: "/coach/payments/rewards",
-      },
-      // {
-      //   id: 8,
-      //   icon: <Settings className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Settings",
-      //   url: "/coach/wallet/settings",
-      // },
-    ],
-  },
+  
+  // Financial
+  // {
+  //   id: 6,
+  //   title: "Wallet",
+  //   icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/wallet",
+  //   permission: 3, // Permission 3 = Wallet
+  //   group: "financial",
+  //   items: [
+  //     {
+  //       id: 1,
+  //       icon: <CircleDollarSign className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Overview",
+  //       url: "/coach/wallet",
+  //     },
+  //     {
+  //       id: 2,
+  //       icon: <FileText className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Transactions",
+  //       url: "/coach/wallet/transactions",
+  //     },
+  //     {
+  //       id: 3,
+  //       icon: <TrendingUp className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Analytics",
+  //       url: "/coach/wallet/analytics",
+  //     },
+  //     {
+  //       id: 4,
+  //       icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Create Payment Link",
+  //       url: "/coach/payments/create",
+  //     },
+  //     {
+  //       id: 5,
+  //       icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Manage Payments",
+  //       url: "/coach/payments/manage",
+  //     },
+  //     {
+  //       id: 6,
+  //       icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Discount Vouchers",
+  //       url: "/coach/payments/vouchers",
+  //     },
+  //     {
+  //       id: 7,
+  //       icon: <Award className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Rewards",
+  //       url: "/coach/payments/rewards",
+  //     },
+  //     // {
+  //     //   id: 8,
+  //     //   icon: <Settings className="icon min-w-[20px] min-h-[20px]" />,
+  //     //   title: "Settings",
+  //     //   url: "/coach/wallet/settings",
+  //     // },
+  //   ],
+  // },
 
-  {
-    id: 7,
-    title: "Retail",
-    icon: <Store className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/retail",
-    permission: 4, // Permission 4 = Retail
-  },
+  // {
+  //   id: 7,
+  //   title: "Retail",
+  //   icon: <Store className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/retail",
+  //   permission: 4, // Permission 4 = Retail
+  //   group: "financial",
+  // },
+  
+  // Communication & Training
   {
     id: 8,
     title: "Chats",
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/chats",
     permission: 5, // Permission 5 = Chats
+    group: "communication",
   },
   {
     id: 9,
@@ -317,6 +313,7 @@ export const sidebar__coachContent = [
     icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/workouts",
     permission: 6, // Permission 6 = Workout
+    group: "content",
     items: [
       {
         id: 1,
@@ -419,63 +416,66 @@ export const sidebar__coachContent = [
       },
     ],
   },
-  {
-    id: 10,
-    title: "Marathon",
-    icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/marathons",
-    permission: 7, // Permission 7 = Marathon
-  },
-  {
-    id: 11,
-    title: "Club",
-    icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/club",
-    permission: 8, // Permission 8 = Club
-    items: [
-      {
-        id: 1,
-        icon: <Projector className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Meetings",
-        url: "/coach/club/meetings",
-      },
-      {
-        id: 2,
-        icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Link Generator",
-        url: "/coach/club/link-generator",
-      },
-      {
-        id: 3,
-        icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Membership",
-        url: "/coach/club/membership",
-      },
-      // {
-      //   id: 4,
-      //   icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Zoom Settings",
-      //   url: "/coach/club/zoom-settings"
-      // },
-      {
-        id: 5,
-        icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Free Trial",
-        url: "/coach/club/free-trial",
-      },
-      {
-        id: 6,
-        icon: <Unlink className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Coach Sync",
-        url: "/coach/club/coach-sync",
-      },
-    ],
-  },
+  // {
+  //   id: 10,
+  //   title: "Marathon",
+  //   icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/marathons",
+  //   permission: 7, // Permission 7 = Marathon
+  // },
+  // {
+  //   id: 11,
+  //   title: "Club",
+  //   icon: <LayoutDashboard className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/club",
+  //   permission: 8, // Permission 8 = Club
+  //   items: [
+  //     {
+  //       id: 1,
+  //       icon: <Projector className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Meetings",
+  //       url: "/coach/club/meetings",
+  //     },
+  //     {
+  //       id: 2,
+  //       icon: <Link className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Link Generator",
+  //       url: "/coach/club/link-generator",
+  //     },
+  //     {
+  //       id: 3,
+  //       icon: <ContactRound className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Membership",
+  //       url: "/coach/club/membership",
+  //     },
+  //     // {
+  //     //   id: 4,
+  //     //   icon: <Video className="icon min-w-[20px] min-h-[20px]" />,
+  //     //   title: "Zoom Settings",
+  //     //   url: "/coach/club/zoom-settings"
+  //     // },
+  //     {
+  //       id: 5,
+  //       icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Free Trial",
+  //       url: "/coach/club/free-trial",
+  //     },
+  //     {
+  //       id: 6,
+  //       icon: <Unlink className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Coach Sync",
+  //       url: "/coach/club/coach-sync",
+  //     },
+  //   ],
+  // },
+  
+  // Tools & Utilities
   {
     id: 12,
     title: "Other Tools",
     icon: <Settings className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools",
+    group: "tools",
     items: [
       {
         id: 1,
@@ -532,6 +532,7 @@ export const sidebar__coachContent = [
     title: "Physical Club",
     icon: <MapPin className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/physical-club",
+    group: "tools",
     // items: [
     //   {
     //     id: 1,
@@ -555,28 +556,30 @@ export const sidebar__coachContent = [
   },
   {
     id: 14,
-    icon: <Clock12 />,
+    icon: <Clock12 className="min-w-[20px] min-h-[20px]" />,
     title: "Downline",
     url: "/coach/downline",
-    permission: null
+    permission: null,
+    group: "tools",
   },
   {
     id: 15,
-    icon: <Play />,
+    icon: <Play className="min-w-[20px] min-h-[20px]" />,
     title: "Courses",
     url: "/coach/courses",
-    permission: 15
+    permission: 15,
+    group: "content",
   }
 ];
 
 
 export const sidebar__coachFooter = [
-  {
-    id: 1,
-    title: "Subscription",
-    icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/subscription",
-  },
+  // {
+  //   id: 1,
+  //   title: "Subscription",
+  //   icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/subscription",
+  // },
   {
     id: 2,
     title: "Support",
