@@ -54,8 +54,8 @@ const tabItems = [
   { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
   { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
   { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: ({ organisation }) => organisation.toLowerCase() === "herbalife" },
-  { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
-  { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
+  // { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
+  // { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Player Reports" },
@@ -129,8 +129,8 @@ export default function ClientData({ clientData }) {
       <ClientStatisticsData clientData={clientData} />
       <ClientMealData _id={clientData._id} client={clientData} />
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
-      <ClientClubDataComponent clientData={clientData} />
-      <MarathonData clientData={clientData} />
+      {/* <ClientClubDataComponent clientData={clientData} /> */}
+      {/* <MarathonData clientData={clientData} /> */}
       <WorkoutContainer id={clientData._id} />
       <AIAgentHistory />
       <WaterLogData clientId={clientData._id} />
