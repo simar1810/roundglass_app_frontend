@@ -17,6 +17,7 @@ export default function DeleteClientModal({
   _id,
   onClose,
   defaultOpen,
+  children,
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -41,10 +42,16 @@ export default function DeleteClientModal({
   }
 
   return <AlertDialog defaultOpen={defaultOpen}>
-    {!defaultOpen && <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] px-2 flex items-center gap-2">
-      <Trash className="w-[16px] text-[var(--accent-2)]" />
-      Delete Client
-    </AlertDialogTrigger>}
+    {children ? (
+      <AlertDialogTrigger asChild>
+        {children}
+      </AlertDialogTrigger>
+    ) : (
+      !defaultOpen && <AlertDialogTrigger className="font-semibold text-[var(--accent-2)] px-2 flex items-center gap-2">
+        <Trash className="w-[16px] text-[var(--accent-2)]" />
+        Delete Client
+      </AlertDialogTrigger>
+    )}
     <AlertDialogContent className="!max-w-[450px] text-center border-0 px-0 overflow-auto gap-0">
       <AlertDialogTitle className="text-[24px]">Are you sure?</AlertDialogTitle>
       <p className="text-[var(--dark-1)]/50 mb-4">You are deleting a client.</p>

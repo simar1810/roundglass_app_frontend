@@ -42,7 +42,7 @@ import { permit } from "@/lib/permit";
 import { extractNumber } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { isBefore, parse } from "date-fns";
-import { ChevronDown, Copy, EllipsisVertical, Plus, Trash2, Eye } from "lucide-react";
+import { ChevronDown, Copy, EllipsisVertical, Eye, Pen, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -723,20 +723,35 @@ function Header({ clientData }) {
           ref={dropdownRef}
           className="text-[14px] font-semibold"
         >
-          <DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">
             <DeleteClientModal
               onClose={() => setModalOpened(false)}
               _id={clientData._id}
-            />
+            >
+              <div className="flex items-center gap-2 w-full">
+                <Trash2 className="w-[16px] h-[16px] text-[var(--accent-2)]" />
+                <span className="text-[var(--accent-2)]">Delete Client</span>
+              </div>
+            </DeleteClientModal>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem 
+            className="cursor-pointer"
+            onSelect={(e) => {
+              e.preventDefault();
+            }}
+          >
             <ClientUpdateCategories
               onClose={() => setModalOpened(false)}
               clientData={clientData}
-            />
+            >
+              <div className="flex items-center gap-2 w-full">
+                <Pen className="w-[16px] h-[16px] text-[var(--accent-1)]" />
+                <span className="text-[var(--accent-1)]">Update Categories</span>
+              </div>
+            </ClientUpdateCategories>
           </DropdownMenuItem>
           {!Boolean(clientData.rollno) && permit("club", roles) && (
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <DualOptionActionModal
                 action={(setLoading, btnRef) =>
                   generateClientRollno(setLoading, btnRef, false)
@@ -744,10 +759,10 @@ function Header({ clientData }) {
                 description="Are you sure to generate a new roll number for the client?"
                 onClose={() => setModalOpened(false)}
               >
-                <AlertDialogTrigger className="font-semibold text-[var(--accent-1)] px-2 flex items-center gap-2">
+                <AlertDialogTrigger className="font-semibold text-[var(--accent-1)] flex items-center gap-2 w-full">
                   <Plus
                     strokeWidth="3"
-                    className="w-[20px] h-[20px] text-[var(--accent-1)]"
+                    className="w-[16px] h-[16px] text-[var(--accent-1)]"
                   />
                   Generate Roll Number
                 </AlertDialogTrigger>

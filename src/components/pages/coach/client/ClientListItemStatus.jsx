@@ -91,7 +91,7 @@ export default function ClientListItemStatus({
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        {Boolean(client.rollno) && <DropdownMenuItem
+        {/* {Boolean(client.rollno) && <DropdownMenuItem
           onClick={() => setModal(<PendingClientClubDataModal
             clientData={client}
             onClose={() => setModal()}
@@ -103,7 +103,7 @@ export default function ClientListItemStatus({
           className="cursor-pointer"
         >
           Club Details
-        </DropdownMenuItem>}
+        </DropdownMenuItem>} */}
         <DropdownMenuItem
           onClick={() => setModal(<ClientUpdateCategories
             clientData={client}
