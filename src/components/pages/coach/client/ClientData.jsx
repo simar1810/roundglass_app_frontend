@@ -48,6 +48,7 @@ import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
+import ClientGrowthStatus from "@/components/pages/growth/ClientGrowthStatus";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -62,6 +63,7 @@ const tabItems = [
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
+  { icon: <TrendingUp className="w-[16px] h-[16px]" />, value: "growth", label: "Growth" },
 ]
 
 const ADHERENCE_SCORE_RANGES = [
@@ -139,6 +141,9 @@ export default function ClientData({ clientData }) {
       <PhysicalClub />
       <TabsContent value="adherence">
         <ClientAdherenceScore clientId={clientData.clientId} />
+      </TabsContent>
+      <TabsContent value="growth">
+        <ClientGrowthStatus clientId={clientData._id} />
       </TabsContent>
     </Tabs>
   </div>

@@ -2,6 +2,7 @@ import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCh
 import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
 import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import {
+  BarChart,
   CalendarDays,
   CalendarRange,
   ClipboardPlus,
@@ -29,6 +30,7 @@ import {
   Soup,
   Sun,
   Tags,
+  TrendingUp,
   User,
   UserPlus,
   Users
@@ -103,6 +105,28 @@ export const sidebar__coachContent = [
     url: "/coach/users",
     permission: "coach", // Only coaches can see this
     group: "main",
+  },
+  {
+    id: 16,
+    title: "Growth Tracking",
+    icon: <TrendingUp className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/growth/dashboard",
+    permission: "coach", // or appropriate permission
+    group: "main",
+    items: [
+      {
+        id: 1,
+        icon: <BarChart className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Dashboard",
+        url: "/coach/growth/dashboard"
+      },
+      {
+        id: 2,
+        icon: <Users className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Groups",
+        url: "/coach/growth/groups"
+      }
+    ]
   },
   
   // Content Management

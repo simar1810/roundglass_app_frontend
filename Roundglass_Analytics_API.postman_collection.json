@@ -1,0 +1,1152 @@
+{
+	"info": {
+		"_postman_id": "roundglass-analytics-api-collection",
+		"name": "Roundglass Analytics API",
+		"description": "Complete API collection for Roundglass client preferences and analytics. Includes CRUD operations for preferences and comprehensive analytical endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "roundglass-api"
+	},
+	"item": [
+		{
+			"name": "Client Preferences",
+			"item": [
+				{
+					"name": "GET - Get Preferences (Client)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/app/roundglass/client-preference?person=client",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "roundglass", "client-preference"],
+							"query": [
+								{
+									"key": "person",
+									"value": "client"
+								}
+							]
+						},
+						"description": "Retrieve preferences for the authenticated client"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Get Preferences (Coach)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach&clientId={{clientId}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "roundglass", "client-preference"],
+							"query": [
+								{
+									"key": "person",
+									"value": "coach"
+								},
+								{
+									"key": "clientId",
+									"value": "{{clientId}}",
+									"description": "Client ID (MongoDB ObjectId)"
+								}
+							]
+						},
+						"description": "Retrieve preferences for a specific client (coach access)"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Create/Update Preferences",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"allergies\": \"Peanuts, Dairy\",\n  \"medicalHistory\": \"Hypertension, Diabetes\",\n  \"familyHistory\": \"Heart disease in family\",\n  \"trainingModule\": [\n    {\n      \"trainingFrequency\": \"5 times per week\",\n      \"duration\": \"60 minutes\",\n      \"intensity\": \"Moderate\",\n      \"conditioningDays\": \"Monday, Wednesday, Friday\"\n    }\n  ],\n  \"supplements\": [\n    {\n      \"brand\": \"Brand XYZ\",\n      \"dosage\": \"500mg\",\n      \"frequency\": \"Once daily\",\n      \"source\": \"Pharmacy\",\n      \"purpose\": \"Vitamin D\",\n      \"dateTime\": \"2024-01-15T10:00:00Z\"\n    }\n  ],\n  \"injuries\": [\n    {\n      \"injuryType\": \"Sprain\",\n      \"bodyPart\": \"Ankle\",\n      \"incidentDate\": \"2023-12-01T00:00:00.000Z\",\n      \"rehabProgress\": \"75% recovered\",\n      \"physiotherapistAssignment\": \"Dr. Smith\",\n      \"fileUpload\": \"https://example.com/file.pdf\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "roundglass", "client-preference"],
+							"query": [
+								{
+									"key": "person",
+									"value": "coach"
+								}
+							]
+						},
+						"description": "Create new preferences or update existing ones (upsert based on clientId)"
+					},
+					"response": []
+				},
+				{
+					"name": "PUT - Update Preferences (Partial)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"allergies\": \"Updated allergies list\",\n  \"medicalHistory\": \"Updated medical history\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "roundglass", "client-preference"],
+							"query": [
+								{
+									"key": "person",
+									"value": "coach"
+								}
+							]
+						},
+						"description": "Partially update preferences (only update provided fields)"
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Delete Preferences",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach&clientId={{clientId}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "app", "roundglass", "client-preference"],
+							"query": [
+								{
+									"key": "person",
+									"value": "coach"
+								},
+								{
+									"key": "clientId",
+									"value": "{{clientId}}",
+									"description": "Client ID (MongoDB ObjectId)"
+								}
+							]
+						},
+						"description": "Delete preferences for a specific client"
+					},
+					"response": []
+				}
+			],
+			"description": "CRUD operations for Roundglass client preferences"
+		},
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "Category Comparison",
+					"item": [
+						{
+							"name": "Intra-Category Comparison",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/category-comparison?person=coach&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "category-comparison"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID for intra-category comparison"
+										},
+										{
+											"key": "metrics",
+											"value": "bmi,muscle,fat",
+											"description": "Optional: Comma-separated metrics (default: all)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Compare clients within the same category"
+							},
+							"response": []
+						},
+						{
+							"name": "Inter-Category Comparison",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/category-comparison?person=coach&categoryIds={{categoryId1}},{{categoryId2}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "category-comparison"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "categoryIds",
+											"value": "{{categoryId1}},{{categoryId2}}",
+											"description": "Comma-separated category IDs for inter-category comparison"
+										},
+										{
+											"key": "metrics",
+											"value": "bmi,muscle,fat",
+											"description": "Optional: Comma-separated metrics (default: all)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Compare metrics between different categories"
+							},
+							"response": []
+						}
+					],
+					"description": "Compare clients within or between categories"
+				},
+				{
+					"name": "Trends Analysis",
+					"item": [
+						{
+							"name": "Single Client Trends",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/trends?person=client&metric=bmi",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "trends"],
+									"query": [
+										{
+											"key": "person",
+											"value": "client"
+										},
+										{
+											"key": "metric",
+											"value": "bmi",
+											"description": "Metric to analyze (default: bmi)"
+										},
+										{
+											"key": "startDate",
+											"value": "2024-01-01",
+											"description": "Optional: Start date (yyyy-MM-dd)",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": "2024-12-31",
+											"description": "Optional: End date (yyyy-MM-dd)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get time-series trends for a single client (client perspective)"
+							},
+							"response": []
+						},
+						{
+							"name": "Multiple Clients Trends",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/trends?person=coach&clientIds={{clientId1}},{{clientId2}}&metric=weight",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "trends"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientIds",
+											"value": "{{clientId1}},{{clientId2}}",
+											"description": "Comma-separated client IDs"
+										},
+										{
+											"key": "metric",
+											"value": "weight",
+											"description": "Metric to analyze"
+										},
+										{
+											"key": "aggregate",
+											"value": "false",
+											"description": "Aggregate across clients (default: false)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get trends for multiple clients (coach perspective)"
+							},
+							"response": []
+						},
+						{
+							"name": "Trends with Date Range",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/trends?person=coach&clientIds={{clientId}}&metric=muscle&startDate=2024-01-01&endDate=2024-12-31",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "trends"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientIds",
+											"value": "{{clientId}}",
+											"description": "Client ID"
+										},
+										{
+											"key": "metric",
+											"value": "muscle",
+											"description": "Metric to analyze"
+										},
+										{
+											"key": "startDate",
+											"value": "2024-01-01",
+											"description": "Start date (yyyy-MM-dd)"
+										},
+										{
+											"key": "endDate",
+											"value": "2024-12-31",
+											"description": "End date (yyyy-MM-dd)"
+										}
+									]
+								},
+								"description": "Get trends for a specific date range"
+							},
+							"response": []
+						},
+						{
+							"name": "Aggregated Trends",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/trends?person=coach&clientIds={{clientId1}},{{clientId2}},{{clientId3}}&metric=fat&aggregate=true",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "trends"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientIds",
+											"value": "{{clientId1}},{{clientId2}},{{clientId3}}",
+											"description": "Comma-separated client IDs"
+										},
+										{
+											"key": "metric",
+											"value": "fat",
+											"description": "Metric to analyze"
+										},
+										{
+											"key": "aggregate",
+											"value": "true",
+											"description": "Aggregate across clients"
+										}
+									]
+								},
+								"description": "Get aggregated trends across multiple clients"
+							},
+							"response": []
+						}
+					],
+					"description": "Time-series trend analysis for health metrics"
+				},
+				{
+					"name": "Client Ranking",
+					"item": [
+						{
+							"name": "Ranking vs All Clients (Client)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/client-ranking?person=client&comparisonGroup=all",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "client-ranking"],
+									"query": [
+										{
+											"key": "person",
+											"value": "client"
+										},
+										{
+											"key": "comparisonGroup",
+											"value": "all",
+											"description": "Compare against all coach clients"
+										},
+										{
+											"key": "metrics",
+											"value": "bmi,muscle,fat,weight",
+											"description": "Optional: Specific metrics (default: all)",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get percentile ranking compared to all coach clients (client perspective)"
+							},
+							"response": []
+						},
+						{
+							"name": "Ranking vs All Clients (Coach)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/client-ranking?person=coach&clientId={{clientId}}&comparisonGroup=all",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "client-ranking"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "Client ID to rank"
+										},
+										{
+											"key": "comparisonGroup",
+											"value": "all",
+											"description": "Compare against all coach clients"
+										}
+									]
+								},
+								"description": "Get percentile ranking for a specific client (coach perspective)"
+							},
+							"response": []
+						},
+						{
+							"name": "Ranking within Category",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/client-ranking?person=coach&clientId={{clientId}}&comparisonGroup=category&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "client-ranking"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "Client ID to rank"
+										},
+										{
+											"key": "comparisonGroup",
+											"value": "category",
+											"description": "Compare within category"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID"
+										}
+									]
+								},
+								"description": "Get percentile ranking within a specific category"
+							},
+							"response": []
+						},
+						{
+							"name": "Ranking - Specific Metrics",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/client-ranking?person=coach&clientId={{clientId}}&metrics=bmi,muscle,fat,weight",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "client-ranking"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "Client ID to rank"
+										},
+										{
+											"key": "metrics",
+											"value": "bmi,muscle,fat,weight",
+											"description": "Specific metrics to rank"
+										}
+									]
+								},
+								"description": "Get ranking for specific metrics only"
+							},
+							"response": []
+						}
+					],
+					"description": "Percentile ranking of clients relative to their peers"
+				},
+				{
+					"name": "Correlations",
+					"item": [
+						{
+							"name": "All Metrics Correlations",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/correlations?person=coach",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "correlations"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										}
+									]
+								},
+								"description": "Calculate correlations between all health metrics for all clients"
+							},
+							"response": []
+						},
+						{
+							"name": "Specific Clients Correlations",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/correlations?person=coach&clientIds={{clientId1}},{{clientId2}},{{clientId3}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "correlations"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientIds",
+											"value": "{{clientId1}},{{clientId2}},{{clientId3}}",
+											"description": "Comma-separated client IDs"
+										}
+									]
+								},
+								"description": "Calculate correlations for specific clients"
+							},
+							"response": []
+						},
+						{
+							"name": "Specific Metrics Correlations",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/correlations?person=coach&metrics=bmi,muscle,fat,weight",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "correlations"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "metrics",
+											"value": "bmi,muscle,fat,weight",
+											"description": "Comma-separated metrics to correlate"
+										}
+									]
+								},
+								"description": "Calculate correlations for specific metrics only"
+							},
+							"response": []
+						},
+						{
+							"name": "Category Correlations",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/correlations?person=coach&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "correlations"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID to filter clients"
+										}
+									]
+								},
+								"description": "Calculate correlations for clients in a specific category"
+							},
+							"response": []
+						}
+					],
+					"description": "Correlation analysis between different health metrics"
+				},
+				{
+					"name": "Distribution",
+					"item": [
+						{
+							"name": "BMI Distribution",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/distribution?person=coach&metric=bmi",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "distribution"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "metric",
+											"value": "bmi",
+											"description": "Metric to analyze"
+										}
+									]
+								},
+								"description": "Get distribution statistics for BMI"
+							},
+							"response": []
+						},
+						{
+							"name": "Muscle Distribution by Category",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/distribution?person=coach&metric=muscle&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "distribution"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "metric",
+											"value": "muscle",
+											"description": "Metric to analyze"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID filter"
+										}
+									]
+								},
+								"description": "Get muscle percentage distribution for a specific category"
+							},
+							"response": []
+						},
+						{
+							"name": "Weight Distribution - Specific Clients",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/distribution?person=coach&metric=weight&clientIds={{clientId1}},{{clientId2}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "distribution"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "metric",
+											"value": "weight",
+											"description": "Metric to analyze"
+										},
+										{
+											"key": "clientIds",
+											"value": "{{clientId1}},{{clientId2}}",
+											"description": "Comma-separated client IDs"
+										}
+									]
+								},
+								"description": "Get weight distribution for specific clients"
+							},
+							"response": []
+						}
+					],
+					"description": "Distribution statistics for specific metrics"
+				},
+				{
+					"name": "Preferences Analysis",
+					"item": [
+						{
+							"name": "All Preferences Analysis",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/preferences-analysis?person=coach",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "preferences-analysis"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										}
+									]
+								},
+								"description": "Get analysis for all preferences (training, supplements, injuries)"
+							},
+							"response": []
+						},
+						{
+							"name": "Training Analysis",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/preferences-analysis?person=coach&analysisType=training",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "preferences-analysis"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "analysisType",
+											"value": "training",
+											"description": "Analysis type: training, supplements, injuries, or all"
+										}
+									]
+								},
+								"description": "Get training module analysis only"
+							},
+							"response": []
+						},
+						{
+							"name": "Supplements Analysis",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/preferences-analysis?person=coach&analysisType=supplements",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "preferences-analysis"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "analysisType",
+											"value": "supplements",
+											"description": "Analysis type"
+										}
+									]
+								},
+								"description": "Get supplement usage analysis only"
+							},
+							"response": []
+						},
+						{
+							"name": "Injuries Analysis",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/preferences-analysis?person=coach&analysisType=injuries",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "preferences-analysis"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "analysisType",
+											"value": "injuries",
+											"description": "Analysis type"
+										}
+									]
+								},
+								"description": "Get injury pattern analysis only"
+							},
+							"response": []
+						},
+						{
+							"name": "Category Preferences Analysis",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/preferences-analysis?person=coach&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "preferences-analysis"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID to filter"
+										}
+									]
+								},
+								"description": "Get preferences analysis for a specific category"
+							},
+							"response": []
+						}
+					],
+					"description": "Analysis of training, supplements, and injury patterns"
+				},
+				{
+					"name": "Analytics Summary",
+					"item": [
+						{
+							"name": "Client Summary",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/summary?person=client",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "summary"],
+									"query": [
+										{
+											"key": "person",
+											"value": "client"
+										}
+									]
+								},
+								"description": "Get comprehensive analytics summary for authenticated client"
+							},
+							"response": []
+						},
+						{
+							"name": "Coach Summary - All Clients",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/summary?person=coach",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "summary"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										}
+									]
+								},
+								"description": "Get comprehensive analytics summary for all coach clients"
+							},
+							"response": []
+						},
+						{
+							"name": "Coach Summary - Specific Client",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/summary?person=coach&clientId={{clientId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "summary"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "Specific client ID to focus on"
+										}
+									]
+								},
+								"description": "Get comprehensive analytics summary for a specific client"
+							},
+							"response": []
+						},
+						{
+							"name": "Coach Summary - Category",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/app/roundglass/analytics/summary?person=coach&categoryId={{categoryId}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "app", "roundglass", "analytics", "summary"],
+									"query": [
+										{
+											"key": "person",
+											"value": "coach"
+										},
+										{
+											"key": "categoryId",
+											"value": "{{categoryId}}",
+											"description": "Category ID to filter"
+										}
+									]
+								},
+								"description": "Get comprehensive analytics summary for a specific category"
+							},
+							"response": []
+						}
+					],
+					"description": "Comprehensive analytics summary dashboard"
+				}
+			],
+			"description": "Analytical endpoints for comparing clients and analyzing metrics"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8084",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		},
+		{
+			"key": "clientId1",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		},
+		{
+			"key": "clientId2",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k2",
+			"type": "string"
+		},
+		{
+			"key": "clientId3",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k3",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		},
+		{
+			"key": "categoryId1",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		},
+		{
+			"key": "categoryId2",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k2",
+			"type": "string"
+		}
+	]
+}
