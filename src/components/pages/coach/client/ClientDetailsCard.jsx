@@ -703,12 +703,13 @@ function Header({ clientData }) {
         </div>
         <div className="flex gap-4">
           <ClientStatus status={clientData.isActive} _id={clientData._id} />
-          {permit("club", roles) && (
+          {/* Membership toggle commented out */}
+          {/* {permit("club", roles) && (
             <ClientClubStatus
               status={clientData.isSubscription}
               _id={clientData._id}
             />
-          )}
+          )} */}
         </div>
       </div>
       <DropdownMenu open={modalOpened}>
