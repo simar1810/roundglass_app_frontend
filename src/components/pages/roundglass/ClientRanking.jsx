@@ -51,7 +51,7 @@ import {
   Radar,
   ResponsiveContainer,
 } from "recharts";
-import { RefreshCw, TrendingUp, TrendingDown, Award, AlertCircle } from "lucide-react";
+import { RefreshCw, TrendingUp, TrendingDown, Award, AlertCircle, Users } from "lucide-react";
 
 // Available metrics
 const AVAILABLE_METRICS = [
@@ -227,19 +227,36 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     toast.success("Data refreshed");
   };
 
+  // Show message if no client selected (and not provided via prop)
+  if (!propClientId && !clientId) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Player Selected</h3>
+            <p className="text-muted-foreground">
+              Please select a player to view ranking data
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (clientLoading) return <ContentLoader />;
 
-  if (clientError || clientData?.status_code !== 200) {
+  if (clientError || (clientData && clientData?.status_code !== 200)) {
     return (
       <ContentError
-        title={clientError?.message || clientData?.message || "Failed to load client data"}
+        title={clientError?.message || clientData?.message || "Failed to load player data"}
       />
     );
   }
 
   if (isLoading) return <ContentLoader />;
 
-  if (error || data?.status_code !== 200) {
+  if (error || (data && data?.status_code !== 200)) {
     return (
       <ContentError
         title={error?.message || data?.message || "Failed to load ranking data"}
@@ -263,13 +280,13 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                   <div>
                     <CardTitle className="text-xl">{client.name}</CardTitle>
                     <CardDescription>
-                      {client.email || client.mobileNumber || "Client details"}
+                      {client.email || client.mobileNumber || "Player details"}
                     </CardDescription>
                   </div>
                 </>
               ) : (
                 <div>
-                  <CardTitle className="text-xl">Client Rankings</CardTitle>
+                  <CardTitle className="text-xl">Player Rankings</CardTitle>
                   <CardDescription>Percentile rankings compared to peers</CardDescription>
                 </div>
               )}
@@ -282,7 +299,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <AnalyticsPrintButton
                 variant="outline"
                 size="sm"
-                title={client ? `${client.name} - Rankings Report` : "Client Rankings Report"}
+                title={client ? `${client.name} - Rankings Report` : "Player Rankings Report"}
               />
             </div>
           </div>
@@ -292,11 +309,11 @@ export default function ClientRanking({ clientId: propClientId = null }) {
             {/* Client Selector */}
             {!propClientId && (
               <div>
-                <label className="text-sm font-medium mb-2 block">Client</label>
+                <label className="text-sm font-medium mb-2 block">Player</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Enter client ID"
+                  placeholder="Enter player ID"
                   value={clientId || ""}
                   onChange={(e) => setClientId(e.target.value)}
                 />
@@ -311,7 +328,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
+                  <SelectItem value="all">All Players</SelectItem>
                   <SelectItem value="category">Category</SelectItem>
                 </SelectContent>
               </Select>
@@ -578,7 +595,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Ranking Data Available</h3>
               <p className="text-muted-foreground">
-                Please select a client to view ranking data
+                Please select a player to view ranking data
               </p>
             </div>
           </CardContent>

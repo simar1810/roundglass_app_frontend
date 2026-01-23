@@ -42,7 +42,7 @@ export default function ComparisonGroupSelector({
   const availableOptions = useMemo(() => {
     if (person === "client") {
       return [
-        { value: "all", label: "All Clients" },
+        { value: "all", label: "All Players" },
         { value: "category", label: "My Category" },
       ];
     }

@@ -46,13 +46,13 @@ import {
 import { cn } from "@/lib/utils";
 import { format, subMonths } from "date-fns";
 import {
+  Activity,
   CalendarIcon,
   Download,
   RefreshCw,
   TrendingUp,
   TrendingDown,
   Minus,
-  Activity,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -223,7 +223,7 @@ export default function TrendsAnalysis() {
     }
 
     try {
-      const headers = ["Date", "Client", "Value"];
+      const headers = ["Date", "Player", "Value"];
       const rows = tableData.map((row) => {
         const csvRow = [row.date, getClientName(row.clientId), row.value ?? "—"];
         return csvRow.join(",");
@@ -250,9 +250,26 @@ export default function TrendsAnalysis() {
     }
   };
 
+  // Show message if no players selected
+  if (selectedClientIds.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Players Selected</h3>
+            <p className="text-muted-foreground">
+              Please select players and date range to view trends
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isLoading) return <ContentLoader />;
 
-  if (error || data?.status_code !== 200) {
+  if (error || (data && data?.status_code !== 200)) {
     return (
       <ContentError
         title={error?.message || data?.message || "Failed to load trends data"}
@@ -375,11 +392,11 @@ export default function TrendsAnalysis() {
               </Popover>
             </div>
 
-            {/* Client Selector */}
+            {/* Player Selector */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Clients</label>
+              <label className="text-sm font-medium mb-2 block">Players</label>
               <SelectMultiple
-                label="Select clients"
+                label="Select players"
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
@@ -400,7 +417,7 @@ export default function TrendsAnalysis() {
                 htmlFor="aggregate"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Aggregate across selected clients
+                Aggregate across selected players
               </Label>
             </div>
           )}
@@ -619,7 +636,7 @@ export default function TrendsAnalysis() {
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
               <p className="text-muted-foreground">
-                Please select clients and date range to view trends
+                Please select players and date range to view trends
               </p>
             </div>
           </CardContent>

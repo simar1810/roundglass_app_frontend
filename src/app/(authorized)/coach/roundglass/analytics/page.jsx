@@ -184,7 +184,7 @@ export default function Page() {
                 Roundglass Analytics
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Comprehensive analytics and insights for your clients
+                Comprehensive analytics and insights for your players
               </p>
             </div>
             <div className="flex gap-2">

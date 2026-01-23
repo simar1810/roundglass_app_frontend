@@ -380,7 +380,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Clients with Training Data: {trainingData.totalClients || 0}
+                      Total Players with Training Data: {trainingData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -391,13 +391,13 @@ export default function PreferencesAnalysis() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Training Frequency Distribution</CardTitle>
-                    <CardDescription>Number of clients by training frequency</CardDescription>
+                    <CardDescription>Number of players by training frequency</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Clients",
+                          label: "Players",
                           color: "hsl(var(--chart-1))",
                         },
                       }}
@@ -462,7 +462,7 @@ export default function PreferencesAnalysis() {
                                       style={{ backgroundColor: data.payload.fill }}
                                     />
                                     <span className="text-sm font-medium">
-                                      {data.payload.name}: {data.value} clients (
+                                      {data.payload.name}: {data.value} players (
                                       {((data.value / (trainingData.totalClients || 1)) * 100).toFixed(1)}%)
                                     </span>
                                   </div>
@@ -522,7 +522,7 @@ export default function PreferencesAnalysis() {
                         .map(([day, count]) => (
                           <div key={day} className="flex items-center justify-between">
                             <span className="text-sm">{day}</span>
-                            <Badge variant="secondary">{count} clients</Badge>
+                            <Badge variant="secondary">{count} players</Badge>
                           </div>
                         ))}
                     </div>
@@ -568,7 +568,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Clients with Supplements: {supplementsData.totalClients || 0}
+                      Total Players with Supplements: {supplementsData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -585,7 +585,7 @@ export default function PreferencesAnalysis() {
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Clients",
+                          label: "Players",
                           color: "hsl(var(--chart-2))",
                         },
                       }}
@@ -624,7 +624,7 @@ export default function PreferencesAnalysis() {
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Clients",
+                          label: "Players",
                           color: "hsl(var(--chart-3))",
                         },
                       }}
@@ -732,7 +732,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Clients with Injuries: {injuriesData.totalClients || 0}
+                      Total Players with Injuries: {injuriesData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>

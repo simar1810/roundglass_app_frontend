@@ -171,7 +171,7 @@ export default function AnalyticsSummary() {
             <div>
               <CardTitle>Analytics Summary</CardTitle>
               <CardDescription>
-                Comprehensive overview of all client analytics and metrics
+                Comprehensive overview of all player analytics and metrics
               </CardDescription>
             </div>
             <div className="flex gap-2 no-print">
@@ -214,11 +214,11 @@ export default function AnalyticsSummary() {
 
             {/* Client Filter (Optional) */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Focus on Client (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Focus on Player (Optional)</label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="Enter client ID"
+                placeholder="Enter player ID"
                 value={selectedClientId || ""}
                 onChange={(e) => setSelectedClientId(e.target.value)}
               />
@@ -233,7 +233,7 @@ export default function AnalyticsSummary() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Clients
+                Total Players
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -386,7 +386,7 @@ export default function AnalyticsSummary() {
                       .map(([frequency, count]) => (
                         <div key={frequency} className="flex items-center justify-between">
                           <span className="text-sm">{frequency}</span>
-                          <Badge variant="secondary">{count} clients</Badge>
+                          <Badge variant="secondary">{count} players</Badge>
                         </div>
                       ))}
                 </div>
@@ -411,7 +411,7 @@ export default function AnalyticsSummary() {
                       .map(([supplement, count]) => (
                         <div key={supplement} className="flex items-center justify-between">
                           <span className="text-sm">{supplement}</span>
-                          <Badge variant="secondary">{count} clients</Badge>
+                          <Badge variant="secondary">{count} players</Badge>
                         </div>
                       ))}
                 </div>
@@ -514,7 +514,7 @@ export default function AnalyticsSummary() {
                 <Award className="h-5 w-5" />
                 Top Performers
               </CardTitle>
-              <CardDescription>Clients with highest average percentile rankings</CardDescription>
+              <CardDescription>Players with highest average percentile rankings</CardDescription>
             </CardHeader>
             <CardContent>
               {topPerformers.length > 0 ? (
@@ -526,7 +526,7 @@ export default function AnalyticsSummary() {
                     >
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">#{index + 1}</Badge>
-                        <span className="text-sm font-medium">Client {performer.clientId.slice(-6)}</span>
+                        <span className="text-sm font-medium">Player {performer.clientId.slice(-6)}</span>
                       </div>
                       <Badge variant="default">
                         {Math.round(performer.avgPercentile)}th percentile
@@ -606,7 +606,7 @@ export default function AnalyticsSummary() {
             </Link>
             <Link href="/coach/roundglass/analytics?tab=rankings">
               <Button variant="outline" className="w-full justify-between">
-                Client Rankings
+                Player Rankings
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -640,7 +640,7 @@ export default function AnalyticsSummary() {
               <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Summary Data Available</h3>
               <p className="text-muted-foreground">
-                Analytics summary data will appear here once clients have health data
+                Analytics summary data will appear here once players have health data
               </p>
             </div>
           </CardContent>

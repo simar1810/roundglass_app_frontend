@@ -2,9 +2,10 @@
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import DashboardFeaturesDetails from "@/components/drawers/DashboardFeaturesDetails";
-import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool";
+// import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool"; // Commented out - carousel not needed
 import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import Stories from "@/components/pages/coach/dashboard/Stories";
+import AnalyticsOverview from "@/components/pages/coach/dashboard/AnalyticsOverview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCoachHome } from "@/lib/fetchers/app";
 import Link from "next/link";
@@ -29,11 +30,18 @@ function Container() {
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
   const coachHomeData = data.data;
   return <>
-    <ActivityTool activities={coachHomeData.activePrograms} />
+    {/* Carousel commented out - not needed for academy */}
+    {/* <ActivityTool activities={coachHomeData.activePrograms} /> */}
     <StatisticsCards />
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Stories stories={coachHomeData.story} coach={true} />
-      <TopPerformersPreview topPerformers={coachHomeData.topPerformers} />
+    
+    {/* Analytics Overview and Results - Better spacing */}
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="lg:col-span-2">
+        <Stories stories={coachHomeData.story} coach={true} />
+      </div>
+      <div className="lg:col-span-3">
+        <AnalyticsOverview />
+      </div>
     </div>
     <DashboardFeaturesDetails
       topPerformers={coachHomeData.topPerformers}

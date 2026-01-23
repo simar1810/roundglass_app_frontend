@@ -117,7 +117,7 @@ export default function CategoryComparison() {
 
   // Fetch comparison data
   const { isLoading, error, data } = useSWR(
-    (comparisonType === "intra" && selectedCategoryId) || 
+    (comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
     (comparisonType === "inter" && selectedCategoryIds.length > 0)
       ? swrKey
       : null,
@@ -129,8 +129,11 @@ export default function CategoryComparison() {
 
   // Handle refresh
   const handleRefresh = () => {
-    mutate(swrKey);
-    toast.success("Data refreshed");
+    if ((comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
+        (comparisonType === "inter" && selectedCategoryIds.length > 0)) {
+      mutate(swrKey);
+      toast.success("Data refreshed");
+    }
   };
 
   // Handle sort
@@ -240,9 +243,29 @@ export default function CategoryComparison() {
   };
 
 
+  // Show message if no category selected
+  const hasValidSelection = (comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
+                             (comparisonType === "inter" && selectedCategoryIds.length > 0);
+  
+  if (!hasValidSelection) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Category Selected</h3>
+            <p className="text-muted-foreground">
+              Please select a category to view comparison data
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isLoading) return <ContentLoader />;
 
-  if (error || data?.status_code !== 200) {
+  if (error || (data && data?.status_code !== 200)) {
     return (
       <ContentError
         title={error?.message || data?.message || "Failed to load category comparison data"}
@@ -259,7 +282,7 @@ export default function CategoryComparison() {
             <div>
               <CardTitle>Category Comparison</CardTitle>
               <CardDescription>
-                Compare clients within or between categories
+                Compare players within or between categories
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -364,7 +387,7 @@ export default function CategoryComparison() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Clients
+                Total Players
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -474,9 +497,9 @@ export default function CategoryComparison() {
       {clientTableData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Client Comparison</CardTitle>
+            <CardTitle>Player Comparison</CardTitle>
             <CardDescription>
-              Detailed comparison of all clients in the selected categories
+              Detailed comparison of all players in the selected categories
             </CardDescription>
           </CardHeader>
           <CardContent>

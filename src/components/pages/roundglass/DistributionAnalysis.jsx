@@ -479,9 +479,9 @@ export default function DistributionAnalysis() {
 
             {/* Client Selector */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Clients (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Players (Optional)</label>
               <SelectMultiple
-                label="Select clients"
+                label="Select players"
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
