@@ -868,13 +868,27 @@ export default function PreferencesAnalysis() {
                   <CardContent>
                     <div className="space-y-2">
                       {Object.entries(injuriesData.rehabProgressStats)
-                        .sort(([, a], [, b]) => b - a)
-                        .map(([progress, count]) => (
-                          <div key={progress} className="flex items-center justify-between">
-                            <span className="text-sm">{progress}</span>
-                            <Badge variant="secondary">{count} injuries</Badge>
-                          </div>
-                        ))}
+                        .sort(([, a], [, b]) => {
+                          // Handle both number and object (percentiles) cases
+                          const aValue = typeof a === 'object' && a !== null ? (a.count || a.p50 || 0) : (a || 0);
+                          const bValue = typeof b === 'object' && b !== null ? (b.count || b.p50 || 0) : (b || 0);
+                          return bValue - aValue;
+                        })
+                        .map(([progress, count]) => {
+                          // Handle both number and object (percentiles) cases
+                          const displayCount = typeof count === 'object' && count !== null
+                            ? (count.count || count.p50 || '—')
+                            : (count || '—');
+                          
+                          return (
+                            <div key={progress} className="flex items-center justify-between">
+                              <span className="text-sm">{progress}</span>
+                              <Badge variant="secondary">
+                                {typeof displayCount === 'number' ? `${displayCount} injuries` : displayCount}
+                              </Badge>
+                            </div>
+                          );
+                        })}
                     </div>
                   </CardContent>
                 </Card>
