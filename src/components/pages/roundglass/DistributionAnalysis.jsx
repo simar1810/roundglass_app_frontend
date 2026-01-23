@@ -2,6 +2,7 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -264,7 +265,7 @@ export default function DistributionAnalysis() {
 
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedClientIds, setSelectedClientIds] = useState([]);
 
   // Fetch clients
@@ -295,7 +296,7 @@ export default function DistributionAnalysis() {
       metric: selectedMetric,
     };
 
-    if (selectedCategoryId) {
+    if (selectedCategoryId && selectedCategoryId !== "all") {
       params.categoryId = selectedCategoryId;
     }
 
@@ -416,22 +417,29 @@ export default function DistributionAnalysis() {
                 Analyze statistical distribution for a specific metric
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 no-print">
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
               {distribution && distribution.length > 0 && (
-                <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                  <AnalyticsPrintButton
+                    variant="outline"
+                    size="sm"
+                    title="Distribution Analysis Report"
+                  />
+                </>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="print:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
             {/* Metric Selector (Required) */}
             <div>
               <label className="text-sm font-medium mb-2 block">
@@ -459,7 +467,7 @@ export default function DistributionAnalysis() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}

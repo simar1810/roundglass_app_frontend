@@ -2,6 +2,10 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
+import AnalyticsMobileFilters from "@/components/common/AnalyticsMobileFilters";
+import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
+import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,7 +88,7 @@ const AVAILABLE_METRICS = [
   { value: "shoulder_distance", label: "Shoulder Distance" },
 ];
 
-export default function TrendsAnalysis({ person = "coach" }) {
+export default function TrendsAnalysis() {
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
   const [startDate, setStartDate] = useState(() => subMonths(new Date(), 6));
@@ -95,9 +99,8 @@ export default function TrendsAnalysis({ person = "coach" }) {
   const [endDateOpen, setEndDateOpen] = useState(false);
 
   // Fetch clients for coach view
-  const { data: clientsData } = useSWR(
-    person === "coach" ? "trends-clients-list" : null,
-    () => getAppClients({ limit: 10000 })
+  const { data: clientsData } = useSWR("trends-clients-list", () =>
+    getAppClients({ limit: 10000 })
   );
 
   const clients = useMemo(() => {
@@ -111,11 +114,11 @@ export default function TrendsAnalysis({ person = "coach" }) {
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person,
+      person: "coach",
       metric: selectedMetric,
     };
 
-    if (person === "coach" && selectedClientIds.length > 0) {
+    if (selectedClientIds.length > 0) {
       params.clientIds = selectedClientIds;
     }
 
@@ -127,38 +130,32 @@ export default function TrendsAnalysis({ person = "coach" }) {
       params.endDate = format(endDate, "yyyy-MM-dd");
     }
 
-    if (person === "coach") {
-      params.aggregate = aggregate;
-    }
+    params.aggregate = aggregate;
 
     return params;
-  }, [person, selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = [
       "roundglass/trends",
-      person,
+      "coach",
       selectedMetric,
       startDate ? format(startDate, "yyyy-MM-dd") : "",
       endDate ? format(endDate, "yyyy-MM-dd") : "",
     ];
 
-    if (person === "coach") {
-      if (selectedClientIds.length > 0) {
-        keyParts.push(`clients:${selectedClientIds.join(",")}`);
-      }
-      keyParts.push(`aggregate:${aggregate}`);
+    if (selectedClientIds.length > 0) {
+      keyParts.push(`clients:${selectedClientIds.join(",")}`);
     }
+    keyParts.push(`aggregate:${aggregate}`);
 
     return keyParts.join("|");
-  }, [apiParams, person, selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
 
   // Fetch trends data
   const { isLoading, error, data } = useSWR(
-    (person === "client" || (person === "coach" && selectedClientIds.length > 0))
-      ? swrKey
-      : null,
+    selectedClientIds.length > 0 ? swrKey : null,
     () => getTrendsAnalysis(apiParams)
   );
 
@@ -226,13 +223,9 @@ export default function TrendsAnalysis({ person = "coach" }) {
     }
 
     try {
-      const headers = ["Date", person === "coach" ? "Client" : "", "Value"].filter(Boolean);
+      const headers = ["Date", "Client", "Value"];
       const rows = tableData.map((row) => {
-        const csvRow = [
-          row.date,
-          person === "coach" ? getClientName(row.clientId) : "",
-          row.value ?? "—",
-        ].filter((cell) => cell !== null);
+        const csvRow = [row.date, getClientName(row.clientId), row.value ?? "—"];
         return csvRow.join(",");
       });
 
@@ -279,22 +272,29 @@ export default function TrendsAnalysis({ person = "coach" }) {
                 Analyze time-series trends for health metrics
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 no-print">
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
               {tableData.length > 0 && (
-                <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                  <AnalyticsPrintButton
+                    variant="outline"
+                    size="sm"
+                    title="Trends Analysis Report"
+                  />
+                </>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="print:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
             {/* Metric Selector */}
             <div>
               <label className="text-sm font-medium mb-2 block">Metric</label>
@@ -375,23 +375,21 @@ export default function TrendsAnalysis({ person = "coach" }) {
               </Popover>
             </div>
 
-            {/* Client Selector (Coach only) */}
-            {person === "coach" && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Clients</label>
-                <SelectMultiple
-                  label="Select clients"
-                  options={clients}
-                  value={selectedClientIds}
-                  onChange={setSelectedClientIds}
-                  searchable
-                />
-              </div>
-            )}
+            {/* Client Selector */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Clients</label>
+              <SelectMultiple
+                label="Select clients"
+                options={clients}
+                value={selectedClientIds}
+                onChange={setSelectedClientIds}
+                searchable
+              />
+            </div>
           </div>
 
-          {/* Aggregate Toggle (Coach only) */}
-          {person === "coach" && selectedClientIds.length > 0 && (
+          {/* Aggregate Toggle */}
+          {selectedClientIds.length > 0 && (
             <div className="mt-4 flex items-center space-x-2">
               <Checkbox
                 id="aggregate"
@@ -492,27 +490,28 @@ export default function TrendsAnalysis({ person = "coach" }) {
           <CardHeader>
             <CardTitle>
               {formatMetricName(selectedMetric)} Trends
-              {person === "coach" && aggregate && " (Aggregated)"}
+              {aggregate && " (Aggregated)"}
             </CardTitle>
             <CardDescription>
               {formatDateRange(startDate, endDate)}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={Object.fromEntries(
-                Object.keys(lineChartData[0] || {})
-                  .filter((key) => key !== "date")
-                  .map((key, index) => [
-                    key,
-                    {
-                      label: key,
-                      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-                    },
-                  ])
-              )}
-              className="h-96"
-            >
+            <AnalyticsResponsiveChart mobileHeight={300} desktopHeight={400}>
+              <ChartContainer
+                config={Object.fromEntries(
+                  Object.keys(lineChartData[0] || {})
+                    .filter((key) => key !== "date")
+                    .map((key, index) => [
+                      key,
+                      {
+                        label: key,
+                        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+                      },
+                    ])
+                )}
+                className="h-full"
+              >
               <LineChart
                 data={lineChartData}
                 margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
@@ -570,7 +569,8 @@ export default function TrendsAnalysis({ person = "coach" }) {
                     />
                   ))}
               </LineChart>
-            </ChartContainer>
+              </ChartContainer>
+            </AnalyticsResponsiveChart>
           </CardContent>
         </Card>
       )}
@@ -585,12 +585,12 @@ export default function TrendsAnalysis({ person = "coach" }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <AnalyticsResponsiveTable className="analytics-table-mobile">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    {person === "coach" && <TableHead>Client</TableHead>}
+                    <TableHead>Client</TableHead>
                     <TableHead>Value</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -598,9 +598,7 @@ export default function TrendsAnalysis({ person = "coach" }) {
                   {tableData.map((row, index) => (
                     <TableRow key={index}>
                       <TableCell>{row.date || "—"}</TableCell>
-                      {person === "coach" && (
-                        <TableCell>{getClientName(row.clientId)}</TableCell>
-                      )}
+                      <TableCell>{getClientName(row.clientId)}</TableCell>
                       <TableCell>
                         {normalizeMetricValue(row.value, selectedMetric)}
                       </TableCell>
@@ -608,7 +606,7 @@ export default function TrendsAnalysis({ person = "coach" }) {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </AnalyticsResponsiveTable>
           </CardContent>
         </Card>
       )}
@@ -621,9 +619,7 @@ export default function TrendsAnalysis({ person = "coach" }) {
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
               <p className="text-muted-foreground">
-                {person === "coach"
-                  ? "Please select clients and date range to view trends"
-                  : "No trend data available for the selected period"}
+                Please select clients and date range to view trends
               </p>
             </div>
           </CardContent>

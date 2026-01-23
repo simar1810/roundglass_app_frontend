@@ -128,6 +128,22 @@ export const sidebar__coachContent = [
       }
     ]
   },
+  {
+    id: 17,
+    title: "Analytics",
+    icon: <BarChart className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/roundglass/analytics",
+    permission: "coach", // Only coaches can see this
+    group: "main",
+    items: [
+      {
+        id: 1,
+        icon: <BarChart className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Dashboard",
+        url: "/coach/roundglass/analytics"
+      }
+    ]
+  },
   
   // Content Management
   {

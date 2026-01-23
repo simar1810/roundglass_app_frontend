@@ -2,6 +2,7 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ export default function CorrelationsAnalysis() {
   // State for filters
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "correlation", direction: "desc" });
   const [selectedCorrelation, setSelectedCorrelation] = useState(null);
 
@@ -118,7 +119,7 @@ export default function CorrelationsAnalysis() {
       params.metrics = selectedMetrics;
     }
 
-    if (selectedCategoryId) {
+    if (selectedCategoryId && selectedCategoryId !== "all") {
       params.categoryId = selectedCategoryId;
     }
 
@@ -318,22 +319,29 @@ export default function CorrelationsAnalysis() {
                 Analyze relationships between different health metrics
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 no-print">
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
               {correlationList.length > 0 && (
-                <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </Button>
+                  <AnalyticsPrintButton
+                    variant="outline"
+                    size="sm"
+                    title="Correlations Analysis Report"
+                  />
+                </>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="print:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
             {/* Client Selector */}
             <div>
               <label className="text-sm font-medium mb-2 block">Clients (Optional)</label>
@@ -366,7 +374,7 @@ export default function CorrelationsAnalysis() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}

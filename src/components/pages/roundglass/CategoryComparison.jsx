@@ -2,6 +2,10 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
+import AnalyticsMobileFilters from "@/components/common/AnalyticsMobileFilters";
+import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
+import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,7 +67,7 @@ const AVAILABLE_METRICS = [
   { value: "shoulder_distance", label: "Shoulder Distance" },
 ];
 
-export default function CategoryComparison({ person = "coach" }) {
+export default function CategoryComparison() {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
@@ -83,7 +87,7 @@ export default function CategoryComparison({ person = "coach" }) {
 
   // Build API params
   const apiParams = useMemo(() => {
-    const params = { person };
+    const params = { person: "coach" };
     
     if (comparisonType === "intra") {
       if (selectedCategoryId) {
@@ -100,16 +104,16 @@ export default function CategoryComparison({ person = "coach" }) {
     }
 
     return params;
-  }, [person, comparisonType, selectedCategoryId, selectedCategoryIds, selectedMetrics]);
+  }, [comparisonType, selectedCategoryId, selectedCategoryIds, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
-    const keyParts = ["roundglass/category-comparison", person];
+    const keyParts = ["roundglass/category-comparison", "coach"];
     if (apiParams.categoryId) keyParts.push(`categoryId:${apiParams.categoryId}`);
     if (apiParams.categoryIds) keyParts.push(`categoryIds:${apiParams.categoryIds.join(",")}`);
     if (apiParams.metrics) keyParts.push(`metrics:${apiParams.metrics.join(",")}`);
     return keyParts.join("|");
-  }, [apiParams, person]);
+  }, [apiParams]);
 
   // Fetch comparison data
   const { isLoading, error, data } = useSWR(
@@ -235,10 +239,6 @@ export default function CategoryComparison({ person = "coach" }) {
     }
   };
 
-  // Handle print
-  const handlePrint = () => {
-    window.print();
-  };
 
   if (isLoading) return <ContentLoader />;
 
@@ -273,16 +273,19 @@ export default function CategoryComparison({ person = "coach" }) {
                     <Download className="h-4 w-4 mr-2" />
                     Export CSV
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handlePrint}>
-                    Print
-                  </Button>
+                  <AnalyticsPrintButton
+                    variant="outline"
+                    size="sm"
+                    title="Category Comparison Report"
+                  />
                 </>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="print:p-4">
+          {/* Desktop Filters */}
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
             {/* Comparison Type Selector */}
             <div>
               <label className="text-sm font-medium mb-2 block">Comparison Type</label>
@@ -412,20 +415,21 @@ export default function CategoryComparison({ person = "coach" }) {
                 <CardDescription>Comparison across categories</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer
-                  config={Object.fromEntries(
-                    Object.keys(barChartData[0] || {})
-                      .filter((key) => key !== "name")
-                      .map((key) => [
-                        key,
-                        {
-                          label: formatMetricName(key),
-                          color: `hsl(var(--chart-${Math.floor(Math.random() * 5) + 1}))`,
-                        },
-                      ])
-                  )}
-                  className="h-80"
-                >
+                <AnalyticsResponsiveChart className="analytics-chart-mobile">
+                  <ChartContainer
+                    config={Object.fromEntries(
+                      Object.keys(barChartData[0] || {})
+                        .filter((key) => key !== "name")
+                        .map((key) => [
+                          key,
+                          {
+                            label: formatMetricName(key),
+                            color: `hsl(var(--chart-${Math.floor(Math.random() * 5) + 1}))`,
+                          },
+                        ])
+                    )}
+                    className="h-full"
+                  >
                   <BarChart data={barChartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
@@ -443,7 +447,8 @@ export default function CategoryComparison({ person = "coach" }) {
                         />
                       ))}
                   </BarChart>
-                </ChartContainer>
+                  </ChartContainer>
+                </AnalyticsResponsiveChart>
               </CardContent>
             </Card>
           )}
@@ -475,7 +480,7 @@ export default function CategoryComparison({ person = "coach" }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <AnalyticsResponsiveTable className="analytics-table-mobile">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -529,7 +534,7 @@ export default function CategoryComparison({ person = "coach" }) {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </AnalyticsResponsiveTable>
           </CardContent>
         </Card>
       )}

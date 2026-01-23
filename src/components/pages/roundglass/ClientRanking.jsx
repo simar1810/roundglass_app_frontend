@@ -2,6 +2,7 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +74,7 @@ const AVAILABLE_METRICS = [
   { value: "shoulder_distance", label: "Shoulder Distance" },
 ];
 
-export default function ClientRanking({ person = "coach", clientId: propClientId = null }) {
+export default function ClientRanking({ clientId: propClientId = null }) {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
@@ -82,17 +83,10 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState([]);
 
-  // Fetch client details (for coach view or if clientId is provided)
+  // Fetch client details
   const { isLoading: clientLoading, error: clientError, data: clientData } = useSWR(
-    clientId || person === "client" ? `client-ranking-details/${clientId || "current"}` : null,
-    () => {
-      if (person === "client") {
-        // For client view, we don't need to fetch client details separately
-        // The API will use the authenticated client
-        return Promise.resolve({ status_code: 200, data: null });
-      }
-      return getAppClientPortfolioDetails(clientId);
-    }
+    clientId ? `client-ranking-details/${clientId}` : null,
+    () => getAppClientPortfolioDetails(clientId)
   );
 
   const client = clientData?.data;
@@ -100,10 +94,10 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person,
+      person: "coach",
     };
 
-    if (person === "coach" && clientId) {
+    if (clientId) {
       params.clientId = clientId;
     }
 
@@ -120,14 +114,14 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
     }
 
     return params;
-  }, [person, clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = [
       "roundglass/client-ranking",
-      person,
-      clientId || "current",
+      "coach",
+      clientId || "none",
       comparisonGroup,
     ];
 
@@ -140,11 +134,11 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
     }
 
     return keyParts.join("|");
-  }, [person, clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
 
   // Fetch ranking data
   const { isLoading, error, data } = useSWR(
-    (person === "client" || (person === "coach" && clientId)) ? swrKey : null,
+    clientId ? swrKey : null,
     () => getClientRanking(apiParams)
   );
 
@@ -236,15 +230,11 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
   if (clientLoading) return <ContentLoader />;
 
   if (clientError || clientData?.status_code !== 200) {
-    if (person === "client") {
-      // For client view, continue even if client details fetch fails
-    } else {
-      return (
-        <ContentError
-          title={clientError?.message || clientData?.message || "Failed to load client data"}
-        />
-      );
-    }
+    return (
+      <ContentError
+        title={clientError?.message || clientData?.message || "Failed to load client data"}
+      />
+    );
   }
 
   if (isLoading) return <ContentLoader />;
@@ -264,7 +254,7 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {client && (
+              {client ? (
                 <>
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={client.profilePhoto} />
@@ -277,24 +267,30 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
                     </CardDescription>
                   </div>
                 </>
-              )}
-              {person === "client" && (
+              ) : (
                 <div>
-                  <CardTitle className="text-xl">My Rankings</CardTitle>
-                  <CardDescription>Your percentile rankings compared to peers</CardDescription>
+                  <CardTitle className="text-xl">Client Rankings</CardTitle>
+                  <CardDescription>Percentile rankings compared to peers</CardDescription>
                 </div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex gap-2 no-print">
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <AnalyticsPrintButton
+                variant="outline"
+                size="sm"
+                title={client ? `${client.name} - Rankings Report` : "Client Rankings Report"}
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Client Selector (Coach only) */}
-            {person === "coach" && !propClientId && (
+        <CardContent className="print:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+            {/* Client Selector */}
+            {!propClientId && (
               <div>
                 <label className="text-sm font-medium mb-2 block">Client</label>
                 <input
@@ -582,9 +578,7 @@ export default function ClientRanking({ person = "coach", clientId: propClientId
               <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Ranking Data Available</h3>
               <p className="text-muted-foreground">
-                {person === "coach"
-                  ? "Please select a client to view ranking data"
-                  : "No ranking data available for comparison"}
+                Please select a client to view ranking data
               </p>
             </div>
           </CardContent>

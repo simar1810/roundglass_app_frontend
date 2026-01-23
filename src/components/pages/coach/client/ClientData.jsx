@@ -13,8 +13,8 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ChartContainer } from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -34,13 +34,13 @@ import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { format, subMinutes } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, MoreVertical, ShoppingBag, TrendingUp, Utensils } from "lucide-react";
+import { format, subMinutes, subMonths } from "date-fns";
+import { BarChart, BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, MoreVertical, RefreshCw, ShoppingBag, TrendingUp, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
@@ -48,6 +48,8 @@ import AIAgentHistory from "./AIAgentHistory";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
+import ClientRanking from "@/components/pages/roundglass/ClientRanking";
+import TrendsAnalysis from "@/components/pages/roundglass/TrendsAnalysis";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -63,6 +65,7 @@ const tabItems = [
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
   { icon: <TrendingUp className="w-[16px] h-[16px]" />, value: "growth", label: "Growth" },
+  { icon: <BarChart className="w-[16px] h-[16px]" />, value: "roundglass-analytics", label: "Analytics" },
 ]
 
 const ADHERENCE_SCORE_RANGES = [
@@ -143,6 +146,9 @@ export default function ClientData({ clientData }) {
       </TabsContent>
       <TabsContent value="growth">
         <ClientGrowthStatus clientId={clientData._id} />
+      </TabsContent>
+      <TabsContent value="roundglass-analytics">
+        <TabsRoundglassAnalytics clientId={clientData._id} clientData={clientData} />
       </TabsContent>
     </Tabs>
   </div>
@@ -1168,6 +1174,122 @@ function ClientAdherenceScore({ clientId }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TabsRoundglassAnalytics({ clientId, clientData }) {
+  const [selectedView, setSelectedView] = useState("ranking");
+
+  return (
+    <div className="space-y-6">
+      {/* Quick Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Client Name
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-semibold">
+              {clientData?.name || "Unknown"}
+            </div>
+            {clientData?.email && (
+              <div className="text-sm text-muted-foreground mt-1">
+                {clientData.email}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant={selectedView === "ranking" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("ranking")}
+                className="w-full justify-start"
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                View Rankings
+              </Button>
+              <Button
+                variant={selectedView === "trends" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("trends")}
+                className="w-full justify-start"
+              >
+                <BarChart className="h-4 w-4 mr-2" />
+                View Trends
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Analytics Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-muted-foreground">
+              <p>View detailed analytics and insights for this client</p>
+              <p className="mt-2 text-xs">
+                Compare performance, track trends, and analyze progress
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Analytics Content */}
+      <div className="mt-6">
+        {selectedView === "ranking" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Client Rankings</h3>
+            </div>
+            <ClientRanking clientId={clientId} />
+          </div>
+        )}
+
+        {selectedView === "trends" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Trends Analysis</h3>
+            </div>
+            <TrendsAnalysisWrapper clientId={clientId} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Wrapper component to pre-fill clientId in TrendsAnalysis
+// Since TrendsAnalysis manages its own state, we'll use a ref-based approach
+// to set the initial client selection
+function TrendsAnalysisWrapper({ clientId }) {
+  // We'll render TrendsAnalysis and use a custom hook or effect to pre-select the client
+  // For now, just render the component - the user can select the client from the dropdown
+  // The component already has client selection built-in
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          <strong>Note:</strong> Use the client filter below to view trends for this specific client.
+          The client ID is: <code className="bg-blue-100 px-2 py-1 rounded">{clientId}</code>
+        </p>
+      </div>
+      <TrendsAnalysis />
     </div>
   );
 }

@@ -449,3 +449,482 @@ export function getTrendIcon(direction) {
   }
 }
 
+/**
+ * Export data to CSV file
+ * @param {Array} data - Array of objects to export
+ * @param {string} filename - Filename for the CSV (without extension)
+ * @param {Array} headers - Optional custom headers array
+ * @returns {void}
+ */
+export function exportToCSV(data, filename = "export", headers = null) {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    console.warn("No data to export");
+    return;
+  }
+
+  try {
+    // Get headers from first object if not provided
+    const csvHeaders = headers || Object.keys(data[0]);
+    
+    // Create CSV rows
+    const rows = data.map((row) => {
+      return csvHeaders.map((header) => {
+        const value = row[header];
+        // Handle null, undefined, and objects
+        if (value === null || value === undefined) {
+          return "";
+        }
+        // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+        if (typeof value === "string" && (value.includes(",") || value.includes('"') || value.includes("\n"))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return String(value);
+      });
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      csvHeaders.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    // Create blob with BOM for UTF-8 encoding
+    const blob = new Blob([`\uFEFF${csvContent}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    // Create download link
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error exporting to CSV:", error);
+    throw new Error("Failed to export CSV");
+  }
+}
+
+/**
+ * Export category comparison data to CSV
+ * @param {Object} comparisonData - Category comparison data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportComparisonToCSV(comparisonData, filename = "category-comparison") {
+  if (!comparisonData) {
+    console.warn("No comparison data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { comparison, statistics, clientTable } = comparisonData;
+
+    // Add summary information
+    if (comparison) {
+      data.push({ Type: "Summary", Field: "Total Clients", Value: comparison.totalClients || 0 });
+      data.push({ Type: "Summary", Field: "Comparison Type", Value: comparison.type || "N/A" });
+    }
+
+    // Add statistics
+    if (statistics) {
+      Object.entries(statistics).forEach(([metric, stats]) => {
+        data.push({
+          Type: "Statistics",
+          Metric: formatMetricName(metric),
+          Mean: stats.mean?.toFixed(2) || "—",
+          Median: stats.median?.toFixed(2) || "—",
+          Min: stats.min?.toFixed(2) || "—",
+          Max: stats.max?.toFixed(2) || "—",
+          StdDev: stats.stdDev?.toFixed(2) || "—",
+        });
+      });
+    }
+
+    // Add client comparison table
+    if (clientTable && Array.isArray(clientTable)) {
+      clientTable.forEach((client, index) => {
+        const row = {
+          Type: "Client Data",
+          "Client Name": client.name || "—",
+          Email: client.email || "—",
+        };
+
+        // Add all metric values
+        Object.keys(client).forEach((key) => {
+          if (key !== "_id" && key !== "name" && key !== "email" && typeof client[key] === "number") {
+            row[formatMetricName(key)] = client[key]?.toFixed(2) || "—";
+          }
+        });
+
+        data.push(row);
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting comparison to CSV:", error);
+    throw new Error("Failed to export comparison data");
+  }
+}
+
+/**
+ * Export trends analysis data to CSV
+ * @param {Object} trendsData - Trends analysis data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportTrendsToCSV(trendsData, filename = "trends-analysis") {
+  if (!trendsData) {
+    console.warn("No trends data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { graphData, trends } = trendsData;
+
+    // Add trend information
+    if (trends && Array.isArray(trends)) {
+      trends.forEach((trend) => {
+        data.push({
+          Type: "Trend",
+          Metric: formatMetricName(trend.metric || "N/A"),
+          Direction: trend.direction || "—",
+          Rate: trend.rate?.toFixed(2) || "—",
+          Correlation: trend.correlation?.toFixed(2) || "—",
+          Interpretation: trend.interpretation || "—",
+        });
+      });
+    }
+
+    // Add time series data
+    if (graphData?.lineChart) {
+      const { labels, datasets } = graphData.lineChart;
+      labels.forEach((label, index) => {
+        const row = { Date: label };
+        datasets.forEach((dataset) => {
+          row[dataset.label || "Value"] = dataset.data[index]?.toFixed(2) || "—";
+        });
+        data.push(row);
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting trends to CSV:", error);
+    throw new Error("Failed to export trends data");
+  }
+}
+
+/**
+ * Export client rankings data to CSV
+ * @param {Object} rankingsData - Client rankings data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportRankingsToCSV(rankingsData, filename = "client-rankings") {
+  if (!rankingsData) {
+    console.warn("No rankings data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { client, rankings, graphData } = rankingsData;
+
+    // Add client information
+    if (client) {
+      data.push({
+        Type: "Client Info",
+        Field: "Name",
+        Value: client.name || "—",
+      });
+      data.push({
+        Type: "Client Info",
+        Field: "Email",
+        Value: client.email || "—",
+      });
+    }
+
+    // Add rankings table
+    if (rankings && Array.isArray(rankings)) {
+      rankings.forEach((ranking) => {
+        data.push({
+          Type: "Ranking",
+          Metric: formatMetricName(ranking.metric || "N/A"),
+          Value: ranking.value?.toFixed(2) || "—",
+          Percentile: ranking.percentile?.toFixed(1) || "—",
+          Rank: formatRank(ranking.rank, ranking.total),
+          Total: ranking.total || "—",
+          Interpretation: ranking.interpretation || "—",
+        });
+      });
+    }
+
+    // Add radar chart data if available
+    if (graphData?.radarChart) {
+      const { labels, datasets } = graphData.radarChart;
+      labels.forEach((label, index) => {
+        datasets.forEach((dataset) => {
+          data.push({
+            Type: "Radar Data",
+            Metric: label,
+            Percentile: dataset.data[index]?.toFixed(1) || "—",
+          });
+        });
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting rankings to CSV:", error);
+    throw new Error("Failed to export rankings data");
+  }
+}
+
+/**
+ * Export correlations analysis data to CSV
+ * @param {Object} correlationsData - Correlations analysis data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportCorrelationsToCSV(correlationsData, filename = "correlations-analysis") {
+  if (!correlationsData) {
+    console.warn("No correlations data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { correlations, graphData } = correlationsData;
+
+    // Add correlation pairs
+    if (correlations && Array.isArray(correlations)) {
+      correlations.forEach((correlation) => {
+        data.push({
+          Metric1: formatMetricName(correlation.metric1 || "N/A"),
+          Metric2: formatMetricName(correlation.metric2 || "N/A"),
+          Correlation: correlation.correlation?.toFixed(3) || "—",
+          Strength: getCorrelationStrength(correlation.correlation),
+          Interpretation: correlation.interpretation || "—",
+        });
+      });
+    }
+
+    // Add heatmap data if available
+    if (graphData?.heatmap) {
+      const { categories, metrics, values } = graphData.heatmap;
+      categories.forEach((category, catIndex) => {
+        metrics.forEach((metric, metricIndex) => {
+          data.push({
+            Type: "Heatmap",
+            Category: category,
+            Metric: formatMetricName(metric),
+            Value: values[catIndex]?.[metricIndex]?.toFixed(2) || "—",
+          });
+        });
+      });
+    }
+
+    // Add scatter plot data if available
+    if (graphData?.scatterPlot) {
+      graphData.scatterPlot.datasets?.forEach((dataset) => {
+        dataset.data?.forEach((point) => {
+          const [x, y] = Array.isArray(point) ? point : [point.x, point.y];
+          data.push({
+            Type: "Scatter Plot",
+            Dataset: dataset.label || "Data",
+            X: x?.toFixed(2) || "—",
+            Y: y?.toFixed(2) || "—",
+            Correlation: dataset.correlation?.toFixed(3) || "—",
+          });
+        });
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting correlations to CSV:", error);
+    throw new Error("Failed to export correlations data");
+  }
+}
+
+/**
+ * Export distribution analysis data to CSV
+ * @param {Object} distributionData - Distribution analysis data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportDistributionToCSV(distributionData, filename = "distribution-analysis") {
+  if (!distributionData) {
+    console.warn("No distribution data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { statistics, graphData } = distributionData;
+
+    // Add statistics
+    if (statistics) {
+      data.push({
+        Type: "Statistics",
+        Field: "Mean",
+        Value: statistics.mean?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "Median",
+        Value: statistics.median?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "Min",
+        Value: statistics.min?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "Max",
+        Value: statistics.max?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "StdDev",
+        Value: statistics.stdDev?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "Q1",
+        Value: statistics.q1?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Statistics",
+        Field: "Q3",
+        Value: statistics.q3?.toFixed(2) || "—",
+      });
+    }
+
+    // Add box plot data
+    if (graphData?.boxPlot) {
+      const boxPlot = graphData.boxPlot;
+      data.push({
+        Type: "Box Plot",
+        Field: "Min",
+        Value: boxPlot.min?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Box Plot",
+        Field: "Q1",
+        Value: boxPlot.q1?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Box Plot",
+        Field: "Median",
+        Value: boxPlot.median?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Box Plot",
+        Field: "Q3",
+        Value: boxPlot.q3?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Box Plot",
+        Field: "Max",
+        Value: boxPlot.max?.toFixed(2) || "—",
+      });
+      data.push({
+        Type: "Box Plot",
+        Field: "Mean",
+        Value: boxPlot.mean?.toFixed(2) || "—",
+      });
+    }
+
+    // Add histogram data if available
+    if (graphData?.histogram) {
+      const { bins, frequencies } = graphData.histogram;
+      bins.forEach((bin, index) => {
+        const binLabel = Array.isArray(bin) ? `${bin[0]}-${bin[1]}` : String(bin);
+        data.push({
+          Type: "Histogram",
+          Bin: binLabel,
+          Frequency: frequencies?.[index] || 0,
+        });
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting distribution to CSV:", error);
+    throw new Error("Failed to export distribution data");
+  }
+}
+
+/**
+ * Export preferences analysis data to CSV
+ * @param {Object} preferencesData - Preferences analysis data from API
+ * @param {string} filename - Optional filename prefix
+ * @returns {void}
+ */
+export function exportPreferencesToCSV(preferencesData, filename = "preferences-analysis") {
+  if (!preferencesData) {
+    console.warn("No preferences data to export");
+    return;
+  }
+
+  try {
+    const data = [];
+    const { training, supplements, injuries } = preferencesData;
+
+    // Export training preferences
+    if (training && Array.isArray(training)) {
+      training.forEach((item) => {
+        data.push({
+          Section: "Training",
+          Type: item.type || "—",
+          Count: item.count || 0,
+          Percentage: item.percentage?.toFixed(1) + "%" || "—",
+          Description: item.description || "—",
+        });
+      });
+    }
+
+    // Export supplements preferences
+    if (supplements && Array.isArray(supplements)) {
+      supplements.forEach((item) => {
+        data.push({
+          Section: "Supplements",
+          Name: item.name || "—",
+          Count: item.count || 0,
+          Percentage: item.percentage?.toFixed(1) + "%" || "—",
+          Description: item.description || "—",
+        });
+      });
+    }
+
+    // Export injuries data
+    if (injuries && Array.isArray(injuries)) {
+      injuries.forEach((item) => {
+        data.push({
+          Section: "Injuries",
+          Type: item.type || "—",
+          Location: item.location || "—",
+          Count: item.count || 0,
+          Percentage: item.percentage?.toFixed(1) + "%" || "—",
+          Description: item.description || "—",
+        });
+      });
+    }
+
+    exportToCSV(data, filename);
+  } catch (error) {
+    console.error("Error exporting preferences to CSV:", error);
+    throw new Error("Failed to export preferences data");
+  }
+}
+
