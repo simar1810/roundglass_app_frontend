@@ -1,8 +1,8 @@
 "use client";
 
-import AddMeasurementModal from "@/components/modals/growth/AddMeasurementModal";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AddMeasurementModal from "@/components/modals/growth/AddMeasurementModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getClientStatus } from "@/lib/fetchers/growth";
 import { getAppClientPortfolioDetails } from "@/lib/fetchers/app";
+import { getClientStatus } from "@/lib/fetchers/growth";
 import { nameInitials } from "@/lib/formatter";
+import { cn } from "@/lib/utils";
 import { differenceInMonths, differenceInYears, format, parse } from "date-fns";
-import { CalendarIcon, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { CalendarIcon, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import { cn } from "@/lib/utils";
-import { ClientGrowthTrendChart } from "./GrowthCharts";
 
 export default function ClientGrowthStatus({ clientId }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -234,10 +232,10 @@ function StatusCards({ status, benchmark }) {
 
   const heightScore = benchmark.heightScore;
   const weightScore = benchmark.weightScore;
-  const heightGap = benchmark.heightGapCm;
-  const weightGap = benchmark.weightGapKg;
-  const p50Height = benchmark.p50HeightCm;
-  const p50Weight = benchmark.p50WeightKg;
+  const heightGap = benchmark.heightGapCm ?? 0;
+  const weightGap = benchmark.weightGapKg ?? 0;
+  const p50Height = benchmark.p50HeightCm ?? 0;
+  const p50Weight = benchmark.p50WeightKg ?? 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -298,11 +296,11 @@ function StatusCards({ status, benchmark }) {
               heightGap > 0 ? "text-green-600" : heightGap < 0 ? "text-red-600" : "text-gray-600"
             )}>
               {heightGap > 0 ? "+" : ""}
-              {heightGap.toFixed(2)} cm
+              {typeof heightGap === "number" ? heightGap.toFixed(2) : "0.00"} cm
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-2">
-            P50: {p50Height.toFixed(2)} cm
+            P50: {typeof p50Height === "number" ? p50Height.toFixed(2) : "0.00"} cm
           </div>
         </CardContent>
       </Card>
@@ -336,11 +334,11 @@ function StatusCards({ status, benchmark }) {
               weightGap > 0 ? "text-green-600" : weightGap < 0 ? "text-red-600" : "text-gray-600"
             )}>
               {weightGap > 0 ? "+" : ""}
-              {weightGap.toFixed(2)} kg
+              {typeof weightGap === "number" ? weightGap.toFixed(2) : "0.00"} kg
             </span>
           </div>
           <div className="text-xs text-muted-foreground mt-2">
-            P50: {p50Weight.toFixed(2)} kg
+            P50: {typeof p50Weight === "number" ? p50Weight.toFixed(2) : "0.00"} kg
           </div>
         </CardContent>
       </Card>
@@ -422,8 +420,16 @@ function GrowthHistoryTable({ clientId, standard }) {
                     {entry.benchmark.weightScore}
                   </Badge>
                 </TableCell>
-                <TableCell>{entry.benchmark.heightGapCm.toFixed(2)} cm</TableCell>
-                <TableCell>{entry.benchmark.weightGapKg.toFixed(2)} kg</TableCell>
+                <TableCell>
+                  {entry.benchmark?.heightGapCm != null 
+                    ? entry.benchmark.heightGapCm.toFixed(2) 
+                    : "—"} cm
+                </TableCell>
+                <TableCell>
+                  {entry.benchmark?.weightGapKg != null 
+                    ? entry.benchmark.weightGapKg.toFixed(2) 
+                    : "—"} kg
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

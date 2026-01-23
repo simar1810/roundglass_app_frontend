@@ -4,6 +4,7 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
 import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
+import { AgeGroupComparisonChart, P50DistributionChart } from "@/components/pages/growth/GrowthCharts";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,6 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { downloadGroupReportPDF, getAllGroups, getGroupReport } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
-import GrowthCharts, { AgeGroupComparisonChart, P50DistributionChart } from "@/components/pages/growth/GrowthCharts";
 import { format, subMonths } from "date-fns";
 import {
     AlertTriangle,
@@ -33,9 +33,9 @@ export default function Page() {
   const searchParams = useSearchParams();
   const groupFromUrl = searchParams.get("group");
   
-  const [selectedGroupId, setSelectedGroupId] = useState(groupFromUrl || "");
-  const [fromDate, setFromDate] = useState(subMonths(new Date(), 6)); // Default: 6 months ago
-  const [toDate, setToDate] = useState(new Date()); // Default: today
+  const [selectedGroupId, setSelectedGroupId] = useState(() => groupFromUrl || "");
+  const [fromDate, setFromDate] = useState(() => subMonths(new Date(), 6)); // Default: 6 months ago
+  const [toDate, setToDate] = useState(() => new Date()); // Default: today
   const [ageGroups, setAgeGroups] = useState(["U14", "U16"]); // Default: U14 and U16
   const [standard, setStandard] = useState("IPA");
   const [fromDateOpen, setFromDateOpen] = useState(false);
@@ -44,10 +44,13 @@ export default function Page() {
 
   // Update selected group when URL parameter changes
   useEffect(() => {
-    if (groupFromUrl) {
+    if (groupFromUrl && groupFromUrl !== selectedGroupId) {
       setSelectedGroupId(groupFromUrl);
+    } else if (!groupFromUrl && selectedGroupId) {
+      // Clear selection if URL param is removed
+      setSelectedGroupId("");
     }
-  }, [groupFromUrl]);
+  }, [groupFromUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch groups
   const { isLoading: groupsLoading, error: groupsError, data: groupsData } = useSWR(
@@ -187,23 +190,21 @@ export default function Page() {
                 );
               })()}
             />
+          ) : groups.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              No groups available. Create one to get started.
+            </div>
           ) : (
             <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
               <SelectTrigger className="w-full md:w-[300px]">
                 <SelectValue placeholder="Select a group" />
               </SelectTrigger>
               <SelectContent>
-                {groups.length === 0 ? (
-                  <SelectItem value="" disabled>
-                    No groups available. Create one to get started.
+                {groups.map((group) => (
+                  <SelectItem key={group._id} value={group._id}>
+                    {group.name}
                   </SelectItem>
-                ) : (
-                  groups.map((group) => (
-                    <SelectItem key={group._id} value={group._id}>
-                      {group.name}
-                    </SelectItem>
-                  ))
-                )}
+                ))}
               </SelectContent>
             </Select>
           )}

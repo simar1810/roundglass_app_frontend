@@ -1,28 +1,27 @@
 "use client";
 
-import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
-import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
+import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
+import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { format, parseISO } from "date-fns";
 import { Eye, Search, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,34 +29,22 @@ export default function Page() {
 
   const { isLoading, error, data } = useSWR("api/growth/groups", () => getAllGroups());
 
+  // Move useMemo before any conditional returns to follow Rules of Hooks
+  const groups = useMemo(() => {
+    if (!data?.data) return [];
+    const groupsList = Array.isArray(data.data) ? data.data : [];
+    if (!searchQuery.trim()) return groupsList;
+    const query = searchQuery.toLowerCase();
+    return groupsList.filter(
+      (group) =>
+        group.name?.toLowerCase().includes(query) ||
+        group.description?.toLowerCase().includes(query)
+    );
+  }, [data, searchQuery]);
+
   if (isLoading) return <ContentLoader />;
 
   if (error || data?.status_code !== 200) {
-    // Handle 404 specifically - endpoint might not be implemented yet
-    if (data?.status_code === 404 || error?.status === 404) {
-      return (
-        <div className="content-container space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Groups Endpoint Not Available</h3>
-              <p className="text-muted-foreground mb-4">
-                The backend endpoint for listing all groups is not yet implemented.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                You can still create groups and manage them from the Growth Dashboard.
-              </p>
-              <div className="mt-6">
-                <Link href="/coach/growth/dashboard">
-                  <Button variant="wz">Go to Growth Dashboard</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
     const { getGrowthErrorMessage } = require("@/lib/utils/growthErrors");
     const errorMessage = getGrowthErrorMessage(
       data?.status_code || 500,
@@ -70,18 +57,6 @@ export default function Page() {
       </div>
     );
   }
-
-  const groups = useMemo(() => {
-    if (!data?.data) return [];
-    const groupsList = Array.isArray(data.data) ? data.data : [];
-    if (!searchQuery.trim()) return groupsList;
-    const query = searchQuery.toLowerCase();
-    return groupsList.filter(
-      (group) =>
-        group.name?.toLowerCase().includes(query) ||
-        group.description?.toLowerCase().includes(query)
-    );
-  }, [data, searchQuery]);
 
   const handleViewReport = (groupId) => {
     router.push(`/coach/growth/dashboard?group=${groupId}`);

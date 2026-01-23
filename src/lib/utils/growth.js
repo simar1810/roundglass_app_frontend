@@ -234,7 +234,9 @@ export async function downloadGroupReportPDF(groupId, filters = {}, filename = "
     }
 
     // Build query parameters
-    const queryParams = {};
+    const queryParams = {
+      person: "coach", // Required by backend auth middleware
+    };
 
     if (filters.from) queryParams.from = filters.from;
     if (filters.to) queryParams.to = filters.to;

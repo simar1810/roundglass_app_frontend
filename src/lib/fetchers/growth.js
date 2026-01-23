@@ -24,7 +24,8 @@ export function createMeasurement(clientId, measurementData) {
     ...(measurementData.standard && { standard: measurementData.standard }),
   };
 
-  return sendData("growth/measurements", payload, "POST");
+  const endpoint = buildUrlWithQueryParams("growth/measurements", { person: "coach" });
+  return sendData(endpoint, payload, "POST");
 }
 
 /**
@@ -35,7 +36,9 @@ export function createMeasurement(clientId, measurementData) {
  * @returns {Promise<Object>} API response with client status and benchmark data
  */
 export function getClientStatus(clientId, date = null, standard = null) {
-  const queryParams = {};
+  const queryParams = {
+    person: "coach", // Required by backend auth middleware
+  };
   if (date) queryParams.date = date;
   if (standard) queryParams.standard = standard;
 
@@ -62,7 +65,8 @@ export function createGroup(groupData) {
     ...(groupData.clientIds && { clientIds: groupData.clientIds }),
   };
 
-  return sendData("growth/groups", payload, "POST");
+  const endpoint = buildUrlWithQueryParams("growth/groups", { person: "coach" });
+  return sendData(endpoint, payload, "POST");
 }
 
 /**
@@ -76,7 +80,8 @@ export function addClientsToGroup(groupId, clientIds) {
     clientIds,
   };
 
-  return sendData(`growth/groups/${groupId}/clients`, payload, "PUT");
+  const endpoint = buildUrlWithQueryParams(`growth/groups/${groupId}/clients`, { person: "coach" });
+  return sendData(endpoint, payload, "PUT");
 }
 
 /**
@@ -90,7 +95,9 @@ export function addClientsToGroup(groupId, clientIds) {
  * @returns {Promise<Object>} API response with group report data
  */
 export function getGroupReport(groupId, filters = {}) {
-  const queryParams = {};
+  const queryParams = {
+    person: "coach", // Required by backend auth middleware
+  };
 
   if (filters.from) queryParams.from = filters.from;
   if (filters.to) queryParams.to = filters.to;
@@ -125,15 +132,11 @@ export { downloadGroupReportPDF } from "../utils/growth";
 
 /**
  * Get all groups for the current coach
- * Note: This endpoint may not exist in the backend. If it doesn't, 
- * groups will need to be managed through the report endpoint or another method.
  * @returns {Promise<Object>} API response with list of groups
  */
 export function getAllGroups() {
-  // Backend endpoint: GET /api/growth/groups
-  // Note: This endpoint doesn't exist in the backend routes shown
-  // The backend only has POST /groups, PUT /groups/:groupId/clients, GET /groups/:groupId/report
-  // This will return 404 until the backend implements GET /api/growth/groups
-  return fetchData("growth/groups");
+  // Backend endpoint: GET /api/growth/groups?person=coach
+  const endpoint = buildUrlWithQueryParams("growth/groups", { person: "coach" });
+  return fetchData(endpoint);
 }
 
