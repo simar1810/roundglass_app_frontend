@@ -12,7 +12,7 @@ import {
 import { cn, extractNumber } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import FormControl from "../FormControl";
 import { Button } from "../ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -254,6 +254,7 @@ export function MetricProgress({
             width={28}
             alt=""
             className="object-contain"
+            style={{ width: "auto", height: "auto" }}
           />
           <h2 className="text-[16px] font-bold">{title}</h2>
           {onUpdate && <EditHealthMatric
@@ -308,8 +309,18 @@ function EditHealthMatric({
   onUpdate,
   name
 }) {
-  const [formData, setFormData] = useState(payload)
+  const [formData, setFormData] = useState(() => payload || {})
   const closeBtnRef = useRef(null);
+
+  // Update formData when payload changes, but only if the specific field value actually changed
+  useEffect(() => {
+    if (payload && payload[name] !== formData[name]) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: payload[name]
+      }));
+    }
+  }, [payload?.[name], name]);
 
   async function saveHealthMatrix() {
     if (onUpdate) onUpdate(formData, name, closeBtnRef)

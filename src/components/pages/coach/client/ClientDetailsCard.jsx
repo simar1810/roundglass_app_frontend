@@ -47,9 +47,8 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import ClientNudges from "./ClientNudges";
-import ClientUpdateCategories from "./ClientUpdateCategories";
 import InjuryAnalyticsDashboard from "./InjuryAnalyticsDashboard";
+import ClientUpdateCategories from "./ClientUpdateCategories";
 
 function getClientHeightStr(healthMatrix) {
   if (["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase()))
@@ -62,7 +61,6 @@ export default function ClientDetailsCard({ clientData }) {
   return (
     <div>
       <ClientDetails clientData={clientData} />
-      <ClientNudges />
     </div>
   );
 }
@@ -201,15 +199,15 @@ function ClientDetails({ clientData }) {
         <ClientCategoriesList clientData={clientData} />
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <FollowUpModal clientData={clientData} />
-          <Button
+          {/* <Button
             onClick={sendAnalysis}
             variant="wz"
             className="w-full text-xs"
           >
             Analysis Reminder
-          </Button>
+          </Button> */}
         </div>
 
         {/* Activities Section */}
@@ -585,10 +583,6 @@ function ClientDetails({ clientData }) {
                 <InjuryAnalyticsDashboard 
                   clientData={clientData} 
                   clientId={clientData._id}
-                  useDemoData={(() => {
-                    const injuries = clientData?.clientPreferences?.injuries || clientData?.injuryLog || [];
-                    return injuries.length === 0;
-                  })()}
                 />
               </div>
             </AccordionContent>
@@ -735,7 +729,7 @@ function Header({ clientData }) {
               </div>
             </DeleteClientModal>
           </DropdownMenuItem>
-          <DropdownMenuItem 
+          {/* <DropdownMenuItem 
             className="cursor-pointer"
             onSelect={(e) => {
               e.preventDefault();
@@ -750,8 +744,8 @@ function Header({ clientData }) {
                 <span className="text-[var(--accent-1)]">Update Categories</span>
               </div>
             </ClientUpdateCategories>
-          </DropdownMenuItem>
-          {!Boolean(clientData.rollno) && permit("club", roles) && (
+          </DropdownMenuItem> */}
+          {/* {!Boolean(clientData.rollno) && permit("club", roles) && (
             <DropdownMenuItem className="cursor-pointer">
               <DualOptionActionModal
                 action={(setLoading, btnRef) =>
@@ -769,7 +763,7 @@ function Header({ clientData }) {
                 </AlertDialogTrigger>
               </DualOptionActionModal>
             </DropdownMenuItem>
-          )}
+          )} */}
         </DropdownMenuContent>
       </DropdownMenu>
     </CardHeader>

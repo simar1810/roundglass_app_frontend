@@ -89,13 +89,13 @@ export const sidebar__coachContent = [
         type: "modal",
         Component: QuickAddClient,
       },
-      {
-        id: 5,
-        icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Invoices",
-        url: "/coach/invoices",
-        permission: "user"
-      }
+      // {
+      //   id: 5,
+      //   icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Invoices",
+      //   url: "/coach/invoices",
+      //   permission: "user"
+      // }
     ],
   },
   {
@@ -260,14 +260,14 @@ export const sidebar__coachContent = [
       },
     ],
   },
-  {
-    id: 5,
-    title: "Feed",
-    icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/feed",
-    permission: 2, // Permission 2 = Feed
-    group: "content",
-  },
+  // {
+  //   id: 5,
+  //   title: "Feed",
+  //   icon: <Newspaper className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/feed",
+  //   permission: 2, // Permission 2 = Feed
+  //   group: "content",
+  // },
   
   // Financial
   // {
@@ -339,14 +339,14 @@ export const sidebar__coachContent = [
   // },
   
   // Communication & Training
-  {
-    id: 8,
-    title: "Chats",
-    icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/chats",
-    permission: 5, // Permission 5 = Chats
-    group: "communication",
-  },
+  // {
+  //   id: 8,
+  //   title: "Chats",
+  //   icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/chats",
+  //   permission: 5, // Permission 5 = Chats
+  //   group: "communication",
+  // },
   // {
   //   id: 9,
   //   title: "Workout",
@@ -509,57 +509,34 @@ export const sidebar__coachContent = [
   //   ],
   // },
   
-  // Tools & Utilities
+  // Tools & Utilities (flattened - previously under "Other Tools")
   {
-    id: 12,
-    title: "Other Tools",
-    icon: <Settings className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/tools",
+    id: 18,
+    title: "Notes",
+    icon: <FileCheck className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/tools/notes",
     group: "tools",
-    items: [
-      {
-        id: 1,
-        icon: <FileCheck className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Notes",
-        url: "/coach/tools/notes",
-      },
-      {
-        id: 3,
-        icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Calorie Counter",
-        url: "/coach/tools/calorie-counter",
-      },
-      // {
-      //   id: 4,
-      //   icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Ideal Weight",
-      //   url: "/coach/tools/ideal-weight",
-      // },
-      {
-        id: 5,
-        icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Programs",
-        url: "/coach/tools/programs",
-      },
-      {
-        id: 9,
-        icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Categories",
-        url: "/coach/tools/categories",
-      },
-      {
-        id: 10,
-        icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Questionaire",
-        url: "/coach/tools/questionaire"
-      },
-      {
-        id: 11,
-        icon: <ListTodo className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Health Matrix Fields",
-        url: "/coach/tools/health-matrix-fields"
-      },
-    ],
+  },
+  {
+    id: 19,
+    title: "Categories",
+    icon: <Tags className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/tools/categories",
+    group: "tools",
+  },
+  {
+    id: 20,
+    title: "Questionaire",
+    icon: <ListTodo className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/tools/questionaire",
+    group: "tools",
+  },
+  {
+    id: 21,
+    title: "Health Matrix Fields",
+    icon: <ListTodo className="min-w-[20px] min-h-[20px]" />,
+    url: "/coach/tools/health-matrix-fields",
+    group: "tools",
   },
   {
     id: 13,

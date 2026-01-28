@@ -4,7 +4,7 @@ import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { sendData, fetchData, sendDataWithFormData } from "@/lib/api";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { Trash2, Pencil, Upload, File, X, Plus, Eye } from "lucide-react";
@@ -13,9 +13,16 @@ import { getObjectUrl } from "@/lib/utils";
 
 export default function UpdateClientInjuryLogModal({ id, clientData = {} }) {
   // Get injuries from clientPreferences or fallback to injuryLog for backward compatibility
-  const injuries = Array.isArray(clientData?.clientPreferences?.injuries)
-    ? clientData.clientPreferences.injuries
-    : (Array.isArray(clientData?.injuryLog) ? clientData.injuryLog : []);
+  // Memoize to prevent infinite loops
+  const injuries = useMemo(() => {
+    if (Array.isArray(clientData?.clientPreferences?.injuries)) {
+      return clientData.clientPreferences.injuries;
+    }
+    if (Array.isArray(clientData?.injuryLog)) {
+      return clientData.injuryLog;
+    }
+    return [];
+  }, [clientData?.clientPreferences?.injuries, clientData?.injuryLog]);
 
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);

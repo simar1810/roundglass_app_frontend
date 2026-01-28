@@ -36,37 +36,8 @@ const COLORS = [
   "#84CC16",
 ];
 
-// Demo data generator for testing
-const generateDemoData = () => {
-  const now = new Date();
-  const demoInjuries = [];
-  const injuryTypes = ["Sprain", "Strain", "Fracture", "Tendinitis", "Contusion", "Muscle Tear"];
-  const bodyParts = ["Knee", "Ankle", "Shoulder", "Back (Lower)", "Wrist", "Thigh"];
-  
-  // Generate injuries for the last 12 months
-  for (let i = 0; i < 15; i++) {
-    const monthsAgo = Math.floor(Math.random() * 12);
-    const date = new Date(now);
-    date.setMonth(date.getMonth() - monthsAgo);
-    date.setDate(Math.floor(Math.random() * 28) + 1);
-    
-    demoInjuries.push({
-      injuryType: injuryTypes[Math.floor(Math.random() * injuryTypes.length)],
-      bodyPart: bodyParts[Math.floor(Math.random() * bodyParts.length)],
-      incidentDate: date.toISOString().split('T')[0],
-      rehabProgress: `Rehabilitation progress: ${Math.floor(Math.random() * 50) + 50}% complete. Regular physiotherapy sessions ongoing.`,
-      physiotherapistAssignment: `Dr. ${["Smith", "Johnson", "Williams", "Brown", "Davis"][Math.floor(Math.random() * 5)]}`,
-      files: []
-    });
-  }
-  
-  return demoInjuries;
-};
-
-export default function InjuryAnalyticsDashboard({ clientData, clientId, useDemoData = false }) {
-  const injuryLogs = useDemoData 
-    ? generateDemoData() 
-    : (clientData?.injuryLog || []);
+export default function InjuryAnalyticsDashboard({ clientData, clientId }) {
+  const injuryLogs = clientData?.injuryLog || [];
 
   // Fetch all clients for team comparison
   const { data: allClientsData, isLoading: isLoadingTeam } = useSWR(
@@ -142,25 +113,6 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId, useDemo
 
   // Team Comparison
   const teamComparison = useMemo(() => {
-    if (useDemoData) {
-      // Demo team comparison data
-      const demoTeamData = [
-        { name: clientData?.name || "This Client", injuries: injuryLogs.length, isCurrentClient: true },
-        { name: "Team Average", injuries: 8.5, isCurrentClient: false },
-        { name: "John Smith", injuries: 12, isCurrentClient: false },
-        { name: "Sarah Johnson", injuries: 9, isCurrentClient: false },
-        { name: "Mike Williams", injuries: 7, isCurrentClient: false },
-        { name: "Emma Brown", injuries: 6, isCurrentClient: false },
-        { name: "David Davis", injuries: 5, isCurrentClient: false },
-      ];
-      
-      return {
-        clientInjuries: injuryLogs.length,
-        teamAverage: 8.5,
-        teamData: demoTeamData,
-      };
-    }
-    
     if (isLoadingTeam || allClients.length === 0) {
       return {
         clientInjuries: injuryLogs.length,
@@ -211,10 +163,10 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId, useDemo
       teamAverage: parseFloat(teamAverage),
       teamData: comparisonData,
     };
-  }, [allClients, injuryLogs, clientData, isLoadingTeam, useDemoData]);
+  }, [allClients, injuryLogs, clientData, isLoadingTeam]);
 
-  // Show demo data message if no real data and not in demo mode
-  if (injuryLogs.length === 0 && !useDemoData) {
+  // Show message if no real data
+  if (injuryLogs.length === 0) {
     return (
       <Card className="border-1 rounded-lg bg-[var(--comp-1)]">
         <CardContent className="pt-6">
@@ -228,13 +180,6 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId, useDemo
 
   return (
     <div className="space-y-4">
-      {useDemoData && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-blue-800 text-center">
-            📊 <strong>Demo Mode:</strong> Showing sample data for visualization purposes
-          </p>
-        </div>
-      )}
       {/* Frequency Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-1 rounded-lg bg-[var(--comp-1)]">

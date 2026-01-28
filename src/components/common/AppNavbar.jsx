@@ -11,7 +11,6 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import PersonalBranding from "../modals/app/PersonalBranding";
-import NotificationModal from "../modals/NotificationModal";
 import {
   Avatar,
   AvatarFallback,
@@ -42,7 +41,6 @@ export default function AppNavbar() {
     <div className="flex items-center justify-end gap-4 ">
     {Modal || <></>}
     <ClientSearchBar setModal={setModal} />
-    <NotificationModal />
     <UserOptions
       profilePhoto={profilePhoto}
       name={name}
@@ -74,10 +72,10 @@ const features = [
   { id: 4, title: "Link Generator", link: "/coach/club/link-generator" },
   { id: 5, title: "Notes", link: "/coach/tools/notes" },
   { id: 6, title: "Reminders", link: "/coach/tools/reminders" },
-  { id: 7, title: "Calorie Counter", link: "/coach/tools/calorie-counter" },
+  // { id: 7, title: "Calorie Counter", link: "/coach/tools/calorie-counter" },
   { id: 8, title: "Ideal Weight", link: "/coach/tools/ideal-weight" },
   { id: 9, title: "Workout", link: "/coach/tools/workouts" },
-  { id: 10, title: "Feed", link: "/coach/feed" },
+  // { id: 10, title: "Feed", link: "/coach/feed" },
   { id: 11, title: "Clients", link: "/coach/clients" },
 ]
 

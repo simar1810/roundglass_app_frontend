@@ -3,15 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchData, sendData } from "@/lib/api";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 export default function UpdateClientSupplementIntakeModal({ id, clientData = {} }) {
   // Get supplements from clientPreferences or fallback to supplementIntake for backward compatibility
-  const supplements = Array.isArray(clientData?.clientPreferences?.supplements)
-    ? clientData.clientPreferences.supplements
-    : (Array.isArray(clientData?.supplementIntake) ? clientData.supplementIntake : []);
+  // Memoize to prevent infinite loops
+  const supplements = useMemo(() => {
+    if (Array.isArray(clientData?.clientPreferences?.supplements)) {
+      return clientData.clientPreferences.supplements;
+    }
+    if (Array.isArray(clientData?.supplementIntake)) {
+      return clientData.supplementIntake;
+    }
+    return [];
+  }, [clientData?.clientPreferences?.supplements, clientData?.supplementIntake]);
 
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);

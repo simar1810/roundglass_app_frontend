@@ -2,16 +2,23 @@ import FormControl from "@/components/FormControl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { sendData, fetchData } from "@/lib/api";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { Plus, Trash2, Pencil } from "lucide-react";
 
 export default function UpdateClientTrainingInfoModal({ id, clientData = {} }) {
   // Get training modules from clientPreferences or fallback to trainingInfo for backward compatibility
-  const trainingModules = Array.isArray(clientData?.clientPreferences?.trainingModule) 
-    ? clientData.clientPreferences.trainingModule
-    : (clientData?.trainingInfo ? [clientData.trainingInfo] : []);
+  // Memoize to prevent infinite loops
+  const trainingModules = useMemo(() => {
+    if (Array.isArray(clientData?.clientPreferences?.trainingModule)) {
+      return clientData.clientPreferences.trainingModule;
+    }
+    if (clientData?.trainingInfo) {
+      return [clientData.trainingInfo];
+    }
+    return [];
+  }, [clientData?.clientPreferences?.trainingModule, clientData?.trainingInfo]);
 
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);

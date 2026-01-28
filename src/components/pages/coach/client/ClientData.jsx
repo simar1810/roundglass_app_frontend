@@ -54,16 +54,16 @@ import TrendsAnalysis from "@/components/pages/roundglass/TrendsAnalysis";
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
   { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
-  { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
+  // { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
   { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: ({ organisation }) => organisation.toLowerCase() === "herbalife" },
   // { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
   // { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
-  { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
-  { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
+  // { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
+  // { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Player Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
-  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
+  // { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
   { icon: <TrendingUp className="w-[16px] h-[16px]" />, value: "growth", label: "Growth" },
   { icon: <BarChart className="w-[16px] h-[16px]" />, value: "roundglass-analytics", label: "Analytics" },
 ]
@@ -135,15 +135,15 @@ export default function ClientData({ clientData }) {
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
       {/* <ClientClubDataComponent clientData={clientData} /> */}
       {/* <MarathonData clientData={clientData} /> */}
-      <WorkoutContainer id={clientData._id} />
-      <AIAgentHistory />
-      <WaterLogData clientId={clientData._id} />
+      {/* <WorkoutContainer id={clientData._id} /> */}
+      {/* <AIAgentHistory /> */}
+      {/* <WaterLogData clientId={clientData._id} /> */}
       <ClientReports />
       <CaseFile sections={clientData.onboarding_questionaire || []} />
       <PhysicalClub />
-      <TabsContent value="adherence">
+      {/* <TabsContent value="adherence">
         <ClientAdherenceScore clientId={clientData.clientId} />
-      </TabsContent>
+      </TabsContent> */}
       <TabsContent value="growth">
         <ClientGrowthStatus clientId={clientData._id} />
       </TabsContent>
@@ -622,13 +622,13 @@ function MarathonData({ clientData }) {
 
 function Header() {
   const { organisation, features } = useAppSelector(state => state.coach.data);
-  return <TabsList className="w-full h-auto bg-transparent p-0 mb-10 flex items-start gap-x-2 gap-y-3 flex-wrap rounded-none no-scrollbar">
+  return <TabsList className="w-full h-auto bg-transparent p-0 mb-10 grid grid-cols-3 gap-3 rounded-none no-scrollbar">
     {tabItems.map(({ icon, value, label, showIf }) => {
       if (showIf && !showIf({ organisation, features })) return null;
       return (
         <TabsTrigger
           key={value}
-          className="min-w-[110px] mb-[-5px] px-2 font-semibold flex-1 basis-0 flex items-center gap-1 rounded-[10px] py-2
+          className="min-w-[110px] mb-[-5px] px-2 font-semibold flex items-center gap-1 rounded-[10px] py-2
              data-[state=active]:bg-[var(--accent-1)] data-[state=active]:text-[var(--comp-1)]
              data-[state=active]:shadow-none text-[#808080] bg-[var(--comp-1)] border-1 border-[#EFEFEF]"
           value={value}

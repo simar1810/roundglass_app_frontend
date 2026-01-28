@@ -43,11 +43,14 @@ function Container() {
         <AnalyticsOverview />
       </div>
     </div>
+    {/* Statistics sidebar (expiring meal plans, followups, etc.) disabled for now */}
+    {/*
     <DashboardFeaturesDetails
       topPerformers={coachHomeData.topPerformers}
       clientFollowUps={coachHomeData.clientFollowUps}
       missingFollowups={coachHomeData.missingFollowups}
     />
+    */}
   </>
 }
 
