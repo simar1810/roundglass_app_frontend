@@ -1,4 +1,44 @@
 import { getUserType } from "../permissions";
+import { fetchData } from "../api";
+
+let freshClientIdsPromise = null;
+let lastFetchTime = 0;
+
+async function getFreshClientIds() {
+  const now = Date.now();
+  // Cache for 1 minute to avoid excessive API calls while staying reasonably fresh
+  if (freshClientIdsPromise && (now - lastFetchTime < 60000)) {
+    return freshClientIdsPromise;
+  }
+
+  freshClientIdsPromise = (async () => {
+    try {
+      if (typeof window === 'undefined') return [];
+
+      const userDataStr = localStorage.getItem("userData");
+      if (!userDataStr) return [];
+
+      const userData = JSON.parse(userDataStr);
+      const subUserId = userData._id;
+      if (!subUserId) return [];
+
+      // Fetch fresh assignments from the backend
+      const response = await fetchData(`app/users/assignments/${subUserId}/clients?page=1&limit=1000`);
+
+      if (response && response.status_code === 200 && response.data) {
+        lastFetchTime = Date.now();
+        return (response.data.clients || []).map(client => String(client._id || client.id));
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching fresh client IDs:", error);
+      freshClientIdsPromise = null;
+      return [];
+    }
+  })();
+
+  return freshClientIdsPromise;
+}
 
 export function withClientFilter(originalFetcher) {
   return async function filteredFetcher(...args) {
@@ -10,27 +50,8 @@ export function withClientFilter(originalFetcher) {
       }
 
       if (userType === "user") {
-        // Get assigned client IDs from cookies
-        const clientIdsCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('userClientIds='))
-          ?.split('=')[1];
-
-        let assignedClientIds = [];
-
-        if (clientIdsCookie) {
-          try {
-            const decodedCookie = decodeURIComponent(clientIdsCookie);
-            assignedClientIds = JSON.parse(decodedCookie);
-            if (Array.isArray(assignedClientIds)) {
-              assignedClientIds = assignedClientIds.map(id => String(id));
-            } else {
-              assignedClientIds = [];
-            }
-          } catch (error) {
-            assignedClientIds = [];
-          }
-        }
+        // Fetch fresh client IDs from the backend instead of using potentially stale cookies
+        const assignedClientIds = await getFreshClientIds();
 
         // If no assigned clients, return empty data
         if (assignedClientIds.length === 0) {

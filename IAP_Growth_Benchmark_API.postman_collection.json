@@ -1,0 +1,570 @@
+{
+	"info": {
+		"_postman_id": "iap-growth-benchmark-api-collection",
+		"name": "IAP Growth Benchmark API",
+		"description": "Complete API collection for IAP/IPA Growth Benchmark module. Includes measurement tracking, client status, group reports, and PDF export.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "iap-growth-api"
+	},
+	"item": [
+		{
+			"name": "Measurements",
+			"item": [
+				{
+					"name": "Create Measurement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"measuredAt\": \"2024-01-18\",\n  \"height\": 162.3,\n  \"heightUnit\": \"Cms\",\n  \"weight\": 54.2,\n  \"weightUnit\": \"KG\",\n  \"standard\": \"IPA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/growth/measurements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "measurements"]
+						},
+						"description": "Create a new measurement entry for a client. Measurements are stored in ClientHealthMatrix."
+					},
+					"response": []
+				}
+			],
+			"description": "Measurement management endpoints"
+		},
+		{
+			"name": "Client Status",
+			"item": [
+				{
+					"name": "Get Client Status - Latest",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/clients/{{clientId}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "clients", "{{clientId}}", "status"]
+						},
+						"description": "Get the latest growth status for a client"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client Status - By Date",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/clients/{{clientId}}/status?date=2024-01-18&standard=IPA",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "clients", "{{clientId}}", "status"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2024-01-18",
+									"description": "Date in YYYY-MM-DD format (optional, returns latest if not provided)"
+								},
+								{
+									"key": "standard",
+									"value": "IPA",
+									"description": "Standard: IPA or IAP (default: IPA)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get growth status for a client at a specific date (closest on or before)"
+					},
+					"response": []
+				}
+			],
+			"description": "Client growth status endpoints"
+		},
+		{
+			"name": "Groups",
+			"item": [
+				{
+					"name": "Create Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Team A\",\n  \"description\": \"Under-14 team\",\n  \"clientIds\": [\"{{clientId}}\", \"{{clientId2}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups"]
+						},
+						"description": "Create a new group for organizing clients"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Clients to Group",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clientIds\": [\"{{clientId}}\", \"{{clientId2}}\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/clients",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "clients"]
+						},
+						"description": "Add clients to an existing group"
+					},
+					"response": []
+				}
+			],
+			"description": "Group management endpoints"
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Group Report - Full",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report"]
+						},
+						"description": "Get complete group report with all age buckets (U14, U16, U18)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Report - Date Range",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report?from=2024-01-01&to=2024-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report"],
+							"query": [
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"description": "End date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get group report filtered by date range"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Report - Specific Age Groups",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report?ageGroup=U14,U16&standard=IPA",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report"],
+							"query": [
+								{
+									"key": "ageGroup",
+									"value": "U14,U16",
+									"description": "Comma-separated age groups: U14, U16, U18"
+								},
+								{
+									"key": "standard",
+									"value": "IPA",
+									"description": "Standard: IPA or IAP (default: IPA)"
+								}
+							]
+						},
+						"description": "Get group report for specific age groups only"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Group Report - Complete Filter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report?from=2024-01-01&to=2024-12-31&ageGroup=U14,U16,U18&standard=IPA",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report"],
+							"query": [
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"description": "End date (YYYY-MM-DD)"
+								},
+								{
+									"key": "ageGroup",
+									"value": "U14,U16,U18",
+									"description": "Comma-separated age groups"
+								},
+								{
+									"key": "standard",
+									"value": "IPA",
+									"description": "Standard: IPA or IAP"
+								}
+							]
+						},
+						"description": "Get group report with all filters applied"
+					},
+					"response": []
+				}
+			],
+			"description": "Group reporting endpoints"
+		},
+		{
+			"name": "PDF Reports",
+			"item": [
+				{
+					"name": "Generate PDF Report - Basic",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report.pdf",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report.pdf"]
+						},
+						"description": "Generate PDF report for a group (basic)"
+					},
+					"response": []
+				},
+				{
+					"name": "Generate PDF Report - With Filters",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report.pdf?from=2024-01-01&to=2024-12-31&ageGroup=U14,U16&standard=IPA",
+							"host": ["{{base_url}}"],
+							"path": ["api", "growth", "groups", "{{groupId}}", "report.pdf"],
+							"query": [
+								{
+									"key": "from",
+									"value": "2024-01-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "to",
+									"value": "2024-12-31",
+									"description": "End date (YYYY-MM-DD)"
+								},
+								{
+									"key": "ageGroup",
+									"value": "U14,U16",
+									"description": "Comma-separated age groups"
+								},
+								{
+									"key": "standard",
+									"value": "IPA",
+									"description": "Standard: IPA or IAP"
+								}
+							]
+						},
+						"description": "Generate PDF report with filters (date range, age groups, standard)"
+					},
+					"response": []
+				}
+			],
+			"description": "PDF export endpoints"
+		},
+		{
+			"name": "Examples",
+			"item": [
+				{
+					"name": "Complete Workflow Example",
+					"item": [
+						{
+							"name": "1. Create Group",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"U14 Team\",\n  \"description\": \"Under 14 years team\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/growth/groups",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "groups"]
+								},
+								"description": "Step 1: Create a new group"
+							},
+							"response": []
+						},
+						{
+							"name": "2. Add Clients to Group",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"clientIds\": [\"{{clientId}}\", \"{{clientId2}}\", \"{{clientId3}}\"]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/growth/groups/{{groupId}}/clients",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "groups", "{{groupId}}", "clients"]
+								},
+								"description": "Step 2: Add clients to the group"
+							},
+							"response": []
+						},
+						{
+							"name": "3. Create Measurements",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"measuredAt\": \"2024-01-18\",\n  \"height\": 162.3,\n  \"heightUnit\": \"Cms\",\n  \"weight\": 54.2,\n  \"weightUnit\": \"KG\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/growth/measurements",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "measurements"]
+								},
+								"description": "Step 3: Create measurements for clients"
+							},
+							"response": []
+						},
+						{
+							"name": "4. Get Client Status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/growth/clients/{{clientId}}/status",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "clients", "{{clientId}}", "status"]
+								},
+								"description": "Step 4: Check individual client status"
+							},
+							"response": []
+						},
+						{
+							"name": "5. Get Group Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "groups", "{{groupId}}", "report"]
+								},
+								"description": "Step 5: Get group analytics report"
+							},
+							"response": []
+						},
+						{
+							"name": "6. Generate PDF Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/growth/groups/{{groupId}}/report.pdf?from=2024-01-01&to=2024-12-31",
+									"host": ["{{base_url}}"],
+									"path": ["api", "growth", "groups", "{{groupId}}", "report.pdf"],
+									"query": [
+										{
+											"key": "from",
+											"value": "2024-01-01"
+										},
+										{
+											"key": "to",
+											"value": "2024-12-31"
+										}
+									]
+								},
+								"description": "Step 6: Generate and download PDF report"
+							},
+							"response": []
+						}
+					],
+					"description": "Complete workflow example from group creation to PDF export"
+				}
+			],
+			"description": "Example workflows and use cases"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8084",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		},
+		{
+			"key": "clientId2",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k2",
+			"type": "string"
+		},
+		{
+			"key": "clientId3",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k3",
+			"type": "string"
+		},
+		{
+			"key": "groupId",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		}
+	]
+}

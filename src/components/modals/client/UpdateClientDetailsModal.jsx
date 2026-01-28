@@ -3,17 +3,18 @@ import SelectControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { clientDetailsFields } from "@/config/data/ui";
-import { sendDataWithFormData } from "@/lib/api";
+import { sendDataWithFormData, sendData, fetchData } from "@/lib/api";
 import { getObjectUrl } from "@/lib/utils";
 import { format, parse } from "date-fns";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { CookingPot, Image as ImageIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch";
 import { _throwError } from "@/lib/formatter";
 import { calculateBMIFinal, calculateIdealWeightFinal } from "@/lib/client/statistics";
+import { Textarea } from "@/components/ui/textarea";
 
 const formFields = ["name", "email", "mobileNumber", "age", "gender", "file", "heightUnit"];
 
@@ -68,14 +69,72 @@ function generateDefaultPayload(obj) {
   } else {
     payload.dob = obj.dob
   }
+
+  // Initialize health information fields from roundglass preferences or personalInfo or direct object
+  // These will be loaded from the roundglass/client-preference endpoint
+  payload.allergiesDietaryRestrictions = "";
+  payload.medicalHistory = "";
+  payload.familyHistory = "";
+
   return payload;
 }
 
 export default function UpdateClientDetailsModal({ clientData }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(() => generateDefaultPayload(clientData));
+  const [preferencesExist, setPreferencesExist] = useState(false);
   const closeBtnRef = useRef();
   const fileRef = useRef();
+
+  // Load health preferences from the new endpoint
+  useEffect(() => {
+    async function loadHealthPreferences() {
+      try {
+        const response = await fetchData(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`);
+        if (response?.data) {
+          setPreferencesExist(true);
+          setFormData(prev => ({
+            ...prev,
+            allergiesDietaryRestrictions: response.data.allergies || "",
+            medicalHistory: response.data.medicalHistory || "",
+            familyHistory: response.data.familyHistory || "",
+          }));
+        } else {
+          setPreferencesExist(false);
+        }
+      } catch (error) {
+        // Silently fail if preferences don't exist yet
+        setPreferencesExist(false);
+        console.log("No health preferences found");
+      }
+    }
+    loadHealthPreferences();
+  }, [clientData._id]);
+
+  async function updateHealthPreferences() {
+    try {
+      // Use POST (upsert) if preferences don't exist, PUT if they do
+      const method = preferencesExist ? "PUT" : "POST";
+      const response = await sendData(
+        `app/roundglass/client-preference?person=coach`,
+        {
+          clientId: clientData._id,
+          allergies: formData.allergiesDietaryRestrictions || "",
+          medicalHistory: formData.medicalHistory || "",
+          familyHistory: formData.familyHistory || "",
+        },
+        method
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Failed to update health preferences");
+      // Update state after successful creation
+      if (!preferencesExist && response.data) {
+        setPreferencesExist(true);
+      }
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async function updateClientDetails() {
     try {
@@ -87,7 +146,9 @@ export default function UpdateClientDetailsModal({ clientData }) {
       }
       // data.append("weight", getWeight(formData))
       for (const field of formFields) {
-        data.append(field, formData[field])
+        if (formData[field] !== undefined) {
+          data.append(field, formData[field])
+        }
       }
       data.append("dob", format(parse(formData.dob, 'yyyy-MM-dd', new Date()), "dd-MM-yyyy"));
       data.append(
@@ -96,11 +157,21 @@ export default function UpdateClientDetailsModal({ clientData }) {
         clientData?.healthMatrix?.healthMatrix?.at(0)?.bmi || 0
       )
       data.append("idealWeight", calculateIdealWeightFinal(formData))
+      
+      // Update personal information (excluding health fields)
       const response = await sendDataWithFormData(`app/updateClient?id=${clientData._id}`, data, "PUT");
       if (!response.data) throw new Error(response.message);
-      toast.success(response.message);
+      
+      // Update health preferences separately using the new endpoint
+      await updateHealthPreferences();
+      
+      toast.success("Details updated successfully");
+      
+      // Refresh data
       mutate(`clientDetails/${clientData._id}`);
       mutate(`app/clientStatsCoach?clientId=/${clientData._id}`);
+      mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`);
+      
       closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
@@ -113,7 +184,7 @@ export default function UpdateClientDetailsModal({ clientData }) {
     <DialogTrigger className="text-[var(--accent-1)] text-[14px] font-semibold pr-3">
       Edit
     </DialogTrigger>
-    <DialogContent className="!max-w-[650px] text-center border-0 px-4 lg:px-10 overflow-auto gap-0">
+    <DialogContent className="!max-w-[650px] max-h-[90vh] text-center border-0 px-4 lg:px-10 overflow-y-auto gap-0">
       <DialogTitle>Personal Information</DialogTitle>
       <div className="mt-4">
         <ProfilePhoto
@@ -193,6 +264,18 @@ function Component({ field, formData, setFormData }) {
         onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
         {...field}
       />;
+    case 5:
+      return <div key={field.id} className="col-span-2">
+        <label className="block">
+          <span className="label font-[600] text-[14px]">{field.label}</span>
+          <Textarea
+            value={formData[field.name]}
+            onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+            placeholder={field.placeholder || "Please enter the value."}
+            className="w-full mt-1 min-h-[100px] px-4 py-2 rounded-[8px] focus:outline-none border-1 border-[#D6D6D6] placeholder:text-[#1C1B1F]/25"
+          />
+        </label>
+      </div>;
     default:
       return <FormControl
         key={field.id}

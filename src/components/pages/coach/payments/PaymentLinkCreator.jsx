@@ -1,35 +1,32 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { fetchData, sendData } from "@/lib/api";
-import { createPaymentLink, getVouchers } from "@/lib/paymentService";
 import { getAppClients } from "@/lib/fetchers/app";
+import { getVouchers } from "@/lib/paymentService";
 import {
-  Calendar,
-  Copy,
-  Send,
-  Sparkles,
-  Link as LinkIcon,
-  Search,
-  X,
-  Check,
+    Check,
+    Link as LinkIcon,
+    Search,
+    Send,
+    X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function PaymentLinkCreator() {
   const router = useRouter();
@@ -392,7 +389,7 @@ export default function PaymentLinkCreator() {
                     {filteredClients.length === 0 ? (
                       <div className="px-4 py-3 text-muted-foreground text-sm">
                         {clientSearch.trim()
-                          ? "No clients found"
+                          ? "No Players Found"
                           : "Start typing to search clients..."}
                       </div>
                     ) : (

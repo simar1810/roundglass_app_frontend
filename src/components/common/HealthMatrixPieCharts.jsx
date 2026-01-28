@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   calculateBMIFinal,
   calculateBMRFinal,
@@ -10,12 +10,15 @@ import {
   calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import { cn, extractNumber } from "@/lib/utils";
-import Image from "next/image";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Pencil } from "lucide-react";
-import FormControl from "../FormControl";
+import Image from "next/image";
 import { useRef, useState } from "react";
+import FormControl from "../FormControl";
 import { Button } from "../ui/button";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
+
+const defaultFields = DEFAULT_FORM_FIELDS.map(field => field.name)
 
 const healtMetrics = [
   {
@@ -39,6 +42,7 @@ const healtMetrics = [
     id: 2,
     getMaxValue: () => 45,
     getMinValue: () => 30,
+    type: "default-hide"
   },
   {
     title: "Fat",
@@ -49,6 +53,7 @@ const healtMetrics = [
     id: 3,
     getMaxValue: () => 20,
     getMinValue: () => 10,
+    type: "default-hide"
   },
   {
     title: "Resting Metabolism",
@@ -60,6 +65,7 @@ const healtMetrics = [
     id: 4,
     getMaxValue: () => 3000,
     getMinValue: () => 1500,
+    type: "default-hide"
   },
   {
     title: "Ideal Weight",
@@ -83,6 +89,7 @@ const healtMetrics = [
     id: 6,
     getMaxValue: () => 67,
     getMinValue: () => 33,
+    type: "default-hide"
   },
   {
     title: "Visceral Fat",
@@ -93,6 +100,7 @@ const healtMetrics = [
     id: 7,
     getMaxValue: () => 12,
     getMinValue: () => 1,
+    type: "default-hide"
   },
   {
     title: "Weight In KGs",
@@ -121,27 +129,32 @@ const healtMetrics = [
     icon: "/svgs/body.svg",
     name: "sub_fat",
     id: 9,
-    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
-    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+    getMaxValue: () => 20,
+    getMinValue: () => 15,
+    type: "default-hide"
   },
-
 ];
 
-const weightDabba = {
-  title: "Weight",
-  value: "26",
-  icon: "/svgs/body.svg",
-  optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
-}
-
-export default function HealthMetrics({ data, onUpdate }) {
+export default function HealthMetrics({ calculateByFormulaes = true, hideHealthMatrices, data, onUpdate, fields, showAll = false }) {
   const payload = {
-    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
-    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
-    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
-    rm: extractNumber(data.rm) || calculateBMRFinal(data),
-    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
-    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
+    bmi: calculateByFormulaes
+      ? extractNumber(data.bmi) || calculateBMIFinal(data)
+      : extractNumber(data.bmi),
+    muscle: calculateByFormulaes
+      ? extractNumber(data.muscle) || calculateSMPFinal(data)
+      : extractNumber(data.muscle),
+    fat: calculateByFormulaes
+      ? extractNumber(data.fat) || calculateBodyFatFinal(data)
+      : extractNumber(data.fat),
+    rm: calculateByFormulaes
+      ? extractNumber(data.rm) || calculateBMRFinal(data)
+      : extractNumber(data.rm),
+    idealWeight: calculateByFormulaes
+      ? extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data)
+      : extractNumber(data.idealWeight) || data.ideal_weight,
+    bodyAge: calculateByFormulaes
+      ? extractNumber(data.bodyAge) || calculateBodyAgeFinal(data)
+      : extractNumber(data.bodyAge),
     visceral_fat: extractNumber(data.visceral_fat),
     weightInKgs: updateWeightField() === "weightInKgs"
       ? extractNumber(data.weightInKgs)
@@ -149,7 +162,10 @@ export default function HealthMetrics({ data, onUpdate }) {
     weightInPounds: updateWeightField() === "weightInPounds"
       ? extractNumber(data.weightInPounds)
       : undefined,
-    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
+    sub_fat: calculateByFormulaes
+      ? extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
+      : extractNumber(data.sub_fat),
+    ...data
   };
 
   function updateWeightField() {
@@ -158,32 +174,42 @@ export default function HealthMetrics({ data, onUpdate }) {
     } else return "weightInPounds"
   }
 
+  // Use fields prop if provided, otherwise use default healtMetrics
+  const metricsToDisplay = fields || healtMetrics;
+
   try {
     return (
       <>
-        {healtMetrics
-          .filter((metric) =>
+        {metricsToDisplay
+          .filter((metric) => (
             !isNaN(payload[metric.name]) &&
             payload[metric.name] !== 0 &&
-            payload[metric.name] !== ""
+            payload[metric.name] !== "" ||
+            (showAll && !defaultFields.includes(metric.name))
+          ) &&
+            (!calculateByFormulaes ? ![null, undefined, ""].includes(payload[metric.name]) : true)
+          )
+          .filter(item =>
+            hideHealthMatrices ? item.type !== "default-hide" : true
           )
           .map((metric) => (
             <MetricProgress
-              key={metric.id}
+              key={metric.id || metric.name}
               {...metric}
-              value={payload[metric.name]}
-              maxPossibleValue={metric.getMaxValue({
-                value: payload[metric.name],
+              title={metric.title || metric.label}
+              value={payload[metric.name] || 0}
+              maxPossibleValue={metric.getMaxValue ? metric.getMaxValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
-              maxThreshold={metric.getMaxValue({
-                value: payload[metric.name],
+              }) : (metric.maxValue || 100)}
+              maxThreshold={metric.getMaxValue ? metric.getMaxValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
-              minThreshold={metric.getMinValue({
-                value: payload[metric.name],
+              }) : (metric.maxValue || 100)}
+              minThreshold={metric.getMinValue ? metric.getMinValue({
+                value: payload[metric.name] || 0,
                 gender: data.gender
-              })}
+              }) : (metric.minValue || 0)}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -293,7 +319,7 @@ function EditHealthMatric({
       <Pencil className="w-4 h-4 absolute bottom-2 right-2" />
     </DialogTrigger>
     <DialogContent className="p-0 gap-0">
-      <DialogHeader className="p-4 border-b-1">
+      <DialogHeader className="p-4 border-b">
         <DialogTitle>Edit Health Matrix</DialogTitle>
       </DialogHeader>
       <div className="max-h-[65vh] h-full overflow-y-auto p-4">

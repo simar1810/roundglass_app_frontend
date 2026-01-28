@@ -1,25 +1,27 @@
-import useCurrentStateContext from "@/providers/CurrentStateContext";
-import MonthlyMealCreation from "./MonthlyMealCreation";
+import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
 	customWorkoutUpdateField,
 	dailyMealRP,
 	mealPlanCreationRP,
 } from "@/config/state-reducers/custom-meal";
-import WeeklyMealCreation from "./WeeklyMealCreation";
-import CustomMealMetaData from "./CustomMealMetaData";
-import SelectMeals from "./SelectMeals";
+import { sendData, uploadImage } from "@/lib/api";
+import { _throwError, format24hr_12hr } from "@/lib/formatter";
+import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { SquarePen, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { sendData, uploadImage } from "@/lib/api";
 import { useSWRConfig } from "swr";
-import { useRouter } from "next/navigation";
-import { _throwError, format24hr_12hr } from "@/lib/formatter";
-import { SquarePen } from "lucide-react";
-import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
+import CustomMealMetaData from "./CustomMealMetaData";
+import MonthlyMealCreation from "./MonthlyMealCreation";
+import SelectMeals from "./SelectMeals";
+import WeeklyMealCreation from "./WeeklyMealCreation";
+import CustomMealPlanPreview from "./CustomMealPlanPreview";
 
 export default function Stage2() {
 	const [loading, setLoading] = useState(false);
+	const [previewOpen, setPreviewOpen] = useState(false);
 	const { dispatch, ...state } = useCurrentStateContext();
 	const component = selectWorkoutCreationComponent(state.mode);
 	const { cache } = useSWRConfig();
@@ -202,11 +204,49 @@ export default function Stage2() {
 			setLoading(true);
 			const plans = {};
 			let toastId;
+			
+			// Check if this is an AI-generated meal plan that already exists
+			const aiMealPlanId = state.aiMealPlanId;
+			const isUpdatingAiPlan = Boolean(aiMealPlanId);
+			
 			for (const key in state.selectedPlans) {
-				toastId = toast.loading(`Creating Meal Plan - ${key}...`);
+				toastId = toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} Meal Plan - ${key}...`);
+				
+				// Normalize the plan data to ensure it's in the correct format
+				let planData = state.selectedPlans[key];
+				if (!Array.isArray(planData)) {
+					// If it's an object with meals property, use that
+					if (Array.isArray(planData?.meals)) {
+						planData = planData.meals;
+					} else {
+						// If it's an object with meal type keys (breakfast, lunch, etc.), transform it
+						const mealTypes = [];
+						const mealTypeKeys = ["breakfast", "lunch", "dinner", "snacks", "morning snacks", "evening snacks"];
+						mealTypeKeys.forEach(mealKey => {
+							const meals = planData[mealKey];
+							if (Array.isArray(meals) && meals.length > 0) {
+								const mealTypeName = mealKey.charAt(0).toUpperCase() + mealKey.slice(1);
+								mealTypes.push({
+									mealType: mealTypeName === "Snacks" ? "Morning Snacks" : mealTypeName,
+									meals: meals
+								});
+							}
+						});
+						planData = mealTypes.length > 0 ? mealTypes : [];
+					}
+				}
+				
+				// Ensure planData is an array before passing to mealPlanCreationRP
+				if (!Array.isArray(planData) || planData.length === 0) {
+					toast.dismiss(toastId);
+					_throwError(`No meals found for ${key}. Please add at least one meal.`);
+				}
+				
+				// For AI plans, the day plans might already exist, but we'll still create/update them
+				// The backend will handle updating existing plans if needed
 				const createdMealPlan = await sendData(
 					"app/create-custom-plan",
-					mealPlanCreationRP(Array.isArray(state.selectedPlans[key]) ? state.selectedPlans[key] : state.selectedPlans[key]?.meals)
+					mealPlanCreationRP(planData)
 				);
 				if (createdMealPlan.status_code !== 200) {
 					toast.dismiss(toastId);
@@ -224,20 +264,43 @@ export default function Stage2() {
 				toast.dismiss(uploadToastId);
 			}
 
-			toastId = toast.loading("Creating The Custom Meal Plan...");
+			toastId = toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} The Custom Meal Plan...`);
 			const formData = dailyMealRP(state);
-			const response = await sendData(`app/meal-plan/custom`, {
-				...formData,
-				image: thumbnail?.img || state.thumbnail,
-				plans,
-				draft
-			});
-			toast.dismiss(toastId);
-			if (response.status_code !== 200) _throwError(response.message);
-			cache.delete("custom-meal-plans");
-			toast.success(response.message);
-			localStorage.removeItem("aiMealPlan");
-			router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			
+			// If this is an AI-generated plan with an ID, use PUT to update instead of POST to create
+			if (isUpdatingAiPlan) {
+				const response = await sendData(
+					`app/meal-plan/custom`,
+					{
+						...formData,
+						image: thumbnail?.img || state.thumbnail,
+						plans: state.selectedPlans,
+						id: aiMealPlanId,
+						planIds: plans,
+						draft
+					},
+					"PUT"
+				);
+				toast.dismiss(toastId);
+				if (response.status_code !== 200) _throwError(response.message);
+				cache.delete("custom-meal-plans");
+				toast.success(response.message);
+				localStorage.removeItem("aiMealPlan");
+				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			} else {
+				const response = await sendData(`app/meal-plan/custom`, {
+					...formData,
+					image: thumbnail?.img || state.thumbnail,
+					plans,
+					draft
+				});
+				toast.dismiss(toastId);
+				if (response.status_code !== 200) _throwError(response.message);
+				cache.delete("custom-meal-plans");
+				toast.success(response.message);
+				localStorage.removeItem("aiMealPlan");
+				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+			}
 		} catch (error) {
 			toast.error(error.message || "Something went wrong!");
 		} finally {
@@ -246,40 +309,88 @@ export default function Stage2() {
 	}
 
 	return (
-		<div>
-			<div className="flex flex-col gap-y-4">
-				<DisplayMealStats meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }} />
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0 md:divide-x-2">
-					<CustomMealMetaData />
-					<div className="md:pl-8">
-						{component}
-						<SelectMeals
-							key={`${state.selectedPlan}${state.selectedMealType}`}
-						/>
-						<div className="mt-4 rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
-							<div>{totals.calories.toFixed(2)} Calories</div>
-							<div>{totals.protein.toFixed(2)} Protein</div>
-							<div>{totals.fats.toFixed(2)} Fats</div>
-							<div>{totals.carbohydrates.toFixed(2)} Carbs</div>
-						</div>
-						<div className="mt-10 grid grid-cols-2 gap-4">
-							<Button
-								disabled={loading}
-								onClick={() => saveCustomWorkout({ draft: true })}
-							>
-								<SquarePen />
-								Draft
-							</Button>
-							<Button
-								disabled={loading}
-								variant="wz"
-								onClick={() => saveCustomWorkout({ draft: false })}
-							>
-								Save Meal
-							</Button>
-						</div>
+		<div className="flex flex-col gap-y-4 relative">
+			<DisplayMealStats meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }} />
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0 md:divide-x-2">
+				<CustomMealMetaData />
+				<div className="md:pl-8">
+					{/* Preview Toggle Button - Fixed position on the right */}
+					<div className="fixed right-4 top-1/2 -translate-y-1/2 z-30">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPreviewOpen(!previewOpen)}
+							className="rounded-l-lg rounded-r-none border-r-0 shadow-md bg-white hover:bg-gray-50"
+						>
+							{previewOpen ? (
+								<ChevronRight className="w-4 h-4" />
+							) : (
+								<>
+									<ChevronLeft className="w-4 h-4" />
+									<span className="ml-2">Preview</span>
+								</>
+							)}
+						</Button>
+					</div>
+
+					{component}
+					<SelectMeals
+						key={`${state.selectedPlan}${state.selectedMealType}`}
+					/>
+					<div className="mt-4 rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
+						<div>{totals.calories.toFixed(2)} Calories</div>
+						<div>{totals.protein.toFixed(2)} Protein</div>
+						<div>{totals.fats.toFixed(2)} Fats</div>
+						<div>{totals.carbohydrates.toFixed(2)} Carbs</div>
+					</div>
+					<div className="mt-10 grid grid-cols-2 gap-4">
+						<Button
+							disabled={loading}
+							onClick={() => saveCustomWorkout({ draft: true })}
+						>
+							<SquarePen />
+							Draft
+						</Button>
+						<Button
+							disabled={loading}
+							variant="wz"
+							onClick={() => saveCustomWorkout({ draft: false })}
+						>
+							Save Meal
+						</Button>
 					</div>
 				</div>
+			</div>
+
+			{/* Backdrop Overlay */}
+			{previewOpen && (
+				<div 
+					className="fixed inset-0 bg-black/20 z-10 transition-opacity duration-300"
+					onClick={() => setPreviewOpen(false)}
+				/>
+			)}
+
+			{/* Full Page Preview Overlay - Slides in from right */}
+			<div className={`fixed right-0 top-0 bottom-0 bg-white border-l-1 shadow-2xl transition-all duration-300 ease-in-out z-20 ${
+				previewOpen ? 'w-[70%] translate-x-0' : 'w-0 translate-x-full overflow-hidden'
+			}`}>
+				{previewOpen && (
+					<div className="h-full flex flex-col w-full">
+						<div className="flex items-center justify-between p-3 border-b-1 flex-shrink-0 bg-gray-50">
+							<h4 className="font-medium text-base text-gray-700">PDF Preview</h4>
+							<button
+								onClick={() => setPreviewOpen(false)}
+								className="h-7 w-7 flex items-center justify-center rounded hover:bg-gray-200 transition-colors text-gray-600"
+								aria-label="Close preview"
+							>
+								<ChevronRight className="w-4 h-4" />
+							</button>
+						</div>
+						<div className="flex-1 overflow-hidden min-h-0">
+							<CustomMealPlanPreview customMealState={state} />
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);

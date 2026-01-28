@@ -1,5 +1,6 @@
 export const addRetailInitialState = {
   stage: 1,
+  acceptFlow: false,
   selectedBrandId: "",
   clientId: "",
   coachId: "",

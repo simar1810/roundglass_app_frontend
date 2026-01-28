@@ -1,29 +1,29 @@
 "use client";
-import useSWR from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { fetchClubSubscription, retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { nameInitials, tabChange } from "@/lib/formatter";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { useMemo, useRef, useState } from "react";
-import Paginate from "@/components/Paginate";
-import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, Pen } from "lucide-react";
+import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
-import { Button } from "@/components/ui/button";
-import { sendData } from "@/lib/api";
-import { toast } from "sonner";
 import { SyncedCoachClientDetails } from "@/components/modals/coach/SyncedCoachesModal";
-import { useAppSelector } from "@/providers/global/hooks";
 import CreateSubscriptionDialog from "@/components/pages/coach/club/club-subscription/CreateClubSubscription";
 import SubscriptionsTable from "@/components/pages/coach/club/club-subscription/ListClubSubscriptions";
+import Paginate from "@/components/Paginate";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sendData } from "@/lib/api";
+import { fetchClubSubscription, retrieveDownlineCoachInformation } from "@/lib/fetchers/app";
+import { nameInitials, tabChange } from "@/lib/formatter";
+import { useAppSelector } from "@/providers/global/hooks";
+import { Eye, Pen } from "lucide-react";
+import Image from "next/image";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
 
 const tabItems = [
   {
@@ -258,7 +258,7 @@ function TabsClients({ clients = [] }) {
               {paginatedClients.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-                    No clients found
+                    No Players Found
                   </TableCell>
                 </TableRow>
               )}

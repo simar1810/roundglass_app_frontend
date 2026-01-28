@@ -28,7 +28,7 @@ export default function Page() {
   return <div className="content-container">
     <div className="flex items-center gap-4 mb-8">
       <h4>{planData.name}</h4>
-      <AssignMealModal type="normal" planId={planData._id} />
+      <AssignMealModal type="normal" plan={planData} planId={planData._id} />
     </div>
     <div className="flex items-center gap-4 pb-4">
       <MealTypesList

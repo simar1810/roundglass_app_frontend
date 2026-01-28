@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 // Helper function to safely parse dates with multiple format attempts
 function safeParseDate(dateString, formats = ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy"]) {
   if (!dateString) return null;
-  
+
   for (const format of formats) {
     const parsed = parse(dateString, format, new Date());
     if (isValid(parsed)) {
@@ -13,7 +13,7 @@ function safeParseDate(dateString, formats = ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd
       return parsed;
     }
   }
-  
+
   // If all formats fail, try native Date parsing as fallback
   const nativeDate = new Date(dateString);
   if (isValid(nativeDate)) {
@@ -34,59 +34,59 @@ export function excelRetailOrdersData(orders, dates) {
 
     endDate.setHours(23, 59, 59, 999);
 
-  const exporting = (orders || [])
-    .filter(order => {
-      if (!order.createdAt) {
-        return false;
-      }
+    const exporting = (orders || [])
+      .filter(order => {
+        if (!order.createdAt) {
+          return false;
+        }
 
-      const parsedDate = safeParseDate(order.createdAt, ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd/yyyy"]);
-      
-      if (!parsedDate) {
-        return false;
-      }
+        const parsedDate = safeParseDate(order.createdAt, ["dd-MM-yyyy", "yyyy-MM-dd", "MM/dd/yyyy"]);
 
-      return (parsedDate >= startDate) && (parsedDate <= endDate);
-    })
-    .map(order => {
-      const sellingPrice = Number(order?.sellingPrice || 0);
-      const costPrice = Number(order?.costPrice || 0);
-      const paidAmount = Number(order?.paidAmount || 0);
-      const profit = Math.max(sellingPrice - costPrice, 0);
+        if (!parsedDate) {
+          return false;
+        }
 
-      const clientName = order?.clientId?.name || 
-                        order?.clientName || 
-                        order?.client?.name || 
-                        order?.clientId?.clientName ||
-                        order?.clientId?.firstName + " " + order?.clientId?.lastName ||
-                        "";
-      
-      const clientPhone = order?.clientId?.mobileNumber || 
-                         order?.clientPhone || 
-                         order?.client?.mobileNumber || 
-                         order?.clientId?.phone ||
-                         order?.clientId?.phoneNumber ||
-                         order?.clientId?.contactNumber ||
-                         "";
+        return (parsedDate >= startDate) && (parsedDate <= endDate);
+      })
+      .map(order => {
+        const sellingPrice = Number(order?.sellingPrice || 0);
+        const costPrice = Number(order?.costPrice || 0);
+        const paidAmount = Number(order?.paidAmount || 0);
+        const profit = Math.max(sellingPrice - costPrice, 0);
 
-      return {
-        "Client Name": clientName,
-        "Phone Number": clientPhone,
-        "Date": order.createdAt,
-        "Coach Margin": order?.coachMargin || 0,
-        "Cost Price": costPrice,
-        "Customer Margin": order?.customerMargin || 0,
-        "Invoice Number": order?.invoiceNumber || order?.orderId || order?._id || "",
-        "Selling Price": sellingPrice,
-        "Status": order?.status || "",
-        "Paid Amount": paidAmount,
-        "Pending Amount": Math.max(sellingPrice - paidAmount, 0),
-        "Profit": profit
-      };
-    })
+        const clientName = order?.clientId?.name ||
+          order?.clientName ||
+          order?.client?.name ||
+          order?.clientId?.clientName ||
+          order?.clientId?.firstName + " " + order?.clientId?.lastName ||
+          "";
 
-  return exporting;
-  
+        const clientPhone = order?.clientId?.mobileNumber ||
+          order?.clientPhone ||
+          order?.client?.mobileNumber ||
+          order?.clientId?.phone ||
+          order?.clientId?.phoneNumber ||
+          order?.clientId?.contactNumber ||
+          "";
+
+        return {
+          "Client Name": clientName,
+          "Phone Number": clientPhone,
+          "Date": order.createdAt,
+          "Coach Margin": order?.coachMargin || 0,
+          "Cost Price": costPrice,
+          "Customer Margin": order?.customerMargin || 0,
+          "Invoice Number": order?.invoiceNumber || order?.orderId || order?._id || "",
+          "Selling Price": sellingPrice,
+          "Status": order?.status || "",
+          "Paid Amount": paidAmount,
+          "Pending Amount": Math.max(sellingPrice - paidAmount, 0),
+          "Profit": profit
+        };
+      })
+
+    return exporting;
+
   } catch (error) {
     return [];
   }
@@ -121,4 +121,3 @@ export function exportToExcel(
 
   XLSX.writeFile(workbook, fileName);
 }
-

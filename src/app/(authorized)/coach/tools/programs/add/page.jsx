@@ -1,19 +1,16 @@
 "use client";
 import FormControl from "@/components/FormControl";
+import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
-import { sendData, sendDataWithFormData } from "@/lib/api";
+import { sendDataWithFormData } from "@/lib/api";
+import { buildClickableUrl } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { Minus, PlusCircle, X } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import { PlusCircle, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { mutate } from "swr";
-import imageCompression from "browser-image-compression";
-import { useRouter } from "next/navigation";
-import SelectMultiple from "@/components/SelectMultiple";
-import { buildClickableUrl } from "@/lib/formatter";
-import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const { _id: coachId, client_categories, whitelabel = "wellnessz" } = useAppSelector(state => state.coach.data);
@@ -25,7 +22,6 @@ export default function Page() {
     coachId: coachId,
     file: "",
     availability: [],
-    allowed_rollno_series: [],
     whitelabel
   })
 
@@ -44,9 +40,6 @@ export default function Page() {
       data.append("file", await imageCompression(formData.file, { maxSizeMB: 0.25 }))
       data.append("person", "client")
       data.append("availability", JSON.stringify(formData.availability))
-      for (const rollno of formData.allowed_rollno_series) {
-        data.append("allowed_rollno_series", rollno)
-      }
       const response = await sendDataWithFormData(`app/programs`, data);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
@@ -89,13 +82,6 @@ export default function Page() {
         onChange={value => setFormData(prev => ({ ...prev, availability: value }))}
         className="mb-4"
       />
-      <UpdateAllowedRollnos
-        rollnos={formData.allowed_rollno_series}
-        onChange={value => setFormData(prev => ({
-          ...prev,
-          allowed_rollno_series: value
-        }))}
-      />
       {formData.file
         ? <div className="relative">
           <Image
@@ -129,51 +115,6 @@ export default function Page() {
       >
         Save
       </Button>
-    </div>
-  </div>
-}
-
-export function UpdateAllowedRollnos({ rollnos, onChange }) {
-  const [newRollnos, setNewRollnos] = useState("")
-  const allSeries = rollnos || []
-  return <div className="mb-4">
-    <div className="mb-2 flex items-end gap-4">
-      <FormControl
-        className="text-[14px] [&_.label]:font-[400] block grow"
-        value={newRollnos}
-        onChange={e => setNewRollnos(e.target.value)}
-        placeholder="Allowed roll no Series."
-      />
-      {newRollnos && <Button
-        variant="wz"
-        onClick={() => {
-          if (allSeries.includes(newRollnos.trim())) {
-            toast.error("Roll no series already added");
-            return
-          }
-          onChange([...allSeries, newRollnos.trim().toLocaleLowerCase()]);
-          setNewRollnos("")
-        }}
-      >
-        Save
-      </Button>}
-    </div>
-    <div className="flex flex-wrap gap-2">
-      {allSeries.map(roll => <div
-        key={roll}
-        className="relative"
-      >
-        <Badge>
-          {roll}
-        </Badge>
-        <Minus
-          className="text-white bg-[var(--accent-2)] absolute top-0 right-[-8px] translate-y-[-20%]
-                      w-[16px] h-[16px] cursor-pointer z-[100] rounded-full"
-          strokeWidth={3}
-          onClick={() => onChange(allSeries.filter(item => item !== roll)
-          )}
-        />
-      </div>)}
     </div>
   </div>
 }

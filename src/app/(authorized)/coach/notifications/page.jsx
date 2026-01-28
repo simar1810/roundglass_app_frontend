@@ -61,6 +61,7 @@ export default function Page() {
 }
 
 function Notification({ notification }) {
+  console.log(notification);
   return <div className="max-w-[96ch] px-4 py-3 mb-3 flex items-center gap-6 border-1 border-[var(--accent-1)] rounded-[10px]">
     <Bell fill="#67BC2A" className="min-w-[52px] h-[52px] bg-[#90C844]/30 text-[var(--accent-1)] p-3 rounded-full" />
     <div>

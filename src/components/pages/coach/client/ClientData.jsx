@@ -1,13 +1,20 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import Loader from "@/components/common/Loader";
 import YouTubeEmbed from "@/components/common/YoutubeEmbed";
 import FormControl from "@/components/FormControl";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import PDFRenderer from "@/components/modals/PDFRenderer";
+import ClientGrowthStatus from "@/components/pages/growth/ClientGrowthStatus";
+import Paginate from "@/components/Paginate";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -18,42 +25,92 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { sendData } from "@/lib/api";
-import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask } from "@/lib/fetchers/app";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fetchData, sendData } from "@/lib/api";
+import { getClientMealPlanById, getClientOrderHistory, getClientWorkouts, getMarathonClientTask, getWaterLog } from "@/lib/fetchers/app";
 import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { format } from "date-fns";
-import { BarChart2, Bot, Briefcase, CalendarIcon, Clock, Dumbbell, Eye, FileDown, FileText, Flag, MoreVertical, ShoppingBag, Users, Utensils } from "lucide-react";
+import { format, subMinutes, subMonths } from "date-fns";
+import { BarChart, BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, MoreVertical, RefreshCw, ShoppingBag, TrendingUp, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
-import useSWR from "swr";
-import PDFRenderer from "@/components/modals/PDFRenderer";
+import useSWR, { mutate } from "swr";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
 import AIAgentHistory from "./AIAgentHistory";
-import ClientClubDataComponent from "./ClientClubDataComponent";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
+import ClientRanking from "@/components/pages/roundglass/ClientRanking";
+import TrendsAnalysis from "@/components/pages/roundglass/TrendsAnalysis";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
   { icon: <Utensils className="w-[16px] h-[16px]" />, value: "meal", label: "Meal" },
   { icon: <Dumbbell className="w-[16px] h-[16px]" />, value: "workout", label: "Workout" },
   { icon: <ShoppingBag className="w-[16px] h-[16px]" />, value: "retail", label: "Retail", showIf: ({ organisation }) => organisation.toLowerCase() === "herbalife" },
-  { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
-  { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
+  // { icon: <Flag className="w-[16px] h-[16px]" />, value: "marathon", label: "Marathon" },
+  // { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
+  { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
   { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
-  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Client Reports" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Player Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
+  { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },
+  { icon: <TrendingUp className="w-[16px] h-[16px]" />, value: "growth", label: "Growth" },
+  { icon: <BarChart className="w-[16px] h-[16px]" />, value: "roundglass-analytics", label: "Analytics" },
 ]
+
+const ADHERENCE_SCORE_RANGES = [
+  {
+    label: "Excellent",
+    min: 80,
+    max: 100,
+    description: "You’re consistently performing at the top level and mastering your skills.",
+  },
+  {
+    label: "Good",
+    min: 60,
+    max: 79,
+    description: "You have a solid grasp and are on the right track, with room to improve.",
+  },
+  {
+    label: "Average",
+    min: 40,
+    max: 59,
+    description: "You’re doing okay, but there are key areas that need more focus.",
+  },
+  {
+    label: "Below Average",
+    min: 20,
+    max: 39,
+    description: "You may be struggling in some areas and should consider extra practice.",
+  },
+  {
+    label: "Poor",
+    min: 0,
+    max: 19,
+    description: "Significant improvement is needed; it’s time to reassess your approach and strategy.",
+  },
+];
+
+const GAUGE_RADIUS = 90;
+const GAUGE_LENGTH = Math.PI * GAUGE_RADIUS;
+
+function tooltipVisibilityClass(isVisible) {
+  return isVisible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0";
+}
+
+function getAdherenceRangeForScore(score) {
+  return ADHERENCE_SCORE_RANGES.find(range => score >= range.min) || ADHERENCE_SCORE_RANGES[ADHERENCE_SCORE_RANGES.length - 1];
+}
 
 export default function ClientData({ clientData }) {
   const router = useRouter();
@@ -76,13 +133,23 @@ export default function ClientData({ clientData }) {
       <ClientStatisticsData clientData={clientData} />
       <ClientMealData _id={clientData._id} client={clientData} />
       {organisation.toLowerCase() === "herbalife" && <ClientRetailData clientId={clientData.clientId} />}
-      <ClientClubDataComponent clientData={clientData} />
-      <MarathonData clientData={clientData} />
+      {/* <ClientClubDataComponent clientData={clientData} /> */}
+      {/* <MarathonData clientData={clientData} /> */}
       <WorkoutContainer id={clientData._id} />
       <AIAgentHistory />
+      <WaterLogData clientId={clientData._id} />
       <ClientReports />
       <CaseFile sections={clientData.onboarding_questionaire || []} />
       <PhysicalClub />
+      <TabsContent value="adherence">
+        <ClientAdherenceScore clientId={clientData.clientId} />
+      </TabsContent>
+      <TabsContent value="growth">
+        <ClientGrowthStatus clientId={clientData._id} />
+      </TabsContent>
+      <TabsContent value="roundglass-analytics">
+        <TabsRoundglassAnalytics clientId={clientData._id} clientData={clientData} />
+      </TabsContent>
     </Tabs>
   </div>
 }
@@ -109,6 +176,25 @@ function ClientMealData({ _id, client }) {
 }
 
 export function CustomMealDetails({ meal, client }) {
+  async function unassignClient(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData(
+        "app/meal-plan/custom/unassign",
+        { clients: [client._id], id: meal._id },
+        "POST"
+      );
+      if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
+      mutate(`app/getClientMealPlanById?clientId=${client._id}`)
+      toast.success(response.message);
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message || "Please try again Later!");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (meal.custom) return <div className="relative border-1 rounded-[10px] overflow-clip block mb-4">
     <Link href={`/coach/meals/list-custom/${meal._id}`} className="block">
       <Image
@@ -129,6 +215,14 @@ export function CustomMealDetails({ meal, client }) {
         </div>
       </div>
       <p>{trimString(meal.description, 80)}</p>
+      <DualOptionActionModal
+        description="Are you sure unassign this client from the meal plan?"
+        action={(setLoading, closeBtnRef) => unassignClient(setLoading, closeBtnRef)}
+      >
+        <AlertDialogTrigger className="ml-auto block" asChild>
+          <Button size="sm" variant="wz">Unassign</Button>
+        </AlertDialogTrigger>
+      </DualOptionActionModal>
     </div>
   </div>
   if (meal?.isRoutine) return <Link href={`/coach/meals/list/${meal._id}`} className="relative border-1 rounded-[10px] overflow-clip block mb-4">
@@ -301,7 +395,7 @@ function RetailOrderDetailCard({ order }) {
         className="bg-black w-[64px] h-[64px] object-cover rounded-md"
       />
       <div>
-        <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
+        <h4>{order.productModule.map(product => `${product.productName} (x${product.quantity || 1})`).join(", ")}</h4>
         <p className="text-[12px] text-[var(--dark-1)]/25">{order.productModule?.at(0)?.productDescription}</p>
       </div>
       <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>
@@ -316,14 +410,14 @@ function RetailOrderDetailCard({ order }) {
       {/* <Link className="underline text-[var(--accent-1)] text-[12px] flex items-center" href="/">
         Order Now&nbsp;{">"}
       </Link> */}
-      {order.pendingAmount > 0
+      {/* {order.pendingAmount > 0
         ? <UpdateClientOrderAmount order={order} />
-        : <Badge variant="wz">Paid</Badge>}
+        : <Badge variant="wz">Paid</Badge>} */}
     </CardFooter>
   </Card>
 }
 
-export function UpdateClientOrderAmount({ order }) {
+export function UpdateClientOrderAmount({ order, swrKey }) {
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState("");
 
@@ -331,13 +425,14 @@ export function UpdateClientOrderAmount({ order }) {
     try {
       setLoading(true);
       const response = await sendData(
-        `app/client/retail-order/${order.clientId}`,
+        `app/client/retail-order/${order.clientId?._id}`,
         { orderId: order._id, amount: value },
         "PUT"
       );
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
-      location.reload()
+      if(typeof swrKey !== "string") location.reload()
+      mutate(swrKey)
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -351,6 +446,7 @@ export function UpdateClientOrderAmount({ order }) {
       <DialogTitle className="p-4 border-b-1">Order Amount</DialogTitle>
       <div className="p-4">
         <p> Pending Amount - ₹{order.pendingAmount}</p>
+        <p> Paid Amount - ₹{order.paidAmount}</p>
         <FormControl
           label="Add Amount"
           value={value}
@@ -434,7 +530,7 @@ function MarathonData({ clientData }) {
                   const videoUrl = getVideoUrl(task);
                   const photoUrl = getPhotoUrl(task);
                   const hasMedia = task.isCompleted && (videoUrl || photoUrl);
-                  
+
                   return (
                     <div
                       key={task.taskId}
@@ -483,7 +579,7 @@ function MarathonData({ clientData }) {
         ))}
       </Accordion>
     </div>
-    
+
     {/* Video/Photo View Modal */}
     {selectedMedia && (
       <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
@@ -587,6 +683,124 @@ function WorkoutContainer({ id }) {
   </TabsContent>
 }
 
+function WaterLogData({ clientId }) {
+  const [date, setDate] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const dateString = date || null;
+
+  // Fetch all records (API might return all regardless of pagination params)
+  const { isLoading, error, data, mutate } = useSWR(
+    `app/water-log?person=coach&clientId=${clientId}${dateString ? `&date=${dateString}` : ""}`,
+    () => getWaterLog(clientId, dateString)
+  );
+
+  if (isLoading) return <TabsContent value="water-log">
+    <ContentLoader />
+  </TabsContent>
+
+  if (error || !Boolean(data) || data?.status_code !== 200) return <TabsContent value="water-log">
+    <ContentError className="mt-0" title={error?.message || data?.message} />
+  </TabsContent>
+
+  // Get all water logs from API
+  const allWaterLogs = data?.data?.results || data?.data || [];
+
+  // Apply client-side pagination
+  const totalResults = allWaterLogs.length;
+  const totalPages = Math.ceil(totalResults / pagination.limit);
+  const startIndex = (pagination.page - 1) * pagination.limit;
+  const endIndex = startIndex + pagination.limit;
+  const waterLogs = allWaterLogs.slice(startIndex, endIndex);
+
+  // Format date to dd-MM-yyyy
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "";
+    try {
+      const dateObj = new Date(dateValue);
+      if (isNaN(dateObj.getTime())) {
+        // If it's already in dd-MM-yyyy format, return as is
+        if (typeof dateValue === "string" && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+          return dateValue;
+        }
+        return dateValue;
+      }
+      return format(dateObj, "dd-MM-yyyy");
+    } catch {
+      return dateValue;
+    }
+  };
+
+  return <TabsContent value="water-log">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-[var(--dark-1)] font-semibold text-lg">Water Log</h3>
+      <div className="flex items-center gap-2">
+        {/* <AddWaterLogModal clientId={clientId} /> */}
+        <DatePicker
+          date={date}
+          setDate={(newDate) => {
+            setDate(newDate);
+            setPagination({ page: 1, limit: pagination.limit });
+          }}
+        />
+        {date && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setDate(null);
+              setPagination({ page: 1, limit: pagination.limit });
+            }}
+            className="text-xs"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+    </div>
+    <div className="bg-white overflow-x-auto rounded-[10px] border-1">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>Amount (ml)</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {waterLogs.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={2} className="text-center text-muted-foreground">
+                No water log entries found
+              </TableCell>
+            </TableRow>
+          ) : (
+            waterLogs.map((item) => (
+              <TableRow key={item._id}>
+                <TableCell>{formatDate(item.date || item.createdAt || item.createdDate)}</TableCell>
+                <TableCell>{format(subMinutes(item.date, 330), "hh:mm a")}</TableCell>
+                <TableCell>{item.amount || item.quantity || item.waterAmount} ml</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+    {allWaterLogs.length > 0 && (
+      <div className="mt-4">
+        <Paginate
+          totalPages={totalPages}
+          totalResults={totalResults}
+          limit={pagination.limit}
+          page={pagination.page}
+          onChange={(newPagination) => {
+            setPagination(newPagination);
+          }}
+        />
+      </div>
+    )}
+  </TabsContent>
+}
+
 export function WorkoutDetails({ workout }) {
   if (workout.custom) return <Link
     href={`/coach/workouts/list-custom/${workout._id}`}
@@ -638,4 +852,444 @@ function CaseFile({ sections }) {
   return <TabsContent value="case-file">
     <DisplayClientQuestionaire data={sections} />
   </TabsContent>
+}
+
+function ClientAdherenceScore({ clientId }) {
+  const [date, setDate] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
+
+  const endpoint = useMemo(() => `app/client/adherence-score?person=coach&clientId=${clientId}`, [clientId])
+  const { isLoading, error, data, mutate } = useSWR(
+    endpoint, () => fetchData(endpoint)
+  );
+
+
+  const adherenceData = data?.data || {};
+  const currentScore = adherenceData.adherenceScore;
+  let history = adherenceData.adherenceScoreHistory || [];
+
+  const formatDateHelper = (dateValue) => {
+    if (!dateValue) return "";
+    try {
+      const dateObj = new Date(dateValue);
+      if (isNaN(dateObj.getTime())) {
+        if (typeof dateValue === "string" && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+          return dateValue;
+        }
+        return dateValue;
+      }
+      return format(dateObj, "dd-MM-yyyy");
+    } catch {
+      return dateValue;
+    }
+  };
+
+  // Filter by date if selected
+  if (date) {
+    history = history.filter(item => {
+      const itemDate = formatDateHelper(item.date);
+      return itemDate === date;
+    });
+  }
+
+  const handleDatePickerChange = (newDate) => {
+    setDate(newDate);
+    setPagination(prev => ({ page: 1, limit: prev.limit }));
+  };
+
+  const clearDateFilter = () => {
+    setDate(null);
+    setPagination(prev => ({ page: 1, limit: prev.limit }));
+  };
+
+  const parsedScore = parseFloat(currentScore);
+  const hasScore = Number.isFinite(parsedScore);
+  const normalizedScore = hasScore ? Math.min(Math.max(parsedScore, 0), 100) : 0;
+  const targetRatio = hasScore ? normalizedScore / 100 : 0;
+  const gradientId = useMemo(() => `adherence-gradient-${clientId}`, [clientId]);
+  const [animatedRatio, setAnimatedRatio] = useState(0);
+  const animationStartRef = useRef(null);
+  const activeRange = hasScore ? getAdherenceRangeForScore(normalizedScore) : null;
+
+  useEffect(() => {
+    animationStartRef.current = null;
+    let frame;
+    const duration = 1200;
+    const animate = (timestamp) => {
+      if (animationStartRef.current === null) {
+        animationStartRef.current = timestamp;
+      }
+      const elapsed = timestamp - animationStartRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimatedRatio(progress * targetRatio);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      animationStartRef.current = null;
+    };
+  }, [targetRatio]);
+
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    if (!history || history.length === 0) return [];
+
+    // Sort by date
+    const sortedHistory = [...history].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+
+    return sortedHistory.map((item, index) => ({
+      date: formatDateHelper(item.date),
+      score: parseFloat(item.score) || 0,
+      fullDate: item.date
+    }));
+  }, [history]);
+
+  const getScoreColor = (label) => {
+    switch (label) {
+      case "Excellent": return "text-emerald-600";
+      case "Good": return "text-green-600";
+      case "Average": return "text-yellow-600";
+      case "Below Average": return "text-orange-600";
+      case "Poor": return "text-red-600";
+      default: return "text-gray-600";
+    }
+  };
+
+  if (isLoading) return <Loader />
+
+  if (error || !data || data?.status_code !== 200) return <div>
+    <Button onClick={mutate}>Retry</Button>
+    {error?.message || data?.message || "Error loading data"}
+  </div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-bold text-[var(--dark-1)] mb-1">Adherence Score</h3>
+          <p className="text-sm text-muted-foreground">
+            Track your progress and consistency over time
+          </p>
+        </div>
+        <Dialog open={isHistoryModalOpen} onOpenChange={setHistoryModalOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              View History
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogTitle className="text-xl font-bold mb-4">Adherence Score History</DialogTitle>
+            {chartData.length > 0 ? (
+              <div className="space-y-6">
+                <div className="h-80 w-full">
+                  <ChartContainer
+                    config={{
+                      score: {
+                        label: "Adherence Score",
+                        color: "hsl(var(--chart-1))",
+                      },
+                    }}
+                    className="h-full w-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="rgb(59, 130, 246)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="rgb(59, 130, 246)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 12 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis
+                          domain={[0, 100]}
+                          tick={{ fontSize: 12 }}
+                          label={{ value: 'Score', angle: -90, position: 'insideLeft' }}
+                        />
+                        <Tooltip
+                          formatter={(value) => [`${value.toFixed(1)}`, "Score"]}
+                          contentStyle={{
+                            backgroundColor: "white",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          stroke="rgb(59, 130, 246)"
+                          strokeWidth={3}
+                          fill="url(#scoreGradient)"
+                          dot={{ fill: "rgb(59, 130, 246)", strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+                <div className="border-t pt-4">
+                  <div className="max-h-64 overflow-auto rounded-lg border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Score</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {chartData.slice().reverse().map((item, index) => {
+                          const range = getAdherenceRangeForScore(item.score);
+                          return (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{item.date}</TableCell>
+                              <TableCell className="text-right font-semibold">{item.score.toFixed(1)}</TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant="outline" className={getScoreColor(range?.label)}>
+                                  {range?.label || "N/A"}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">No history data available yet</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Main Score Card */}
+      <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          {/* Gauge Section */}
+          <div className="flex-1 max-w-md">
+            <div className="flex flex-col items-center space-y-6">
+              {/* Gauge */}
+              <div className="relative w-full max-w-[320px] h-32">
+                <svg viewBox="0 0 220 120" className="h-full w-full">
+                  <defs>
+                    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M20 110 A 90 90 0 0 1 200 110"
+                    fill="transparent"
+                    stroke="rgba(0,0,0,0.08)"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M20 110 A 90 90 0 0 1 200 110"
+                    fill="transparent"
+                    stroke={`url(#${gradientId})`}
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                    strokeDasharray={GAUGE_LENGTH.toFixed(2)}
+                    strokeDashoffset={(GAUGE_LENGTH * (1 - animatedRatio)).toFixed(2)}
+                    style={{ transition: "stroke-dashoffset 0.3s ease-out" }}
+                  />
+                </svg>
+              </div>
+
+              {/* Score */}
+              <div className="flex flex-col items-center">
+                <p className={`text-6xl font-bold ${getScoreColor(activeRange?.label)} mb-4`}>
+                  {hasScore ? normalizedScore.toFixed(0) : "N/A"}
+                </p>
+                <Badge
+                  variant="outline"
+                  className={`text-base font-semibold px-4 py-2 ${getScoreColor(activeRange?.label)} border-current`}
+                >
+                  {activeRange?.label ?? "No Data"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Score Details Section */}
+          <div className="flex-1 space-y-6">
+            <div>
+              <h4 className="text-lg font-semibold text-[var(--dark-1)] mb-4">Score Breakdown</h4>
+              <div className="space-y-3">
+                {ADHERENCE_SCORE_RANGES.map(range => (
+                  <div
+                    key={range.label}
+                    className={`p-3 rounded-lg border-2 transition-colors ${range.label === activeRange?.label
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent bg-slate-50 hover:bg-slate-100"
+                      }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`font-semibold text-sm ${range.label === activeRange?.label
+                            ? getScoreColor(range.label)
+                            : "text-slate-700"
+                            }`}>
+                            {range.label}
+                          </span>
+                          {range.label === activeRange?.label && (
+                            <Badge variant="outline" className="text-xs">Current</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {range.description}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+                        {range.min}-{range.max}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabsRoundglassAnalytics({ clientId, clientData }) {
+  const [selectedView, setSelectedView] = useState("ranking");
+
+  return (
+    <div className="space-y-6">
+      {/* Quick Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Client Name
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-semibold">
+              {clientData?.name || "Unknown"}
+            </div>
+            {clientData?.email && (
+              <div className="text-sm text-muted-foreground mt-1">
+                {clientData.email}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant={selectedView === "ranking" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("ranking")}
+                className="w-full justify-start"
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                View Rankings
+              </Button>
+              <Button
+                variant={selectedView === "trends" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("trends")}
+                className="w-full justify-start"
+              >
+                <BarChart className="h-4 w-4 mr-2" />
+                View Trends
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Analytics Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-muted-foreground">
+              <p>View detailed analytics and insights for this client</p>
+              <p className="mt-2 text-xs">
+                Compare performance, track trends, and analyze progress
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Analytics Content */}
+      <div className="mt-6">
+        {selectedView === "ranking" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Client Rankings</h3>
+            </div>
+            <ClientRanking clientId={clientId} />
+          </div>
+        )}
+
+        {selectedView === "trends" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Trends Analysis</h3>
+            </div>
+            <TrendsAnalysisWrapper clientId={clientId} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Wrapper component to pre-fill clientId in TrendsAnalysis
+// Since TrendsAnalysis manages its own state, we'll use a ref-based approach
+// to set the initial client selection
+function TrendsAnalysisWrapper({ clientId }) {
+  // We'll render TrendsAnalysis and use a custom hook or effect to pre-select the client
+  // For now, just render the component - the user can select the client from the dropdown
+  // The component already has client selection built-in
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          <strong>Note:</strong> Use the client filter below to view trends for this specific client.
+          The client ID is: <code className="bg-blue-100 px-2 py-1 rounded">{clientId}</code>
+        </p>
+      </div>
+      <TrendsAnalysis />
+    </div>
+  );
 }

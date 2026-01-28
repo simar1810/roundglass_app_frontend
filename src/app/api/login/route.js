@@ -46,19 +46,6 @@ export async function POST(request) {
 			);
 		}
 
-		// Store user's assigned client IDs for filtering
-		if (userData && userData.clients && Array.isArray(userData.clients)) {
-			const clientIds = userData.clients.map((client) =>
-				typeof client === "object" && client.$oid ? client.$oid : client
-			);
-			response.cookies.set("userClientIds", JSON.stringify(clientIds), {
-				httpOnly: false, // Allow client-side access
-				secure: process.env.NODE_ENV === "production",
-				path: "/",
-				maxAge: 60 * 60 * 24 * 7,
-			});
-		}
-
 		return response;
 	} catch (error) {
 		return NextResponse.json(

@@ -1,0 +1,262 @@
+{
+	"info": {
+		"_postman_id": "roundglass-client-preferences-api",
+		"name": "Roundglass Client Preferences API",
+		"description": "Complete API collection for Roundglass client preferences management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET - Get Preferences (Client)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=client",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "client"
+						}
+					]
+				},
+				"description": "Retrieve preferences for the authenticated client"
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Get Preferences (Coach)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach&clientId=64a1b2c3d4e5f6g7h8i9j0k1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "coach"
+						},
+						{
+							"key": "clientId",
+							"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+							"description": "Client ID (MongoDB ObjectId)"
+						}
+					]
+				},
+				"description": "Retrieve preferences for a specific client (coach access)"
+			},
+			"response": []
+		},
+		{
+			"name": "POST - Create/Update Preferences (Upsert)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"clientId\": \"64a1b2c3d4e5f6g7h8i9j0k1\",\n  \"allergies\": \"Peanuts, Dairy\",\n  \"medicalHistory\": \"Hypertension, Diabetes\",\n  \"familyHistory\": \"Heart disease in family\",\n  \"trainingModule\": [\n    {\n      \"trainingFrequency\": \"5 times per week\",\n      \"duration\": \"60 minutes\",\n      \"intensity\": \"Moderate\",\n      \"conditioningDays\": \"Monday, Wednesday, Friday\"\n    }\n  ],\n  \"supplements\": [\n    {\n      \"brand\": \"Brand XYZ\",\n      \"dosage\": \"500mg\",\n      \"frequency\": \"Once daily\",\n      \"source\": \"Pharmacy\",\n      \"purpose\": \"Vitamin D\",\n      \"dateTime\": \"2024-01-15T10:00:00Z\"\n    }\n  ],\n  \"injuries\": [\n    {\n      \"injuryType\": \"Sprain\",\n      \"bodyPart\": \"Ankle\",\n      \"incidentDate\": \"2023-12-01T00:00:00.000Z\",\n      \"rehabProgress\": \"75% recovered\",\n      \"physiotherapistAssignment\": \"Dr. Smith\",\n      \"fileUpload\": \"https://example.com/file.pdf\"\n    }\n  ],\n  \"dietRecall\": [\n    {\n      \"date\": \"18-01-2024\",\n      \"practionerNotes\": {\n        \"totalEnergyIntake\": \"2500\",\n        \"proteinG\": \"150\",\n        \"carbohydrateG\": \"300\",\n        \"fatG\": \"80\",\n        \"commentsKeyObservations\": \"Good protein intake, need to increase carbs\"\n      },\n      \"meals\": [\n        {\n          \"mealType\": \"Breakfast\",\n          \"foodBeverage\": \"Oatmeal with fruits\",\n          \"quantity\": \"1 bowl\",\n          \"location\": \"Home\",\n          \"comments\": \"Added banana and berries\"\n        },\n        {\n          \"mealType\": \"Lunch\",\n          \"foodBeverage\": \"Grilled chicken salad\",\n          \"quantity\": \"200g chicken, 150g salad\",\n          \"location\": \"Restaurant\",\n          \"comments\": \"Light dressing\"\n        }\n      ]\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "coach"
+						}
+					]
+				},
+				"description": "Create new preferences or update existing ones (upsert based on clientId)"
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Partial Update Preferences",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"clientId\": \"64a1b2c3d4e5f6g7h8i9j0k1\",\n  \"allergies\": \"Updated allergies list\",\n  \"medicalHistory\": \"Updated medical history\",\n  \"trainingModule\": [\n    {\n      \"trainingFrequency\": \"6 times per week\",\n      \"duration\": \"45 minutes\",\n      \"intensity\": \"High\",\n      \"conditioningDays\": \"Monday to Saturday\"\n    }\n  ],\n  \"dietRecall\": [\n    {\n      \"date\": \"20-01-2024\",\n      \"practionerNotes\": {\n        \"totalEnergyIntake\": \"2600\",\n        \"proteinG\": \"160\",\n        \"carbohydrateG\": \"320\",\n        \"fatG\": \"85\",\n        \"commentsKeyObservations\": \"Increased intake as per recommendations\"\n      },\n      \"meals\": [\n        {\n          \"mealType\": \"Breakfast\",\n          \"foodBeverage\": \"Eggs and toast\",\n          \"quantity\": \"2 eggs, 2 slices toast\",\n          \"location\": \"Home\",\n          \"comments\": \"Whole grain bread\"\n        }\n      ]\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=client",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "client"
+						}
+					]
+				},
+				"description": "Partially update preferences (only update provided fields)"
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE - Delete Preferences",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach&clientId=64a1b2c3d4e5f6g7h8i9j0k1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "coach"
+						},
+						{
+							"key": "clientId",
+							"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+							"description": "Client ID (MongoDB ObjectId)"
+						}
+					]
+				},
+				"description": "Delete preferences for a specific client"
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Update Diet Recall Only",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"dietRecall\": [\n    {\n      \"date\": \"18-01-2024\",\n      \"practionerNotes\": {\n        \"totalEnergyIntake\": \"2500\",\n        \"proteinG\": \"150\",\n        \"carbohydrateG\": \"300\",\n        \"fatG\": \"80\",\n        \"commentsKeyObservations\": \"Good protein intake, need to increase carbs\"\n      },\n      \"meals\": [\n        {\n          \"mealType\": \"Breakfast\",\n          \"foodBeverage\": \"Oatmeal with fruits\",\n          \"quantity\": \"1 bowl\",\n          \"location\": \"Home\",\n          \"comments\": \"Added banana and berries\"\n        },\n        {\n          \"mealType\": \"Lunch\",\n          \"foodBeverage\": \"Grilled chicken salad\",\n          \"quantity\": \"200g chicken, 150g salad\",\n          \"location\": \"Restaurant\",\n          \"comments\": \"Light dressing\"\n        },\n        {\n          \"mealType\": \"Dinner\",\n          \"foodBeverage\": \"Fish with vegetables\",\n          \"quantity\": \"150g fish, 100g vegetables\",\n          \"location\": \"Home\",\n          \"comments\": \"Steamed vegetables\"\n        }\n      ]\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/app/roundglass/client-preference?person=coach",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"app",
+						"roundglass",
+						"client-preference"
+					],
+					"query": [
+						{
+							"key": "person",
+							"value": "coach"
+						}
+					]
+				},
+				"description": "Update only dietRecall field without affecting other preferences"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8084",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "64a1b2c3d4e5f6g7h8i9j0k1",
+			"type": "string"
+		}
+	]
+}

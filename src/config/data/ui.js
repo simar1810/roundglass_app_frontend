@@ -1,11 +1,11 @@
 import { FaFacebookSquare, FaLinkedin, FaWhatsapp, FaYoutube } from "react-icons/fa";
-import { MdContactSupport } from "react-icons/md";
 import { FaSquareInstagram } from "react-icons/fa6";
+import { MdContactSupport } from "react-icons/md";
 
 export const dashboardCards = {
   app: [
-    { id: 1, title: "Active Clients", name: "members", icon: "/svgs/person.svg", link: "/coach/clients" },
-    { id: 2, title: "Total Clients", name: "clients", icon: "/svgs/users-icon.svg", link: "/coach/clients" },
+    { id: 1, title: "Active Players", name: "members", icon: "/svgs/person.svg", link: "/coach/clients" },
+    { id: 2, title: "Total Players", name: "clients", icon: "/svgs/users-icon.svg", link: "/coach/clients" },
     { id: 3, title: "Meals Plans", name: "meals", icon: "/svgs/cutlery.svg", link: "/coach/meals/list-custom" },
     { id: 4, title: "Orders", name: "orders", icon: "/svgs/checklist.svg", link: "/coach/retail" },
   ],
@@ -66,6 +66,9 @@ export const clientDetailsFields = [
   },
   // { id: 7, label: "Weight", name: "weight", type: 3 },
   { id: 8, label: "Height", name: "height", type: 2 },
+  { id: 9, label: "Allergies, dietary restrictions", name: "allergiesDietaryRestrictions", type: 5, placeholder: "Enter allergies and dietary restrictions" },
+  { id: 10, label: "Medical history", name: "medicalHistory", type: 5, placeholder: "Enter medical history" },
+  { id: 11, label: "Family history", name: "familyHistory", type: 5, placeholder: "Enter family history" },
 ]
 
 export const clientOwnDetailsFields = [
@@ -80,7 +83,10 @@ export const clientOwnDetailsFields = [
       { id: 1, name: "Male", value: "Male" },
       { id: 2, name: "Female", value: "Female" },
     ]
-  }
+  },
+  { id: 7, label: "Allergies, dietary restrictions", name: "allergiesDietaryRestrictions", type: 5, placeholder: "Enter allergies and dietary restrictions" },
+  { id: 8, label: "Medical history", name: "medicalHistory", type: 5, placeholder: "Enter medical history" },
+  { id: 9, label: "Family history", name: "familyHistory", type: 5, placeholder: "Enter family history" },
 ]
 
 export const linkGeneratorFields = [
@@ -112,14 +118,14 @@ export const linkGeneratorFields = [
     id: 11, label: "Select A Client", inputtype: 7, name: "one_to_one_client_id",
     options: []
   },
-  {
-    id: 12,
-    label: "Allowed Client Roll Nos Series",
-    type: "text",
-    inputtype: 9,
-    placeholder: "Enter roll no series",
-    name: "allowed_client_rollnos"
-  }
+  // {
+  //   id: 12,
+  //   label: "Allowed Client Roll Nos Series",
+  //   type: "text",
+  //   inputtype: 9,
+  //   placeholder: "Enter roll no series",
+  //   name: "allowed_client_rollnos"
+  // }
 ];
 
 export const quickAddClientFormFields = [

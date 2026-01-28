@@ -1,20 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-  UserPlus, 
-  Loader2, 
-  Search, 
-  Users 
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { assignClientsToUser, getAvailableClients } from "@/lib/fetchers/app";
+import {
+    Loader2,
+    Search,
+    UserPlus,
+    Users
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getAvailableClients, assignClientsToUser } from "@/lib/fetchers/app";
 
 export default function QuickAssignButton({ 
   userId, 
@@ -190,7 +189,7 @@ export default function QuickAssignButton({
                 {availableClients.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                    <p>No clients found</p>
+                    <p>No Players Found</p>
                   </div>
                 )}
               </div>

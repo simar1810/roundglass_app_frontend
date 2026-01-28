@@ -4,13 +4,17 @@ import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
 import AssignMealModal from "@/components/modals/Assignmealmodal";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
+import { SquarePen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { FiFilter } from "react-icons/fi";
 import { IoIosArrowDropdown, IoMdAddCircle } from "react-icons/io";
 import { LuTrash } from "react-icons/lu";
 import { PiSparkleFill } from "react-icons/pi";
@@ -18,21 +22,45 @@ import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
 export default function Page() {
-  const [query, setQuery] = useState("")
-  const { isLoading, error, data } = useSWR("custom-meal-plans", () =>
-    getCustomMealPlans("coach")
-  );
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "daily";
   const router = useRouter();
+
+  const [query, setQuery] = useState("")
+  const [excludeManual, setExcludeManual] = useState(searchParams.get("excludeManual") === "true");
+  const [excludeAdmin, setExcludeAdmin] = useState(searchParams.get("excludeAdmin") === "true");
+  const [showFilters, setShowFilters] = useState(false);
+  const { isLoading, error, data } = useSWR("custom-meal-plans", () =>
+    getCustomMealPlans("coach")
+  );
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const filterRef = useRef(null);
   const { mutate } = useSWRConfig();
   const [loading, setLoading] = useState(false);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (excludeManual) {
+      params.set("excludeManual", "true");
+    } else {
+      params.delete("excludeManual");
+    }
+    if (excludeAdmin) {
+      params.set("excludeAdmin", "true");
+    } else {
+      params.delete("excludeAdmin");
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [excludeManual, excludeAdmin, router, searchParams]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilters(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -43,16 +71,27 @@ export default function Page() {
   if (error || data?.status_code !== 200)
     return <ContentError title={error || data?.message} />;
 
-  const mealRegex = new RegExp(query, "i") 
+  const mealRegex = new RegExp(query, "i")
 
   const filteredMealPlans = ["daily", "weekly", "monthly"].includes(mode)
     ? data
       .data
       .filter((meal) => meal.mode === mode)
       .filter(meal => mealRegex.test(meal.title))
+      .filter(meal => {
+        if (excludeManual && !meal.admin) return false;
+        if (excludeAdmin && meal.admin) return false;
+        return true;
+      })
+      .sort((a, b) => b._id.localeCompare(a._id))
     : data
       .data
-      .filter(meal => mealRegex.test(meal.title));
+      .filter(meal => mealRegex.test(meal.title))
+      .filter(meal => {
+        if (excludeManual && !meal.admin) return false;
+        if (excludeAdmin && meal.admin) return false;
+        return true;
+      }).sort((a, b) => b._id.localeCompare(a._id));
   const handleNavigate = (planMode) => {
     if (localStorage.getItem("aiMealPlan")) {
       localStorage.removeItem('aiMealPlan')
@@ -119,25 +158,94 @@ export default function Page() {
         </div>
         <div className="flex flex-wrap gap-2 items-center justify-between ">
           <div className="flex gap-6 mt-5">
-            {["daily", "weekly", "monthly"].map((tab) => (
-              <Link
-                key={tab}
-                href={`?mode=${tab}`}
+            {["daily", "weekly", "monthly"].map((tab) => {
+              const params = new URLSearchParams();
+              params.set("mode", tab);
+              if (excludeManual) params.set("excludeManual", "true");
+              if (excludeAdmin) params.set("excludeAdmin", "true");
+              return (
+                <Link
+                  key={tab}
+                  href={`?${params.toString()}`}
+                  className={cn(
+                    "pb-2 text-sm md:text-base font-medium text-gray-600 hover:text-black transition",
+                    mode === tab
+                      ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
+                      : ""
+                  )}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
+                </Link>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-3 mt-5">
+            <div className="relative" ref={filterRef}>
+              <button
+                onClick={() => setShowFilters((prev) => !prev)}
                 className={cn(
-                  "pb-2 text-sm md:text-base font-medium text-gray-600 hover:text-black transition",
-                  mode === tab
-                    ? "border-b-2 border-[#67BC2A] text-[#67BC2A] font-semibold"
-                    : ""
+                  "px-3 py-2 flex items-center gap-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition",
+                  (excludeManual || excludeAdmin) && "border-[#67BC2A] bg-green-50 text-[#67BC2A]"
                 )}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)} Plans
-              </Link>
-            ))}
+                <FiFilter size={16} />
+                Filters
+                {(excludeManual || excludeAdmin) && (
+                  <span className="ml-1 bg-[#67BC2A] text-white text-xs px-1.5 py-0.5 rounded-full">
+                    {[excludeManual, excludeAdmin].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+              {showFilters && (
+                <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg border border-gray-200 rounded-lg z-20 p-4">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Filter Meal Plans</h4>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="exclude-manual"
+                        checked={excludeManual}
+                        onCheckedChange={setExcludeManual}
+                      />
+                      <Label
+                        htmlFor="exclude-manual"
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
+                        Hide Manually Created Plans
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="exclude-admin"
+                        checked={excludeAdmin}
+                        onCheckedChange={setExcludeAdmin}
+                      />
+                      <Label
+                        htmlFor="exclude-admin"
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
+                        Hide Admin Added Plans
+                      </Label>
+                    </div>
+                    {(excludeManual || excludeAdmin) && (
+                      <button
+                        onClick={() => {
+                          setExcludeManual(false);
+                          setExcludeAdmin(false);
+                        }}
+                        className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <SearchFormControl
+              query={query}
+              setQuery={setQuery}
+            />
           </div>
-          <SearchFormControl
-            query={query}
-            setQuery={setQuery}
-          />
         </div>
       </div>
       <div className="flex-1  no-scrollbar mt-4 pb-20">
@@ -170,6 +278,15 @@ export default function Page() {
               >
                 {meal.admin ? "Admin" : "Manual"}
               </Badge>
+              {meal.draft && <Badge
+                className={cn(
+                  "absolute top-3 left-20 text-xs font-normal text-white px-3"
+                )}
+                variant="wz_fill"
+              >
+                <SquarePen />
+                Draft
+              </Badge>}
               {!meal.admin && (
                 <button
                   onClick={() => handleDeleteMeal(meal._id)}
@@ -185,7 +302,7 @@ export default function Page() {
                     {meal.description}
                   </p>
                 </Link>
-                <AssignMealModal planId={meal._id} type="custom" />
+                <AssignMealModal plan={meal} planId={meal._id} type="custom" />
               </div>
             </div>
           ))}

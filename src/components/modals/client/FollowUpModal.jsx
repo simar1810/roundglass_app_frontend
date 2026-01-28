@@ -17,6 +17,7 @@ import {
   setHealthMatrices,
   setNextFollowUpDate,
   stage1Completed,
+  toggleHideHealthMatrices,
 } from "@/config/state-reducers/follow-up";
 import {
   calculateBMIFinal,
@@ -36,6 +37,28 @@ import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
 import { _throwError } from "@/lib/formatter";
 import { extractNumber } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { useMemo } from "react";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
+import { Switch } from "@/components/ui/switch";
+
+const SVG_ICONS = [
+  "/svgs/body.svg",      // 0
+  "/svgs/check.svg",     // 1
+  "/svgs/checklist.svg", // 2
+  "/svgs/bmi.svg",       // 3
+  "/svgs/cutlery.svg",   // 4
+  "/svgs/fat.svg",       // 5
+  "/svgs/fats.svg",      // 6
+  "/svgs/muscle.svg",    // 7
+  "/svgs/meta.svg",      // 8
+  "/svgs/person.svg",    // 9
+  "/svgs/weight.svg",    // 10
+  "/svgs/flame-icon.svg",// 11
+  "/svgs/marathon.svg",  // 12
+  "/svgs/users-icon.svg",// 13
+];
+
 
 export default function FollowUpModal({ clientData }) {
   if (!clientData.healthMatrix) return <></>
@@ -82,13 +105,23 @@ function Stage1({ clientData }) {
   const latestOldWeight = `${extractNumber(latesthealthMatrix?.weight)} ${latesthealthMatrix?.weightUnit}`
 
   return <div className="p-4">
-    <FormControl
-      label="Date"
-      type="date"
-      className="block w-1/2 [&_.label]:font-[400] [&_.input]:text-[14px]"
-      value={healthMatrix.date}
-      onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
-    />
+    <div className="grid grid-cols-2 gap-4">
+      <FormControl
+        label="Date"
+        type="date"
+        className="block [&_.label]:font-[400] [&_.input]:text-[14px]"
+        value={healthMatrix.date}
+        onChange={e => dispatch(changeFieldvalue("date", e.target.value))}
+      />
+      <FormControl
+        label="Note"
+        type="text"
+        className="block [&_.label]:font-[400] [&_.input]:text-[14px]"
+        value={healthMatrix.notes}
+        onChange={e => dispatch(changeFieldvalue("notes", e.target.value))}
+        placeholder="Enter the notes."
+      />
+    </div>
     {latestOldWeight && <h3 className="mt-4">Latest Old Weight {latestOldWeight}</h3>}
     <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
       <div>
@@ -174,9 +207,37 @@ function Stage2({
   heightUnit,
   clientId
 }) {
-  const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
+  const { healthMatrix, hideHealthMatrices, dispatch, ...state } = useCurrentStateContext();
+  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
 
   const closeBtnRef = useRef();
+
+  const formFields = useMemo(() => {
+    if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
+
+    const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
+
+    // Filter default fields
+    const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
+      [...defaultFields, "weightInKgs", "weightInPounds"].includes(field.name) ||
+      (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
+    );
+
+    // Map coach added fields
+    const customFields = coachAddedFields.map(field => ({
+      label: field.title,
+      value: "0",
+      info: `Range: ${field.minValue} - ${field.maxValue}`,
+      icon: SVG_ICONS[field.svg] || "/svgs/checklist.svg",
+      name: field.fieldLabel,
+      title: field.title,
+      id: field._id || field.fieldLabel,
+      getMaxValue: () => field.maxValue,
+      getMinValue: () => field.minValue,
+    }));
+
+    return [...activeDefaultFields, ...customFields];
+  }, [coachHealthMatrixFields]);
 
   const payload = {
     ...healthMatrix,
@@ -206,7 +267,8 @@ function Stage2({
 
   async function createFollowUp() {
     try {
-      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj })
+      const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
+      const data = generateRequestPayload({ healthMatrix, hideHealthMatrices, ...state }, { ...payload, ...statObj }, extraFields)
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
       if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
@@ -228,11 +290,23 @@ function Stage2({
 
   return (
     <div>
+      <label>
+        <div className="select-none cursor-pointer flex items-center gap-2 px-4 pt-4">
+          Hide Body Metrics
+          <Switch
+            checked={hideHealthMatrices}
+            onCheckedChange={value => dispatch(toggleHideHealthMatrices(value))}
+          />
+        </div>
+      </label>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-6">
           <HealthMetrics
             onUpdate={onUpdateHealthMatrix}
             data={payload}
+            fields={formFields}
+            showAll={true}
+            hideHealthMatrices={hideHealthMatrices}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-10">

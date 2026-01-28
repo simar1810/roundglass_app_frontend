@@ -17,6 +17,7 @@ export default function ClientUpdateCategories({
   children
 }) {
   const { client_categories = [] } = useAppSelector(state => state.coach.data);
+  const [dialogOpen, setDialogOpen] = useState(open || false);
 
   const { categories: clientCategories } = clientData;
   const set = new Set(clientCategories)
@@ -41,12 +42,21 @@ export default function ClientUpdateCategories({
     removeCategoryIds: []
   });
 
+  const handleOpenChange = (isOpen) => {
+    setDialogOpen(isOpen);
+    if (!isOpen && onClose) {
+      onClose();
+    }
+  };
+
   async function udpateCategories() {
     try {
       setLoading(true);
       const response = await sendData("app/categories/client", formData);
       if (response.status_code !== 200) throw new Error(response.message);
       toast.success(response.message);
+      setDialogOpen(false);
+      if (onClose) onClose();
       location.reload()
     } catch (error) {
       toast.error(error.message);
@@ -69,11 +79,16 @@ export default function ClientUpdateCategories({
       })
   }
 
-  return <Dialog defaultOpen={open} onOpenChange={onClose}>
-    {children}
-    {!children && <DialogTrigger>
-      <Pen className="w-[16px] h-[16px]" />
-    </DialogTrigger>}
+  return <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+    {children ? (
+      <div onClick={() => setDialogOpen(true)} className="w-full">
+        {children}
+      </div>
+    ) : (
+      <DialogTrigger>
+        <Pen className="w-[16px] h-[16px]" />
+      </DialogTrigger>
+    )}
     <DialogContent className="gap-0 p-0">
       <DialogTitle className="p-4 border-b-1">Categories</DialogTitle>
       <div className="p-4">

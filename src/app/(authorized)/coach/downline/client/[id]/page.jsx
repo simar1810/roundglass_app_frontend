@@ -109,7 +109,7 @@ function TabsProfile({ profile }) {
           </div>
           <UpdateDetails
             actionType="UPDATE_CLIENT"
-            title="Client Details"
+            title="Player Details"
             user={profile}
           />
         </CardHeader>

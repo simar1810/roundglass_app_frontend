@@ -1,16 +1,17 @@
 import FormControl from "@/components/FormControl";
-import UploadImage from "@/components/modals/UploadImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import { uploadImage } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { format, parse } from "date-fns";
 import { Search, } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import SelectMealCollection from "./SelectMealCollection";
 
@@ -53,7 +54,39 @@ export default function EditSelectedMealDetails({
   const { dispatch } = useCurrentStateContext();
   const [formData, setFormData] = useState(recipe);
   const onChangeHandler = e => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const closeBtnRef = useRef()
+  const closeBtnRef = useRef();
+  const fileRef = useRef();
+  const [uploading, setUploading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(formData.image || recipe.image || "/not-found.png");
+
+  // Keep preview in sync when recipe changes (e.g., after save or selecting from search)
+  useEffect(() => {
+    setFormData(recipe);
+    setPreviewImage(recipe.image || "/not-found.png");
+  }, [recipe]);
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    const MAX_SIZE_LIMIT = 1 * 1024 * 1024;
+    if (!file) return;
+    if (file && file.size > MAX_SIZE_LIMIT) {
+      toast.error("File size more than 1MB");
+      return;
+    }
+    const localPreview = URL.createObjectURL(file);
+    setPreviewImage(localPreview);
+    try {
+      setUploading(true);
+      const response = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, image: response.img }));
+      setPreviewImage(response.img || localPreview);
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      toast.error(error.message || "Something went wrong!");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function updateDish(open) {
     if (open === true) return;
@@ -78,7 +111,7 @@ export default function EditSelectedMealDetails({
       <div className="mt-4 flex items-start gap-4">
         <Image
           alt=""
-          src={recipe.image || "/not-found.png"}
+          src={previewImage}
           height={100}
           width={100}
           className="rounded-lg max-h-[100px] bg-[var(--comp-1)] object-contain border-1"
@@ -109,13 +142,29 @@ export default function EditSelectedMealDetails({
     <DialogContent className="p-0 gap-0 max-h-[70vh] overflow-y-auto">
       <DialogTitle className="p-4 border-b-1">Details</DialogTitle>
       <div className="p-4">
-        <Image
-          alt=""
-          src={recipe.image || "/not-found.png"}
-          height={100}
-          width={100}
-          className="w-full h-[250px] bg-[var(--comp-1)] rounded-lg object-contain border-1"
-        />
+        <div
+          className="relative w-full h-[250px] bg-[var(--comp-1)] rounded-lg overflow-hidden border-1 cursor-pointer"
+          onClick={() => fileRef.current?.click()}
+        >
+          <Image
+            alt=""
+            src={previewImage}
+            fill
+            sizes="100vw"
+            className="object-contain"
+            onError={(e) => (e.currentTarget.src = "/not-found.png")}
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm font-semibold transition">
+            {uploading ? "Uploading..." : "Click to upload photo"}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            ref={fileRef}
+            onChange={handleImageUpload}
+          />
+        </div>
         <div className="mt-2 mb-6 flex justify-between items-center">
           <SelectMealCollection index={index}>
             <DialogTrigger asChild>
@@ -125,7 +174,6 @@ export default function EditSelectedMealDetails({
               </Button>
             </DialogTrigger>
           </SelectMealCollection>
-          {recipe._id && <UploadImage setter={(image) => setFormData({ ...formData, image })} />}
         </div>
         <FormControl
           value={formData.dish_name || formData.name || ""}
@@ -134,13 +182,36 @@ export default function EditSelectedMealDetails({
           placeholder="Dish Name"
           className="block mb-4"
         />
-        <FormControl
-          value={formData.description || ""}
-          name="description"
-          onChange={onChangeHandler}
-          placeholder="Description"
-          className="block mb-4"
-        />
+        <div>
+          <label className="text-sm font-medium mb-2 block">Description</label>
+          <Textarea
+            value={formData.description || ""}
+            name="description"
+            onChange={onChangeHandler}
+            placeholder="Description"
+            className="min-h-[80px] mb-4"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-2 block">Ingredients</label>
+          <Textarea
+            value={formData.ingredients || ""}
+            name="ingredients"
+            onChange={onChangeHandler}
+            placeholder="Enter ingredients (e.g., 2 eggs, 1 cup flour, etc.)"
+            className="min-h-[100px] mb-4"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-2 block">Method</label>
+          <Textarea
+            value={formData.method || ""}
+            name="method"
+            onChange={onChangeHandler}
+            placeholder="Enter cooking method/instructions"
+            className="min-h-[100px] mb-4"
+          />
+        </div>
         <FormControl
           type="time"
           value={formData.time || ""}

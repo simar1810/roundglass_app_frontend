@@ -999,9 +999,11 @@ function StatisticsPage5({
 
 function StatisticsPage6({
   data: {
+    coachAbout,
     coachName,
     coachDescription,
-    coachProfileImage
+    coachProfileImage,
+    coachWeightLoss
   },
   styles,
   brand
@@ -1054,20 +1056,29 @@ function StatisticsPage6({
 
     {/* Coach Info */}
     <View style={{ marginTop: 32 }}>
-      <Text style={[styles.sectionTitle, { fontSize: 16 }]}>Your Wellness Coach</Text>
-      <View style={styles.divider} />
+      <Text style={[styles.sectionTitle, { fontSize: 20 }]}>Your Coach</Text>
+      <View style={{ marginVertical: 10, height: 1, backgroundColor: "#F7941E" }} />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-        <View style={{ width: '50%' }}>
-          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50' }}>
+        <View style={{ width: '60%' }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#7ed957', marginBottom: 8 }}>
             {coachName ?? 'Your Coach'}
           </Text>
-          <Text style={styles.paragraph}>{coachDescription ?? 'Dedicated to your transformation journey.'}</Text>
+          <Text style={{ fontSize: 12, marginBottom: 4 }}>
+            {coachAbout}
+          </Text>
+          {/* {coachWeightLoss && <Text style={{ fontSize: 12, marginBottom: 4 }}>
+            I have lost {coachWeightLoss} in my weight loss journey
+          </Text>} */}
+          {/* <Text style={styles.paragraph}>
+            {coachDescription ?? 'Dedicated to your transformation journey.'}
+          </Text> */}
         </View>
-        {/* <Image
-          alt=""
-          src={coachProfileImage || "/assets/PNG/tryimage.png"}
-          style={{ width: 120, height: 120, borderRadius: 60, objectFit: "contain" }}
-        /> */}
+        {(brand.coachLogo || coachProfileImage) && (
+          <Image
+            src={brand.coachLogo || coachProfileImage}
+            style={{ width: 100, height: 140, objectFit: "cover", borderRadius: 8 }}
+          />
+        )}
       </View>
     </View>
 

@@ -616,12 +616,12 @@ export default function VoucherManager() {
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Percent className="h-5 w-5 text-orange-600" />
               </div>
-              <div>
+              {/* <div>
                 <p className="text-sm text-muted-foreground">Total Discount</p>
                 <p className="text-xl font-bold">
                   {formatAmount(voucherStats.totalDiscount)}
                 </p>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>
