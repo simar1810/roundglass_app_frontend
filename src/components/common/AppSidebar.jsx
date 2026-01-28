@@ -89,14 +89,17 @@ export default function AppSidebar() {
   return (
     <Sidebar className="w-[204px] bg-[var(--dark-4)] pl-2 pr-0 border-r-1">
       {Modal || <></>}
-      <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive pb-6 pt-6">
-        <Image
-          src="/wellnessz-white.png"
-          alt="wellnessZ logo"
-          width={659}
-          height={125}
-          className="max-w-[10ch] mx-auto"
-        />
+      <SidebarHeader className="bg-[var(--dark-4)] pb-6 pt-6">
+        <div className="mx-2 rounded-lg bg-white px-3 py-2 flex items-center justify-center shadow-sm">
+          <Image
+            src="/wellnessz-white.png"
+            alt="wellnessZ logo"
+            width={180}
+            height={40}
+            className="max-w-full h-auto object-contain"
+            priority
+          />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 pt-2 no-scrollbar">

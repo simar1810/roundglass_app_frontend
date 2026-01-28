@@ -347,115 +347,115 @@ export const sidebar__coachContent = [
     permission: 5, // Permission 5 = Chats
     group: "communication",
   },
-  {
-    id: 9,
-    title: "Workout",
-    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/workouts",
-    permission: 6, // Permission 6 = Workout
-    group: "content",
-    items: [
-      {
-        id: 1,
-        icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Workouts",
-        url: "/coach/workouts/add/",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/workouts/add/daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/workouts/add/weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/workouts/add/monthly",
-          },
-        ],
-      },
-      // {
-      //   id: 1.5,
-      //   icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "New Workout",
-      //   url: "/coach/workouts/new",
-      // },
-      {
-        id: 2,
-        icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "View Workouts",
-        url: "/coach/workouts/list-custom",
-        items: [
-          {
-            id: 1,
-            icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Daily",
-            url: "/coach/workouts/list-custom/?mode=daily",
-          },
-          {
-            id: 2,
-            icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Weekly",
-            url: "/coach/workouts/list-custom/?mode=weekly",
-          },
-          {
-            id: 3,
-            icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-            title: "Monthly",
-            url: "/coach/workouts/list-custom/?mode=monthly",
-          },
-        ],
-      },
-      {
-        id: 3,
-        icon: <Hourglass className="icon max-w-[20px] max-h-[20px]" />,
-        title: "Routine Workouts Plan",
-        url: "/coach/workouts/list/",
-        items: [
-          {
-            id: 1,
-            icon: <Dumbbell className="icon max-w-[20px] max-h-[20px]" />,
-            title: "All Workouts",
-            url: "/coach/workouts/list/",
-          },
-          {
-            id: 2,
-            icon: <PlusCircle className="icon max-w-[20px] max-h-[20px]" />,
-            title: "Add",
-            type: "modal",
-            Component: CreateWorkoutModal,
-          },
-        ],
-      },
-      {
-        id: 4,
-        icon: <Clock className="max-w-[20px] max-h-[20px]" />,
-        title: "Sessions",
-        url: "/coach/workouts/sessions",
-        items: [
-          {
-            id: 1,
-            icon: <Globe className="max-w-[20px] max-h-[20px]" />,
-            title: "All Sessions",
-            url: "/coach/workouts/sessions/list",
-          },
-          {
-            id: 2,
-            icon: <PlusCircle className="max-w-[20px] max-h-[20px]" />,
-            title: "Add Session",
-            url: "/coach/workouts/sessions/add",
-          },
-        ],
-      },
-    ],
-  },
+  // {
+  //   id: 9,
+  //   title: "Workout",
+  //   icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/workouts",
+  //   permission: 6, // Permission 6 = Workout
+  //   group: "content",
+  //   items: [
+  //     {
+  //       id: 1,
+  //       icon: <Logs className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "Add Workouts",
+  //       url: "/coach/workouts/add/",
+  //       items: [
+  //         {
+  //           id: 1,
+  //           icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Daily",
+  //           url: "/coach/workouts/add/daily",
+  //         },
+  //         {
+  //           id: 2,
+  //           icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Weekly",
+  //           url: "/coach/workouts/add/weekly",
+  //         },
+  //         {
+  //           id: 3,
+  //           icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Monthly",
+  //           url: "/coach/workouts/add/monthly",
+  //         },
+  //       ],
+  //     },
+  //     // {
+  //     //   id: 1.5,
+  //     //   icon: <Dumbbell className="icon min-w-[20px] min-h-[20px]" />,
+  //     //   title: "New Workout",
+  //     //   url: "/coach/workouts/new",
+  //     // },
+  //     {
+  //       id: 2,
+  //       icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
+  //       title: "View Workouts",
+  //       url: "/coach/workouts/list-custom",
+  //       items: [
+  //         {
+  //           id: 1,
+  //           icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Daily",
+  //           url: "/coach/workouts/list-custom/?mode=daily",
+  //         },
+  //         {
+  //           id: 2,
+  //           icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Weekly",
+  //           url: "/coach/workouts/list-custom/?mode=weekly",
+  //         },
+  //         {
+  //           id: 3,
+  //           icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+  //           title: "Monthly",
+  //           url: "/coach/workouts/list-custom/?mode=monthly",
+  //         },
+  //       ],
+  //     },
+  //     {
+  //       id: 3,
+  //       icon: <Hourglass className="icon max-w-[20px] max-h-[20px]" />,
+  //       title: "Routine Workouts Plan",
+  //       url: "/coach/workouts/list/",
+  //       items: [
+  //         {
+  //           id: 1,
+  //           icon: <Dumbbell className="icon max-w-[20px] max-h-[20px]" />,
+  //           title: "All Workouts",
+  //           url: "/coach/workouts/list/",
+  //         },
+  //         {
+  //           id: 2,
+  //           icon: <PlusCircle className="icon max-w-[20px] max-h-[20px]" />,
+  //           title: "Add",
+  //           type: "modal",
+  //           Component: CreateWorkoutModal,
+  //         },
+  //       ],
+  //     },
+  //     {
+  //       id: 4,
+  //       icon: <Clock className="max-w-[20px] max-h-[20px]" />,
+  //       title: "Sessions",
+  //       url: "/coach/workouts/sessions",
+  //       items: [
+  //         {
+  //           id: 1,
+  //           icon: <Globe className="max-w-[20px] max-h-[20px]" />,
+  //           title: "All Sessions",
+  //           url: "/coach/workouts/sessions/list",
+  //         },
+  //         {
+  //           id: 2,
+  //           icon: <PlusCircle className="max-w-[20px] max-h-[20px]" />,
+  //           title: "Add Session",
+  //           url: "/coach/workouts/sessions/add",
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
   // {
   //   id: 10,
   //   title: "Marathon",
@@ -524,23 +524,17 @@ export const sidebar__coachContent = [
         url: "/coach/tools/notes",
       },
       {
-        id: 2,
-        icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Reminders",
-        url: "/coach/tools/reminders",
-      },
-      {
         id: 3,
         icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
         title: "Calorie Counter",
         url: "/coach/tools/calorie-counter",
       },
-      {
-        id: 4,
-        icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Ideal Weight",
-        url: "/coach/tools/ideal-weight",
-      },
+      // {
+      //   id: 4,
+      //   icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Ideal Weight",
+      //   url: "/coach/tools/ideal-weight",
+      // },
       {
         id: 5,
         icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
@@ -620,12 +614,12 @@ export const sidebar__coachFooter = [
   //   icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
   //   url: "/coach/subscription",
   // },
-  {
-    id: 2,
-    title: "Support",
-    icon: <Headset className="min-w-[20px] min-h-[20px]" />,
-    url: "/coach/support",
-  },
+  // {
+  //   id: 2,
+  //   title: "Support",
+  //   icon: <Headset className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/coach/support",
+  // },
   // {
   //   id: 3,
   //   title: "About",

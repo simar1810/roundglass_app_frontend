@@ -1,4 +1,3 @@
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { sendDataWithFormData } from "@/lib/api";
@@ -37,10 +36,8 @@ export default function AddStoryModal() {
   return <Dialog>
     <DialogTrigger>
       <div className="aspect-square bg-[var(--accent-1)] rounded-[10px] p-2 h-40 md:h-auto w-full">
-        <div className="w-[100px] h-[100px] md:w-[64px] md:h-[64px] border-2 bg-[var(--primary-1)] border-[var(--primary-1)] relative rounded-full">
-          <Avatar className="w-full h-full p-3">
-            <AvatarImage src="/logo.png" />
-          </Avatar>
+        <div className="w-[100px] h-[100px] md:w-[64px] md:h-[64px] border-2 bg-[var(--primary-1)] border-[var(--primary-1)] relative rounded-full flex items-center justify-center">
+          <ImageIcon className="w-[32px] h-[32px] text-[var(--accent-1)]" />
           <Plus className="w-[18px] h-[18px] bg-black text-white absolute bottom-0 right-0 rounded-full" />
         </div>
       </div>
