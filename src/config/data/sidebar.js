@@ -82,13 +82,13 @@ export const sidebar__coachContent = [
         type: "modal",
         Component: AddClientWithCheckup,
       },
-      {
-        id: 4,
-        icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Quick Add",
-        type: "modal",
-        Component: QuickAddClient,
-      },
+      // {
+      //   id: 4,
+      //   icon: <UserPlus className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Quick Add",
+      //   type: "modal",
+      //   Component: QuickAddClient,
+      // },
       // {
       //   id: 5,
       //   icon: <IndianRupee className="icon min-w-[20px] min-h-[20px]" />,

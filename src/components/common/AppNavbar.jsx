@@ -226,13 +226,13 @@ function UserOptions({ profilePhoto, name }) {
             App personalisation
           </DropdownMenuLabel>
         </DropdownMenuItem>} */}
-        <DropdownMenuItem onClick={() => setOpened(false)}>
+        {/* <DropdownMenuItem onClick={() => setOpened(false)}>
           <Link href={`${COACH_WEBSITE_BASE_LINK}/${coachId}`} target="_blank" className="w-full">
             <DropdownMenuLabel className="text-[14px] py-0">
               Your Website
             </DropdownMenuLabel>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         {/* <DropdownMenuItem onClick={() => setOpened(false)}>
           <Link href="/coach/portfolio" className="w-full">
             <DropdownMenuLabel className="text-[14px] py-0">

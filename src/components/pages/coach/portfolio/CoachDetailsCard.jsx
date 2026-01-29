@@ -104,7 +104,7 @@ ${inviteUrl}`)
         </div>)}
       </div>
 
-      <div className="flex items-center justify-between pb-2">
+      {/* <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Coach Timings</h4>
         <UpdateCoachTimingsModal messageTimings={coachData.messageTimings} />
       </div>
@@ -117,9 +117,9 @@ ${inviteUrl}`)
           <p className="font-medium">Closing Time</p>
           <p className="text-[var(--dark-2)] col-span-3">:&nbsp;{messageTimings.closingTime || "—"}</p>
         </div>
-      </div>
+      </div> */}
 
-      <div className="flex items-center justify-between pb-2">
+      {/* <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Portfolio Website</h4>
         <Link
           target="_blank"
@@ -129,9 +129,9 @@ ${inviteUrl}`)
           <Link2 className="w-4 h-4" />
           Explore Portfolio
         </Link>
-      </div>
+      </div> */}
 
-      <div className="flex items-center justify-between pb-2">
+      {/* <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Invite Link</h4>
         <Button
           variant="wz"
@@ -141,16 +141,16 @@ ${inviteUrl}`)
           <Link2 className="w-4 h-4" />
           Invite Link
         </Button>
-      </div>
+      </div> */}
 
-      <div className="flex items-center justify-between pt-2">
+      {/* <div className="flex items-center justify-between pt-2">
         <h4 className="text-lg font-semibold">Delete All Client Nudges</h4>
         <DeleteClientNudges description="Are you sure you want to delete all notifications for all clients?">
           <AlertDialogTrigger asChild>
             <Button variant="destructive">Delete</Button>
           </AlertDialogTrigger>
         </DeleteClientNudges>
-      </div>
+      </div> */}
     </CardContent>
   </Card>
 }

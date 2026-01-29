@@ -11,14 +11,14 @@ import { sendData } from "@/lib/api";
 // Define available permissions with their descriptions
 const AVAILABLE_PERMISSIONS = [
   { id: 1, name: "Meal Plans", description: "View and manage meal plans" },
-  { id: 2, name: "Feed", description: "View and manage feed content" },
-  { id: 3, name: "Wallet", description: "View wallet and payment features" },
-  { id: 4, name: "Retail", description: "View retail orders and products" },
-  { id: 5, name: "Chats", description: "Access chat and messaging features" },
-  { id: 6, name: "Workouts", description: "View and manage workout plans" },
-  { id: 7, name: "Marathon", description: "View marathon tasks and progress" },
-  { id: 8, name: "Club", description: "View club activities and members" },
-  { id: 9, name: "Invoice", description: "View Create and Share Invoices" }
+  // { id: 2, name: "Feed", description: "View and manage feed content" },
+  // { id: 3, name: "Wallet", description: "View wallet and payment features" },
+  // { id: 4, name: "Retail", description: "View retail orders and products" },
+  // { id: 5, name: "Chats", description: "Access chat and messaging features" },
+  // { id: 6, name: "Workouts", description: "View and manage workout plans" },
+  // { id: 7, name: "Marathon", description: "View marathon tasks and progress" },
+  // { id: 8, name: "Club", description: "View club activities and members" },
+  // { id: 9, name: "Invoice", description: "View Create and Share Invoices" }
 ];
 
 export default function UserPermissionsModal({ open, onClose, user, onSuccess }) {
