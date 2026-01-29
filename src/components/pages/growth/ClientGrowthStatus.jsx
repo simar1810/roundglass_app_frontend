@@ -379,65 +379,24 @@ function GrowthHistoryTable({ clientId, standard }) {
   // TODO: Implement history fetching when backend endpoint is available
   // This could be: GET /api/growth/clients/:clientId/history?standard=IPA
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Growth History</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8 text-muted-foreground">
-          <p>Growth history tracking will be available soon.</p>
-          <p className="text-sm mt-2">
-            Historical measurements will be displayed here once the backend endpoint is implemented.
-          </p>
-        </div>
-        {/* Future implementation:
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Height</TableHead>
-              <TableHead>Weight</TableHead>
-              <TableHead>Height Score</TableHead>
-              <TableHead>Weight Score</TableHead>
-              <TableHead>Height Gap</TableHead>
-              <TableHead>Weight Gap</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {history.map((entry) => (
-              <TableRow key={entry._id}>
-                <TableCell>{entry.createdDate}</TableCell>
-                <TableCell>{entry.height} {entry.heightUnit}</TableCell>
-                <TableCell>{entry.weight} {entry.weightUnit}</TableCell>
-                <TableCell>
-                  <Badge variant={entry.benchmark.heightScore === 1 ? "default" : "destructive"}>
-                    {entry.benchmark.heightScore}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={entry.benchmark.weightScore === 1 ? "default" : "destructive"}>
-                    {entry.benchmark.weightScore}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {entry.benchmark?.heightGapCm != null 
-                    ? entry.benchmark.heightGapCm.toFixed(2) 
-                    : "—"} cm
-                </TableCell>
-                <TableCell>
-                  {entry.benchmark?.weightGapKg != null 
-                    ? entry.benchmark.weightGapKg.toFixed(2) 
-                    : "—"} kg
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        */}
-      </CardContent>
-    </Card>
-  );
+  return null;
+  
+  // Commented out - Growth History section
+  // return (
+  //   <Card>
+  //     <CardHeader>
+  //       <CardTitle>Growth History</CardTitle>
+  //     </CardHeader>
+  //     <CardContent>
+  //       <div className="text-center py-8 text-muted-foreground">
+  //         <p>Growth history tracking will be available soon.</p>
+  //         <p className="text-sm mt-2">
+  //           Historical measurements will be displayed here once the backend endpoint is implemented.
+  //         </p>
+  //       </div>
+  //     </CardContent>
+  //   </Card>
+  // );
 }
 
 

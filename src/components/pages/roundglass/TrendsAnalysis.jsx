@@ -180,6 +180,13 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     return calculateTrendDirection(trends);
   }, [trends]);
 
+  // Get client name by ID
+  const getClientName = (clientId) => {
+    if (!clientId || !clientsData?.data) return "—";
+    const client = clientsData.data.find((c) => c._id === clientId);
+    return client?.name || "—";
+  };
+
   // Prepare line chart data
   const lineChartData = useMemo(() => {
     if (!graphData?.lineChart && !graphData?.multiLineChart) return [];
@@ -192,15 +199,24 @@ export default function TrendsAnalysis({ initialClientId = null }) {
 
     if (!labels || !datasets) return [];
 
+    // Create mapping from MongoDB ID to client name
+    const clientIdToNameMap = {};
+    datasets.forEach((dataset) => {
+      const clientName = getClientName(dataset.label);
+      clientIdToNameMap[dataset.label] = clientName;
+    });
+
     // Transform to recharts format
     return labels.map((label, index) => {
       const dataPoint = { date: label };
       datasets.forEach((dataset) => {
-        dataPoint[dataset.label] = dataset.data[index];
+        // Use client name as key instead of MongoDB ID
+        const clientName = clientIdToNameMap[dataset.label] || dataset.label;
+        dataPoint[clientName] = dataset.data[index];
       });
       return dataPoint;
     });
-  }, [graphData, aggregate]);
+  }, [graphData, aggregate, clientsData]);
 
   // Prepare table data
   const tableData = useMemo(() => {
@@ -212,13 +228,6 @@ export default function TrendsAnalysis({ initialClientId = null }) {
       clientId: point.clientId || null,
     }));
   }, [trendsData]);
-
-  // Get client name by ID
-  const getClientName = (clientId) => {
-    if (!clientId || !clientsData?.data) return "—";
-    const client = clientsData.data.find((c) => c._id === clientId);
-    return client?.name || "—";
-  };
 
   // Handle refresh
   const handleRefresh = () => {
