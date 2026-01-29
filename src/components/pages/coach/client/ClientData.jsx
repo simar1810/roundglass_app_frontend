@@ -1275,21 +1275,6 @@ function TabsRoundglassAnalytics({ clientId, clientData }) {
 }
 
 // Wrapper component to pre-fill clientId in TrendsAnalysis
-// Since TrendsAnalysis manages its own state, we'll use a ref-based approach
-// to set the initial client selection
 function TrendsAnalysisWrapper({ clientId }) {
-  // We'll render TrendsAnalysis and use a custom hook or effect to pre-select the client
-  // For now, just render the component - the user can select the client from the dropdown
-  // The component already has client selection built-in
-  return (
-    <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Use the client filter below to view trends for this specific client.
-          The client ID is: <code className="bg-blue-100 px-2 py-1 rounded">{clientId}</code>
-        </p>
-      </div>
-      <TrendsAnalysis />
-    </div>
-  );
+  return <TrendsAnalysis initialClientId={clientId} />;
 }

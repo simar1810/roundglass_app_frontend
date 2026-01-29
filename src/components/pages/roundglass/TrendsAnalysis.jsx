@@ -54,7 +54,7 @@ import {
   TrendingDown,
   Minus,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import {
@@ -88,7 +88,7 @@ const AVAILABLE_METRICS = [
   { value: "shoulder_distance", label: "Shoulder Distance" },
 ];
 
-export default function TrendsAnalysis() {
+export default function TrendsAnalysis({ initialClientId = null }) {
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
   const [startDate, setStartDate] = useState(() => subMonths(new Date(), 6));
@@ -110,6 +110,17 @@ export default function TrendsAnalysis() {
       label: client.name || "Unknown",
     }));
   }, [clientsData]);
+
+  // Auto-select initial client if provided
+  useEffect(() => {
+    if (initialClientId && clientsData?.data && selectedClientIds.length === 0) {
+      // Check if the initialClientId exists in the clients list
+      const clientExists = clientsData.data.some((client) => client._id === initialClientId);
+      if (clientExists) {
+        setSelectedClientIds([initialClientId]);
+      }
+    }
+  }, [initialClientId, clientsData, selectedClientIds.length]);
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -289,7 +300,7 @@ export default function TrendsAnalysis() {
                 Analyze time-series trends for health metrics
               </CardDescription>
             </div>
-            <div className="flex gap-2 no-print">
+            <div className="flex gap-3 no-print">
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -310,13 +321,13 @@ export default function TrendsAnalysis() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="print:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+        <CardContent className="print:p-4 pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             {/* Metric Selector */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Metric</label>
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Metric</label>
               <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,9 +340,21 @@ export default function TrendsAnalysis() {
               </Select>
             </div>
 
+            {/* Player Selector */}
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Players</label>
+              <SelectMultiple
+                label="Select players"
+                options={clients}
+                value={selectedClientIds}
+                onChange={setSelectedClientIds}
+                searchable
+              />
+            </div>
+
             {/* Start Date Picker */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Start Date</label>
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Start Date</label>
               <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -361,8 +384,8 @@ export default function TrendsAnalysis() {
             </div>
 
             {/* End Date Picker */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">End Date</label>
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">End Date</label>
               <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -391,23 +414,11 @@ export default function TrendsAnalysis() {
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* Player Selector */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Players</label>
-              <SelectMultiple
-                label="Select players"
-                options={clients}
-                value={selectedClientIds}
-                onChange={setSelectedClientIds}
-                searchable
-              />
-            </div>
           </div>
 
           {/* Aggregate Toggle */}
           {selectedClientIds.length > 0 && (
-            <div className="mt-4 flex items-center space-x-2">
+            <div className="mt-6 flex items-center space-x-2 no-print">
               <Checkbox
                 id="aggregate"
                 checked={aggregate}
