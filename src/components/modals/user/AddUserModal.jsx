@@ -36,7 +36,8 @@ const AVAILABLE_PERMISSIONS = [
   { id: 5, name: "Chats", description: "Access to chat and messaging", icon: MessageCircle, color: "text-purple-500" },
   { id: 6, name: "Workout", description: "Access to workout plans", icon: Dumbbell, color: "text-purple-500" },
   { id: 7, name: "Marathon", description: "Access to marathon features", icon: Footprints, color: "text-red-500" },
-  { id: 8, name: "Club", description: "Access to club activities", icon: LayoutDashboard, color: "text-indigo-500" }
+  { id: 8, name: "Club", description: "Access to club activities", icon: LayoutDashboard, color: "text-indigo-500" },
+  { id: 9, name: "Invoice", description: "Access to invoices", icon: LayoutDashboard, color: "text-indigo-500" },
 ];
 
 // Group permissions by category for tab organization
@@ -44,7 +45,7 @@ const PERMISSION_CATEGORIES = {
   "Core Features": [1, 2, 3], // Meal Plans, Feed, Wallet
   "Business & Tools": [4, 5], // Retail, Chats
   "Fitness & Health": [6, 7], // Workout, Marathon
-  "Community": [8] // Club
+  "Community": [8, 9] // Club
 };
 
 export default function AddUserModal({ open, onClose, onSuccess }) {

@@ -10,12 +10,13 @@ import { addMealType, addNewRecipeBlank, changeFieldvalue, changeRecipeFieldValu
 import { sendData, sendDataWithFormData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { ArrowLeft, Plus, Upload, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Upload, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import imageCompression from "browser-image-compression";
+import MealPlanPreview from "./MealPlanPreview";
 
 const Map = {
   custom_copy_edit: function (_, closeRef) {
@@ -31,6 +32,7 @@ const Map = {
 
 export default function Stage2() {
   const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(true);
   const router = useRouter()
   const { meals, selectedMealType, dispatch, ...state } = useCurrentStateContext();
 
@@ -55,31 +57,70 @@ export default function Stage2() {
     }
   }
 
-  return <div className="">
-    <div className="w-full pb-2 px-4 flex items-center gap-4 border-b-1">
-      <ArrowLeft className="cursor-pointer" onClick={() => dispatch(setCurrentStage(1))} />
-      <h4>Create Meal</h4>
-    </div>
-    <div className="p-4">
-      <MealTypesList />
-      <div className="min-h-[70vh] flex items-stretch gap-10 overflow-x-auto">
-        {selectedMeals.map((recipe, index) => <RecipeDetails
-          key={recipe.id}
-          recipe={recipe}
-          index={index}
-        />)}
-        <div className="min-w-96 max-w-96 flex flex-col items-center justify-center border-1 border-dashed rounded-[8px]">
-          <div
-            onClick={() => dispatch(addNewRecipeBlank((Math.random() * 1000000).toFixed(0)))}
-            className="bg-[var(--comp-3)]/40 rounded-full mb-4 p-4 cursor-pointer"
-          >
-            <Plus />
-          </div>
-          <h3>Add More recipes</h3>
-        </div>
+  return <div className="flex h-full relative">
+    <div className={`flex-1 flex flex-col transition-all duration-300 ${previewOpen ? '' : 'w-full'}`}>
+      <div className="w-full pb-2 px-4 flex items-center gap-4 border-b-1">
+        <ArrowLeft className="cursor-pointer" onClick={() => dispatch(setCurrentStage(1))} />
+        <h4>Create Meal</h4>
       </div>
-      <Button disabled={loading} onClick={createMealPlan} variant="wz" className="block mt-10 ml-auto">Create Plan</Button>
+      <div className="p-4 flex-1 overflow-y-auto">
+        <MealTypesList />
+        <div className="min-h-[70vh] flex items-stretch gap-10 overflow-x-auto">
+          {selectedMeals.map((recipe, index) => <RecipeDetails
+            key={recipe.id}
+            recipe={recipe}
+            index={index}
+          />)}
+          <div className="min-w-96 max-w-96 flex flex-col items-center justify-center border-1 border-dashed rounded-[8px]">
+            <div
+              onClick={() => dispatch(addNewRecipeBlank((Math.random() * 1000000).toFixed(0)))}
+              className="bg-[var(--comp-3)]/40 rounded-full mb-4 p-4 cursor-pointer"
+            >
+              <Plus />
+            </div>
+            <h3>Add More recipes</h3>
+          </div>
+        </div>
+        <Button disabled={loading} onClick={createMealPlan} variant="wz" className="block mt-10 ml-auto">Create Plan</Button>
+      </div>
     </div>
+    
+    {/* Preview Bar */}
+    <div className={`relative border-l-1 bg-white transition-all duration-300 flex-shrink-0 ${previewOpen ? 'w-[500px]' : 'w-0 overflow-hidden'}`}>
+      {previewOpen && (
+        <div className="h-full flex flex-col w-full">
+          <div className="flex items-center justify-between p-4 border-b-1 flex-shrink-0">
+            <h4 className="font-semibold">PDF Preview</h4>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPreviewOpen(false)}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-hidden min-h-0">
+            <MealPlanPreview mealPlanState={{ ...state, meals }} />
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Toggle Button when preview is closed */}
+    {!previewOpen && (
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPreviewOpen(true)}
+          className="rounded-l-lg rounded-r-none border-r-0 shadow-lg bg-white"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="ml-2">Preview</span>
+        </Button>
+      </div>
+    )}
   </div>
 }
 

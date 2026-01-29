@@ -42,18 +42,19 @@ export default function ClientClubDataComponent({ onSubmit = () => { }, mutateQu
     <Button variant="wz" className="mt-4 mb-20 mx-auto block">Add Subscription</Button>
   </TabsContent>
 
-  if (!clientData.rollno && permit("club", roles)) return <TabsContent value="club">
-    <div className="h-[400px] flex items-center justify-center">
-      <DualOptionActionModal
-        action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}
-        description="Are you sure to generate a new roll number for the client?"
-      >
-        <AlertDialogTrigger className="font-semibold text-[var(--primary-1)] bg-[var(--accent-1)] px-4 py-2 rounded-[8px]">
-          Generate Roll Number
-        </AlertDialogTrigger>
-      </DualOptionActionModal>
-    </div>
-  </TabsContent>
+  // NOTE: "Generate Roll Number" UI intentionally hidden
+  // if (!clientData.rollno && permit("club", roles)) return <TabsContent value="club">
+  //   <div className="h-[400px] flex items-center justify-center">
+  //     <DualOptionActionModal
+  //       action={(setLoading, btnRef) => generateClientRollno(setLoading, btnRef, false)}
+  //       description="Are you sure to generate a new roll number for the client?"
+  //     >
+  //       <AlertDialogTrigger className="font-semibold text-[var(--primary-1)] bg-[var(--accent-1)] px-4 py-2 rounded-[8px]">
+  //         Generate Roll Number
+  //       </AlertDialogTrigger>
+  //     </DualOptionActionModal>
+  //   </div>
+  // </TabsContent>
 
   return <TabsContent value="club">
     {clubSystem === 2 && <VolumePointHistory _id={clientData._id} />}

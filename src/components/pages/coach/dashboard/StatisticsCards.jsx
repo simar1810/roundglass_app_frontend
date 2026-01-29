@@ -30,7 +30,7 @@ export default function StatisticsCards() {
       {organisation !== "Herbalife" && <DashboardInfoCard
         trendUp={Math.random() > 0.5}
         quantity={statistics.clients - statistics.members}
-        title="Pending Clients"
+        title="Pending Players"
         icon="/svgs/person.svg"
       />}
       {appCards.map(item => <DashboardInfoCard
@@ -39,7 +39,7 @@ export default function StatisticsCards() {
         quantity={statistics[item.name]}
         {...item}
       />)}
-      <ClubCards statistics={statistics} />
+      {/* <ClubCards statistics={statistics} /> */}
     </div>
   </>
 }

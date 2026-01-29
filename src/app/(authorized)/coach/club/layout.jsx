@@ -19,7 +19,7 @@ export default function Layout({ children }) {
       />
       <h3 className="text-center mt-4">Buy Pro Subscription to Unlock Club Features</h3>
       <Link
-        href={`https://wellnessz.in/plans/${_id}`}
+        href={`https://roundglass.com/plans/${_id}`}
         className="w-fit bg-[var(--accent-1)] text-white font-bold block mx-auto mt-4 px-4 py-2 rounded-[8px]"
         target="_blank"
       >

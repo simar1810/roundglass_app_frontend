@@ -177,7 +177,7 @@ export function clientWiseHistoryClientOptions(data) {
 
 export function clientWiseHistory(data, range) {
   if (!range?.from || !range?.to) return [];
-  const start = addDays(new Date(range.from), 1);
+  const start = addDays(new Date(range.from), 0);
   const end = new Date(range.to);
 
   const totalDays =

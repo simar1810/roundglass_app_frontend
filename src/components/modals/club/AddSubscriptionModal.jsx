@@ -23,7 +23,8 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
     paymentMode: "cash",
     startDate: "",
     description: "",
-    noOfDays: 30
+    noOfDays: 30,
+    paidAmount: 0
   });
   const closeBtnRef = useRef(null);
 
@@ -54,6 +55,14 @@ export default function AddSubscriptionModal({ _id, onSubmit }) {
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
           label="Amount"
+          type="number"
+          placeholder="Enter Amount"
+          className="block mb-4"
+        />
+        <FormControl
+          value={formData.paidAmount}
+          onChange={(e) => setFormData({ ...formData, paidAmount: e.target.value })}
+          label="Paid Amount"
           type="number"
           placeholder="Enter Amount"
           className="block mb-4"

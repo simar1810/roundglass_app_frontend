@@ -27,7 +27,7 @@ export default function ClientDetailsCardProfile({ clientData }) {
           clientData={clientData}
         />
       </div>
-      <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>
+      {clientData.goal && <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2 mb-4">{clientData.goal}</p>}
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.3] mt-2">{clientData.notes}</p>
       {Boolean(activities) && <ClientActivities activities={activities} />}
       <div className="mt-4 flex items-center justify-between">
@@ -39,6 +39,108 @@ export default function ClientDetailsCardProfile({ clientData }) {
           <p>{field.title}</p>
           <p className="text-[var(--dark-2)] col-span-2">:&nbsp;{clientData[field.name]}</p>
         </div>)}
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <h4>Training Information</h4>
+      </div>
+      <div className="mt-4 pl-4">
+        {clientData?.trainingInfo?.trainingFrequency && (
+          <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+            <p>Training Frequency</p>
+            <p className="text-[var(--dark-2)] col-span-2">
+              :&nbsp;{clientData.trainingInfo.trainingFrequency}
+            </p>
+          </div>
+        )}
+        {clientData?.trainingInfo?.trainingDuration && (
+          <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+            <p>Duration</p>
+            <p className="text-[var(--dark-2)] col-span-2">
+              :&nbsp;{clientData.trainingInfo.trainingDuration}
+            </p>
+          </div>
+        )}
+        {clientData?.trainingInfo?.trainingIntensity && (
+          <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+            <p>Intensity</p>
+            <p className="text-[var(--dark-2)] col-span-2">
+              :&nbsp;{clientData.trainingInfo.trainingIntensity}
+            </p>
+          </div>
+        )}
+        {clientData?.trainingInfo?.conditioningDays && (
+          <div className="text-[13px] mb-1 grid grid-cols-4 items-center gap-2">
+            <p>Conditioning Days</p>
+            <p className="text-[var(--dark-2)] col-span-2">
+              :&nbsp;{clientData.trainingInfo.conditioningDays}
+            </p>
+          </div>
+        )}
+        {!clientData?.trainingInfo && (
+          <p className="text-sm italic text-[#808080]">
+            No training information added yet
+          </p>
+        )}
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <h4>Supplement Intake Tracker</h4>
+      </div>
+      <div className="mt-4 pl-4">
+        {clientData?.supplementIntake && clientData.supplementIntake.length > 0 ? (
+          <div className="space-y-4">
+            {clientData.supplementIntake.map((supplement, index) => (
+              <div
+                key={index}
+                className="p-3 border-1 rounded-[8px] bg-[var(--comp-1)] space-y-2"
+              >
+                {supplement.brand && (
+                  <div className="text-[13px] grid grid-cols-4 items-center gap-2">
+                    <p className="font-semibold">Brand</p>
+                    <p className="text-[var(--dark-2)] col-span-3">
+                      :&nbsp;{supplement.brand}
+                    </p>
+                  </div>
+                )}
+                {supplement.dosage && (
+                  <div className="text-[13px] grid grid-cols-4 items-center gap-2">
+                    <p className="font-semibold">Dosage</p>
+                    <p className="text-[var(--dark-2)] col-span-3">
+                      :&nbsp;{supplement.dosage}
+                    </p>
+                  </div>
+                )}
+                {supplement.frequency && (
+                  <div className="text-[13px] grid grid-cols-4 items-center gap-2">
+                    <p className="font-semibold">Frequency</p>
+                    <p className="text-[var(--dark-2)] col-span-3">
+                      :&nbsp;{supplement.frequency}
+                    </p>
+                  </div>
+                )}
+                {supplement.source && (
+                  <div className="text-[13px] grid grid-cols-4 items-center gap-2">
+                    <p className="font-semibold">Source</p>
+                    <p className="text-[var(--dark-2)] col-span-3">
+                      :&nbsp;{supplement.source}
+                    </p>
+                  </div>
+                )}
+                {supplement.purpose && (
+                  <div className="text-[13px] grid grid-cols-4 items-center gap-2">
+                    <p className="font-semibold">Purpose</p>
+                    <p className="text-[var(--dark-2)] col-span-3">
+                      :&nbsp;{supplement.purpose}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm italic text-[#808080]">
+            No supplement information added yet
+          </p>
+        )}
       </div>
     </CardContent>
   </Card >

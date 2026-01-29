@@ -17,7 +17,8 @@ const AVAILABLE_PERMISSIONS = [
   { id: 5, name: "Chats", description: "Access chat and messaging features" },
   { id: 6, name: "Workouts", description: "View and manage workout plans" },
   { id: 7, name: "Marathon", description: "View marathon tasks and progress" },
-  { id: 8, name: "Club", description: "View club activities and members" }
+  { id: 8, name: "Club", description: "View club activities and members" },
+  { id: 9, name: "Invoice", description: "View Create and Share Invoices" }
 ];
 
 export default function UserPermissionsModal({ open, onClose, user, onSuccess }) {

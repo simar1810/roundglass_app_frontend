@@ -84,7 +84,7 @@ function FormContainer() {
 
 function SuccessClientCreated() {
   const { clientId } = useCurrentStateContext();
-  const { coachRefUrl = "https://wellnessz.in/app" } = useAppSelector(state => state.coach.data);
+  const { coachRefUrl = "https://roundglass.com/app" } = useAppSelector(state => state.coach.data);
   const clientLink = `${coachRefUrl}/loginClient?clientID=${clientId}`
   return <div className="px-4">
     <CircleCheckBig className="static w-[120px] h-[120px] text-[var(--accent-1)] aspect-square mx-auto" />

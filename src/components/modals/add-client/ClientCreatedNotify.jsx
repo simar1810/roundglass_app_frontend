@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export default function ClientCreatedNotify() {
   const { clientId } = useCurrentStateContext();
-  const { coachRefUrl = "https://wellnessz.in/app" } = useAppSelector(state => state.coach.data);
+  const { coachRefUrl = "https://roundglass.com/app" } = useAppSelector(state => state.coach.data);
 
   return <>
     <div className="p-2 pt-0">

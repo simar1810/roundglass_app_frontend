@@ -46,8 +46,8 @@ export default function AddPostClientModal() {
 
   return (
     <Dialog>
-      <DialogTrigger className="bg-[var(--accent-1)] text-white text-[14px] font-semibold ml-auto px-4 py-2 flex items-center gap-1 rounded-[8px]">
-        <Plus className="w-[16px]" />
+      <DialogTrigger className="bg-[var(--accent-1)] text-white rounded-l-full text-[14px] font-semibold ml-auto px-4 py-2 flex items-center gap-1">
+        <Plus className="w-[20px] h-[20px] bg-white rounded-full text-[var(--accent-1)] mr-2 animate-pulse ring-2 ring-white" />
         New post
       </DialogTrigger>
       <DialogContent className="!max-w-[500px] max-h-[75vh] p-0 overflow-y-auto">
@@ -94,7 +94,7 @@ function FileInput() {
   const { dispatch, newPostFormData: { file1 } } = useCurrentStateContext();
   const fileRef = useRef();
 
-  return <div className="border rounded-lg flex flex-col items-center justify-center h-40 mb-4 cursor-pointer h-[182px] relative">
+  return <div className="border rounded-lg flex flex-col items-center justify-center mb-4 cursor-pointer h-[182px] relative">
     <input
       type="file"
       hidden

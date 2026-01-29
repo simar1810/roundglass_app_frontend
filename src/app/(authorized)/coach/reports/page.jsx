@@ -55,7 +55,7 @@ export default function Page() {
           <TableHead className="w-[100px] text-center">Name</TableHead>
           <TableHead className="text-center">Email</TableHead>
           <TableHead className="text-center">Mobile Number</TableHead>
-          <TableHead className="text-center">Client ID</TableHead>
+          <TableHead className="text-center">Player ID</TableHead>
           <TableHead className="text-center">Roll No</TableHead>
           <TableHead className="text-center">Uploaded Reports</TableHead>
           <TableHead className="text-center">Total</TableHead>

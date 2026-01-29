@@ -58,7 +58,7 @@ export default function ClientNudges() {
         />
       </div>
     </div>
-    
+
     {/* Action Buttons Section */}
     <div className="mb-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
@@ -77,25 +77,25 @@ export default function ClientNudges() {
       :
       <Tabs defaultValue="calendar" className="">
         <TabsList className="mb-4 bg-gray-100 p-1 rounded-lg border border-gray-200 inline-flex">
-          <TabsTrigger 
+          <TabsTrigger
             value="calendar"
             className="data-[state=active]:bg-white data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-sm px-4 py-2 rounded-md transition-all"
           >
             Calendar
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="recent"
             className="data-[state=active]:bg-white data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-sm px-4 py-2 rounded-md transition-all"
           >
             Recent
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="all-days"
             className="data-[state=active]:bg-white data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-sm px-4 py-2 rounded-md transition-all"
           >
             Reocurr
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="schedule"
             className="data-[state=active]:bg-white data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-sm px-4 py-2 rounded-md transition-all"
           >
@@ -140,11 +140,11 @@ function parseNotificationDate(dateStr) {
     // Try "dd-MM-yyyy HH:mm" format first
     let parsed = parse(dateStr, "dd-MM-yyyy HH:mm", new Date());
     if (isValid(parsed)) return parsed;
-    
+
     // Try "dd-MM-yyyy" format
     parsed = parse(dateStr, "dd-MM-yyyy", new Date());
     if (isValid(parsed)) return parsed;
-    
+
     return null;
   } catch {
     return null;
@@ -156,12 +156,12 @@ function getStatusForDate(notif, targetDate) {
   const clientMarkedStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
     ? notif.notificationStatus.clientMarkedStatus
     : [];
-  
+
   if (clientMarkedStatus.length === 0) return null;
-  
+
   // Format target date as "dd-MM-yyyy" for comparison
   const targetDateStr = format(targetDate, "dd-MM-yyyy");
-  
+
   // Find status entries that match the date (checking if date string starts with target date)
   const matchingEntries = clientMarkedStatus.filter(entry => {
     if (!entry?.date) return false;
@@ -169,7 +169,7 @@ function getStatusForDate(notif, targetDate) {
     if (!entryDate) return false;
     return format(entryDate, "dd-MM-yyyy") === targetDateStr;
   });
-  
+
   // Return the most recent matching entry (last in array)
   if (matchingEntries.length > 0) {
     const lastEntry = matchingEntries[matchingEntries.length - 1];
@@ -179,7 +179,7 @@ function getStatusForDate(notif, targetDate) {
       date: lastEntry.date
     };
   }
-  
+
   return null;
 }
 
@@ -187,7 +187,7 @@ function getStatusForDate(notif, targetDate) {
 function doesRecurringNotificationOccurOnDate(notif, date) {
   if (notif.schedule_type !== "reocurr") return false;
   if (!Array.isArray(notif.reocurrence) || notif.reocurrence.length === 0) return false;
-  
+
   const dayOfWeek = getDay(date); // 0 = Sunday, 6 = Saturday
   return notif.reocurrence.includes(dayOfWeek);
 }
@@ -196,10 +196,10 @@ function doesRecurringNotificationOccurOnDate(notif, date) {
 function isScheduledNotificationOnDate(notif, date) {
   if (notif.schedule_type !== "schedule") return false;
   if (!notif.date) return false;
-  
+
   const notificationDate = parseNotificationDate(notif.date);
   if (!notificationDate) return false;
-  
+
   return isSameDay(notificationDate, date);
 }
 
@@ -207,47 +207,49 @@ function NudgesCalendar({ notifications }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const scrollContainerRef = useRef(null);
   const today = new Date();
-  
+
   // Get all dates that have nudges (past 30 days + next 30 days)
   const dateRange = useMemo(() => {
     const startDate = subMonths(today, 1);
     const endDate = addMonths(today, 1);
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, []);
-  
-  // Scroll to today's date on mount
+
+  // Scroll the horizontal list to today's date on mount without jumping the page
   useEffect(() => {
-    // Small delay to ensure DOM is fully rendered
     const timer = setTimeout(() => {
-      if (scrollContainerRef.current) {
-        const todayDate = new Date();
-        const todayIndex = dateRange.findIndex(date => isSameDay(date, todayDate));
-        if (todayIndex !== -1) {
-          const dateButton = scrollContainerRef.current.children[todayIndex];
-          if (dateButton) {
-            // Scroll to center the current date
-            dateButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            // Also set today as selected by default
-            setSelectedDate(todayDate);
-          }
-        }
-      }
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const todayDate = new Date();
+      const todayIndex = dateRange.findIndex(date => isSameDay(date, todayDate));
+      if (todayIndex === -1) return;
+
+      const dateButton = container.children[todayIndex];
+      if (!dateButton) return;
+
+      // Scroll only the horizontal container so the page doesn't jump vertically
+      const targetLeft = dateButton.offsetLeft - (container.clientWidth - 15) + (dateButton.clientWidth / 2);
+      const maxScroll = Math.max(container.scrollWidth - container.clientWidth, 0);
+      const clampedLeft = Math.min(maxScroll, Math.max(targetLeft, 0));
+      container.scrollTo({ left: clampedLeft, behavior: 'smooth' });
+      setSelectedDate(todayDate);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [dateRange]);
-  
+
   // Organize notifications by date
   const notificationsByDate = useMemo(() => {
     const map = new Map();
-    
+
     dateRange.forEach(date => {
       const dateKey = format(date, "yyyy-MM-dd");
       const nudgesForDate = [];
-      
+
       notifications.forEach(notif => {
         let shouldInclude = false;
-        
+
         if (notif.schedule_type === "reocurr") {
           // For recurring, check if it occurs on this day of week
           shouldInclude = doesRecurringNotificationOccurOnDate(notif, date);
@@ -255,7 +257,7 @@ function NudgesCalendar({ notifications }) {
           // For scheduled, check if it's on this exact date
           shouldInclude = isScheduledNotificationOnDate(notif, date);
         }
-        
+
         if (shouldInclude) {
           const statusForDate = getStatusForDate(notif, date);
           nudgesForDate.push({
@@ -265,24 +267,24 @@ function NudgesCalendar({ notifications }) {
           });
         }
       });
-      
+
       if (nudgesForDate.length > 0) {
         map.set(dateKey, nudgesForDate);
       }
     });
-    
+
     return map;
   }, [notifications, dateRange]);
-  
-  const selectedDateNudges = selectedDate 
+
+  const selectedDateNudges = selectedDate
     ? notificationsByDate.get(format(selectedDate, "yyyy-MM-dd")) || []
     : [];
-  
+
   return (
     <div className="space-y-4">
       {/* Horizontal Scrollable Date Picker */}
       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
         >
@@ -291,7 +293,7 @@ function NudgesCalendar({ notifications }) {
             const nudgesForDate = notificationsByDate.get(dateKey) || [];
             const isSelected = isSameDay(selectedDate, date);
             const isCurrentDay = isToday(date);
-            
+
             return (
               <button
                 key={dateKey}
@@ -299,8 +301,8 @@ function NudgesCalendar({ notifications }) {
                 className={cn(
                   "flex-shrink-0 w-20 p-3 rounded-lg border-2 transition-all cursor-pointer",
                   "flex flex-col items-center justify-center gap-1",
-                  isSelected 
-                    ? "border-blue-500 bg-blue-50 shadow-md" 
+                  isSelected
+                    ? "border-blue-500 bg-blue-50 shadow-md"
                     : "border-gray-200 bg-white hover:border-gray-300",
                   isCurrentDay && !isSelected && "border-green-400 bg-green-50"
                 )}
@@ -330,7 +332,7 @@ function NudgesCalendar({ notifications }) {
           })}
         </div>
       </div>
-      
+
       {/* Selected Date Details */}
       {selectedDate && (
         <div className="p-4 bg-white border border-gray-200 rounded-lg">
@@ -344,7 +346,7 @@ function NudgesCalendar({ notifications }) {
               </Badge>
             )}
           </div>
-          
+
           {selectedDateNudges.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No nudges for this date</p>
           ) : (
@@ -366,7 +368,7 @@ function NudgesCalendar({ notifications }) {
 
 function DayNotificationItem({ notif, currentStatus, imageLink }) {
   const [showImage, setShowImage] = useState(false);
-  
+
   return (
     <div className="p-3 border rounded-md my-2 bg-white">
       <div className="flex items-start justify-between mb-2">
@@ -415,7 +417,7 @@ function RecurringNotificationCard({ notif, currentStatus, imageLink }) {
   const { id } = useParams();
   const [showImage, setShowImage] = useState(false);
   const formattedTime = notif?.time || "--:--";
-  
+
   return (
     <div className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-4">
@@ -478,7 +480,7 @@ function RecurringNotificationCard({ notif, currentStatus, imageLink }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <Badge className="text-[10px] bg-blue-100 text-blue-700">
               Recurring
@@ -490,7 +492,7 @@ function RecurringNotificationCard({ notif, currentStatus, imageLink }) {
               </Badge>
             )}
           </div>
-          
+
           {/* Status Display */}
           {currentStatus ? (
             <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -503,8 +505,8 @@ function RecurringNotificationCard({ notif, currentStatus, imageLink }) {
                       currentStatus === "Done"
                         ? "bg-green-100 text-green-800"
                         : currentStatus === "In Progress"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
                     )}
                   >
                     {currentStatus}
@@ -550,7 +552,7 @@ function DateNotificationItem({ nudge, date }) {
   const [showImage, setShowImage] = useState(false);
   const status = nudge.statusForDate;
   const formattedTime = nudge?.time || "--:--";
-  
+
   return (
     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
       <div className="flex items-start justify-between mb-2">
@@ -609,7 +611,7 @@ function DateNotificationItem({ nudge, date }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
+
       <div className="flex items-center gap-4 mb-3">
         <Badge className="capitalize text-[10px]">{nudge.schedule_type}</Badge>
         <span className="text-xs text-gray-500">🕒 {formattedTime}</span>
@@ -619,7 +621,7 @@ function DateNotificationItem({ nudge, date }) {
           </Badge>
         )}
       </div>
-      
+
       {/* Status Display */}
       {status ? (
         <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg">
@@ -632,8 +634,8 @@ function DateNotificationItem({ nudge, date }) {
                   status.status === "Done"
                     ? "bg-green-100 text-green-800"
                     : status.status === "In Progress"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-800"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
                 )}
               >
                 {status.status}
@@ -765,21 +767,21 @@ function NotificationAllDays({
   const [selectedDay, setSelectedDay] = useState(null);
   const weekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const weekDaysShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  
+
   // Filter recurring notifications
   const recurringNotifications = notifications.filter((n) => n.schedule_type === "reocurr");
-  
+
   // Get notifications for selected day
   const notifForSelectedDay =
     selectedDay !== null
       ? recurringNotifications.filter((n) => n.reocurrence?.includes(selectedDay))
       : [];
-  
+
   // Count notifications per day
   const getNotificationCount = (dayIndex) => {
     return recurringNotifications.filter((n) => n.reocurrence?.includes(dayIndex)).length;
   };
-  
+
   return <TabsContent
     value="all-days"
     className="bg-[var(--comp-1)] text-sm px-4 py-2 border-1 rounded-[6px]"
@@ -797,7 +799,7 @@ function NotificationAllDays({
         </Badge>
       )}
     </div>
-    
+
     {recurringNotifications.length === 0 ? (
       <div className="py-12 text-center">
         <p className="text-gray-500 mb-2">No recurring notifications found</p>
@@ -824,8 +826,8 @@ function NotificationAllDays({
                     isSelected
                       ? "bg-blue-600 text-white border-blue-700 shadow-lg scale-105"
                       : isActive
-                      ? "bg-blue-50 border-blue-300 hover:bg-blue-100"
-                      : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
+                        ? "bg-blue-50 border-blue-300 hover:bg-blue-100"
+                        : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
                   )}
                 >
                   <span className={cn(
@@ -837,8 +839,8 @@ function NotificationAllDays({
                   {count > 0 && (
                     <Badge className={cn(
                       "text-[9px] px-1.5 py-0.5",
-                      isSelected 
-                        ? "bg-white text-blue-600" 
+                      isSelected
+                        ? "bg-white text-blue-600"
                         : "bg-blue-500 text-white"
                     )}>
                       {count}
@@ -954,7 +956,7 @@ function NotificationSchedule({
   </TabsContent>
 }
 
-function NotificationItem({ notif }) {
+export function NotificationItem({ notif }) {
   const { id } = useParams();
   const [selectedStatusImage, setSelectedStatusImage] = useState(null);
   const [showStatusImage, setShowStatusImage] = useState(false);
@@ -962,10 +964,10 @@ function NotificationItem({ notif }) {
   const isSeen = notif?.isRead;
   const formattedTime = notif?.time || "--:--";
   const formattedDate = notif?.date || "--/--/----";
-  
+
   // Get status options if available
-  const possibleStatuses = Array.isArray(notif?.notificationStatus?.possibleStatus) 
-    ? notif.notificationStatus.possibleStatus 
+  const possibleStatuses = Array.isArray(notif?.notificationStatus?.possibleStatus)
+    ? notif.notificationStatus.possibleStatus
     : [];
   // Ensure defaultStatus is always an array, not a string
   const defaultStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
@@ -973,18 +975,18 @@ function NotificationItem({ notif }) {
     : [];
   // Safely access status from the LAST item (most recent) if it exists
   // The array is ordered chronologically, with the most recent status at the end
-  const status = defaultStatus.length > 0 
+  const status = defaultStatus.length > 0
     ? defaultStatus[defaultStatus.length - 1]?.status || null
     : null;
   const imageUrlFromStatus = Array.isArray(notif?.notificationStatus?.clientMarkedStatus)
-  ? notif.notificationStatus.clientMarkedStatus.find(entry => entry?.imageLink)?.imageLink
-  : null;
+    ? notif.notificationStatus.clientMarkedStatus.find(entry => entry?.imageLink)?.imageLink
+    : null;
   const imageUrl =
-  imageUrlFromStatus ||
-  notif?.imageUrl ||
-  notif?.attachment ||
-  notif?.photo ||
-  null;
+    imageUrlFromStatus ||
+    notif?.imageUrl ||
+    notif?.attachment ||
+    notif?.photo ||
+    null;
   return (
     <div
       className={cn(
@@ -1100,43 +1102,43 @@ function NotificationItem({ notif }) {
                 {possibleStatuses.map((status, index) => {
                   const statusName = typeof status === "string" ? status : status.name;
                   const imageForStatus =
-                   notif?.notificationStatus?.clientMarkedStatus?.find(
-                    (entry) => entry.status === statusName
+                    notif?.notificationStatus?.clientMarkedStatus?.find(
+                      (entry) => entry.status === statusName
                     )?.imageLink || null;
-                   return (
-                      <div
-                        key={index}
-                        className="flex items-center gap-1 bg-gray-100 border border-gray-300 rounded px-2 py-0.5"
-                      >
-                        <span className="text-[10px] font-medium text-gray-700">
-                          {statusName}
-                        </span>
-                        {imageForStatus && (
-                          <button
-                            onClick={() => {
-                              setSelectedStatusImage(imageForStatus);
-                              setShowStatusImage(!showStatusImage);
-                            }}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <Eye className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                   );
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-gray-100 border border-gray-300 rounded px-2 py-0.5"
+                    >
+                      <span className="text-[10px] font-medium text-gray-700">
+                        {statusName}
+                      </span>
+                      {imageForStatus && (
+                        <button
+                          onClick={() => {
+                            setSelectedStatusImage(imageForStatus);
+                            setShowStatusImage(!showStatusImage);
+                          }}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <Eye className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
                 })}
               </div>
               {status && possibleStatuses.some(s => {
                 const statusName = typeof s === "string" ? s : s?.name;
                 return statusName === status;
               }) && (
-                <div className="mt-2 text-xs text-gray-600">
-                  <span className="font-medium">Current Status:</span>{" "}
-                  <Badge className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 border-blue-300 ml-1">
-                    {status}
-                  </Badge>
-                </div>
-              )}
+                  <div className="mt-2 text-xs text-gray-600">
+                    <span className="font-medium">Current Status:</span>{" "}
+                    <Badge className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 border-blue-300 ml-1">
+                      {status}
+                    </Badge>
+                  </div>
+                )}
             </div>
           )}
 

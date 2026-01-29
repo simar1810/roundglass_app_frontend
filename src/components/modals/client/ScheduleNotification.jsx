@@ -299,6 +299,7 @@ function ScheduleNotification({
         getNormalizedPayloadForSave(payload),
         defaultPayload._id,
       );
+      console.log(formData)
       const response = await sendData(
         `app/notifications-schedule`,
         formData,
@@ -509,6 +510,7 @@ function ScheduleNotification({
               onChange={value => setPayload(prev => ({ ...prev, clients: value }))}
               className="[&_.option]:px-4 [&_.option]:py-2"
               selectAll={true}
+              searchable={true}
             />
           </div>
         )}
@@ -599,7 +601,7 @@ function generatePayload(payload, id) {
       time: formatTime(payload.time),
       reocurrence: payload.reocurrence,
       clients: Array.isArray(payload.clients)
-        ? payload.clients[0]
+        ? payload.clients
         : payload.clients,
       isImageRequired: payload.isImageRequired || false
     };
@@ -677,7 +679,7 @@ function generatePayload(payload, id) {
         date: format(parsedDate, "dd-MM-yyyy"),
         time: formatTime(payload.time),
         clients: Array.isArray(payload.clients)
-          ? payload.clients[0]
+          ? payload.clients
           : payload.clients,
         isImageRequired: payload.isImageRequired || false
       };

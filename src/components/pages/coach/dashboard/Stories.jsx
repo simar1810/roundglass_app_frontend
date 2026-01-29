@@ -10,14 +10,15 @@ import { mutate } from "swr";
 import { sendData } from "@/lib/api";
 import Image from "next/image";
 
-export default function Stories({ stories }) {
+export default function Stories({ stories, coach=false }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [modalOpened, setModalOpened] = useState(false);
 
-  return <div className="bg-[var(--primary-1)] max-h-[80vh] md:max-h-[50vh] mt-2 md:mt-8 p-4 border-1 rounded-[12px] overflow-y-auto">
-    <h4 className="mb-4">Results</h4>
-    <div className="grid md:grid-cols-4 gap-4 no-scrollbar">
-      <AddStoryModal />
+  return <div className="bg-[var(--primary-1)] max-h-[60vh] md:max-h-[40vh] mt-2 p-3 shadow-md shadow-zinc-200 rounded-2xl overflow-y-auto">
+    <h4 className="mb-3 text-sm text-gray-800 font-bold">Results</h4>
+    <div className="grid md:grid-cols-6 gap-3 no-scrollbar">
+      {coach && <AddStoryModal />}
+      {/* here is the coach add new story */}
       {stories.map((story, index) => <div
         className="relative"
         key={story._id}
@@ -34,7 +35,7 @@ export default function Stories({ stories }) {
               alt=""
               src={story.img1 || "/"}
               fill
-              className="object-cover object-center"
+              className="object-cover object-center w-38"
               onError={e => e.target.src = "/not-found.png"}
             />
           </div>

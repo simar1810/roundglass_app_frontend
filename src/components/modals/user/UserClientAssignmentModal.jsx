@@ -1,29 +1,25 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
-  Search,
-  Users,
-  UserPlus,
-  UserMinus,
-  X,
-  Loader2
-} from "lucide-react";
-import { toast } from "sonner";
-import {
-  getAvailableClients,
-  getUserClients,
-  assignClientsToUser,
-  addClientToUser,
-  removeClientFromUser
+    assignClientsToUser,
+    getAvailableClients,
+    getUserClients,
+    removeClientFromUser
 } from "@/lib/fetchers/app";
+import {
+    Loader2,
+    Search,
+    UserMinus,
+    UserPlus,
+    Users
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function UserClientAssignmentModal({ open, onClose, user, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -231,7 +227,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                     {availableClients.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                        <p>No clients found</p>
+                        <p>No Players Found</p>
                       </div>
                     )}
                   </div>

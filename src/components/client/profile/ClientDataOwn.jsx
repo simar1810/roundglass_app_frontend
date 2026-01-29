@@ -3,7 +3,7 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getClientMealPlanById, getClientNextMarathonClient, getWorkoutForClient } from "@/lib/fetchers/app";
+import { getClientMealPlanById, getClientNextMarathonClient, getWorkoutForClient, retrieveReports } from "@/lib/fetchers/app";
 import { CalendarIcon } from "lucide-react";
 import useSWR from "swr";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import ClientStatisticsDataOwn from "./ClientStatisticsDataOwn";
 import { cn } from "@/lib/utils";
 import { CustomMealDetails, WorkoutDetails } from "@/components/pages/coach/client/ClientData";
+import Image from "next/image";
 
 export default function ClientDataOwn({ clientData }) {
   return <div className="bg-white p-4 rounded-[18px] border-1 w-[90vw] md:w-auto">
@@ -25,6 +26,7 @@ export default function ClientDataOwn({ clientData }) {
       {/* <ClientClubDataComponent clientData={clientData} /> */}
       <MarathonData clientData={clientData} />
       <WorkoutContainer id={clientData._id} />
+      <ClientReports _id={clientData._id}/>
     </Tabs>
   </div>
 }
@@ -47,6 +49,42 @@ function ClientMealData({ _id }) {
     />)}
     {meals.length === 0 && <ContentError title="No Meal plan assigned to this client" />}
   </TabsContent>
+}
+function ClientReports({ _id }) {
+  const { isLoading, error, data } = useSWR(
+    `app/reports?clientId=${_id}`,
+    () => retrieveReports("client", _id)
+  );
+  if (isLoading)
+    return (
+      <TabsContent value="reports">
+        <ContentLoader />
+      </TabsContent>
+    );
+  if (error || data.status_code !== 200)
+    return (
+      <TabsContent value="reports">
+        <ContentError className="mt-0" title={error || data.message} />
+      </TabsContent>
+    );
+  const reportGroups = data?.data || [];
+  return (
+    <TabsContent value="reports">
+      {reportGroups.length > 0 ? (
+        reportGroups.map((group) =>
+          group.reports.map((r) => (
+            <ReportCard 
+              key={r._id}
+              report={r}
+              parentCreatedAt={group.createdAt}
+            />
+          ))
+        )
+      ) : (
+        <ContentError title="No Reports Found for this client" />
+      )}
+    </TabsContent>
+  );
 }
 
 function MarathonData() {
@@ -105,7 +143,7 @@ function MarathonData() {
 }
 
 function Header() {
-  return <TabsList className={cn("w-full bg-transparent p-0 mb-4 grid border-b-2 rounded-none", false ? "grid-cols-5" : "grid-cols-4")}>
+  return <TabsList className={cn("w-full bg-transparent p-0 mb-4 grid overflow-x-auto no-scrollbar border-b-2 rounded-none", false ? "grid-cols-6" : "grid-cols-5")}>
     <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
       value="statistics"
@@ -119,7 +157,7 @@ function Header() {
       Meal
     </TabsTrigger>
     <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]  mr-4"
       value="workout"
     >
       Workout
@@ -131,10 +169,16 @@ function Header() {
       Retail
     </TabsTrigger>} */}
     <TabsTrigger
-      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)] mr-2"
       value="marathon"
     >
       Marathon
+    </TabsTrigger>
+    <TabsTrigger
+      className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+      value="reports"
+    >
+      Reports
     </TabsTrigger>
     {/* <TabsTrigger
       className="mb-[-5px] font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
@@ -185,4 +229,39 @@ function WorkoutContainer() {
       workout={workout}
     />)}
   </TabsContent>
+}
+function ReportCard({ report, parentCreatedAt }) {
+  return (
+    <div className="border p-4 rounded-xl mb-4 bg-gray-50">
+      <h3 className="font-semibold text-lg">
+        {report.title || "Client Report"}
+      </h3>
+      {report.description && (
+        <p className="text-sm mt-1 text-gray-600">{report.description || "NA"}</p>
+      )}
+      <p className="text-xs text-gray-500 mt-2">
+        {parentCreatedAt?.slice(0, 10)}
+      </p>
+      <div className="mt-3">
+        {report.file_type === "image" ? (
+          <Image
+            src={report?.file || "/not-found.png"}
+            alt="report"
+            width={500}
+            height={500}
+            className="rounded-lg max-h-30 w-full md:max-h-50 object-cover border"
+          />
+        ) : (
+          <a
+            href={report?.file}
+            target="_blank"
+            className="text-[var(--accent-1)] underline font-medium text-sm"
+          >
+            View PDF
+          </a>
+        )}
+      </div>
+
+    </div>
+  );
 }

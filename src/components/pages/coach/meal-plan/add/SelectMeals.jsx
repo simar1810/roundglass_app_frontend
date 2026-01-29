@@ -22,7 +22,7 @@ export default function SelectMeals() {
   const [activeId, setActiveId] = useState(null);
 
   const rawPlan = selectedPlans[selectedPlan];
-  console.log(selectedPlans)
+
   const isWeekly = rawPlan &&
   typeof rawPlan === "object" &&
   !Array.isArray(rawPlan) &&

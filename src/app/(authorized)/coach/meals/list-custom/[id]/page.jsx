@@ -192,7 +192,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       >
         Copy & Edit
       </Link>
-      <AssignMealModal planId={customPlan._id} type="custom" />
+      <AssignMealModal plan={customPlan} planId={customPlan._id} type="custom" />
       {!customPlan.admin && <>
         <Link
           href={`/coach/meals/add-custom?creationType=edit&mode=${customPlan.mode}&mealId=${customPlan._id}`}
@@ -268,7 +268,7 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
               onCheckedChange={setIncludeDescription}
               onSelect={(e) => e.preventDefault()}
             >
-              Recipe Description
+              Show Recipe
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={includeGuidelines}
@@ -297,18 +297,27 @@ function CustomMealMetaData({ customPlan, selectedPlan, hasPlanData }) {
       src={customPlan.image || "/not-found.png"}
       height={500}
       width={500}
-      className="w-full max-h-[200 px] my-4 rounded-[10px] object-cover aspect-video"
+      className="w-full max-h-[200px] my-4 rounded-[10px] object-cover aspect-video"
       onError={e => e.target.src = "/not-found.png"}
     />
-    <p>{customPlan.description}</p>
-    {customPlan.guidelines && <div className="mt-4">
-      <h5 className="font-bold">Guidelines</h5>
-      <p>{customPlan.guidelines}</p>
-    </div>}
-    {customPlan.supplements && <div className="mt-4">
-      <h5 className="font-bold">Supplements</h5>
-      <p>{customPlan.supplements}</p>
-    </div>}
+    {customPlan.description && (
+      <div className="mt-6">
+        <h5 className="text-base font-bold text-gray-900 mb-3">Description</h5>
+        <p className="text-sm text-gray-700 leading-relaxed">{customPlan.description}</p>
+      </div>
+    )}
+    {customPlan.guidelines && (
+      <div className="mt-6">
+        <h5 className="text-base font-bold text-gray-900 mb-3">Guidelines</h5>
+        <p className="text-sm text-gray-700 leading-relaxed">{customPlan.guidelines}</p>
+      </div>
+    )}
+    {customPlan.supplements && (
+      <div className="mt-6">
+        <h5 className="text-base font-bold text-gray-900 mb-3">Supplements</h5>
+        <p className="text-sm text-gray-700 leading-relaxed">{customPlan.supplements}</p>
+      </div>
+    )}
   </div >
 }
 

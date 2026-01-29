@@ -91,7 +91,7 @@ export default function ClientListItemStatus({
         <EllipsisVertical className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        {Boolean(client.rollno) && <DropdownMenuItem
+        {/* {Boolean(client.rollno) && <DropdownMenuItem
           onClick={() => setModal(<PendingClientClubDataModal
             clientData={client}
             onClose={() => setModal()}
@@ -103,8 +103,8 @@ export default function ClientListItemStatus({
           className="cursor-pointer"
         >
           Club Details
-        </DropdownMenuItem>}
-        <DropdownMenuItem
+        </DropdownMenuItem>} */}
+        {/* <DropdownMenuItem
           onClick={() => setModal(<ClientUpdateCategories
             clientData={client}
             onClose={() => setModal()}
@@ -116,7 +116,7 @@ export default function ClientListItemStatus({
           className="cursor-pointer"
         >
           Client Categories
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         {Boolean(client.rollno) && <DropdownMenuItem
           onClick={() => setModal(<EditClientRollnoModal
             _id={client._id}
@@ -128,7 +128,7 @@ export default function ClientListItemStatus({
         >
           Update Roll Number
         </DropdownMenuItem>}
-        {!Boolean(client.rollno) && <DropdownMenuItem
+        {/* {!Boolean(client.rollno) && <DropdownMenuItem
           onClick={() => setModal(<GenerateRollNo
             _id={client._id}
             onClose={() => setModal()}
@@ -137,7 +137,7 @@ export default function ClientListItemStatus({
           className="cursor-pointer"
         >
           Generate Roll Number
-        </DropdownMenuItem>}
+        </DropdownMenuItem>} */}
         <DropdownMenuItem
           onClick={() => setModal(<DeleteClientModal
             defaultOpen={true}

@@ -1,14 +1,14 @@
-import { TabsContent } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { datesInRange, nameInitials } from "@/lib/formatter"
-import { cn } from "@/lib/utils"
-import { clientWiseHistory, clientWiseHistoryClientOptions, statusClases } from "@/lib/physical-attendance"
-import { useMemo, useRef, useState } from "react"
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { TabsContent } from "@/components/ui/tabs"
+import { datesInRange, nameInitials } from "@/lib/formatter"
+import { clientWiseHistory, clientWiseHistoryClientOptions, statusClases } from "@/lib/physical-attendance"
+import { cn } from "@/lib/utils"
 import { Search } from "lucide-react"
+import { useMemo, useRef, useState } from "react"
 
 function TableHeader({ days }) {
   return (
@@ -176,7 +176,7 @@ function SelectClients({
           ))}
           {filteredClients.length === 0 && (
             <div className="text-center text-gray-500 py-4">
-              No clients found matching "{searchQuery}"
+              No Players Found matching "{searchQuery}"
             </div>
           )}
         </div>

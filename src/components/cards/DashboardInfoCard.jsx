@@ -1,14 +1,13 @@
-import { Lock } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader
-} from "../ui/card";
-import { Avatar, AvatarImage } from "../ui/avatar";
-import { Badge } from "../ui/badge";
-import Link from "next/link";
 import { useAppSelector } from "@/providers/global/hooks";
+import { Lock } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import {
+    Card,
+    CardContent,
+    CardHeader
+} from "../ui/card";
 
 export default function DashboardInfoCard({
   icon = "/svgs/users-icon.svg",
@@ -50,7 +49,7 @@ function LockedFeature() {
     <div>
       <h5 className="text-[10px]">This feature is Locked</h5>
       <p className="leading-[1] text-[8px] mt-[2px]">Upgrade now to unlock</p>
-      <Link target="_blank" href={`https://wellnessz.in/plans/${_id}`} className="w-fit text-[var(--accent-1)] text-[8px] font-semibold block mx-auto mt-1 px-[4px] py-1 border-1 border-[var(--accent-1)]">
+      <Link target="_blank" href={`https://roundglass.com/plans/${_id}`} className="w-fit text-[var(--accent-1)] text-[8px] font-semibold block mx-auto mt-1 px-[4px] py-1 border-1 border-[var(--accent-1)]">
         Upgrade
       </Link>
     </div>

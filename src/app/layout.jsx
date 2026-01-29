@@ -1,10 +1,7 @@
 import GlobalStateProvider from "@/providers/GlobalStateProvider";
-import "./globals.css";
 import { Toaster } from "sonner";
 import { SWRConfig } from "swr";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { use } from "react";
+import "./globals.css";
 
 export const metadata = {
   title: "Round Glass",
@@ -19,7 +16,7 @@ export default function RootLayout({ children }) {
   // const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(userAgent);
 
   // if (isMobile) {
-  //   redirect('https://wellnessz.in/app');
+  //   redirect('https://roundglass.com/app');
   // }
   return (
     <html lang="en">

@@ -28,6 +28,7 @@ import { Button } from "../ui/button";
 import { destroyClient } from "@/providers/global/slices/client";
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import { toast } from "sonner";
+import { SearchBar } from "./AppClientNavbar";
 
 export default function AppClientSidebar() {
   const [Modal, setModal] = useState();
@@ -66,6 +67,7 @@ export default function AppClientSidebar() {
           className="max-w-[10ch] mx-auto mt-4"
         />
       </SidebarHeader>
+      <SearchBar/>
       <SidebarContent className="bg-[var(--dark-4)] pr-2 pb-4 no-scrollbar">
         <SidebarGroup>
           <SidebarMenu className="px-0">
@@ -132,7 +134,7 @@ function SidebarItemWithItems({ Modal, setModal, item }) {
           : <DropdownMenuItem
             asChild
             key={item.title}
-            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "bg-white !bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
+            className={`!text-[var(--comp-4)] [&_.icon]:!text-[var(--comp-4)] text-[14px] mb-[2px] gap-2 ${pathname.includes(item.url) ? "!bg-[var(--accent-1)] !text-[var(--dark-1)] [&_.icon]:!text-[var(--dark-1)]" : "hover:!bg-[var(--dark-4)] hover:!text-[var(--comp-1)]  hover:[&_.icon]:!text-[var(--comp-1)]"}`}
           >
             <Link href={item.url}>
               {item.icon}

@@ -63,12 +63,12 @@ export const sidebar__clientContent = [
     icon: <MessageCircle className="min-w-[20px] min-h-[20px]" />,
     url: "/client/app/chats"
   },
-  {
-    id: 8,
-    title: "Workout",
-    icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
-    url: "/client/app/workouts"
-  },
+  // {
+  //   id: 8,
+  //   title: "Workout",
+  //   icon: <PersonStanding className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/client/app/workouts"
+  // },
   {
     id: 9,
     title: "Next Marathon",
@@ -77,7 +77,7 @@ export const sidebar__clientContent = [
   },
   {
     id: 10,
-    title: "Wz Sessions",
+    title: "Sessions",
     icon: <Footprints className="min-w-[20px] min-h-[20px]" />,
     url: "/client/app/sessions"
   },
@@ -100,24 +100,24 @@ export const sidebar__clientContent = [
         title: "Notes",
         url: "/client/app/tools/notes"
       },
-      {
-        id: 2,
-        icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Reminders",
-        url: "/client/app/tools/reminders"
-      },
+      // {
+      //   id: 2,
+      //   icon: <Clock12 className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Reminders",
+      //   url: "/client/app/tools/reminders"
+      // },
       {
         id: 3,
         icon: <Flame className="icon min-w-[20px] min-h-[20px]" />,
         title: "Calorie Counter",
         url: "/client/app/tools/calorie-counter"
       },
-      {
-        id: 4,
-        icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Ideal Weight",
-        url: "/client/app/tools/ideal-weight"
-      },
+      // {
+      //   id: 4,
+      //   icon: <FaWeightScale className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "Ideal Weight",
+      //   url: "/client/app/tools/ideal-weight"
+      // },
       // {
       //   id: 5,
       //   icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
@@ -135,10 +135,10 @@ export const clientSidebar__coachFooter = [
     icon: <CircleDollarSign className="min-w-[20px] min-h-[20px]" />,
     url: "/client/app/subscription"
   },
-  {
-    id: 2,
-    title: "Support",
-    icon: <Headset className="min-w-[20px] min-h-[20px]" />,
-    url: "/client/app/support"
-  }
+  // {
+  //   id: 2,
+  //   title: "Support",
+  //   icon: <Headset className="min-w-[20px] min-h-[20px]" />,
+  //   url: "/client/app/support"
+  // }
 ]

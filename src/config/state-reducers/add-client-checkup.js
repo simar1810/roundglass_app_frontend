@@ -61,6 +61,11 @@ export function addClientCheckupReducer(state, action) {
         ...state,
         stage: 5
       }
+    case "TOGGLE_HIDE_HEALTHMATRICES":
+      return {
+        ...state,
+        hideHealthMatrices: action.payload
+      }
     default:
       return state;
   }
@@ -127,6 +132,11 @@ const fields = {
     "visceral_fat", "activeType", "rm", "muscle",
     "fat", "ideal_weight", "bodyAge", "pendingCustomer", "existingClientID", "sub_fat"
   ],
+  hideHealthMatrixFields: [
+    "name", "email", "mobileNumber", "notes", "gender",
+    "heightUnit", "weightUnit", "file", "bmi",
+    "activeType","ideal_weight", "pendingCustomer", "existingClientID",
+  ]
 }
 
 export function stage1Completed(state, stage) {
@@ -150,11 +160,21 @@ export function stage1Completed(state, stage) {
   return { success: true };
 }
 
-export function generateRequestPayload(state, coachId, existingClientID) {
+export function generateRequestPayload(state, coachId, existingClientID, extraFields = []) {
   const formData = new FormData();
-  for (const field of fields.requestFields) {
+
+  // Add hardcoded fields
+  for (const field of state.hideHealthMatrices ? fields.hideHealthMatrixFields : fields.requestFields) {
     formData.append(field, state[field]);
   }
+
+  // Add each custom field as a separate body variable
+  for (const field of extraFields) {
+    if (state[field] !== undefined && state[field] !== null) {
+      formData.append(field, state[field]);
+    }
+  }
+
   if (state.weightUnit?.toLowerCase() === "kg") {
     formData.append("weight", state["weightInKgs"]);
   } else {
@@ -200,5 +220,12 @@ export function init(type, data) {
 export function clientOnboardingCompleted() {
   return {
     type: "CLIENT_ONBOARDING_COMPLETED"
+  }
+}
+
+export function toggleHideHealthMatrices(payload) {
+  return {
+    type: "TOGGLE_HIDE_HEALTHMATRICES",
+    payload
   }
 }

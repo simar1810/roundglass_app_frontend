@@ -2,7 +2,6 @@
 import AppClientNavbar from "@/components/client/AppClientNavbar";
 import AppClientSidebar from "@/components/client/AppClientSidebar";
 import ClientGuardian from "@/components/client/ClientGuardian";
-import FAQChatbot from "@/components/common/FAQChatbot";
 import Loader from "@/components/common/Loader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
@@ -21,7 +20,6 @@ export default async function Layout({ children }) {
     _id={_id}
     token={token}
   >
-    <FAQChatbot />
     <SidebarProvider className="!bg-white">
       <AppClientSidebar />
       <div className="md:max-w-[calc(100vw-205px)] grow no-scrollbar">

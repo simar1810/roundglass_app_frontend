@@ -1,12 +1,12 @@
 "use client"
-import { useAppDispatch, useAppSelector } from "@/providers/global/hooks"
+import ContentError from "@/components/common/ContentError";
+import Loader from "@/components/common/Loader";
+import { getClientProfile } from "@/lib/fetchers/app";
+import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
+import { destroyClient, storeClient } from "@/providers/global/slices/client";
+import { AlertCircle, TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { getClientProfile } from "@/lib/fetchers/app";
-import Loader from "@/components/common/Loader";
-import ContentError from "@/components/common/ContentError";
-import { TriangleAlert } from "lucide-react";
-import { destroyClient, storeClient } from "@/providers/global/slices/client";
 
 export default function ClientGuardian({ children }) {
   const { isLoading, data } = useSWR("clientProfile", getClientProfile)
@@ -47,5 +47,35 @@ export default function ClientGuardian({ children }) {
     />
   </div>
 
+  // Check if client is inactive
+  if (client && client.isActive === false) {
+    return <InactiveClientModal />
+  }
+
   return children;
+}
+
+function InactiveClientModal() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-lg border shadow-lg max-w-[450px] w-full mx-4 p-6">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <AlertCircle className="w-16 h-16 text-[var(--accent-2)]" />
+          </div>
+          <h2 className="text-2xl font-bold text-[var(--accent-2)] mb-4">
+            Account Inactive
+          </h2>
+          <div className="py-4">
+            <p className="text-[var(--dark-1)] text-base mb-2">
+              You are currently inactive.
+            </p>
+            <p className="text-[var(--dark-2)] text-sm">
+              Please contact your coach to reactivate your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

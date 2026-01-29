@@ -1,6 +1,7 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import Loader from "@/components/common/Loader";
 import RetailMarginDropDown from "@/components/drop-down/RetailMarginDropDown";
 import FormControl from "@/components/FormControl";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
@@ -12,7 +13,7 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,17 +22,19 @@ import { fetchData, sendData } from "@/lib/api";
 import { excelRetailOrdersData, exportToExcel } from "@/lib/excel";
 import { getOrderHistory, getRetail } from "@/lib/fetchers/app";
 import { buildUrlWithQueryParams } from "@/lib/formatter";
-import { invoicePDFData } from "@/lib/pdf";
+import { invoicePDFData, salesReportPDFData } from "@/lib/pdf";
 import { sortByPriority } from "@/lib/retail";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
 import { TabsTrigger } from "@radix-ui/react-tabs";
-import { parse } from "date-fns";
-import { Clock, EllipsisVertical, Eye, EyeClosed, RefreshCcw, ShoppingCart } from "lucide-react";
+import { endOfDay, endOfMonth, endOfWeek, endOfYear, format, isValid, parse, startOfDay, startOfMonth, startOfWeek, startOfYear } from "date-fns";
+import { ListFilterPlus, Clock, EllipsisVertical, Eye, EyeClosed, FileText, NotebookPen, Pen, RefreshCcw, Search, ShoppingCart, Trash2 } from "lucide-react";
+import DateRangePicker from "@/components/common/DateRangePicker";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
+import { useTabsContentNavigation } from "@/hooks/useTabsContentNavigation";
 
 export default function Page() {
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
@@ -59,9 +62,10 @@ export default function Page() {
 
   return <div className="mt-4">
     <RetailStatisticsCards
-      totalSales={retails.totalSale}
-      totalOrders={orders.myOrder.length}
-      acumulatedVP={(orders?.acumulatedVP || 0).toFixed(2)}
+      totalSales={retails?.totalSale || 0}
+      totalOrders={orders?.myOrder?.length || 0}
+      acumulatedVP={Number(orders?.acumulatedVP || 0)}
+      orders={orders || null}
     />
     <div className="content-container">
       <RetailContainer
@@ -72,53 +76,327 @@ export default function Page() {
   </div>
 }
 
+// Helper function to parse date from order
+function parseOrderDate(dateString) {
+  try {
+    if (!dateString) return null;
+
+    // Convert to string if it's not already
+    const dateStr = String(dateString).trim();
+    if (!dateStr) return null;
+
+    // Try dd-MM-yyyy first (most common format from backend based on codebase)
+    const formats = ["dd-MM-yyyy", "dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy", "dd-MM-yy", "d-M-yyyy", "d/MM/yyyy"];
+
+    for (const format of formats) {
+      try {
+        const parsed = parse(dateStr, format, new Date());
+        if (isValid(parsed) && !isNaN(parsed.getTime())) {
+          // Check if the parsed date makes sense (not too far in past/future)
+          const year = parsed.getFullYear();
+          if (year >= 2000 && year <= 2100) {
+            parsed.setHours(0, 0, 0, 0);
+            return parsed;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    // Fallback: try native Date parsing
+    try {
+      const nativeDate = new Date(dateStr);
+      if (isValid(nativeDate) && !isNaN(nativeDate.getTime())) {
+        const year = nativeDate.getFullYear();
+        if (year >= 2000 && year <= 2100) {
+          nativeDate.setHours(0, 0, 0, 0);
+          return nativeDate;
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Helper function to normalize date range
+function normalizeDateRange(dateRange) {
+  if (!dateRange || (!dateRange.from && !dateRange.to)) {
+    return null; // All time
+  }
+  
+  try {
+    const start = dateRange.from ? new Date(dateRange.from) : null;
+    const end = dateRange.to ? new Date(dateRange.to) : null;
+    
+    if (start && isValid(start)) {
+      start.setHours(0, 0, 0, 0);
+    }
+    if (end && isValid(end)) {
+      end.setHours(23, 59, 59, 999);
+    }
+    
+    if (start && end && start > end) {
+      // Swap if start is after end
+      return { start: end, end: start };
+    }
+    
+    return { start, end };
+  } catch (error) {
+    return null;
+  }
+}
+
+// Calculate filtered stats
+function calculateFilteredStats(orders, dateRange) {
+  try {
+    if (!orders) {
+      return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+    }
+
+    const allOrders = [...(orders.myOrder || []), ...(orders.retailRequest || [])];
+    const saleOrders = allOrders.filter(order =>
+      order && (order.orderType === "sale" || !order.orderType)
+    );
+
+    // If no date range provided, return all orders
+    const normalizedRange = normalizeDateRange(dateRange);
+    if (!normalizedRange || (!normalizedRange.start && !normalizedRange.end)) {
+      const totalSales = saleOrders.reduce((sum, order) =>
+        sum + (Number(order?.sellingPrice) || 0), 0
+      );
+      const totalOrders = saleOrders.length;
+      // Volume points calculation - try to sum from orders, fallback to accumulated VP
+      let volumePoints = saleOrders.reduce((sum, order) => {
+        // Try order.volumePoints first
+        if (order?.volumePoints !== undefined && order?.volumePoints !== null) {
+          return sum + (Number(order.volumePoints) || 0);
+        }
+        // Try order.volume_points (snake_case)
+        if (order?.volume_points !== undefined && order?.volume_points !== null) {
+          return sum + (Number(order.volume_points) || 0);
+        }
+        // Try calculating from productModule if it has VP data
+        if (order?.productModule && Array.isArray(order.productModule)) {
+          const orderVP = order.productModule.reduce((vpSum, product) => {
+            const productVP = Number(product?.volumePoints || product?.volume_points || product?.VP || 0);
+            const quantity = Number(product?.quantity || 1);
+            return vpSum + (productVP * quantity);
+          }, 0);
+          if (orderVP > 0) {
+            return sum + orderVP;
+          }
+        }
+        return sum;
+      }, 0);
+
+      // If no VP found in orders, use accumulated VP
+      if (volumePoints === 0 && orders?.acumulatedVP) {
+        volumePoints = Number(orders.acumulatedVP) || 0;
+      }
+
+      return { totalSales, totalOrders, volumePoints };
+    }
+
+    const { start: startDate, end: endDate } = normalizedRange;
+    if (!startDate || !endDate) {
+      return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+    }
+
+    const filteredOrders = saleOrders.filter(order => {
+      try {
+        if (!order || !order.createdAt) return false;
+
+        const orderDate = parseOrderDate(order.createdAt);
+        if (!orderDate || !isValid(orderDate)) {
+          return false;
+        }
+
+        // Normalize order date to start of day for comparison
+        const orderDateNormalized = new Date(orderDate);
+        orderDateNormalized.setHours(0, 0, 0, 0);
+
+        // Check if order date is within range
+        const isInRange = orderDateNormalized >= startDate && orderDateNormalized <= endDate;
+
+        return isInRange;
+      } catch (error) {
+        return false;
+      }
+    });
+
+
+    const totalSales = filteredOrders.reduce((sum, order) =>
+      sum + (Number(order?.sellingPrice) || 0), 0
+    );
+    const totalOrders = filteredOrders.length;
+
+    // Calculate volume points - check multiple possible locations
+    const volumePoints = filteredOrders.reduce((sum, order) => {
+      // Try order.volumePoints first
+      if (order?.volumePoints !== undefined && order?.volumePoints !== null) {
+        return sum + (Number(order.volumePoints) || 0);
+      }
+      // Try order.volume_points (snake_case)
+      if (order?.volume_points !== undefined && order?.volume_points !== null) {
+        return sum + (Number(order.volume_points) || 0);
+      }
+      // Try calculating from productModule - products have VP in the product table
+      if (order?.productModule && Array.isArray(order.productModule)) {
+        const orderVP = order.productModule.reduce((vpSum, product) => {
+          // Check multiple possible VP field names in product
+          const productVP = Number(
+            product?.volumePoints ||
+            product?.volume_points ||
+            product?.VP ||
+            product?.vp ||
+            product?.volumePoint ||
+            product?.volume_point ||
+            0
+          );
+          const quantity = Number(product?.quantity || 1);
+          return vpSum + (productVP * quantity);
+        }, 0);
+        if (orderVP > 0) {
+          return sum + orderVP;
+        }
+      }
+      return sum;
+    }, 0);
+
+    return { totalSales, totalOrders, volumePoints };
+  } catch (error) {
+    return { totalSales: 0, totalOrders: 0, volumePoints: 0 };
+  }
+}
+
 function RetailStatisticsCards({
-  totalSales,
-  totalOrders,
-  acumulatedVP
+  totalSales = 0,
+  totalOrders = 0,
+  acumulatedVP = 0,
+  orders = null
 }) {
   const [hide, setHide] = useState(true);
-  return <div className="grid grid-cols-3 gap-1 md:gap-4">
-    <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
-      <CardHeader className="text-white p-0 mb-0">
-        <CardTitle className="">
-          <span className="w-full text-base md:text-lg mr-2">Total Sales</span>
-          {hide
-            ? <EyeClosed
-              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
-              onClick={() => setHide(false)}
-            />
-            : <Eye
-              className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
-              onClick={() => setHide(true)}
-            />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>₹ {totalSales}</h4>
-      </CardContent>
-    </Card>
-    <Card className="p-4 rounded-[10px] shadow-none">
-      <CardHeader className="p-0 mb-0">
-        <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className="text-base md:!text-[28px]">{totalOrders}</h4>
-      </CardContent>
-    </Card>
-    <Card className="p-4 rounded-[10px] shadow-none">
-      <CardHeader className="p-0 mb-0">
-        <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <h4 className="text-[10px] md:!text-[28px]">{acumulatedVP}</h4>
-      </CardContent>
-    </Card>
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+
+  const filteredStats = useMemo(() => {
+    try {
+      // If no date range selected, return all time stats
+      if (!dateRange.from && !dateRange.to) {
+        return {
+          totalSales: Number(totalSales || 0),
+          totalOrders: Number(totalOrders || 0),
+          volumePoints: Number(acumulatedVP || 0),
+          // Also include aliases for backward compatibility
+          sales: Number(totalSales || 0),
+          orders: Number(totalOrders || 0)
+        };
+      }
+      if (!orders || typeof orders !== 'object') {
+        return { totalSales: 0, totalOrders: 0, volumePoints: 0, sales: 0, orders: 0 };
+      }
+      const result = calculateFilteredStats(orders, dateRange);
+      // Add aliases for consistency
+      return {
+        ...result,
+        sales: result.totalSales,
+        orders: result.totalOrders
+      };
+    } catch (error) {
+      return { sales: 0, orders: 0, volumePoints: 0 };
+    }
+  }, [dateRange, totalSales, totalOrders, acumulatedVP, orders]);
+
+  return <div className="space-y-4">
+    {/* Date Range Filter */}
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium">Date Range:</span>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
+      </div>
+      <RetailReportGenerator orders={orders} dateRange={dateRange} />
+    </div>
+
+    {/* Statistics Cards */}
+    <div className="grid grid-cols-3 gap-1 md:gap-4">
+      <Card className="bg-linear-to-tr from-[var(--accent-1)] to-[#04BE51] p-4 rounded-[10px]">
+        <CardHeader className="text-white p-0 mb-0">
+          <CardTitle className="">
+            <span className="w-full text-base md:text-lg mr-2">Total Sales</span>
+            {hide
+              ? <EyeClosed
+                className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+                onClick={() => setHide(false)}
+              />
+              : <Eye
+                className="w-[16px] h-[16px] cursor-pointer inline-block ml-auto"
+                onClick={() => setHide(true)}
+              />}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className={cn("text-white text-sm md:!text-[28px]", hide && "text-transparent")}>
+            ₹ {(!dateRange.from && !dateRange.to)
+              ? Number(totalSales || 0).toFixed(2)
+              : Number(filteredStats?.totalSales || filteredStats?.sales || 0).toFixed(2)}
+          </h4>
+        </CardContent>
+      </Card>
+      <Card className="p-4 rounded-[10px] shadow-none">
+        <CardHeader className="p-0 mb-0">
+          <CardTitle className={"text-base md:text-lg mr-2"}>Total Orders</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className="text-base md:!text-[28px]">
+            {(!dateRange.from && !dateRange.to)
+              ? totalOrders
+              : Number(filteredStats?.totalOrders || filteredStats?.orders || 0)}
+          </h4>
+        </CardContent>
+      </Card>
+      <Card className="p-4 rounded-[10px] shadow-none">
+        <CardHeader className="p-0 mb-0">
+          <CardTitle className={"text-base md:text-lg mr-2"}>Volume Points</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <h4 className="text-[10px] md:!text-[28px]">
+            {(!dateRange.from && !dateRange.to)
+              ? Number(acumulatedVP || 0).toFixed(2)
+              : Number(filteredStats?.volumePoints || 0).toFixed(2)}
+          </h4>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 }
 
+const tabs = [
+  
+]
+const tabItems = [
+   { id: 1, name: "New Order", value: "brands" },
+   { id: 2, name: "Order History", value: "order-history" },
+   { id: 3, name: "Purchase History", value: "purchase-history" },
+   { id: 4, name: "Inventory", value: "inventory" },
+];
+
 function RetailContainer({ orders, retails }) {
-  return <Tabs defaultValue="brands">
+  const { selectedTab, tabChange } = useTabsContentNavigation(
+    "brands",
+    tabItems.map(item => item.value)
+  );
+  return <Tabs
+      value={selectedTab}
+      onValueChange={tabChange}
+    >
     <TabsList className="w-full bg-transparent p-0 mb-4 flex justify-start gap-4 border-b-2 rounded-none">
       <TabsTrigger
         className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
@@ -134,11 +412,20 @@ function RetailContainer({ orders, retails }) {
       </TabsTrigger>
       <TabsTrigger
         className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
+        value="purchase-history"
+      >
+        <p className="text-sm md:text-lg">Purchase History</p>
+      </TabsTrigger>
+      <TabsTrigger
+        className="pb-4 md:pb-2 px-2 font-semibold rounded-none data-[state=active]:bg-transparent data-[state=active]:text-[var(--accent-1)] data-[state=active]:shadow-none data-[state=active]:!border-b-2 data-[state=active]:border-b-[var(--accent-1)]"
         value="inventory"
       >
         <p className="text-sm md:text-lg">Inventory</p>
       </TabsTrigger>
     </TabsList>
+    <TabsContent value="purchase-history">
+      <PurchaseHistory />
+    </TabsContent>
     <Brands brands={retails.brands} />
     <Orders orders={orders} />
     <Inventory />
@@ -149,10 +436,6 @@ function Brands({ brands }) {
   return <TabsContent value="brands">
     <div className="flex items-center gap-2 justify-between">
       <h4>Brands</h4>
-      {/* <Button variant="wz" size="sm">
-        <Plus />
-        Add New Kit
-      </Button> */}
     </div>
     <div className="mt-4 grid grid-cols-1 md:grid-cols-6">
       {brands.map(brand => <Brand key={brand._id} brand={brand} />)}
@@ -204,7 +487,26 @@ function Brand({
 }
 
 function Orders({ orders }) {
-  const myOrders = [...orders.myOrder, ...orders.retailRequest]
+  const [filter, setFilter] = useState("all"); // all | pending | completed | cancelled
+
+  const rawOrders = [...orders.myOrder, ...orders.retailRequest];
+
+  const myOrders = rawOrders
+    .filter((order) => {
+      if (filter === "all") return true;
+      if (filter === "pending") {
+        // Exclude cancelled orders from pending filter
+        const isCancelled = (order.status || "").toLowerCase() === "cancelled";
+        if (isCancelled) return false;
+
+        const isPendingStatus = (order.status || "").toLowerCase() === "pending";
+        const isClientRequest = Array.isArray(orders.retailRequest) && orders.retailRequest.some((req) => req._id === order._id);
+        return isPendingStatus || isClientRequest;
+      }
+      if (filter === "completed") return (order.status || "").toLowerCase() === "completed";
+      if (filter === "cancelled") return (order.status || "").toLowerCase() === "cancelled";
+      return true;
+    })
     .sort((a, b) => {
       const dateA = parse(a.createdAt, 'dd-MM-yyyy', new Date());
       const dateB = parse(b.createdAt, 'dd-MM-yyyy', new Date());
@@ -218,9 +520,27 @@ function Orders({ orders }) {
     });
 
   return <TabsContent value="order-history">
-    <ExportOrdersoExcel orders={orders} />
+    <div className="flex flex-wrap items-center gap-2 mb-3">
+      {["all", "pending", "completed", "cancelled"].map((item) => (
+        <Button
+          key={item}
+          size="sm"
+          variant={filter === item ? "wz" : "outline"}
+          className="text-xs capitalize"
+          onClick={() => setFilter(item)}
+        >
+          {item}
+        </Button>
+      ))}
+      <ExportOrdersoExcel orders={orders} />
+    </div>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {myOrders.map(order => <Order key={order._id} order={order} />)}
+      {myOrders.length === 0 && (
+        <div className="col-span-full">
+          <ContentError title="No orders found for this filter." />
+        </div>
+      )}
     </div>
   </TabsContent>
 }
@@ -246,9 +566,42 @@ function Order({ order }) {
 
 function PurchaseOrder({ order }) {
   const coach = useAppSelector(state => state.coach.data);
-  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
-    <CardHeader className="px-0">
-      <div className="flex justify-between items-center">
+  
+  // Calculate total quantity of products
+  const totalQuantity = (order.productModule || []).reduce((sum, product) => {
+    return sum + (Number(product.quantity) || 1);
+  }, 0);
+  
+  // Format date and time
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const parsedDate = parseOrderDate(dateString);
+      if (!parsedDate || !isValid(parsedDate)) return dateString;
+      
+      // Check if createdAt includes time information
+      if (order.createdAt && order.createdAt.includes(" ")) {
+        // If it has time, format both date and time
+        return format(new Date(parsedDate), "dd-MM-yyyy HH:mm");
+      }
+      // Otherwise just format date
+      return format(parsedDate, "dd-MM-yyyy");
+    } catch {
+      return dateString;
+    }
+  };
+  
+  // Get total amount (prefer sellingPrice, fallback to totalAmount or calculate from products)
+  const totalAmount = order.sellingPrice || order.totalAmount || 
+    (order.productModule || []).reduce((sum, product) => {
+      const price = Number(product.sellingPrice || product.price || 0);
+      const qty = Number(product.quantity || 1);
+      return sum + (price * qty);
+    }, 0);
+
+  return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-3 rounded-[4px]">
+    <CardHeader className="px-0 pb-2">
+      <div className="flex justify-between items-start">
         <div className="text-yellow-600 text-[14px] font-bold flex items-center gap-1">
           <ShoppingCart className="bg-yellow-600 text-white w-[28px] h-[28px] p-1 rounded-full" />
           <p>Purchase Order</p>
@@ -257,50 +610,104 @@ function PurchaseOrder({ order }) {
           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
             {order.orderType || 'Purchase'}
           </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild className="text-black w-[16px]">
-              <EllipsisVertical className="cursor-pointer" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="font-semibold px-2 py-[6px]">
-              <PDFRenderer pdfTemplate="PDFInvoice" data={invoicePDFData(order, coach)}>
-                <DialogTrigger className="w-full text-[12px] font-bold flex items-center gap-2">
-                  Invoice
-                </DialogTrigger>
-              </PDFRenderer>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </CardHeader>
-    <CardContent className="px-0">
+    <CardContent className="px-0 space-y-3">
+      {/* Brand Name */}
+      {order.brand?.name && (
+        <div className="text-xs text-gray-600">
+          <span className="font-semibold">Brand:</span> {order.brand.name}
+        </div>
+      )}
+      
+      {/* Products */}
       <div className="flex gap-4">
         <Image
           height={100}
           width={100}
           unoptimized
-          src={order.productModule?.at(0)?.productImage}
+          src={order.productModule?.at(0)?.productImage || "/not-found.png"}
           alt=""
-          className="bg-black w-[64px] h-[64px] object-cover rounded-md"
+          className="bg-black w-[80px] h-[80px] object-cover rounded-md"
         />
-        <div>
-          <h4>{order.productModule.map(product => product.productName).join(", ")}</h4>
-          <p className="text-[10px] text-[var(--dark-1)]/25 leading-[1.2]">{order.productModule?.at(0)?.productDescription}</p>
-          {order.sellingPrice && <div className="text-[20px] text-nowrap font-bold ml-auto">₹ {order.sellingPrice}</div>}
+        <div className="flex-1">
+          <h4 className="text-sm font-bold mb-1">
+            {order.productModule?.length > 0 
+              ? order.productModule.map(product => product.productName).join(", ")
+              : "No products"}
+          </h4>
+          
+          {/* Product Details */}
+          {order.productModule && order.productModule.length > 0 && (
+            <div className="space-y-1 mb-2">
+              {order.productModule.map((product, index) => (
+                <div key={index} className="text-xs text-[var(--dark-1)]/70">
+                  {product.productName}
+                  {product.quantity && (
+                    <span className="ml-2 font-semibold">× {product.quantity}</span>
+                  )}
+                  {product.sellingPrice && (
+                    <span className="ml-2">@ ₹{Number(product.sellingPrice || product.price || 0).toFixed(2)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Total Quantity */}
+          {totalQuantity > 0 && (
+            <div className="text-xs text-gray-600 mb-1">
+              <span className="font-semibold">Total Items:</span> {totalQuantity}
+            </div>
+          )}
+          
+          {/* Total Amount */}
+          {totalAmount > 0 && (
+            <div className="text-[20px] text-nowrap font-bold text-yellow-700 mt-2">
+              ₹ {Number(totalAmount).toFixed(2)}
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* Date and Time */}
+      <div className="pt-2 border-t border-gray-200 space-y-1">
+        {order.createdAt && (
+          <div className="text-xs text-[var(--dark-1)]/60">
+            <span className="font-semibold">Purchase Date:</span> {formatDateTime(order.createdAt)}
+          </div>
+        )}
+        {order.updatedAt && order.updatedAt !== order.createdAt && (
+          <div className="text-xs text-[var(--dark-1)]/60">
+            <span className="font-semibold">Last Updated:</span> {formatDateTime(order.updatedAt)}
+          </div>
+        )}
+      </div>
+      
+      {/* Order ID */}
+      {order._id && (
+        <div className="text-xs text-gray-500 font-mono">
+          Order ID: {order._id.slice(-8)}
+        </div>
+      )}
     </CardContent>
   </Card>
 }
 
 function SaleOrder({ order }) {
   const coach = useAppSelector(state => state.coach.data);
+  const status = (order.status || "").toLowerCase();
+  const pendingAmount = Math.max(order.pendingAmount || 0, 0);
+  const paidAmount = Math.max(order.paidAmount || 0, 0);
+
   return <Card className="bg-[var(--comp-1)] mb-2 gap-2 border-1 shadow-none px-4 py-2 rounded-[4px]">
     <CardHeader className="px-0">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          {order.status === "Completed" && <RetailCompletedLabel status={order.status} />}
-          {order.status === "Pending" && <RetailPendingLabel status={order.status} />}
-          {order.status === "Cancelled" && <RetailCancelledLabel status={order.status} />}
+          {status === "completed" && <RetailCompletedLabel status={order.status} />}
+          {status === "pending" && <RetailPendingLabel status={order.status} />}
+          {status === "cancelled" && <RetailCancelledLabel status={order.status} />}
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
             {order.orderType || 'Sale'}
           </span>
@@ -336,16 +743,24 @@ function SaleOrder({ order }) {
         </div>
       </div>
     </CardContent>
-    <CardFooter className="px-0 items-end justify-between">
-      <div className="text-[12px]">
+    <CardFooter className="px-0 items-end justify-between gap-2">
+      <div className="text-[12px] mr-auto">
         <p className="text-[var(--dark-1)]/25">Order From: <span className="text-[var(--dark-1)]">{order.clientName || "-"}</span></p>
         <p className="text-[var(--dark-1)]/25">Order Date: <span className="text-[var(--dark-1)]">{order.createdAt || "-"}</span></p>
-        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.pendingAmount || 0)}</span></p>
-        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {Math.max(order.paidAmount || 0)}</span></p>
+        <p className="text-[var(--dark-1)]/25">Pending Amount: <span className="text-[var(--dark-1)]">₹ {pendingAmount}</span></p>
+        <p className="text-[var(--dark-1)]/25">Paid Amount: <span className="text-[var(--dark-1)]">₹ {paidAmount}</span></p>
       </div>
-      {order.pendingAmount > 0
-        ? <UpdateClientOrderAmount order={order} />
-        : <Badge variant="wz">Paid</Badge>}
+      {pendingAmount > 0
+        ? <UpdateClientOrderAmount swrKey={"app/order-history"} order={order} />
+        : status === "pending"
+          ? <RetailPendingLabel status={order.status} />
+          : <Badge variant="wz">Paid</Badge>}
+      <OrderNote
+        notes={order.notes}
+        orderId={order._id}
+      />
+      <DeleteOrder orderId={order._id} />
+      <UpdateOrder order={order} />
     </CardFooter>
     <div>
       {order.status === "Pending" && <AcceptRejectOrder order={order} />}
@@ -415,7 +830,7 @@ function ExportOrdersoExcel({ orders }) {
     <DialogTrigger asChild>
       <Button
         variant="wz"
-        className="block mb-4 ml-auto"
+        className="block ml-auto"
       >Export</Button>
     </DialogTrigger>
     <DialogContent className="p-0">
@@ -446,13 +861,12 @@ function ExportOrdersoExcel({ orders }) {
 }
 
 function AcceptRejectOrder({ order = {} }) {
-  return <div className="mt-4 flex items-center gap-2">
-    <AcceptRetailsOrder order={order} />
-    <RejectOrderAction
-      status="cancel"
-      id={order.orderId}
-    />
-  </div>
+  return (
+    <div className="mt-4 flex items-center gap-3 justify-end flex-wrap">
+      <AcceptRetailsOrder order={order} />
+      <RejectOrderAction status="cancel" id={order.orderId} />
+    </div>
+  );
 }
 
 function RejectOrderAction({
@@ -491,22 +905,34 @@ function RejectOrderAction({
 }
 
 function AcceptRetailsOrder({ order }) {
-  return <div>
-    <Brand
-      brand={{
-        ...order.brand,
-        clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
-        productModule: order.productModule,
-        status: order.status,
-        orderId: order.orderId,
-        status: "Pending"
-      }}
-    >
-      <Button
-        size="sm"
-        variant="wz">Accept</Button>
-    </Brand>
-  </div >
+  const [open, setOpen] = useState(false);
+  const coach = useAppSelector(state => state.coach.data);
+
+  return (
+    <>
+      <Button size="sm" variant="wz" onClick={() => setOpen(true)}>
+        Accept
+      </Button>
+      <AddRetailModal
+        payload={{
+          stage: 2,
+          acceptFlow: true,
+          coachId: coach?._id,
+          clientId: order.clientId && String(order?.clientId)?.trim() !== "" ? order.clientId : null,
+          clientName: order.clientName || "",
+          productModule: order.productModule || [],
+          status: order.status || "Pending",
+          orderId: order.orderId || "",
+          margins: order.brand?.margins || [],
+          selectedBrandId: order.brand?._id,
+          margin: order.brand?.margins?.[0] || 0,
+          brand: order.brand || {},
+        }}
+        open={open}
+        setOpen={setOpen}
+      />
+    </>
+  );
 }
 
 function Inventory() {
@@ -518,9 +944,9 @@ function Inventory() {
 function InventoryContainer() {
   const [query, setQuery] = useState("")
   const { isWhitelabel } = useAppSelector(state => state.coach.data)
-
+  const [stockFilter, setStockFilter] = useState("all");
   const { isLoading, error, data, mutate } = useSWR(
-    "app/getAllReminder?person=coach",
+    "app/inventory",
     () => fetchData(
       buildUrlWithQueryParams(
         "app/inventory",
@@ -528,35 +954,61 @@ function InventoryContainer() {
       )
     )
   );
-
   const sortedProducts = useMemo(() => {
     if (!data?.data || data.status_code !== 200) return [];
     return data.data.length > 0
       ? sortByPriority(data.data || [], isWhitelabel)
       : [];
   }, [data?.data, data?.status_code, isWhitelabel]);
+  const products = useMemo(() => {
+    if (!sortedProducts.length) return [];
+    const regex = new RegExp(query, "i");
+    let filtered = sortedProducts.filter(product =>
+      regex.test(product.productName)
+    );
 
+    if (stockFilter === "in-stock") {
+      filtered = filtered
+        .filter(p => p.quantity > 0)
+        .sort((a, b) => b.quantity - a.quantity);
+    }
+
+    if (stockFilter === "out-of-stock") {
+      filtered = filtered.filter(p => p.quantity === 0);
+    }
+
+    return filtered;
+  }, [sortedProducts, query, stockFilter]);
   if (isLoading) return <ContentLoader />
 
   if (error || data?.status_code !== 200) return <ContentError title={error?.message || data?.message} />
 
-  const regex = new RegExp(query, "i")
-  const products = sortedProducts.filter(
-    product => regex.test(product.productName)
-  ) || []
-
   return <div>
-    <div className="mb-8 flex items-center justify-between">
+    <div className="mb-8 flex flex-wrap gap-4 md:gap-0 items-center justify-between">
       <h5>Products</h5>
-      <Input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Product Name..."
-        className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
-      />
-      <Button onClick={mutate} variant="icon">
-        <RefreshCcw />
-      </Button>
+      <div className="flex items-center justify-start md:justify-end gap-1 md:gap-4">
+        <div className="ml-auto ring-1 flex items-center ring-gray-200 text-gray-500 rounded-[8px] overflow-hidden px-4 py-2 bg-[var(--comp-1)]">
+          <ListFilterPlus size={18} />
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+          >
+            <option value="all">All Products</option>
+            <option value="in-stock">In Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+        <Input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Product Name..."
+          className="w-32 md:max-w-[400px] bg-[var(--comp-1)] ml-auto"
+        />
+        <Button onClick={mutate} variant="icon">
+          <RefreshCcw />
+        </Button>
+        <ResetInventory />
+      </div>
     </div>
     <Table className="border-1">
       <TableHeader>
@@ -584,4 +1036,404 @@ function getQuantityStatusColor(quantity) {
   if (quantity === 0) return "w-[8ch] block bg-red-300 text-black px-4 py-1 rounded-[2px] text-center"
   if (quantity <= 3) return "w-[8ch] block bg-yellow-300 text-black px-4 py-1 rounded-[2px] text-center"
   return "w-[8ch] block bg-green-300 text-black px-4 py-1 rounded-[2px] text-center"
+}
+
+
+function PurchaseHistory() {
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const { isLoading, error, data, mutate } = useSWR(
+    "order/history-by-status?orderType=purchase",
+    () => fetchData("app/order/history-by-status?orderType=purchase")
+  );
+
+  // Filter and sort orders - must be called before conditional returns
+  const filteredOrders = useMemo(() => {
+    if (!data?.data || isLoading || error || data?.status_code !== 200) {
+      return [];
+    }
+    
+    let orders = data.data || [];
+    
+    // Apply date range filter
+    if (dateRange.from || dateRange.to) {
+      const startDate = dateRange.from ? startOfDay(new Date(dateRange.from)) : null;
+      const endDate = dateRange.to ? endOfDay(new Date(dateRange.to)) : null;
+      
+      orders = orders.filter(order => {
+        try {
+          if (!order.createdAt) return false;
+          
+          const orderDate = parseOrderDate(order.createdAt);
+          if (!orderDate || !isValid(orderDate)) return false;
+          
+          const orderDateNormalized = new Date(orderDate);
+          orderDateNormalized.setHours(0, 0, 0, 0);
+          
+          if (startDate && orderDateNormalized < startDate) return false;
+          if (endDate && orderDateNormalized > endDate) return false;
+          
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    }
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      orders = orders.filter(order => {
+        const productNames = (order.productModule || [])
+          .map(p => (p.productName || "").toLowerCase())
+          .join(" ");
+        const brandName = (order.brand?.name || "").toLowerCase();
+        const orderId = (order._id || "").toLowerCase();
+        const totalAmount = String(order.sellingPrice || order.totalAmount || "").toLowerCase();
+        
+        return productNames.includes(query) ||
+               brandName.includes(query) ||
+               orderId.includes(query) ||
+               totalAmount.includes(query);
+      });
+    }
+    
+    // Sort by date (newest first)
+    return orders.sort((a, b) => {
+      try {
+        const dateA = parseOrderDate(a.createdAt);
+        const dateB = parseOrderDate(b.createdAt);
+        if (!dateA || !dateB) return 0;
+        return dateB - dateA;
+      } catch {
+        return 0;
+      }
+    });
+  }, [data, isLoading, error, dateRange, searchQuery]);
+
+  if (isLoading) return <Loader />
+
+  if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
+
+  return <TabsContent value="purchase-history">
+    {/* Filters */}
+    <div className="mb-6 flex flex-wrap items-center gap-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium">Date Range:</span>
+        <DateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
+      </div>
+      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+        <Search className="h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search by product name, brand, order ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-[var(--comp-1)]"
+        />
+      </div>
+      {(dateRange.from || dateRange.to || searchQuery) && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDateRange({ from: null, to: null });
+            setSearchQuery("");
+          }}
+        >
+          Clear Filters
+        </Button>
+      )}
+    </div>
+    
+    {/* Results count */}
+    {filteredOrders.length > 0 && (
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {filteredOrders.length} purchase{filteredOrders.length !== 1 ? 's' : ''}
+        {(dateRange.from || dateRange.to || searchQuery) && ` (filtered from ${(data.data || []).length} total)`}
+      </div>
+    )}
+
+    {/* Orders Grid */}
+    {filteredOrders.length === 0 ? (
+      <div className="min-h-[200px] flex items-center justify-center">
+        <ContentError title={searchQuery || dateRange.from || dateRange.to ? "No purchases found matching your filters" : "0 orders created"} />
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {filteredOrders.map(order => <Order key={order._id} order={order} />)}
+      </div>
+    )}
+  </TabsContent>
+}
+
+function OrderNote({ notes = "", orderId }) {
+  const [value, setValue] = useState(notes)
+  const [loading, setLoading] = useState(false)
+
+  const closeBtnRef = useRef()
+
+  async function updateNote() {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/note", { notes: value, orderId });
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <Dialog>
+    <DialogClose ref={closeBtnRef} />
+    <DialogTrigger>
+      <NotebookPen className="w-[28px] h-[28px] text-white bg-[var(--accent-1)] p-1 rounded-[4px]" />
+    </DialogTrigger>
+    <DialogContent className="p-0 !space-y-0">
+      <DialogTitle className="border-b-1 p-4">Order Notes</DialogTitle>
+      <div className="p-4">
+        {/* <p className="italics"></p>
+        {!notes && <div className="text-center">No note added</div>} */}
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Please add a note"
+        />
+        <Button
+          variant="wz"
+          className="mt-4"
+          disabled={!value || loading || value === notes}
+          onClick={updateNote}
+        >
+          Save
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+}
+
+function DeleteOrder({ orderId }) {
+  async function deleteOrder(setLoading, closeBtnRef) {
+    try {
+      setLoading(true);
+      const endpoint = buildUrlWithQueryParams("app/delete-order", { id: orderId })
+      const response = await sendData(endpoint, {}, "DELETE");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/order-history");
+      closeBtnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <DualOptionActionModal
+    description="Are you sure of deleting this order!"
+    action={(setLoading, btnRef) => deleteOrder(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger>
+      <Trash2 className="w-[28px] h-[28px] text-white bg-[var(--accent-2)] p-[6px] rounded-[4px]" />
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
+}
+
+function UpdateOrder({ order }) {
+  const [open, setOpen] = useState(false)
+  return <div>
+    <Button onClick={() => setOpen(true)}>
+      <Pen />
+    </Button>
+    <AddRetailModal
+      open={open}
+      payload={{
+        stage: 2,
+        acceptFlow: false,
+        coachId: order.coachId,
+        margin: order.coachMargin,
+        selectedBrandId: order.brand?._id,
+        margins: order.brand?.margins || [],
+        brand: {
+          margins: order.brand?.margins || [],
+          _id: order.brand?._id
+        },
+        clientId: order.clientId?._id,
+        productModule: order.productModule,
+        status: order.status,
+        clientName: order?.clientId?.name || "",
+        orderId: order._id || "",
+        actionType: "update"
+      }}
+      setOpen={setOpen}
+    />
+  </div>
+}
+
+function RetailReportGenerator({ orders, dateRange: currentDateRange }) {
+  const [open, setOpen] = useState(false);
+  const [reportType, setReportType] = useState("summary"); // summary, detailed
+  const [selectedDateRange, setSelectedDateRange] = useState(currentDateRange || { from: null, to: null });
+
+  // Sync with parent dateRange when it changes
+  useEffect(() => {
+    if (currentDateRange) {
+      setSelectedDateRange(currentDateRange);
+    }
+  }, [currentDateRange]);
+  const [pdfData, setPdfData] = useState(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
+
+  const handleGenerateReport = () => {
+    try {
+      if (!orders) {
+        toast.error("No orders data available");
+        return;
+      }
+
+      const stats = calculateFilteredStats(orders, selectedDateRange);
+      // Convert date range to period string for PDF data (for backward compatibility)
+      const periodString = (!selectedDateRange.from && !selectedDateRange.to) ? "all" : "custom";
+      const reportData = salesReportPDFData(stats, orders, periodString, reportType);
+
+      setPdfData(reportData);
+      setOpen(false);
+      // Open PDF after a brief delay to ensure state is updated
+      setTimeout(() => {
+        setPdfOpen(true);
+      }, 100);
+    } catch (error) {
+      toast.error(error.message || "Failed to generate report");
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="wz" size="sm" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Generate Report
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="text-xl font-bold mb-4">Generate Sales Report</DialogTitle>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <DateRangePicker
+                dateRange={selectedDateRange}
+                onDateRangeChange={setSelectedDateRange}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Report Type</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={reportType === "summary" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("summary")}
+                  className="flex-1"
+                >
+                  Summary
+                </Button>
+                <Button
+                  variant={reportType === "detailed" ? "wz" : "outline"}
+                  size="sm"
+                  onClick={() => setReportType("detailed")}
+                  className="flex-1"
+                >
+                  Detailed
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-1">Report Includes:</p>
+              <ul className="text-sm space-y-1 list-disc list-inside">
+                {reportType === "summary" ? (
+                  <>
+                    <li>Total Sales Amount</li>
+                    <li>Total Orders Count</li>
+                    <li>Volume Points</li>
+                    <li>Average Order Value</li>
+                  </>
+                ) : (
+                  <>
+                    <li>All order details</li>
+                    <li>Client information</li>
+                    <li>Product details</li>
+                    <li>Financial breakdown</li>
+                    <li>Volume points per order</li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            <Button
+              variant="wz"
+              className="w-full gap-2"
+              onClick={handleGenerateReport}
+            >
+              <FileText className="h-4 w-4" />
+              Generate PDF Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {pdfData && (
+        <PDFRenderer
+          pdfTemplate="PDFSalesReport"
+          data={pdfData}
+          open={pdfOpen}
+          onOpenChange={setPdfOpen}
+        >
+          <Button
+            variant="wz"
+            className="hidden"
+          >
+            View Report
+          </Button>
+        </PDFRenderer>
+      )}
+    </>
+  );
+}
+
+function ResetInventory() {
+  async function resetInventory(setLoading, btnRef) {
+    try {
+      setLoading(true);
+      const response = await sendData("app/order/reset-inventory", {}, "POST");
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success(response.message);
+      mutate("app/inventory");
+      btnRef.current.click();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <DualOptionActionModal
+    description="Are you sure of reseting your inventory!"
+    action={(setLoading, btnRef) => resetInventory(setLoading, btnRef)}
+  >
+    <AlertDialogTrigger asChild>
+      <Button size="sm" variant="destructive">
+        <Trash2 className="w-[28px] h-[28px] text-white" />
+        Reset
+      </Button>
+    </AlertDialogTrigger>
+  </DualOptionActionModal>
 }

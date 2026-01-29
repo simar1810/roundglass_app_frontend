@@ -96,16 +96,17 @@ export const meetingEditFormControls = [
     name: "baseLink",
     inputtype: 1,
     getvalue: (obj) => obj.baseLink || ""
-  },
-  {
-    id: 13,
-    label: "Allowed Client Roll Nos Series",
-    type: "text",
-    inputtype: 9,
-    placeholder: "Enter roll no series",
-    name: "allowed_client_rollnos",
-    getvalue: (obj) => obj.allowed_client_rollnos || []
   }
+  // ,
+  // {
+  //   id: 13,
+  //   label: "Allowed Client Roll Nos Series",
+  //   type: "text",
+  //   inputtype: 9,
+  //   placeholder: "Enter roll no series",
+  //   name: "allowed_client_rollnos",
+  //   getvalue: (obj) => obj.allowed_client_rollnos || []
+  // }
 ];
 
 export function selectMeetingEditFields(meetingType) {

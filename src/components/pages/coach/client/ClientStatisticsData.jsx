@@ -4,24 +4,69 @@ import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
+import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
 import { sendData } from "@/lib/api";
 import { getClientStatsForCoach } from "@/lib/fetchers/app";
 import { _throwError } from "@/lib/formatter";
 import { clientStatisticsPDFData, comparisonPDFData } from "@/lib/pdf";
 import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
-import { FilePen, X } from "lucide-react"
-import { useState } from "react";
+import { FilePen, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
+
+const SVG_ICONS = [
+  "/svgs/body.svg",      // 0
+  "/svgs/check.svg",     // 1
+  "/svgs/checklist.svg", // 2
+  "/svgs/bmi.svg",       // 3
+  "/svgs/cutlery.svg",   // 4
+  "/svgs/fat.svg",       // 5
+  "/svgs/fats.svg",      // 6
+  "/svgs/muscle.svg",    // 7
+  "/svgs/meta.svg",      // 8
+  "/svgs/person.svg",    // 9
+  "/svgs/weight.svg",    // 10
+  "/svgs/flame-icon.svg",// 11
+  "/svgs/marathon.svg",  // 12
+  "/svgs/users-icon.svg",// 13
+];
 
 export default function ClientStatisticsData({ clientData }) {
   try {
     const { dob, clientId, gender } = clientData
     const [selectedDate, setSelectedDate] = useState(0);
+    const coachState = useAppSelector(state => state.coach?.data || {});
+    const coachHealthMatrixFields = coachState.coachHealthMatrixFields;
+
+    const formFields = useMemo(() => {
+      if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
+
+      const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
+
+      const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
+        [...defaultFields, "weightInKgs", "weightInPounds"].includes(field.name) ||
+        (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
+      );
+
+      const customFields = coachAddedFields.map(field => ({
+        label: field.title,
+        value: "0",
+        info: `Range: ${field.minValue} - ${field.maxValue}`,
+        icon: SVG_ICONS[field.svg] || "/svgs/checklist.svg",
+        name: field.fieldLabel,
+        title: field.title,
+        id: field._id || field.fieldLabel,
+        getMaxValue: () => field.maxValue,
+        getMinValue: () => field.minValue,
+      }));
+
+      return [...activeDefaultFields, ...customFields];
+    }, [coachHealthMatrixFields]);
 
     const { isLoading, error, data, mutate } = useSWR(
       `app/clientStatsCoach?clientId=${clientId}`,
@@ -91,7 +136,10 @@ export default function ClientStatisticsData({ clientData }) {
         ? clientStats?.at(selectedDate)?.weight
         : "",
     }
-    const weightDifference = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifferenceRaw = Math.abs(Number(clientStats?.at(0)?.weight) - Number(clientStats?.at(1)?.weight))
+    const weightDifference = Number.isFinite(weightDifferenceRaw)
+      ? Number(weightDifferenceRaw.toFixed(1))
+      : NaN;
 
     return <TabsContent value="statistics">
       <div className="pb-4 flex items-center gap-2 border-b-1 w-80 md:w-full no-scrollbar overflow-x-auto pt-4">
@@ -117,11 +165,14 @@ export default function ClientStatisticsData({ clientData }) {
         clientStats={clientStats}
         selectedDate={selectedDate}
       />
-      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {parseInt(weightDifference)} KG</h5>}
+      {clientStats?.at(selectedDate)?.notes && <p className="px-4 py-2 rounded-[4px] bg-[var(--accent-1)] text-white">{clientStats?.at(selectedDate)?.notes}</p>}
+      {!isNaN(weightDifference) && <h5 className="text-[16px] my-4">Weight Difference Between Last Check-up: {weightDifference} KG</h5>}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5">
         <HealthMetrics
           onUpdate={onUpdateHealthMatrix}
           data={payload}
+          fields={formFields}
+          calculateByFormulaes={false}
         />
       </div>
     </TabsContent>
@@ -140,7 +191,7 @@ function StatisticsExportingOptions({
   clientStats,
   selectedDate
 }) {
-  const coach = useAppSelector(state => state.coach.data);
+  const coach = useAppSelector(state => state.coach?.data || {});
 
   return <div className="py-4 text-[12px] flex items-center gap-2 border-b-1 overflow-x-auto">
     <PDFRenderer pdfTemplate="PDFComparison" data={comparisonPDFData(clientData, clientStats, coach, selectedDate)}>
