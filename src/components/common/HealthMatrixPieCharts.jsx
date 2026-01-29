@@ -1,24 +1,22 @@
 "use client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   calculateBMIFinal,
   calculateBMRFinal,
   calculateBodyAgeFinal,
   calculateBodyFatFinal,
+  calculateBodyWater,
   calculateIdealWeightFinal,
   calculateSMPFinal,
   calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import { cn, extractNumber } from "@/lib/utils";
-import { Pencil } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
-import FormControl from "../FormControl";
-import { Button } from "../ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
-
-const defaultFields = DEFAULT_FORM_FIELDS.map(field => field.name)
+import { Pencil } from "lucide-react";
+import FormControl from "../FormControl";
+import { useRef, useState } from "react";
+import { Button } from "../ui/button";
 
 const healtMetrics = [
   {
@@ -42,7 +40,6 @@ const healtMetrics = [
     id: 2,
     getMaxValue: () => 45,
     getMinValue: () => 30,
-    type: "default-hide"
   },
   {
     title: "Fat",
@@ -53,7 +50,6 @@ const healtMetrics = [
     id: 3,
     getMaxValue: () => 20,
     getMinValue: () => 10,
-    type: "default-hide"
   },
   {
     title: "Resting Metabolism",
@@ -65,7 +61,6 @@ const healtMetrics = [
     id: 4,
     getMaxValue: () => 3000,
     getMinValue: () => 1500,
-    type: "default-hide"
   },
   {
     title: "Ideal Weight",
@@ -89,7 +84,6 @@ const healtMetrics = [
     id: 6,
     getMaxValue: () => 67,
     getMinValue: () => 33,
-    type: "default-hide"
   },
   {
     title: "Visceral Fat",
@@ -100,7 +94,6 @@ const healtMetrics = [
     id: 7,
     getMaxValue: () => 12,
     getMinValue: () => 1,
-    type: "default-hide"
   },
   {
     title: "Weight In KGs",
@@ -129,32 +122,29 @@ const healtMetrics = [
     icon: "/svgs/body.svg",
     name: "sub_fat",
     id: 9,
-    getMaxValue: () => 20,
-    getMinValue: () => 15,
-    type: "default-hide"
+    getMaxValue: ({ gender }) => gender === "male" ? 5 : 20,
+    getMinValue: ({ gender }) => gender === "male" ? 2 : 10,
+  },
+  {
+    title: "Body Water",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "bodyWater",
+    id: 10,
+    getMaxValue: (gender) => gender === "male" ? 73 : 60,
+    getMinValue: (gender) => gender === "male" ? 43 : 41,
   },
 ];
 
-export default function HealthMetrics({ calculateByFormulaes = true, hideHealthMatrices, data, onUpdate, fields, showAll = false }) {
+export default function HealthMetrics({ data, onUpdate }) {
   const payload = {
-    bmi: calculateByFormulaes
-      ? extractNumber(data.bmi) || calculateBMIFinal(data)
-      : extractNumber(data.bmi),
-    muscle: calculateByFormulaes
-      ? extractNumber(data.muscle) || calculateSMPFinal(data)
-      : extractNumber(data.muscle),
-    fat: calculateByFormulaes
-      ? extractNumber(data.fat) || calculateBodyFatFinal(data)
-      : extractNumber(data.fat),
-    rm: calculateByFormulaes
-      ? extractNumber(data.rm) || calculateBMRFinal(data)
-      : extractNumber(data.rm),
-    idealWeight: calculateByFormulaes
-      ? extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data)
-      : extractNumber(data.idealWeight) || data.ideal_weight,
-    bodyAge: calculateByFormulaes
-      ? extractNumber(data.bodyAge) || calculateBodyAgeFinal(data)
-      : extractNumber(data.bodyAge),
+    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
+    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
+    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
+    rm: extractNumber(data.rm) || calculateBMRFinal(data),
+    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
+    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
     visceral_fat: extractNumber(data.visceral_fat),
     weightInKgs: updateWeightField() === "weightInKgs"
       ? extractNumber(data.weightInKgs)
@@ -162,10 +152,8 @@ export default function HealthMetrics({ calculateByFormulaes = true, hideHealthM
     weightInPounds: updateWeightField() === "weightInPounds"
       ? extractNumber(data.weightInPounds)
       : undefined,
-    sub_fat: calculateByFormulaes
-      ? extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent
-      : extractNumber(data.sub_fat),
-    ...data
+    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent,
+    bodyWater: extractNumber(data.bodyWater) || calculateBodyWater(data)
   };
 
   function updateWeightField() {
@@ -174,42 +162,32 @@ export default function HealthMetrics({ calculateByFormulaes = true, hideHealthM
     } else return "weightInPounds"
   }
 
-  // Use fields prop if provided, otherwise use default healtMetrics
-  const metricsToDisplay = fields || healtMetrics;
-
   try {
     return (
       <>
-        {metricsToDisplay
-          .filter((metric) => (
+        {healtMetrics
+          .filter((metric) =>
             !isNaN(payload[metric.name]) &&
             payload[metric.name] !== 0 &&
-            payload[metric.name] !== "" ||
-            (showAll && !defaultFields.includes(metric.name))
-          ) &&
-            (!calculateByFormulaes ? ![null, undefined, ""].includes(payload[metric.name]) : true)
-          )
-          .filter(item =>
-            hideHealthMatrices ? item.type !== "default-hide" : true
+            payload[metric.name] !== ""
           )
           .map((metric) => (
             <MetricProgress
-              key={metric.id || metric.name}
+              key={metric.id}
               {...metric}
-              title={metric.title || metric.label}
-              value={payload[metric.name] || 0}
-              maxPossibleValue={metric.getMaxValue ? metric.getMaxValue({
-                value: payload[metric.name] || 0,
+              value={payload[metric.name]}
+              maxPossibleValue={metric.getMaxValue({
+                value: payload[metric.name],
                 gender: data.gender
-              }) : (metric.maxValue || 100)}
-              maxThreshold={metric.getMaxValue ? metric.getMaxValue({
-                value: payload[metric.name] || 0,
+              })}
+              maxThreshold={metric.getMaxValue({
+                value: payload[metric.name],
                 gender: data.gender
-              }) : (metric.maxValue || 100)}
-              minThreshold={metric.getMinValue ? metric.getMinValue({
-                value: payload[metric.name] || 0,
+              })}
+              minThreshold={metric.getMinValue({
+                value: payload[metric.name],
                 gender: data.gender
-              }) : (metric.minValue || 0)}
+              })}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -254,7 +232,6 @@ export function MetricProgress({
             width={28}
             alt=""
             className="object-contain"
-            style={{ width: "auto", height: "auto" }}
           />
           <h2 className="text-[16px] font-bold">{title}</h2>
           {onUpdate && <EditHealthMatric
@@ -309,18 +286,8 @@ function EditHealthMatric({
   onUpdate,
   name
 }) {
-  const [formData, setFormData] = useState(() => payload || {})
+  const [formData, setFormData] = useState(payload)
   const closeBtnRef = useRef(null);
-
-  // Update formData when payload changes, but only if the specific field value actually changed
-  useEffect(() => {
-    if (payload && payload[name] !== formData[name]) {
-      setFormData(prev => ({
-        ...prev,
-        [name]: payload[name]
-      }));
-    }
-  }, [payload?.[name], name]);
 
   async function saveHealthMatrix() {
     if (onUpdate) onUpdate(formData, name, closeBtnRef)
@@ -330,7 +297,7 @@ function EditHealthMatric({
       <Pencil className="w-4 h-4 absolute bottom-2 right-2" />
     </DialogTrigger>
     <DialogContent className="p-0 gap-0">
-      <DialogHeader className="p-4 border-b">
+      <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Edit Health Matrix</DialogTitle>
       </DialogHeader>
       <div className="max-h-[65vh] h-full overflow-y-auto p-4">

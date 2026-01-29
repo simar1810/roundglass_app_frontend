@@ -593,3 +593,34 @@ export function validStatistics(matrices) {
 
   return true
 }
+
+export function generateAgeStandard(data) {
+  if(!isNaN(extractNumber(data.age)) && Boolean(data.age)) {
+    return data.age;
+  }
+  if(ddMMyyyy.test(data.dob)) {
+    return Math.abs(
+      differenceInYears(
+        parse(data.dob, "dd-MM-yyyy", new Date()),
+        new Date()
+      )
+    )
+  }
+  return 0;
+}
+
+export function calculateBodyWater(data) {
+  const gender = data.gender?.toLowerCase();
+  const height = generateWeightStandard(data);
+  const weight = generateWeightStandard(data);
+  const age = generateAgeStandard(data);
+  if(gender === "male") {
+    return (2.447 
+      - (0.09156 * age)
+      + (0.1074 * height)
+      + (0.3362 * weight))?.toFixed(1)
+  }
+  return (- 2.097
+    + (0.1069 * height)
+    + (0.2466 * weight))?.toFixed(1)
+}
