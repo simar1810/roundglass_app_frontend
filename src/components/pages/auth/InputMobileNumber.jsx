@@ -83,10 +83,10 @@ export default function InputMobileNumber() {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h3 className="text-2xl font-semibold mb-4">Hi, Welcome</h3>
-      <h5 className="text-lg mb-1">Ready to Inspire Wellness?</h5>
+      <h3 className="text-2xl font-semibold mb-4">Welcome to Roundglass</h3>
+      <h5 className="text-lg mb-1">Sign in to continue</h5>
       <p className="text-gray-600 text-sm mb-6">
-        Sign up or log in now to transform.
+        Enter your mobile number to get an OTP.
       </p>
 
       <Tabs value={loginType} onValueChange={handleLoginTypeChange} className="w-full">
