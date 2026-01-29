@@ -27,7 +27,7 @@ import { mutate } from "swr";
 export default function first() {
   return <CurrentStateProvider>
     <div className="content-height-screen content-container">
-      <h4>WellnessZ Link Generator</h4>
+      <h4>Round Glass Link Generator</h4>
       <div className="relative">
         <Image
           src="/illustrations/link-generator.svg"
@@ -60,7 +60,7 @@ function ZoomMeetingOptions() {
     <LinkGenerator withZoom={true}>
       <DialogTrigger className="px-4 py-2 flex items-center gap-2 rounded-[8px]">
         <span className="w-[28px] min-h-[28px] bg-[#0B5CFF] text-[var(--primary-1)] text-[8px] text-center font-[500] leading-[28px] aspect-square rounded-full">zoom</span>
-        <span className="text-xs md:text-base">With Zoom Meeting</span> 
+        <span className="text-xs md:text-base">With Zoom Meeting</span>
       </DialogTrigger>
       {Boolean(zoom_doc_id) && <DropdownMenu>
         <DropdownMenuTrigger asChild>

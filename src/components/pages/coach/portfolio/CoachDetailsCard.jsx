@@ -41,7 +41,7 @@ export default function CoachDetailsCard({ coachData }) {
   function copyInviteLink() {
     copyText(`Hey! 👋
 
-I just joined *WellnessZ*, an amazing wellness & coaching app 💚
+I just joined *Round Glass*, an amazing wellness & coaching app 💚
 
 Register now using my link and let’s begin your health journey together 💪👇
 https://wellnessz.in/app/coachCode?coachID=${coachId}`)

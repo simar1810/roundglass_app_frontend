@@ -60,7 +60,7 @@ export default function AppClientSidebar() {
       <SidebarHeader className="bg-[var(--dark-4)] text-white font-cursive">
         <Image
           src="/wellnessz-white.png"
-          alt="wellnessZ logo"
+          alt="Round Glass logo"
           width={659}
           height={125}
           className="max-w-[10ch] mx-auto mt-4"

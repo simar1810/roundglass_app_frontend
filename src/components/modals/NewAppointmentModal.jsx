@@ -30,7 +30,7 @@ export default function NewAppointmentModal() {
           <div className="grid grid-cols-1 gap-1 mt-5 mb-4">
             <p className="text-sm mb-2">Title</p>
             <FormControl
-            as= "textarea"
+              as="textarea"
               placeholder="Title"
               className="w-full h-12 rounded-lg  border-gray-200 px-4"
             />
@@ -43,7 +43,7 @@ export default function NewAppointmentModal() {
               <div className="relative">
                 <FormControl
                   as="textarea"
-                  placeholder = 'Date'
+                  placeholder='Date'
                   className="w-full h-12 rounded-lg  border-gray-200 px-4 appearance-none"
                 >
                   {/* <option value="">Date</option> */}
@@ -56,7 +56,7 @@ export default function NewAppointmentModal() {
               <div className="relative">
                 <FormControl
                   as="textarea"
-                  placeholder = 'Time'
+                  placeholder='Time'
                   className="w-full h-12 rounded-lg  border-gray-200 px-4 appearance-none"
                 >
                   {/* <option value="">Time</option> */}
@@ -88,7 +88,7 @@ export default function NewAppointmentModal() {
                   defaultChecked
                   className="w-5 h-5  border-green-500 appearance-none rounded-full checked:bg-green-500 checked:border-green-500"
                 />
-                <span>WellnessZ Client</span>
+                <span>Round Glass Client</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <FormControl

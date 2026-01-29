@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { use } from "react";
 
 export const metadata = {
-  title: "WellnessZ",
+  title: "Round Glass",
   description: "All in One Business Platform for Wellness Professionals",
   manifest: "/app.webmanifest",
 };

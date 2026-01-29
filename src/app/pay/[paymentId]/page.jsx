@@ -127,7 +127,7 @@ export default function PayPage({ params }) {
               setPolling(false);
             }
           }
-        } catch {}
+        } catch { }
       }, 3000); // Poll every 3 seconds
     }
     return () => clearInterval(interval);
@@ -171,7 +171,7 @@ export default function PayPage({ params }) {
         key: res.razorpayKey,
         amount: res.amount,
         currency: "INR",
-        name: "WellnessZ",
+        name: "Round Glass",
         description: "Payment",
         order_id: res.orderId,
         handler: function () {
@@ -214,8 +214,7 @@ export default function PayPage({ params }) {
       if (res?.success) {
         setVoucherApplied(true);
         setVoucherSuccess(
-          `Voucher applied! ${
-            res.message || "Discount has been applied to your payment."
+          `Voucher applied! ${res.message || "Discount has been applied to your payment."
           }`
         );
 
@@ -413,7 +412,7 @@ export default function PayPage({ params }) {
                 )}
 
                 {/* Debug Info - Remove this in production */}
-                
+
               </div>
             </div>
 

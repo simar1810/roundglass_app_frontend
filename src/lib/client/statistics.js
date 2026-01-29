@@ -1,4 +1,6 @@
+import { differenceInYears, parse } from "date-fns";
 import { extractNumber } from "../utils";
+import { ddMMyyyy } from "@/config/data/regex";
 
 export function calculateBMI({ height, heightUnit, weight, weightUnit }) {
   let heightInMeters;
@@ -591,3 +593,31 @@ export function validStatistics(matrices) {
 
   return true
 }
+
+function calculateAge(data) {
+  const { age, dob } = data
+  if(!extractNumber(age)) return age;
+  if(ddMMyyyy.test(dob)) return Math.abs(
+    differenceInYears(
+      parse(dob, "dd-MM-yyyy", new Date()),
+      new Date()
+    )
+  )
+  return 0;
+}
+
+export function calculateBodyWater(data) {
+  const { gender = "male", height, heightUnit, weight, weightUnit } = data
+  const heightStandard = generateHeightStandard(data);
+  const weightStandard = generateWeightStandard(data);
+  const age = calculateAge(data)
+  if(gender.toLowerCase() === "male") {
+    return (2.447 - (0.09156 * age))
+      + (0.1074 * heightStandard)
+      + (0.3362 * weightStandard)
+  }
+
+  return -2.097
+    + (0.1069 * heightStandard) + (0.2466 * weightStandard)
+}
+console.log(calculateAge({}))
