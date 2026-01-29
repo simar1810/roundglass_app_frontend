@@ -17,7 +17,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   Legend,
 } from "recharts";
 import { Activity, TrendingUp, AlertTriangle, Users } from "lucide-react";
@@ -226,7 +225,7 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId }) {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Type-level Distribution */}
         <Card className="border-1 rounded-lg bg-[var(--comp-1)]">
           <CardHeader>
@@ -241,32 +240,30 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId }) {
                     color: "var(--accent-1)",
                   },
                 }}
-                className="h-[300px]"
+                className="aspect-[4/3]"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={typeDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {typeDistribution.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={typeDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {typeDistribution.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
               </ChartContainer>
             ) : (
               <p className="text-sm text-[#808080] text-center py-8">
@@ -290,31 +287,29 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId }) {
                     color: "var(--accent-1)",
                   },
                 }}
-                className="h-[300px]"
+                className="aspect-[4/3]"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="month"
-                      stroke="#6b7280"
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
-                    <ChartTooltip
-                      content={<ChartTooltipContent />}
-                      cursor={{ stroke: "var(--accent-1)", strokeWidth: 1 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="var(--accent-1)"
-                      strokeWidth={2}
-                      dot={{ fill: "var(--accent-1)", r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <LineChart data={monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="month"
+                    stroke="#6b7280"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ stroke: "var(--accent-1)", strokeWidth: 1 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="var(--accent-1)"
+                    strokeWidth={2}
+                    dot={{ fill: "var(--accent-1)", r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
               </ChartContainer>
             ) : (
               <p className="text-sm text-[#808080] text-center py-8">
@@ -353,41 +348,39 @@ export default function InjuryAnalyticsDashboard({ clientData, clientId }) {
                     color: "var(--accent-1)",
                   },
                 }}
-                className="h-[300px]"
+                className="aspect-[4/3]"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={teamComparison.teamData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#6b7280"
-                      tick={{ fontSize: 11 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
-                    <ChartTooltip
-                      content={<ChartTooltipContent />}
-                      cursor={{ fill: "rgba(0,0,0,0.05)" }}
-                    />
-                    <Bar
-                      dataKey="injuries"
-                      radius={[8, 8, 0, 0]}
-                    >
-                      {teamComparison.teamData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.isCurrentClient
-                              ? "var(--accent-1)"
-                              : COLORS[(index + 1) % COLORS.length]
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart data={teamComparison.teamData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#6b7280"
+                    tick={{ fontSize: 11 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                  />
+                  <Bar
+                    dataKey="injuries"
+                    radius={[8, 8, 0, 0]}
+                  >
+                    {teamComparison.teamData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.isCurrentClient
+                            ? "var(--accent-1)"
+                            : COLORS[(index + 1) % COLORS.length]
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ChartContainer>
             </div>
           ) : (

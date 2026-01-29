@@ -53,25 +53,29 @@ import {
 } from "recharts";
 import { RefreshCw, TrendingUp, TrendingDown, Award, AlertCircle, Users } from "lucide-react";
 
-// Available metrics
+// Metrics that should be hidden from the UI (not required in analytics view)
+const EXCLUDED_METRICS = new Set([
+  "chest",
+  "arm",
+  "abdomen",
+  "waist",
+  "hip",
+  "thighs",
+]);
+
+// Available metrics (only those we want to expose in the UI)
 const AVAILABLE_METRICS = [
-  { value: "bmi", label: "BMI" },
-  { value: "muscle", label: "Muscle %" },
-  { value: "fat", label: "Fat %" },
-  { value: "rm", label: "Resting Metabolic Rate" },
-  { value: "ideal_weight", label: "Ideal Weight" },
-  { value: "bodyAge", label: "Body Age" },
-  { value: "visceral_fat", label: "Visceral Fat" },
-  { value: "weight", label: "Weight" },
-  { value: "sub_fat", label: "Subcutaneous Fat" },
-  { value: "chest", label: "Chest" },
-  { value: "arm", label: "Arm" },
-  { value: "abdomen", label: "Abdomen" },
-  { value: "waist", label: "Waist" },
-  { value: "hip", label: "Hip" },
-  { value: "thighs", label: "Thighs" },
-  { value: "height", label: "Height" },
-  { value: "shoulder_distance", label: "Shoulder Distance" },
+  { value: "bmi", name: "BMI" },
+  { value: "muscle", name: "Muscle %" },
+  { value: "fat", name: "Fat %" },
+  { value: "rm", name: "Resting Metabolic Rate" },
+  { value: "ideal_weight", name: "Ideal Weight" },
+  { value: "bodyAge", name: "Body Age" },
+  { value: "visceral_fat", name: "Visceral Fat" },
+  { value: "weight", name: "Weight" },
+  { value: "sub_fat", name: "Subcutaneous Fat" },
+  { value: "height", name: "Height" },
+  { value: "shoulder_distance", name: "Shoulder Distance" },
 ];
 
 export default function ClientRanking({ clientId: propClientId = null }) {
@@ -153,39 +157,52 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     }));
   }, [client_categories]);
 
-  // Prepare radar chart data
+  // Prepare radar chart data (exclude metrics we don't want to show)
   const radarChartData = useMemo(() => {
     if (!graphData?.radarChart) return [];
 
     const { labels, datasets } = graphData.radarChart;
     if (!labels || !datasets || datasets.length === 0) return [];
 
-    return labels.map((label, index) => ({
+    // Filter out excluded metrics by label key
+    const filtered = labels
+      .map((label, index) => ({ label, index }))
+      .filter(({ label }) => !EXCLUDED_METRICS.has(label));
+
+    return filtered.map(({ label, index }) => ({
       metric: formatMetricName(label),
       percentile: datasets[0].data[index] || 0,
       fullLabel: label,
     }));
   }, [graphData]);
 
-  // Prepare percentile bar data
+  // Prepare percentile bar data (exclude metrics we don't want to show)
   const percentileBarData = useMemo(() => {
     if (!rankingData?.rankings) return [];
 
-    return Object.entries(rankingData.rankings).map(([metric, data]) => ({
-      metric: formatMetricName(metric),
-      percentile: data.percentile || 0,
-      value: data.value,
-      rank: data.rank,
-      total: data.total,
-      fullMetric: metric,
-    }));
+    return Object.entries(rankingData.rankings)
+      .filter(([metric]) => !EXCLUDED_METRICS.has(metric))
+      .map(([metric, data]) => ({
+        metric: formatMetricName(metric),
+        percentile: data.percentile || 0,
+        value: data.value,
+        rank: data.rank,
+        total: data.total,
+        fullMetric: metric,
+      }));
   }, [rankingData]);
 
-  // Calculate summary statistics
+  // Calculate summary statistics (based only on included metrics)
   const summary = useMemo(() => {
     if (!rankingData?.rankings) return null;
 
-    const rankings = Object.values(rankingData.rankings);
+    const filteredEntries = Object.entries(rankingData.rankings).filter(
+      ([metric]) => !EXCLUDED_METRICS.has(metric)
+    );
+
+    if (filteredEntries.length === 0) return null;
+
+    const rankings = filteredEntries.map(([, value]) => value);
     const percentiles = rankings.map((r) => r.percentile).filter((p) => p !== null && p !== undefined);
 
     if (percentiles.length === 0) return null;
@@ -201,17 +218,17 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       avgPercentile: Math.round(avgPercentile),
       bestMetric: bestMetric
         ? {
-            metric: Object.keys(rankingData.rankings).find(
-              (k) => rankingData.rankings[k].percentile === bestMetric.percentile
-            ),
+            metric: filteredEntries.find(
+              ([, value]) => value.percentile === bestMetric.percentile
+            )?.[0],
             percentile: bestMetric.percentile,
           }
         : null,
       worstMetric: worstMetric
         ? {
-            metric: Object.keys(rankingData.rankings).find(
-              (k) => rankingData.rankings[k].percentile === worstMetric.percentile
-            ),
+            metric: filteredEntries.find(
+              ([, value]) => value.percentile === worstMetric.percentile
+            )?.[0],
             percentile: worstMetric.percentile,
           }
         : null,
@@ -230,7 +247,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   // Show message if no client selected (and not provided via prop)
   if (!propClientId && !clientId) {
     return (
-      <Card>
+          <Card className="min-w-0">
         <CardContent className="pt-6">
           <div className="text-center py-12">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -267,7 +284,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <Card>
+          <Card className="min-w-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -305,10 +322,10 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print items-start">
             {/* Client Selector */}
             {!propClientId && (
-              <div>
+              <div className="min-w-0">
                 <label className="text-sm font-medium mb-2 block">Player</label>
                 <input
                   type="text"
@@ -321,7 +338,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
             )}
 
             {/* Comparison Group Selector */}
-            <div>
+            <div className="min-w-0">
               <label className="text-sm font-medium mb-2 block">Comparison Group</label>
               <Select value={comparisonGroup} onValueChange={setComparisonGroup}>
                 <SelectTrigger>
@@ -336,7 +353,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
 
             {/* Category Selector (if comparisonGroup="category") */}
             {comparisonGroup === "category" && (
-              <div>
+              <div className="min-w-0">
                 <label className="text-sm font-medium mb-2 block">Category</label>
                 <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
                   <SelectTrigger>
@@ -354,7 +371,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
             )}
 
             {/* Metrics Selector */}
-            <div>
+            <div className="min-w-0 md:col-span-2 lg:col-span-2">
               <label className="text-sm font-medium mb-2 block">Metrics</label>
               <SelectMultiple
                 label="Select metrics (all if empty)"
@@ -362,6 +379,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                 value={selectedMetrics}
                 onChange={setSelectedMetrics}
                 searchable
+                className="w-full"
               />
             </div>
           </div>
@@ -371,7 +389,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       {/* Summary Card */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Overall Percentile
@@ -387,7 +405,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           </Card>
 
           {summary.bestMetric && (
-            <Card>
+          <Card className="min-w-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Best Performing
@@ -410,7 +428,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           )}
 
           {summary.worstMetric && (
-            <Card>
+          <Card className="min-w-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Needs Improvement
@@ -438,7 +456,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Radar Chart */}
         {radarChartData.length > 0 && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>Percentile Overview</CardTitle>
               <CardDescription>
@@ -468,7 +486,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
 
         {/* Percentile Bars */}
         {percentileBarData.length > 0 && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <CardTitle>Percentile Rankings</CardTitle>
               <CardDescription>

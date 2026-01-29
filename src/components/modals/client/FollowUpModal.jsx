@@ -17,7 +17,6 @@ import {
   setHealthMatrices,
   setNextFollowUpDate,
   stage1Completed,
-  toggleHideHealthMatrices,
 } from "@/config/state-reducers/follow-up";
 import {
   calculateBMIFinal,
@@ -65,11 +64,11 @@ export default function FollowUpModal({ clientData }) {
   return <Dialog>
     <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange className="w-[18px] h-[18px]" />
-      Follow-up
+      Player Follow-up
     </DialogTrigger>
     <DialogContent className="!max-w-[650px] max-h-[70vh] border-b-1 p-0 gap-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
-        <DialogTitle className="text-[24px]">Follow Up</DialogTitle>
+        <DialogTitle className="text-[24px]">Player Follow-up</DialogTitle>
       </DialogHeader>
       <CurrentStateProvider
         state={init(clientData)}
@@ -207,7 +206,7 @@ function Stage2({
   heightUnit,
   clientId
 }) {
-  const { healthMatrix, hideHealthMatrices, dispatch, ...state } = useCurrentStateContext();
+  const { healthMatrix, dispatch, ...state } = useCurrentStateContext();
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
 
   const closeBtnRef = useRef();
@@ -268,7 +267,7 @@ function Stage2({
   async function createFollowUp() {
     try {
       const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
-      const data = generateRequestPayload({ healthMatrix, hideHealthMatrices, ...state }, { ...payload, ...statObj }, extraFields)
+      const data = generateRequestPayload({ healthMatrix, ...state }, { ...payload, ...statObj }, extraFields)
       const response = await sendData(`app/add-followup?clientId=${clientId}`, data)
       if (response.status_code !== 200) _throwError(response.message || response.error);
       toast.success(response.message);
@@ -290,15 +289,6 @@ function Stage2({
 
   return (
     <div>
-      <label>
-        <div className="select-none cursor-pointer flex items-center gap-2 px-4 pt-4">
-          Hide Body Metrics
-          <Switch
-            checked={hideHealthMatrices}
-            onCheckedChange={value => dispatch(toggleHideHealthMatrices(value))}
-          />
-        </div>
-      </label>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-6">
           <HealthMetrics
@@ -306,7 +296,6 @@ function Stage2({
             data={payload}
             fields={formFields}
             showAll={true}
-            hideHealthMatrices={hideHealthMatrices}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 mt-10">

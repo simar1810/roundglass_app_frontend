@@ -422,12 +422,17 @@ function ClientSelector({ clientId, setClientId }) {
 }
 
 function MeasurementResults({ benchmarkData, onNewMeasurement, onClose }) {
-  const heightScore = benchmarkData.heightScore;
-  const weightScore = benchmarkData.weightScore;
-  const heightGap = benchmarkData.heightGapCm;
-  const weightGap = benchmarkData.weightGapKg;
-  const p50Height = benchmarkData.p50HeightCm;
-  const p50Weight = benchmarkData.p50WeightKg;
+  const heightScore = benchmarkData?.heightScore;
+  const weightScore = benchmarkData?.weightScore;
+  const heightGap = benchmarkData?.heightGapCm;
+  const weightGap = benchmarkData?.weightGapKg;
+  const p50Height = benchmarkData?.p50HeightCm;
+  const p50Weight = benchmarkData?.p50WeightKg;
+
+  const hasHeightGap = typeof heightGap === "number" && !Number.isNaN(heightGap);
+  const hasWeightGap = typeof weightGap === "number" && !Number.isNaN(weightGap);
+  const hasP50Height = typeof p50Height === "number" && !Number.isNaN(p50Height);
+  const hasP50Weight = typeof p50Weight === "number" && !Number.isNaN(p50Weight);
 
   return (
     <div className="px-6 py-4">
@@ -443,11 +448,19 @@ function MeasurementResults({ benchmarkData, onNewMeasurement, onClose }) {
               >
                 {heightScore === 1 ? "Healthy" : "Below Standard"}
               </Badge>
-              <span className="text-2xl font-bold">{heightScore}</span>
+              <span className="text-2xl font-bold">
+                {typeof heightScore === "number" ? heightScore : "N/A"}
+              </span>
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              Gap: {heightGap > 0 ? "+" : ""}
-              {heightGap.toFixed(2)} cm
+              {hasHeightGap ? (
+                <>
+                  Gap: {heightGap > 0 ? "+" : ""}
+                  {heightGap.toFixed(2)} cm
+                </>
+              ) : (
+                <>Gap: N/A</>
+              )}
             </div>
           </div>
 
@@ -460,11 +473,19 @@ function MeasurementResults({ benchmarkData, onNewMeasurement, onClose }) {
               >
                 {weightScore === 1 ? "Healthy" : "Below Standard"}
               </Badge>
-              <span className="text-2xl font-bold">{weightScore}</span>
+              <span className="text-2xl font-bold">
+                {typeof weightScore === "number" ? weightScore : "N/A"}
+              </span>
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              Gap: {weightGap > 0 ? "+" : ""}
-              {weightGap.toFixed(2)} kg
+              {hasWeightGap ? (
+                <>
+                  Gap: {weightGap > 0 ? "+" : ""}
+                  {weightGap.toFixed(2)} kg
+                </>
+              ) : (
+                <>Gap: N/A</>
+              )}
             </div>
           </div>
         </div>
@@ -475,11 +496,15 @@ function MeasurementResults({ benchmarkData, onNewMeasurement, onClose }) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Height: </span>
-              <span className="font-semibold">{p50Height.toFixed(2)} cm</span>
+              <span className="font-semibold">
+                {hasP50Height ? `${p50Height.toFixed(2)} cm` : "N/A"}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Weight: </span>
-              <span className="font-semibold">{p50Weight.toFixed(2)} kg</span>
+              <span className="font-semibold">
+                {hasP50Weight ? `${p50Weight.toFixed(2)} kg` : "N/A"}
+              </span>
             </div>
           </div>
         </div>

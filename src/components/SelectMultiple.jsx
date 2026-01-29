@@ -34,9 +34,10 @@ export default function SelectMultiple({
       return options;
     }
     const query = searchQuery.toLowerCase().trim();
-    return options.filter(option => 
-      option.name?.toLowerCase().includes(query)
-    );
+    return options.filter(option => {
+      const labelText = (option.name || option.label || "").toLowerCase();
+      return labelText.includes(query);
+    });
   }, [options, searchQuery, searchable]);
 
   function toggleOption(selectedValue) {
@@ -131,7 +132,7 @@ export default function SelectMultiple({
             ) : (
               filteredOptions.map((option) => (
                 <label
-                  key={option.id}
+                  key={option.id || option.value}
                   className="flex items-center px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                 >
                   <input
@@ -140,7 +141,9 @@ export default function SelectMultiple({
                     checked={value.includes(option.value)}
                     onChange={() => toggleOption(option.value)}
                   />
-                  {option.name}
+                  <span className="truncate">
+                    {option.name || option.label || option.value}
+                  </span>
                 </label>
               ))
             )}

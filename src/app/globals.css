@@ -503,9 +503,9 @@ a {
   }
 
   .content-container {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    max-width: 900px !important;
+    padding: 1.5rem 1.75rem !important;
+    margin: 0 auto !important;
   }
 
   /* Card styles for print */

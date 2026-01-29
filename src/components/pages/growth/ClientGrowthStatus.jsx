@@ -124,9 +124,9 @@ export default function ClientGrowthStatus({ clientId }) {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             {/* Date Filter */}
-            <div className="flex-1">
+            <div className="w-full min-w-0">
               <label className="text-sm font-medium mb-2 block">Filter by Date</label>
               <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
@@ -174,7 +174,7 @@ export default function ClientGrowthStatus({ clientId }) {
             </div>
 
             {/* Standard Selector */}
-            <div className="flex-1">
+            <div className="w-full min-w-0">
               <label className="text-sm font-medium mb-2 block">Standard</label>
               <Select value={standard} onValueChange={setStandard}>
                 <SelectTrigger>
@@ -238,7 +238,7 @@ function StatusCards({ status, benchmark }) {
   const p50Weight = benchmark.p50WeightKg ?? 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* Current Measurements */}
       <Card>
         <CardHeader className="pb-3">

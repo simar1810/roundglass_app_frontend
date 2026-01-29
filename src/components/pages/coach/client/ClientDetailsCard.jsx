@@ -4,6 +4,7 @@ import FollowUpModal from "@/components/modals/client/FollowUpModal";
 import UpdateClientDetailsModal from "@/components/modals/client/UpdateClientDetailsModal";
 import UpdateClientGoalModal from "@/components/modals/client/UpdateClientGoalModal";
 import UpdateClientInjuryLogModal from "@/components/modals/client/UpdateClientInjuryLogModal";
+import UpdateClientMealRecallModal from "@/components/modals/client/UpdateClientMealRecallModal";
 import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotesModal";
 import UpdateClientSupplementIntakeModal from "@/components/modals/client/UpdateClientSupplementIntakeModal";
 import UpdateClientTrainingInfoModal from "@/components/modals/client/UpdateClientTrainingInfoModal";
@@ -41,10 +42,10 @@ import { nameInitials } from "@/lib/formatter";
 import { permit } from "@/lib/permit";
 import { extractNumber } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { isBefore, parse } from "date-fns";
-import { ChevronDown, Copy, EllipsisVertical, Eye, Pen, Plus, Trash2 } from "lucide-react";
+import { isBefore, parse, compareDesc } from "date-fns";
+import { ChevronDown, ChevronUp, Copy, EllipsisVertical, Eye, Pen, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import InjuryAnalyticsDashboard from "./InjuryAnalyticsDashboard";
@@ -81,7 +82,7 @@ function findClientLatestWeight(matrices = []) {
 
 function ClientDetails({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
-  const [accordionValue, setAccordionValue] = useState(["personal-info", "training-info", "supplement-intake", "injury-log"]);
+  const [accordionValue, setAccordionValue] = useState(["personal-info", "training-info", "supplement-intake", "injury-log", "meal-recall"]);
   
   async function sendAnalysis() {
     try {
@@ -162,6 +163,29 @@ function ClientDetails({ clientData }) {
       mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`, undefined, { revalidate: true });
     } catch (error) {
       toast.error(error.message || "Failed to delete injury entry");
+    }
+  }
+
+  async function deleteMealRecallEntry(index, entryId) {
+    try {
+      const dietRecall = clientData?.clientPreferences?.dietRecall || [];
+      const updatedDietRecall = dietRecall.filter((_, i) => i !== index);
+      
+      const response = await sendData(
+        `app/roundglass/client-preference?person=coach`,
+        {
+          clientId: clientData._id,
+          dietRecall: updatedDietRecall,
+        },
+        "PUT"
+      );
+      
+      if (response.status_code !== 200) throw new Error(response.message);
+      toast.success("Meal recall entry deleted successfully");
+      mutate(`clientDetails/${clientData._id}`, undefined, { revalidate: true });
+      mutate(`app/roundglass/client-preference?person=coach&clientId=${clientData._id}`, undefined, { revalidate: true });
+    } catch (error) {
+      toast.error(error.message || "Failed to delete meal recall entry");
     }
   }
   const clienthealthMatrix = clientData?.healthMatrix?.healthMatrix || [{}];
@@ -573,6 +597,27 @@ function ClientDetails({ clientData }) {
             </AccordionContent>
           </AccordionItem>
 
+          {/* Meal Recall */}
+          <AccordionItem value="meal-recall" className="border-1 rounded-lg px-4 mb-2">
+            <div className="flex items-center justify-between py-2">
+              <AccordionTrigger className="hover:no-underline flex-1">
+                <h4 className="font-semibold">24-Hour Meal Recall</h4>
+              </AccordionTrigger>
+              <div onClick={(e) => e.stopPropagation()}>
+                <UpdateClientMealRecallModal 
+                  id={clientData._id} 
+                  clientData={clientData}
+                />
+              </div>
+            </div>
+            <AccordionContent>
+              <MealRecallDisplay 
+                dietRecall={clientData?.clientPreferences?.dietRecall || []}
+                onDelete={deleteMealRecallEntry}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Injury Analytics Dashboard */}
           <AccordionItem value="injury-analytics" className="border-1 rounded-lg px-4 mb-2">
             <AccordionTrigger className="hover:no-underline">
@@ -944,5 +989,167 @@ function ImagePreviewDialog({ imageUrl, children }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MealRecallDisplay({ dietRecall, onDelete }) {
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_DISPLAY_COUNT = 5;
+
+  // Sort by date (newest first)
+  const sortedRecall = useMemo(() => {
+    if (!Array.isArray(dietRecall) || dietRecall.length === 0) return [];
+    
+    return [...dietRecall].sort((a, b) => {
+      try {
+        const dateA = parse(a.date || "", "dd-MM-yyyy", new Date());
+        const dateB = parse(b.date || "", "dd-MM-yyyy", new Date());
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
+        return compareDesc(dateA, dateB);
+      } catch {
+        return 0;
+      }
+    });
+  }, [dietRecall]);
+
+  const displayedRecall = showAll ? sortedRecall : sortedRecall.slice(0, INITIAL_DISPLAY_COUNT);
+  const hasMore = sortedRecall.length > INITIAL_DISPLAY_COUNT;
+
+  if (sortedRecall.length === 0) {
+    return (
+      <p className="text-sm italic text-[#808080] text-center py-4">
+        No meal recall entries added yet
+      </p>
+    );
+  }
+
+  return (
+    <div className="pt-2">
+      <div className="space-y-3">
+        {displayedRecall.map((recall, index) => {
+          // Find original index for delete function
+          const originalIndex = dietRecall.findIndex(r => r._id === recall._id || (r.date === recall.date && !r._id && !recall._id));
+          
+          return (
+            <div
+              key={recall._id || index}
+              className="p-3 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 relative"
+            >
+              {sortedRecall.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(originalIndex >= 0 ? originalIndex : index, recall._id)}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                  title="Delete entry"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Date Header */}
+              <div className="flex items-center justify-between pr-8">
+                <div className="text-[13px]">
+                  <p className="font-semibold text-[var(--dark-1)]">{recall.date || "No date"}</p>
+                </div>
+                {recall.meals && recall.meals.length > 0 && (
+                  <span className="text-xs text-[var(--dark-1)]/60">
+                    {recall.meals.length} meal{recall.meals.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              {/* Nutritional Summary - Compact */}
+              {recall.practionerNotes && (
+                <>
+                  {(recall.practionerNotes.totalEnergyIntake || recall.practionerNotes.proteinG || 
+                    recall.practionerNotes.carbohydrateG || recall.practionerNotes.fatG) && (
+                    <div className="text-[12px] flex flex-wrap gap-3 mt-2 pt-2 border-t-1">
+                      {recall.practionerNotes.totalEnergyIntake && (
+                        <span className="text-[var(--dark-2)]">
+                          <span className="text-[var(--dark-1)]/70">Energy: </span>
+                          {recall.practionerNotes.totalEnergyIntake} kcal
+                        </span>
+                      )}
+                      {recall.practionerNotes.proteinG && (
+                        <span className="text-[var(--dark-2)]">
+                          <span className="text-[var(--dark-1)]/70">Protein: </span>
+                          {recall.practionerNotes.proteinG}g
+                        </span>
+                      )}
+                      {recall.practionerNotes.carbohydrateG && (
+                        <span className="text-[var(--dark-2)]">
+                          <span className="text-[var(--dark-1)]/70">Carbs: </span>
+                          {recall.practionerNotes.carbohydrateG}g
+                        </span>
+                      )}
+                      {recall.practionerNotes.fatG && (
+                        <span className="text-[var(--dark-2)]">
+                          <span className="text-[var(--dark-1)]/70">Fat: </span>
+                          {recall.practionerNotes.fatG}g
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {recall.practionerNotes.commentsKeyObservations && (
+                    <div className="text-[12px] mt-1 pt-1 border-t-1">
+                      <p className="text-[var(--dark-1)]/70 mb-1">Notes:</p>
+                      <p className="text-[var(--dark-2)] break-words whitespace-pre-wrap line-clamp-2">
+                        {recall.practionerNotes.commentsKeyObservations}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Meals - Compact List */}
+              {recall.meals && recall.meals.length > 0 && (
+                <div className="text-[12px] space-y-1 mt-2 pt-2 border-t-1">
+                  <div className="space-y-1">
+                    {recall.meals.slice(0, 3).map((meal, mealIndex) => (
+                      <div key={mealIndex} className="flex items-start gap-2 text-[var(--dark-2)]">
+                        <span className="text-[var(--dark-1)]/70 min-w-[60px]">{meal.mealType || "Meal"}:</span>
+                        <span className="flex-1">{meal.foodBeverage || "-"}</span>
+                      </div>
+                    ))}
+                    {recall.meals.length > 3 && (
+                      <p className="text-[var(--dark-1)]/60 italic text-xs">
+                        +{recall.meals.length - 3} more meal{recall.meals.length - 3 !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Show More/Less Toggle */}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setShowAll(!showAll)}
+          className="w-full mt-3 py-2 text-sm text-[var(--accent-1)] font-medium hover:bg-[var(--comp-1)] rounded-lg border-1 flex items-center justify-center gap-2"
+        >
+          {showAll ? (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              Show Less ({INITIAL_DISPLAY_COUNT} most recent)
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4" />
+              Show All ({sortedRecall.length} entries)
+            </>
+          )}
+        </button>
+      )}
+      
+      {sortedRecall.length > 0 && (
+        <p className="text-xs text-[var(--dark-1)]/50 text-center mt-2">
+          Showing {displayedRecall.length} of {sortedRecall.length} entries
+        </p>
+      )}
+    </div>
   );
 }

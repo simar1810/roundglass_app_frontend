@@ -96,7 +96,10 @@ export default function ClientStatisticsData({ clientData }) {
             }
           }, "PUT"
         );
-        if (!response.updatedEntry) _throwError(response.message);
+        // Safely handle null/invalid responses to avoid frontend crashes
+        if (!response || !response.updatedEntry) {
+          _throwError(response?.message || "Failed to update health matrix. Please try again.");
+        }
         closeBtnRef.current.click();
         toast.success(response.message);
         mutate();

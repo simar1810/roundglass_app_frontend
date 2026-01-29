@@ -61,11 +61,6 @@ export function addClientCheckupReducer(state, action) {
         ...state,
         stage: 5
       }
-    case "TOGGLE_HIDE_HEALTHMATRICES":
-      return {
-        ...state,
-        hideHealthMatrices: action.payload
-      }
     default:
       return state;
   }
@@ -163,8 +158,8 @@ export function stage1Completed(state, stage) {
 export function generateRequestPayload(state, coachId, existingClientID, extraFields = []) {
   const formData = new FormData();
 
-  // Add hardcoded fields
-  for (const field of state.hideHealthMatrices ? fields.hideHealthMatrixFields : fields.requestFields) {
+  // Add hardcoded fields (always send full health matrix; hide-body-metrics feature removed)
+  for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
 
