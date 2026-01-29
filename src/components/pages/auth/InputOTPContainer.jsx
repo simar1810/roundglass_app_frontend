@@ -103,7 +103,7 @@ export default function InputOTPContainer() {
   }
 
   return <div>
-    <h3 className="text-[32px] leading-[1]">Security Code</h3>
+    <h3 className="text-[32px] leading-[1]">Enter OTP</h3>
     <button
       onClick={() => dispatch(changeCurrentStage(1))}
       className="mb-4 flex items-center gap-1"
@@ -135,7 +135,7 @@ export default function InputOTPContainer() {
       </InputOTPGroup>
     </InputOTP>
     <div className="text-[14px] mt-4 flex items-center gap-1">
-      <p className="text-[var(--dark-1)]/50">Didn&apos;t received OTP?</p>
+      <p className="text-[var(--dark-1)]/50">Didn&apos;t receive an OTP?</p>
       <button
         className="font-bold"
         onClick={resendOtp}

@@ -35,7 +35,7 @@ export default function RegisterContainer() {
   }
 
   return <div className="grow">
-    <h3 className="text-[32px] mb-4">Welcome, Coach</h3>
+    <h3 className="text-[32px] mb-4">Welcome to Roundglass</h3>
     <div className="mt-4 grid grid-cols-2 gap-4">
       <FormControl
         label="Name"
