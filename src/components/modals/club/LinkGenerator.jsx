@@ -72,9 +72,9 @@ function MeetingSuccess() {
       <DialogTitle className="px-4">Meeting Success</DialogTitle>
     </DialogHeader>
     <div className="mt-10 mb-32">
-      <Label className="font-bold mb-2" htmlFor="wz-link">WellnessZ Link</Label>
+      <Label className="font-bold mb-2" htmlFor="wz-link">Round glass Link</Label>
       <div className="bg-[var(--accent-1)] flex items-center border-1 rounded-[8px] overflo-clip">
-        <div id="wz-link" placeholder="WellnessZ Link" className="bg-[var(--primary-1)]  text-[14px] p-2 rounded-r-none border-0">
+        <div id="wz-link" placeholder="Round glass Link" className="bg-[var(--primary-1)]  text-[14px] p-2 rounded-r-none border-0">
           {wellnessZLink}
         </div>
         <div
@@ -100,7 +100,7 @@ function MeetingLink() {
       <DialogTitle className="p-4">Meeting Link</DialogTitle>
     </DialogHeader>
     <div className="text-left p-4">
-      <p className="text-[14px] leading-[1.6] text-left">Say goodbye to loong, complicated links and Say hello to custom WellnessZ integerated meeting links </p>
+      <p className="text-[14px] leading-[1.6] text-left">Say goodbye to loong, complicated links and Say hello to custom Round glass integerated meeting links </p>
       <FormControl
         label="Meeting Link"
         value={baseLink}
@@ -128,9 +128,9 @@ function MeetingLink() {
         </div>
       </>}
       {view === 3 && <div className="mt-10 mb-32">
-        <Label className="font-bold mb-2" htmlFor="wz-link">WellnessZ Link</Label>
+        <Label className="font-bold mb-2" htmlFor="wz-link">Round glass Link</Label>
         <div className="bg-[var(--accent-1)] flex items-center border-1 rounded-[8px] overflo-clip">
-          <div id="wz-link" placeholder="WellnessZ Link" className="bg-[var(--primary-1)]  text-[14px] p-2 rounded-r-none border-0">
+          <div id="wz-link" placeholder="Round glass Link" className="bg-[var(--primary-1)]  text-[14px] p-2 rounded-r-none border-0">
             {wellnessZLink}
           </div>
           <div

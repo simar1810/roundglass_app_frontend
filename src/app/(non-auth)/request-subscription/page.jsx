@@ -57,7 +57,7 @@ function MembershipSubscriptionContainer() {
     />
     <div className="max-w-[500px] w-full bg-[var(--comp-1)] py-6 px-8 mx-auto my-auto border-1 shadow-2xl rounded-[8px]">
       <h3 className="text-[24px] text-center">
-        <span className="text-[var(--accent-1)]">WellnessZ</span>&nbsp;
+        <span className="text-[var(--accent-1)]">Round Glass</span>&nbsp;
         <span>Subscription Form</span>
       </h3>
       <form onSubmit={requestSubscription} className="mt-8">

@@ -51,7 +51,7 @@ export default function Page() {
           <TableRow>
             <TableHead className="w-[100px]">Sr. No</TableHead>
             <TableHead>Base Link</TableHead>
-            <TableHead>WellnessZ Link</TableHead>
+            <TableHead>Round Glass Link</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Time</TableHead>
             <TableHead>Attendance</TableHead>

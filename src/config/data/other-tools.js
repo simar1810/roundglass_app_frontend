@@ -14,7 +14,7 @@ export const reminderFormInputs = [
   {
     id: 5, component: 3, label: "Attendee Details", name: "attendeeType",
     options: [
-      { id: 1, label: "WellnessZ Client", value: 1, valuex: "wz_client" },
+      { id: 1, label: "Round Glass Client", value: 1, valuex: "wz_client" },
       { id: 2, label: "Other", value: 2, valuex: "other_client" }
     ]
   },

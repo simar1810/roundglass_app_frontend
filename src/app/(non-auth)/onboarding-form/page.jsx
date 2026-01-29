@@ -30,7 +30,7 @@ export default function Page() {
     />
     <div className="max-w-[500px] w-full bg-[var(--comp-1)] py-6 px-8 mx-auto my-auto border-1 shadow-2xl rounded-[8px]">
       <h3 className="text-[32px] text-center">
-        <span className="text-[var(--accent-1)]">WellnessZ</span>&nbsp;
+        <span className="text-[var(--accent-1)]">Round Glass</span>&nbsp;
         <span>Club</span>
       </h3>
       <p className="text-[14px] text-[var(--dark-1)]/25 text-center font-semibold mt-2">Onboarding Form</p>

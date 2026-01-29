@@ -86,13 +86,13 @@ ${inviteUrl}`)
         <UpdateCoachAboutModal defaultValue={coachData.about} />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.5] pb-6 border-b border-slate-200">{coachData.about}</p>
-      
+
       <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Specialization</h4>
         <UpdateCoachSpecializationModal defaultValue={coachData.specialization} />
       </div>
       <p className="text-[14px] text-[var(--dark-2)] leading-[1.5] pb-6 border-b border-slate-200">{coachData.specialization}</p>
-      
+
       <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Personal Information</h4>
         <UpdatePersonalDetails coachData={coachData} />
@@ -103,7 +103,7 @@ ${inviteUrl}`)
           <p className="text-[var(--dark-2)] col-span-3">:&nbsp;{coachData[field.name] || "—"}</p>
         </div>)}
       </div>
-      
+
       <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Coach Timings</h4>
         <UpdateCoachTimingsModal messageTimings={coachData.messageTimings} />
@@ -118,7 +118,7 @@ ${inviteUrl}`)
           <p className="text-[var(--dark-2)] col-span-3">:&nbsp;{messageTimings.closingTime || "—"}</p>
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Portfolio Website</h4>
         <Link
@@ -130,7 +130,7 @@ ${inviteUrl}`)
           Explore Portfolio
         </Link>
       </div>
-      
+
       <div className="flex items-center justify-between pb-2">
         <h4 className="text-lg font-semibold">Invite Link</h4>
         <Button
@@ -142,7 +142,7 @@ ${inviteUrl}`)
           Invite Link
         </Button>
       </div>
-      
+
       <div className="flex items-center justify-between pt-2">
         <h4 className="text-lg font-semibold">Delete All Client Nudges</h4>
         <DeleteClientNudges description="Are you sure you want to delete all notifications for all clients?">

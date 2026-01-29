@@ -4,7 +4,7 @@ import { SWRConfig } from "swr";
 import "./globals.css";
 
 export const metadata = {
-  title: "Roundglass",
+  title: "Round Glass",
   description: "All in One Business Platform for Wellness Professionals",
   manifest: "/app.webmanifest",
 };
