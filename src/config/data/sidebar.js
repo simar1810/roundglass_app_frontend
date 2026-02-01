@@ -33,7 +33,8 @@ import {
   TrendingUp,
   User,
   UserPlus,
-  Users
+  Users,
+  Download
 } from "lucide-react";
 import { FaWeightScale } from "react-icons/fa6";
 
@@ -141,6 +142,12 @@ export const sidebar__coachContent = [
         icon: <BarChart className="icon min-w-[20px] min-h-[20px]" />,
         title: "Dashboard",
         url: "/coach/roundglass/analytics"
+      },
+      {
+        id: 2,
+        icon: <Download className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Data Export",
+        url: "/coach/roundglass/data-export"
       }
     ]
   },

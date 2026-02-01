@@ -9,6 +9,7 @@ import UpdateClientNotesModal from "@/components/modals/client/UpdateClientNotes
 import UpdateClientSupplementIntakeModal from "@/components/modals/client/UpdateClientSupplementIntakeModal";
 import UpdateClientTrainingInfoModal from "@/components/modals/client/UpdateClientTrainingInfoModal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
+import ClientDataExport from "@/components/pages/roundglass/ClientDataExport";
 import {
   Accordion,
   AccordionContent,
@@ -751,29 +752,37 @@ function Header({ clientData }) {
           )} */}
         </div>
       </div>
-      <DropdownMenu open={modalOpened}>
-        <DropdownMenuTrigger
-          onClick={() => setModalOpened(true)}
-          asChild
-          className="!absolute top-0 right-4"
-        >
-          <EllipsisVertical className="cursor-pointer" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          ref={dropdownRef}
-          className="text-[14px] font-semibold"
-        >
-          <DropdownMenuItem className="cursor-pointer">
-            <DeleteClientModal
-              onClose={() => setModalOpened(false)}
-              _id={clientData._id}
-            >
-              <div className="flex items-center gap-2 w-full">
-                <Trash2 className="w-[16px] h-[16px] text-[var(--accent-2)]" />
-                <span className="text-[var(--accent-2)]">Delete Client</span>
-              </div>
-            </DeleteClientModal>
-          </DropdownMenuItem>
+      <div className="!absolute top-0 right-4 flex items-center gap-2">
+        {clientData._id && (
+          <ClientDataExport
+            clientId={clientData._id}
+            variant="outline"
+            size="sm"
+            showFormatDropdown={true}
+          />
+        )}
+        <DropdownMenu open={modalOpened}>
+          <DropdownMenuTrigger
+            onClick={() => setModalOpened(true)}
+            asChild
+          >
+            <EllipsisVertical className="cursor-pointer" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            ref={dropdownRef}
+            className="text-[14px] font-semibold"
+          >
+            <DropdownMenuItem className="cursor-pointer">
+              <DeleteClientModal
+                onClose={() => setModalOpened(false)}
+                _id={clientData._id}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Trash2 className="w-[16px] h-[16px] text-[var(--accent-2)]" />
+                  <span className="text-[var(--accent-2)]">Delete Client</span>
+                </div>
+              </DeleteClientModal>
+            </DropdownMenuItem>
           {/* <DropdownMenuItem 
             className="cursor-pointer"
             onSelect={(e) => {
@@ -809,8 +818,9 @@ function Header({ clientData }) {
               </DualOptionActionModal>
             </DropdownMenuItem>
           )} */}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </CardHeader>
   );
 }

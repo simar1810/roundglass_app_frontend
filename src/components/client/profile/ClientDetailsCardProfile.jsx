@@ -13,6 +13,7 @@ import { nameInitials } from "@/lib/formatter";
 import { clientPortfolioFields } from "@/config/data/ui";
 import UpdateClientGoalModal from "@/components/modals/client/UpdateClientGoalModal";
 import UpdateClientDetailsOwnModal from "@/components/modals/client/UpdateClientDetailsOwnModal";
+import ClientDataExport from "@/components/pages/roundglass/ClientDataExport";
 
 export default function ClientDetailsCardProfile({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
@@ -175,14 +176,28 @@ function Header({ clientData }) {
       <AvatarImage src={clientData.profilePhoto} />
       <AvatarFallback>{nameInitials(clientData.name)}</AvatarFallback>
     </Avatar>
-    <div>
-      <h3 className="mb-2">{clientData.name}</h3>
-      <div className="mb-2 flex items-center gap-2">
-        <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
-        <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
-      </div>
-      <div className={`text-center rounded-[4px] ${clientData.isActive ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
-        {clientData.isActive ? <>Active</> : <>In Active</>}
+    <div className="flex-1">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="mb-2">{clientData.name}</h3>
+          <div className="mb-2 flex items-center gap-2">
+            <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
+            <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
+          </div>
+          <div className={`text-center rounded-[4px] ${clientData.isActive ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
+            {clientData.isActive ? <>Active</> : <>In Active</>}
+          </div>
+        </div>
+        {clientData._id && (
+          <div className="flex-shrink-0">
+            <ClientDataExport
+              clientId={clientData._id}
+              variant="outline"
+              size="sm"
+              showFormatDropdown={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   </CardHeader>

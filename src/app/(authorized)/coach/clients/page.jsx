@@ -17,6 +17,7 @@ import { useAppSelector } from "@/providers/global/hooks";
 import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
+import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
 
 const initialQuery = {
   page: 1,
@@ -88,11 +89,19 @@ export default function Page() {
           setQuery(prev => ({ ...prev, page: 1 })); // Reset to page 1 when filter changes
         }}
       />
-      <Header
-        selectedCategories={selectedCategories}
-        setSelectedCategories={setSelectedCategories}
-        categories={client_categories}
-      />
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+        <Header
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
+          categories={client_categories}
+        />
+        <TeamDataExport
+          defaultCategoryIds={selectedCategories}
+          defaultFormat="excel"
+          variant="outline"
+          size="sm"
+        />
+      </div>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 divide-y-1">

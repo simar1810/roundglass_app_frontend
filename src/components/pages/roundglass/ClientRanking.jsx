@@ -75,7 +75,6 @@ const AVAILABLE_METRICS = [
   { value: "weight", name: "Weight" },
   { value: "sub_fat", name: "Subcutaneous Fat" },
   { value: "height", name: "Height" },
-  { value: "shoulder_distance", name: "Shoulder Distance" },
 ];
 
 export default function ClientRanking({ clientId: propClientId = null }) {

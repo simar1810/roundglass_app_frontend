@@ -71,6 +71,7 @@ export const getAppClients = withClientFilter((query) => {
   if (query?.page) queries += "page=" + query.page + "&";
   if (query?.limit) queries += "limit=" + query.limit + "&";
   if (query?.isActive) queries += "isActive=" + query.isActive + "&";
+  if (query?.search) queries += "search=" + encodeURIComponent(query.search) + "&";
   return fetchData(`app/allClient?${queries}`);
 });
 

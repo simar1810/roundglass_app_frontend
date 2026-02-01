@@ -26,14 +26,7 @@ export const AVAILABLE_METRICS = [
   { value: "visceral_fat", label: "Visceral Fat" },
   { value: "weight", label: "Weight" },
   { value: "sub_fat", label: "Subcutaneous Fat" },
-  { value: "chest", label: "Chest" },
-  { value: "arm", label: "Arm" },
-  { value: "abdomen", label: "Abdomen" },
-  { value: "waist", label: "Waist" },
-  { value: "hip", label: "Hip" },
-  { value: "thighs", label: "Thighs" },
   { value: "height", label: "Height" },
-  { value: "shoulder_distance", label: "Shoulder Distance" },
 ];
 
 /**

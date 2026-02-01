@@ -22,6 +22,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import AnalyticsErrorBoundary from "@/components/common/AnalyticsErrorBoundary";
+import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
 
 // Import all analytics components
 import AnalyticsSummary from "@/components/pages/roundglass/AnalyticsSummary";
@@ -112,11 +113,13 @@ export default function Page() {
     tabChange(value, router, params, pathname);
   };
 
-  // Handle export all data
-  const handleExportAll = () => {
-    toast.info("Export functionality coming soon");
-    // TODO: Implement export all analytics data
-  };
+  // Prepare default category IDs for export (pre-populate with selected category if any)
+  const defaultCategoryIdsForExport = useMemo(() => {
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      return [selectedCategoryId];
+    }
+    return [];
+  }, [selectedCategoryId]);
 
   // Update URL params when filters change
   const updateFilterParams = (key, value) => {
@@ -194,10 +197,12 @@ export default function Page() {
                   Settings
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={handleExportAll}>
-                <Download className="h-4 w-4 mr-2" />
-                Export All Data
-              </Button>
+              <TeamDataExport
+                defaultCategoryIds={defaultCategoryIdsForExport}
+                defaultFormat="excel"
+                variant="outline"
+                size="sm"
+              />
             </div>
           </div>
         </CardHeader>

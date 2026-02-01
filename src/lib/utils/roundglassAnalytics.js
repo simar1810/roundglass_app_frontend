@@ -1,4 +1,4 @@
-import { format, parseISO, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 
 /**
  * Roundglass Analytics utility functions for calculations, formatting, and data transformation
@@ -117,7 +117,6 @@ export function formatMetricName(metric) {
     ideal_weight: "Ideal Weight",
     visceral_fat: "Visceral Fat",
     sub_fat: "Subcutaneous Fat",
-    shoulder_distance: "Shoulder Distance",
   };
 
   // Check if metric exists in map
@@ -272,7 +271,6 @@ export function formatDateRange(startDate, endDate, formatString = "MMM dd, yyyy
 
     return `${formattedStart} - ${formattedEnd}`;
   } catch (error) {
-    console.error("Error formatting date range:", error);
     return "—";
   }
 }
@@ -304,13 +302,6 @@ export function normalizeMetricValue(value, metric, decimals = 2) {
     rm: " kcal",
     bodyAge: " years",
     ideal_weight: " kg",
-    chest: " cm",
-    arm: " cm",
-    abdomen: " cm",
-    waist: " cm",
-    hip: " cm",
-    thighs: " cm",
-    shoulder_distance: " cm",
   };
 
   const unit = unitMap[metric] || "";
