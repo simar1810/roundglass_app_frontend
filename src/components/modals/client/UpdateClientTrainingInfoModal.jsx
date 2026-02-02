@@ -48,7 +48,7 @@ export default function UpdateClientTrainingInfoModal({ id, clientData = {} }) {
       setLoading(true);
       const updatedEntries = entries.filter((_, i) => i !== index);
       
-      // Check if preferences exist first
+      // Check if preferences document exists first
       let preferencesExist = false;
       try {
         const checkResponse = await fetchData(`app/roundglass/client-preference?person=coach&clientId=${id}`);
@@ -57,6 +57,7 @@ export default function UpdateClientTrainingInfoModal({ id, clientData = {} }) {
         preferencesExist = false;
       }
 
+      // Use POST if preferences don't exist, PUT if they do
       const method = preferencesExist ? "PUT" : "POST";
       const response = await sendData(
         `app/roundglass/client-preference?person=coach`,
@@ -232,15 +233,18 @@ function TrainingEntryEditModal({ id, entry, index, onSuccess, trigger }) {
     try {
       setLoading(true);
       
-      // Get current entries
+      // Check if preferences document exists first
+      let preferencesExist = false;
       let currentEntries = [];
       try {
         const checkResponse = await fetchData(`app/roundglass/client-preference?person=coach&clientId=${id}`);
+        preferencesExist = !!checkResponse?.data;
         if (checkResponse?.data?.trainingModule) {
           currentEntries = checkResponse.data.trainingModule;
         }
       } catch (error) {
         // Preferences don't exist yet
+        preferencesExist = false;
       }
 
       // Prepare the entry to save
@@ -263,8 +267,7 @@ function TrainingEntryEditModal({ id, entry, index, onSuccess, trigger }) {
         currentEntries.push(entryToSave);
       }
 
-      // Check if preferences exist
-      const preferencesExist = currentEntries.length > 0 || entry?._id;
+      // Use POST if preferences don't exist, PUT if they do
       const method = preferencesExist ? "PUT" : "POST";
 
       const response = await sendData(

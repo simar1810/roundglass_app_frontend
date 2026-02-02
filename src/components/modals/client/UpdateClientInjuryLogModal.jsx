@@ -54,7 +54,7 @@ export default function UpdateClientInjuryLogModal({ id, clientData = {} }) {
       setLoading(true);
       const updatedEntries = entries.filter((_, i) => i !== index);
       
-      // Check if preferences exist first
+      // Check if preferences document exists first
       let preferencesExist = false;
       try {
         const checkResponse = await fetchData(`app/roundglass/client-preference?person=coach&clientId=${id}`);
@@ -63,6 +63,7 @@ export default function UpdateClientInjuryLogModal({ id, clientData = {} }) {
         preferencesExist = false;
       }
 
+      // Use POST if preferences don't exist, PUT if they do
       const method = preferencesExist ? "PUT" : "POST";
       const response = await sendData(
         `app/roundglass/client-preference?person=coach`,
@@ -241,6 +242,8 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
     physiotherapistAssignment: entry?.physiotherapistAssignment || "",
     fileUpload: entry?.fileUpload || "",
     newFile: null,
+    customInjuryType: "",
+    customBodyPart: "",
   });
 
   const closeBtnRef = useRef(null);
@@ -260,14 +263,21 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
 
   useEffect(() => {
     if (open && entry) {
+      // Check if injuryType is in the predefined list
+      const isCustomInjuryType = entry.injuryType && !injuryTypes.includes(entry.injuryType);
+      // Check if bodyPart is in the predefined list
+      const isCustomBodyPart = entry.bodyPart && !bodyParts.includes(entry.bodyPart);
+      
       setFormData({
-        injuryType: entry.injuryType || "",
-        bodyPart: entry.bodyPart || "",
+        injuryType: isCustomInjuryType ? "Other" : (entry.injuryType || ""),
+        bodyPart: isCustomBodyPart ? "Other" : (entry.bodyPart || ""),
         incidentDate: entry.incidentDate ? new Date(entry.incidentDate).toISOString().split('T')[0] : "",
         rehabProgress: entry.rehabProgress || "",
         physiotherapistAssignment: entry.physiotherapistAssignment || "",
         fileUpload: entry.fileUpload || "",
         newFile: null,
+        customInjuryType: isCustomInjuryType ? entry.injuryType : "",
+        customBodyPart: isCustomBodyPart ? entry.bodyPart : "",
       });
     } else if (open && !entry) {
       setFormData({
@@ -278,12 +288,35 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
         physiotherapistAssignment: "",
         fileUpload: "",
         newFile: null,
+        customInjuryType: "",
+        customBodyPart: "",
       });
     }
   }, [open, entry]);
 
   function validateForm() {
-    const fields = ['injuryType', 'bodyPart', 'incidentDate', 'rehabProgress', 'physiotherapistAssignment'];
+    // Validate injury type
+    if (!formData.injuryType || formData.injuryType.trim() === '') {
+      toast.error(`Please select or enter an injury type`);
+      return false;
+    }
+    if (formData.injuryType === "Other" && (!formData.customInjuryType || formData.customInjuryType.trim() === '')) {
+      toast.error(`Please enter a custom injury type`);
+      return false;
+    }
+    
+    // Validate body part
+    if (!formData.bodyPart || formData.bodyPart.trim() === '') {
+      toast.error(`Please select or enter a body part`);
+      return false;
+    }
+    if (formData.bodyPart === "Other" && (!formData.customBodyPart || formData.customBodyPart.trim() === '')) {
+      toast.error(`Please enter a custom body part`);
+      return false;
+    }
+    
+    // Validate other required fields
+    const fields = ['incidentDate', 'rehabProgress', 'physiotherapistAssignment'];
     for (const field of fields) {
       const value = formData[field].trim();
       if (!value || value === '') {
@@ -390,21 +423,24 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
         }
       }
       
-      // Get current entries
+      // Check if preferences document exists first
+      let preferencesExist = false;
       let currentEntries = [];
       try {
         const checkResponse = await fetchData(`app/roundglass/client-preference?person=coach&clientId=${id}`);
+        preferencesExist = !!checkResponse?.data;
         if (checkResponse?.data?.injuries) {
           currentEntries = checkResponse.data.injuries;
         }
       } catch (error) {
         // Preferences don't exist yet
+        preferencesExist = false;
       }
 
-      // Prepare the entry to save
+      // Prepare the entry to save - use custom value if "Other" was selected
       const entryToSave = {
-        injuryType: formData.injuryType.trim(),
-        bodyPart: formData.bodyPart.trim(),
+        injuryType: formData.injuryType === "Other" ? (formData.customInjuryType || "").trim() : formData.injuryType.trim(),
+        bodyPart: formData.bodyPart === "Other" ? (formData.customBodyPart || "").trim() : formData.bodyPart.trim(),
         incidentDate: formData.incidentDate ? new Date(formData.incidentDate).toISOString() : "",
         rehabProgress: formData.rehabProgress.trim(),
         physiotherapistAssignment: formData.physiotherapistAssignment.trim(),
@@ -423,8 +459,7 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
         currentEntries.push(entryToSave);
       }
 
-      // Check if preferences exist
-      const preferencesExist = currentEntries.length > 0 || entry?._id;
+      // Use POST if preferences don't exist, PUT if they do
       const method = preferencesExist ? "PUT" : "POST";
 
       const response = await sendData(
@@ -474,7 +509,7 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
               <label className="label font-[600] block mb-1">Injury Type *</label>
               <Select
                 value={formData.injuryType}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, injuryType: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, injuryType: value, customInjuryType: value === "Other" ? prev.customInjuryType : "" }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select injury type" />
@@ -487,6 +522,16 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
                   ))}
                 </SelectContent>
               </Select>
+              {formData.injuryType === "Other" && (
+                <FormControl
+                  label="Custom Injury Type *"
+                  value={formData.customInjuryType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customInjuryType: e.target.value }))}
+                  placeholder="Enter custom injury type"
+                  className="mt-2"
+                  required
+                />
+              )}
             </div>
 
             {/* Body Part */}
@@ -494,7 +539,7 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
               <label className="label font-[600] block mb-1">Body Part *</label>
               <Select
                 value={formData.bodyPart}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, bodyPart: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, bodyPart: value, customBodyPart: value === "Other" ? prev.customBodyPart : "" }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select body part" />
@@ -507,6 +552,16 @@ function InjuryEntryEditModal({ id, entry, index, onSuccess, trigger }) {
                   ))}
                 </SelectContent>
               </Select>
+              {formData.bodyPart === "Other" && (
+                <FormControl
+                  label="Custom Body Part *"
+                  value={formData.customBodyPart}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customBodyPart: e.target.value }))}
+                  placeholder="Enter custom body part"
+                  className="mt-2"
+                  required
+                />
+              )}
             </div>
 
             {/* Incident Date */}
