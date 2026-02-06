@@ -1,42 +1,22 @@
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
-import QuickAddClient from "@/components/modals/add-client/QuickAddClient";
-import CreateWorkoutModal from "@/components/modals/tools/CreateWorkoutModal";
 import {
   BarChart,
-  CalendarDays,
-  CalendarRange,
   ClipboardPlus,
-  Clock,
   Clock12,
-  Dumbbell,
+  Download,
   FileChartColumn,
   FileCheck,
-  Flame,
-  Globe,
-  Headset,
   Home,
-  Hourglass,
-  IndianRupee,
   ListTodo,
-  Logs,
   MapPin,
-  MessageCircle,
-  Newspaper,
-  PersonStanding,
   Play,
   PlusCircle,
-  Salad,
-  Settings,
   Soup,
-  Sun,
   Tags,
   TrendingUp,
   User,
-  UserPlus,
-  Users,
-  Download
+  Users
 } from "lucide-react";
-import { FaWeightScale } from "react-icons/fa6";
 
 export const sidebar__coachContent = [
   // Main Navigation
@@ -239,32 +219,32 @@ export const sidebar__coachContent = [
         title: "Recipes",
         url: "/coach/meals/recipes",
       },
-      {
-        id: 5,
-        icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,
-        title: "AI Generation",
-        url: "/coach/meals/ai",
-        // items: [
-        //   {
-        //     id: 1,
-        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Daily",
-        //     url: "/coach/meals/ai/daily",
-        //   },
-        //   {
-        //     id: 2,
-        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Weekly",
-        //     url: "/coach/meals/ai/weekly",
-        //   },
-        //   {
-        //     id: 3,
-        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Monthly",
-        //     url: "/coach/meals/ai/monthly",
-        //   },
-        // ]
-      },
+      // {
+      //   id: 5,
+      //   icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,
+      //   title: "AI Generation",
+      //   url: "/coach/meals/ai",
+      //   // items: [
+      //   //   {
+      //   //     id: 1,
+      //   //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
+      //   //     title: "Daily",
+      //   //     url: "/coach/meals/ai/daily",
+      //   //   },
+      //   //   {
+      //   //     id: 2,
+      //   //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
+      //   //     title: "Weekly",
+      //   //     url: "/coach/meals/ai/weekly",
+      //   //   },
+      //   //   {
+      //   //     id: 3,
+      //   //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
+      //   //     title: "Monthly",
+      //   //     url: "/coach/meals/ai/monthly",
+      //   //   },
+      //   // ]
+      // },
     ],
   },
   // {
