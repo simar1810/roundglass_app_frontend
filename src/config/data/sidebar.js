@@ -219,6 +219,12 @@ export const sidebar__coachContent = [
         title: "Recipes",
         url: "/coach/meals/recipes",
       },
+      {
+        id: 5,
+        icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Ingredients",
+        url: "/coach/meals/ingredients",
+      },
       // {
       //   id: 5,
       //   icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,

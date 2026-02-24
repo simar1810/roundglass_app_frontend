@@ -58,6 +58,59 @@ export function getRecipes() {
   return fetchData("app/getRecipes?person=coach");
 }
 
+/** Single recipe by id (includes ingredientLineItems.ingredient populated). */
+export function getRecipeById(id) {
+  if (!id) return Promise.resolve(null);
+  return fetchData(`app/recipees?id=${id}`);
+}
+
+// --- Ingredients (ingredient-to-recipe) ---
+function ingredientsQueryParams(query = {}) {
+  const params = {};
+  if (query.category != null && query.category !== "") params.category = query.category;
+  if (query.q != null && query.q !== "") params.q = query.q;
+  if (query.limit != null) params.limit = query.limit;
+  if (query.skip != null) params.skip = query.skip;
+  return params;
+}
+
+export function getIngredients(query = {}) {
+  const params = ingredientsQueryParams(query);
+  const endpoint = Object.keys(params).length ? buildUrlWithQueryParams("app/ingredients", params) : "app/ingredients";
+  return fetchData(endpoint);
+}
+
+export function searchIngredients(query = {}) {
+  const params = ingredientsQueryParams(query);
+  const endpoint = Object.keys(params).length ? buildUrlWithQueryParams("app/ingredients/search", params) : "app/ingredients/search";
+  return fetchData(endpoint);
+}
+
+export function getIngredientById(id) {
+  if (!id) return Promise.resolve(null);
+  return fetchData(`app/ingredients/${id}`);
+}
+
+export function getIngredientByFoodCode(foodCode) {
+  if (!foodCode) return Promise.resolve(null);
+  const encoded = encodeURIComponent(foodCode);
+  return fetchData(`app/ingredients/by-code/${encoded}`);
+}
+
+export function createIngredient(payload) {
+  return sendData("app/ingredients", payload, "POST");
+}
+
+export function updateIngredient(id, payload) {
+  if (!id) return Promise.resolve(null);
+  return sendData(`app/ingredients/${id}`, payload, "PUT");
+}
+
+export function deleteIngredient(id) {
+  if (!id) return Promise.resolve(null);
+  return sendData(`app/ingredients/${id}`, {}, "DELETE");
+}
+
 export function getPlans() {
   return fetchData("app/plans");
 }
