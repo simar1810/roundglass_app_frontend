@@ -7,15 +7,6 @@ const state = {
   userLogin: {
     userId: "",
     password: ""
-  },
-  registration: {
-    name: "",
-    expectedNoOfClients: "",
-    city: "",
-    coachId: "",
-    organisation: "",
-    terms: false,
-    coachRef: ""
   }
 }
 

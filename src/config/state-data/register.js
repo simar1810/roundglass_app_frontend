@@ -4,8 +4,7 @@ const registerState = {
   city: "",
   coachId: "",
   organisation: "",
-  terms: false,
-  coachRef: ""
+  terms: false
 }
 
 export default registerState;

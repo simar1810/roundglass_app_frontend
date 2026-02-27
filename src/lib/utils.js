@@ -128,15 +128,33 @@ export function subscriptionDaysRemaining(planCode, endDate) {
 
 export function daysDifference__notification(...dates) {
   const parseFlexibleDates = dates.map(dateStr => {
-    let parsed = parse(dateStr, 'dd-MM-yyyy', new Date());
+    if (!dateStr) return null;
+
+    const value = String(dateStr).trim();
+
+    let parsed = parse(value, 'dd-MM-yyyy', new Date());
+
     if (!isValid(parsed)) {
-      parsed = parse(dateStr, 'yyyy-MM-dd', new Date());
+      parsed = parse(value, 'yyyy-MM-dd', new Date());
     }
+
+    if (!isValid(parsed)) {
+      const fallback = new Date(value);
+      if (isValid(fallback)) {
+        parsed = fallback;
+      }
+    }
+
     return parsed;
   });
 
-  if (!isValid(parseFlexibleDates[0]) || !isValid(parseFlexibleDates[1])) {
-    throw new Error('Invalid date format. Use dd-MM-yyyy or yyyy-MM-dd');
+  if (
+    !parseFlexibleDates[0] ||
+    !parseFlexibleDates[1] ||
+    !isValid(parseFlexibleDates[0]) ||
+    !isValid(parseFlexibleDates[1])
+  ) {
+    return 0;
   }
 
   return differenceInCalendarDays(parseFlexibleDates[1], parseFlexibleDates[0]);

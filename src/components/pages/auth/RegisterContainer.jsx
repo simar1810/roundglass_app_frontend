@@ -62,13 +62,6 @@ export default function RegisterContainer() {
         value={state.city}
         onChange={e => dispatch(setFieldValue("city", e.target.value))}
       />
-      <FormControl
-        label="Coach Ref (optional)"
-        placeholder="Coach Ref"
-        className="text-[14px] [&_.label]:font-[500]"
-        value={state.coachRef}
-        onChange={e => dispatch(setFieldValue("coachRef", e.target.value))}
-      />
     </div>
     <div className="text-[13px] mt-8 flex items-center gap-1">
       <FormControl
