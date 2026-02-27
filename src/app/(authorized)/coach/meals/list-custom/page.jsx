@@ -17,7 +17,6 @@ import { useEffect, useRef, useState } from "react";
 import { FiFilter } from "react-icons/fi";
 import { IoIosArrowDropdown, IoMdAddCircle } from "react-icons/io";
 import { LuTrash } from "react-icons/lu";
-import { PiSparkleFill } from "react-icons/pi";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -118,13 +117,6 @@ export default function Page() {
         <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between py-3 border-b border-gray-200 relative gap-4">
           <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
           <div className="flex gap-3 items-center">
-            <button
-              onClick={() => router.push("/coach/meals/ai")}
-              className="px-2 md:px-3 py-2 md:py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-[10px] md:text-xs"
-            >
-              <PiSparkleFill size={14} className="text-white" />
-              Create AI Meal Plan
-            </button>
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown((prev) => !prev)}
