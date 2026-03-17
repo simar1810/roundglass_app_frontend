@@ -250,6 +250,14 @@ export default function CategoryComparison() {
     }
   };
 
+  const handleClearFilters = () => {
+    setComparisonType("single");
+    setSelectedGroupId("");
+    setSelectedGroupIds([]);
+    setSelectedMetrics([]);
+    setSortConfig({ key: null, direction: "asc" });
+  };
+
   // Handle sort
   const handleSort = (key) => {
     setSortConfig((prev) => ({
@@ -394,6 +402,9 @@ export default function CategoryComparison() {
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
               </Button>
               {clientTableData.length > 0 && (
                 <>
@@ -616,21 +627,36 @@ export default function CategoryComparison() {
           )}
 
           {/* Box Plot (single-group/intra only; backend returns array per metric) */}
-          {Array.isArray(graphData?.boxPlot) && graphData.boxPlot.length > 0 && (
-            <Card className="min-w-0 overflow-hidden">
-              <CardHeader>
-                <CardTitle>Distribution (Box Plot)</CardTitle>
-                <CardDescription>Per-metric distribution for the selected group</CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-hidden">
-                <div className="grid grid-cols-1 gap-3">
-                  {graphData.boxPlot.map((item) => (
-                    <BoxPlot key={item.label} item={item} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {Array.isArray(graphData?.boxPlot) &&
+            graphData.boxPlot.filter(
+              (item) =>
+                !["chest", "arm", "abdomen", "waist", "hip", "thighs"].includes(
+                  String(item.label || "").toLowerCase()
+                )
+            ).length > 0 && (
+              <Card className="min-w-0 overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Distribution (Box Plot)</CardTitle>
+                  <CardDescription>
+                    Per-metric distribution for the selected group
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-hidden">
+                  <div className="grid grid-cols-1 gap-3">
+                    {graphData.boxPlot
+                      .filter(
+                        (item) =>
+                          !["chest", "arm", "abdomen", "waist", "hip", "thighs"].includes(
+                            String(item.label || "").toLowerCase()
+                          )
+                      )
+                      .map((item) => (
+                        <BoxPlot key={item.label} item={item} />
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
         </div>
       )}
 

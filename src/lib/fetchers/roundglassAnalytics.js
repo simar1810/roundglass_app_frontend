@@ -78,6 +78,14 @@ export function getTrendsAnalysis(params) {
     queryParams.endDate = params.endDate;
   }
 
+  // Optional category/group filters (coach)
+  if (params.categoryId) {
+    queryParams.categoryId = params.categoryId;
+  }
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
+  }
+
   // Optional aggregate flag
   if (params.aggregate !== undefined) {
     queryParams.aggregate = params.aggregate.toString();
@@ -119,6 +127,11 @@ export function getClientRanking(params) {
   // Category ID (required if comparisonGroup="category")
   if (params.categoryId) {
     queryParams.categoryId = params.categoryId;
+  }
+
+  // Optional group filter (coach groups)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
   }
 
   // Handle metrics - can be array or comma-separated string
@@ -169,6 +182,11 @@ export function getCorrelations(params) {
     queryParams.categoryId = params.categoryId;
   }
 
+  // Optional group filter (coach groups)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
+  }
+
   const endpoint = buildUrlWithQueryParams(
     "app/roundglass/analytics/correlations",
     queryParams
@@ -195,6 +213,13 @@ export function getDistribution(params) {
   // Optional category filter
   if (params.categoryId) {
     queryParams.categoryId = params.categoryId;
+    // Backward/alternate param name used by some backends
+    queryParams.categoryIds = params.categoryId;
+  }
+
+  // Optional group filter (coach groups)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
   }
 
   // Handle clientIds - can be array or comma-separated string
@@ -228,6 +253,11 @@ export function getPreferencesAnalysis(params) {
   // Optional category filter
   if (params.categoryId) {
     queryParams.categoryId = params.categoryId;
+  }
+
+  // Optional group filter (coach groups)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
   }
 
   // Optional analysis type (default: "all")

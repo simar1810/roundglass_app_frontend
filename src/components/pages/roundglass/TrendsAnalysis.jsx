@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
 import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
 import {
     calculateTrendDirection,
@@ -41,6 +42,7 @@ import {
     formatMetricName,
     normalizeMetricValue
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { format, subMonths } from "date-fns";
 import {
     Activity,
@@ -78,14 +80,37 @@ const AVAILABLE_METRICS = [
 ];
 
 export default function TrendsAnalysis({ initialClientId = null }) {
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
   const [startDate, setStartDate] = useState(() => subMonths(new Date(), 6));
   const [endDate, setEndDate] = useState(() => new Date());
   const [selectedClientIds, setSelectedClientIds] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [aggregate, setAggregate] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
+
+  const categoryOptions = useMemo(() => {
+    return client_categories.map((cat) => ({
+      value: cat._id,
+      label: cat.name || cat.title || "Unknown",
+    }));
+  }, [client_categories]);
+
+  const { data: groupsData } = useSWR("trends-groups-list", () => getAllGroups());
+  const groupOptions = useMemo(() => {
+    const list = groupsData?.data?.groups || groupsData?.data || [];
+    const arr = Array.isArray(list) ? list : [];
+    return arr
+      .map((g) => ({
+        value: g?._id || g?.id,
+        label: g?.name || g?.title || "Unnamed group",
+      }))
+      .filter((g) => Boolean(g.value));
+  }, [groupsData]);
 
   // Fetch clients for coach view
   const { data: clientsData } = useSWR("trends-clients-list", () =>
@@ -132,8 +157,16 @@ export default function TrendsAnalysis({ initialClientId = null }) {
 
     params.aggregate = aggregate;
 
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
+    }
+
+    if (selectedGroupId && selectedGroupId !== "all") {
+      params.groupId = selectedGroupId;
+    }
+
     return params;
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedCategoryId, selectedGroupId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -150,8 +183,16 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     }
     keyParts.push(`aggregate:${aggregate}`);
 
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
+    }
+
+    if (selectedGroupId) {
+      keyParts.push(`group:${selectedGroupId}`);
+    }
+
     return keyParts.join("|");
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedCategoryId, selectedGroupId]);
 
   // Fetch trends data
   const { isLoading, error, data } = useSWR(
@@ -172,7 +213,10 @@ export default function TrendsAnalysis({ initialClientId = null }) {
   // Get client name by ID
   const getClientName = (clientId) => {
     if (!clientId || !clientsData?.data) return "—";
-    const client = clientsData.data.find((c) => c._id === clientId);
+    const id = String(clientId);
+    const client = clientsData.data.find(
+      (c) => String(c._id) === id || (c?.clientId && String(c.clientId) === id)
+    );
     return client?.name || "—";
   };
 
@@ -222,6 +266,16 @@ export default function TrendsAnalysis({ initialClientId = null }) {
   const handleRefresh = () => {
     mutate(swrKey);
     toast.success("Data refreshed");
+  };
+
+  const handleClearFilters = () => {
+    setSelectedMetric("bmi");
+    setSelectedClientIds([]);
+    setSelectedCategoryId("all");
+    setSelectedGroupId("all");
+    setStartDate(subMonths(new Date(), 6));
+    setEndDate(new Date());
+    setAggregate(false);
   };
 
   // Export to CSV
@@ -276,6 +330,9 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
+              </Button>
               {tableData.length > 0 && (
                 <>
                   <Button variant="outline" size="sm" onClick={handleExportCSV}>
@@ -293,7 +350,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
           </div>
         </CardHeader>
         <CardContent className="print:p-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
             {/* Metric Selector */}
             <div className="w-full min-w-0">
               <label className="text-sm font-medium mb-3 block">Metric</label>
@@ -319,8 +376,48 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
+                selectAll
                 searchable
               />
+              {/* <p className="text-[11px] text-muted-foreground mt-1">
+                Tip: use “Select All” in the dropdown to include everyone.
+              </p> */}
+            </div>
+
+            {/* Category Filter */}
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group Filter */}
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Group (Optional)</label>
+              <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {groupOptions.map((g) => (
+                    <SelectItem key={g.value} value={g.value}>
+                      {g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Start Date Picker */}

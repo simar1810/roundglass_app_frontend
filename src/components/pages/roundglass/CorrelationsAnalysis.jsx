@@ -37,6 +37,7 @@ import {
 } from "@/lib/utils/roundglassAnalytics";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -74,6 +75,7 @@ export default function CorrelationsAnalysis() {
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "correlation", direction: "desc" });
   const [selectedCorrelation, setSelectedCorrelation] = useState(null);
 
@@ -83,6 +85,18 @@ export default function CorrelationsAnalysis() {
       label: cat.name || cat.title || "Unknown",
     }));
   }, [client_categories]);
+
+  const { data: groupsData } = useSWR("correlations-groups-list", () => getAllGroups());
+  const groupOptions = useMemo(() => {
+    const list = groupsData?.data?.groups || groupsData?.data || [];
+    const arr = Array.isArray(list) ? list : [];
+    return arr
+      .map((g) => ({
+        value: g?._id || g?.id,
+        label: g?.name || g?.title || "Unnamed group",
+      }))
+      .filter((g) => Boolean(g.value));
+  }, [groupsData]);
 
   // Fetch clients
   const { data: clientsData } = useSWR("correlations-clients-list", () =>
@@ -115,8 +129,12 @@ export default function CorrelationsAnalysis() {
       params.categoryId = selectedCategoryId;
     }
 
+    if (selectedGroupId && selectedGroupId !== "all") {
+      params.groupId = selectedGroupId;
+    }
+
     return params;
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
+  }, [selectedClientIds, selectedMetrics, selectedCategoryId, selectedGroupId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -138,8 +156,12 @@ export default function CorrelationsAnalysis() {
       keyParts.push(`category:${selectedCategoryId}`);
     }
 
+    if (selectedGroupId) {
+      keyParts.push(`group:${selectedGroupId}`);
+    }
+
     return keyParts.join("|");
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
+  }, [selectedClientIds, selectedMetrics, selectedCategoryId, selectedGroupId]);
 
   // Fetch correlations data
   const { isLoading, error, data } = useSWR(swrKey, () => getCorrelations(apiParams));
@@ -244,6 +266,15 @@ export default function CorrelationsAnalysis() {
     toast.success("Data refreshed");
   };
 
+  const handleClearFilters = () => {
+    setSelectedClientIds([]);
+    setSelectedMetrics([]);
+    setSelectedCategoryId("all");
+    setSelectedGroupId("all");
+    setSelectedCorrelation(null);
+    setSortConfig({ key: "correlation", direction: "desc" });
+  };
+
   // Export to CSV
   const handleExportCSV = () => {
     if (!correlationList.length) {
@@ -310,6 +341,9 @@ export default function CorrelationsAnalysis() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
+              </Button>
               {correlationList.length > 0 && (
                 <>
                   <Button variant="outline" size="sm" onClick={handleExportCSV}>
@@ -327,7 +361,7 @@ export default function CorrelationsAnalysis() {
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
             {/* Player Selector */}
             <div>
               <label className="text-sm font-medium mb-2 block">Players (Optional)</label>
@@ -364,6 +398,24 @@ export default function CorrelationsAnalysis() {
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Group (Optional)</label>
+              <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {groupOptions.map((g) => (
+                    <SelectItem key={g.value} value={g.value}>
+                      {g.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

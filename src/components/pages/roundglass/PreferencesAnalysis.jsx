@@ -28,6 +28,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ export default function PreferencesAnalysis() {
   // State for filters
   const [analysisType, setAnalysisType] = useState("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [activeTab, setActiveTab] = useState("training");
 
   const categoryOptions = useMemo(() => {
@@ -68,6 +70,18 @@ export default function PreferencesAnalysis() {
       label: cat.name || cat.title || "Unknown",
     }));
   }, [client_categories]);
+
+  const { data: groupsData } = useSWR("preferences-groups-list", () => getAllGroups());
+  const groupOptions = useMemo(() => {
+    const list = groupsData?.data?.groups || groupsData?.data || [];
+    const arr = Array.isArray(list) ? list : [];
+    return arr
+      .map((g) => ({
+        value: g?._id || g?.id,
+        label: g?.name || g?.title || "Unnamed group",
+      }))
+      .filter((g) => Boolean(g.value));
+  }, [groupsData]);
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -79,12 +93,16 @@ export default function PreferencesAnalysis() {
       params.categoryId = selectedCategoryId;
     }
 
+    if (selectedGroupId && selectedGroupId !== "all") {
+      params.groupId = selectedGroupId;
+    }
+
     if (analysisType !== "all") {
       params.analysisType = analysisType;
     }
 
     return params;
-  }, [selectedCategoryId, analysisType]);
+  }, [selectedCategoryId, selectedGroupId, analysisType]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -94,12 +112,16 @@ export default function PreferencesAnalysis() {
       keyParts.push(`category:${selectedCategoryId}`);
     }
 
+    if (selectedGroupId) {
+      keyParts.push(`group:${selectedGroupId}`);
+    }
+
     if (analysisType !== "all") {
       keyParts.push(`type:${analysisType}`);
     }
 
     return keyParts.join("|");
-  }, [selectedCategoryId, analysisType]);
+  }, [selectedCategoryId, selectedGroupId, analysisType]);
 
   // Fetch preferences analysis data
   const { isLoading, error, data } = useSWR(swrKey, () => getPreferencesAnalysis(apiParams));
@@ -197,6 +219,13 @@ export default function PreferencesAnalysis() {
     toast.success("Data refreshed");
   };
 
+  const handleClearFilters = () => {
+    setAnalysisType("all");
+    setSelectedCategoryId("all");
+    setSelectedGroupId("all");
+    setActiveTab("training");
+  };
+
   // Export to CSV
   const handleExportCSV = (section, data) => {
     if (!data || Object.keys(data).length === 0) {
@@ -292,6 +321,9 @@ export default function PreferencesAnalysis() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
+              </Button>
               <AnalyticsPrintButton
                 variant="outline"
                 size="sm"
@@ -301,7 +333,7 @@ export default function PreferencesAnalysis() {
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
             {/* Analysis Type Selector */}
             <div>
               <label className="text-sm font-medium mb-2 block">Analysis Type</label>
@@ -330,6 +362,24 @@ export default function PreferencesAnalysis() {
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Group (Optional)</label>
+              <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {groupOptions.map((g) => (
+                    <SelectItem key={g.value} value={g.value}>
+                      {g.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

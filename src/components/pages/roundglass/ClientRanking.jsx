@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { getAppClientPortfolioDetails, getAppClients } from "@/lib/fetchers/app";
 import { getClientRanking } from "@/lib/fetchers/roundglassAnalytics";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import {
@@ -92,6 +93,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const debounceRef = useRef(null);
   const [comparisonGroup, setComparisonGroup] = useState("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState([]);
 
   const applySelectedClient = (c) => {
@@ -232,12 +234,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       params.categoryId = selectedCategoryId;
     }
 
+    if (comparisonGroup === "group" && selectedGroupId) {
+      params.groupId = selectedGroupId;
+    }
+
     if (selectedMetrics.length > 0) {
       params.metrics = selectedMetrics;
     }
 
     return params;
-  }, [clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedCategoryId, selectedGroupId, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -252,12 +258,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       keyParts.push(`category:${selectedCategoryId}`);
     }
 
+    if (comparisonGroup === "group" && selectedGroupId) {
+      keyParts.push(`group:${selectedGroupId}`);
+    }
+
     if (selectedMetrics.length > 0) {
       keyParts.push(`metrics:${selectedMetrics.join(",")}`);
     }
 
     return keyParts.join("|");
-  }, [clientId, comparisonGroup, selectedCategoryId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedCategoryId, selectedGroupId, selectedMetrics]);
 
   // Fetch ranking data
   const { isLoading, error, data } = useSWR(
@@ -275,6 +285,18 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       label: cat.name || cat.title || "Unknown",
     }));
   }, [client_categories]);
+
+  const { data: groupsData } = useSWR("client-ranking-groups-list", () => getAllGroups());
+  const groupOptions = useMemo(() => {
+    const list = groupsData?.data?.groups || groupsData?.data || [];
+    const arr = Array.isArray(list) ? list : [];
+    return arr
+      .map((g) => ({
+        value: g?._id || g?.id,
+        label: g?.name || g?.title || "Unnamed group",
+      }))
+      .filter((g) => Boolean(g.value));
+  }, [groupsData]);
 
   // Prepare radar chart data (exclude metrics we don't want to show)
   const radarChartData = useMemo(() => {
@@ -363,6 +385,22 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     toast.success("Data refreshed");
   };
 
+  const handleClearFilters = () => {
+    if (!propClientId) {
+      setClientId(null);
+      setClientQuery("");
+    } else {
+      setClientId(propClientId);
+      setClientQuery("");
+    }
+    setComparisonGroup("all");
+    setSelectedCategoryId("");
+    setSelectedGroupId("");
+    setSelectedMetrics([]);
+    setSuggestionsOpen(false);
+    setHighlightedIndex(-1);
+  };
+
   const needsClientSelection = !propClientId && !clientId;
 
   return (
@@ -396,6 +434,9 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
               </Button>
               <AnalyticsPrintButton
                 variant="outline"
@@ -528,6 +569,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                 <SelectContent>
                   <SelectItem value="all">All Players</SelectItem>
                   <SelectItem value="category">Category</SelectItem>
+                  <SelectItem value="group">Group</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -544,6 +586,25 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                     {categoryOptions.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Group Selector (if comparisonGroup="group") */}
+            {comparisonGroup === "group" && (
+              <div className="min-w-0">
+                <label className="text-sm font-medium mb-2 block">Group</label>
+                <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groupOptions.map((g) => (
+                      <SelectItem key={g.value} value={g.value}>
+                        {g.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -609,7 +670,9 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-muted-foreground" />
                 <div className="text-2xl font-bold">{summary.avgPercentile}</div>
-                <span className="text-sm text-muted-foreground">th percentile</span>
+                <span className="text-sm text-muted-foreground">
+                  {formatPercentile(summary.avgPercentile).replace(/ percentile$/, "")} percentile
+                </span>
               </div>
             </CardContent>
           </Card>

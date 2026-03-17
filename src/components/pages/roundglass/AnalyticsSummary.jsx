@@ -280,6 +280,16 @@ export default function AnalyticsSummary() {
     toast.success("Data refreshed");
   };
 
+  const handleClearFilters = () => {
+    setSelectedCategoryId("all");
+    setSelectedGroupId("all");
+    setFocusQuery("");
+    setSelectedClientId("");
+    setSuggestionsOpen(false);
+    setClientSuggestions([]);
+    setHighlightedIndex(-1);
+  };
+
   const openDetails = (kind) => {
     setDetailKind(kind);
     setDetailOpen(true);
@@ -418,6 +428,9 @@ export default function AnalyticsSummary() {
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                Clear filters
               </Button>
               <AnalyticsPrintButton
                 variant="outline"
@@ -1051,7 +1064,7 @@ export default function AnalyticsSummary() {
                         <span className="text-sm font-medium">Player {performer.clientId.slice(-6)}</span>
                       </div>
                       <Badge variant="default">
-                        {Math.round(performer.avgPercentile)}th percentile
+                        {formatPercentile(performer.avgPercentile)}
                       </Badge>
                     </div>
                   ))}
