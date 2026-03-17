@@ -118,6 +118,11 @@ function NewRecipeContainer({ type }) {
         toast.error("Add at least one ingredient with quantity (grams).");
         return;
       }
+    } else {
+      if (!state.ingredients?.trim()) {
+        toast.error("Please provide ingredients (or switch to “Build from ingredients”).");
+        return;
+      }
     }
 
     try {

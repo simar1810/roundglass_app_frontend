@@ -85,6 +85,31 @@ export function addClientsToGroup(groupId, clientIds) {
 }
 
 /**
+ * Remove clients from an existing group
+ * @param {string} groupId - Group MongoDB ObjectId
+ * @param {string[]} clientIds - Array of client ObjectIds to remove
+ * @returns {Promise<Object>} API response with updated group data (populated clients)
+ */
+export function removeClientsFromGroup(groupId, clientIds) {
+  const payload = { clientIds };
+  const endpoint = buildUrlWithQueryParams(
+    `growth/groups/${groupId}/clients/remove`,
+    { person: "coach" }
+  );
+  return sendData(endpoint, payload, "POST");
+}
+
+/**
+ * Delete a group
+ * @param {string} groupId - Group MongoDB ObjectId
+ * @returns {Promise<Object>} API response with deleted groupId
+ */
+export function deleteGroup(groupId) {
+  const endpoint = buildUrlWithQueryParams(`growth/groups/${groupId}`, { person: "coach" });
+  return sendData(endpoint, {}, "DELETE");
+}
+
+/**
  * Get aggregated growth statistics for a group of clients
  * @param {string} groupId - Group MongoDB ObjectId
  * @param {Object} [filters] - Filter options

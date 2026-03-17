@@ -108,6 +108,12 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     setHighlightedIndex(-1);
   };
 
+  const normalizeSearchText = (v) =>
+    String(v || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+
   useEffect(() => {
     const onMouseDown = (e) => {
       if (!containerRef.current) return;
@@ -137,8 +143,25 @@ export default function ClientRanking({ clientId: propClientId = null }) {
         if (seq !== searchSeqRef.current) return;
         const list = res?.data?.clients || res?.data || [];
         const normalized = Array.isArray(list) ? list : [];
+
+        // Some backends only support search by ID/email. If name search returns nothing,
+        // fall back to a small local filter on the first page of clients.
+        let candidates = normalized;
+        if (candidates.length === 0 && /[a-z]/i.test(q)) {
+          const fallback = await getAppClients({ page: 1, limit: 500 });
+          if (seq !== searchSeqRef.current) return;
+          const all = fallback?.data?.clients || fallback?.data || [];
+          const allNormalized = Array.isArray(all) ? all : [];
+          const nq = normalizeSearchText(q);
+          candidates = allNormalized.filter((c) => {
+            const name = normalizeSearchText(c?.name);
+            const clientId = normalizeSearchText(c?.clientId);
+            return (name && name.includes(nq)) || (clientId && clientId.includes(nq));
+          });
+        }
+
         setClientSuggestions(
-          normalized.map((c) => ({
+          (Array.isArray(candidates) ? candidates : []).map((c) => ({
             _id: c?._id || c?.id,
             name: c?.name || "Unknown",
             clientId: c?.clientId || "",
@@ -178,11 +201,13 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     try {
       const res = await getAppClients({ page: 1, limit: 50, search: query });
       const clients = res?.data?.clients || res?.data || [];
-      const normalizedQuery = query.toLowerCase();
+      const normalizedQuery = normalizeSearchText(query);
 
-      const exactMatches = (Array.isArray(clients) ? clients : []).filter((c) => {
-        const appClientId = String(c?.clientId || "").toLowerCase(); // short app id
-        const mongoId = String(c?._id || c?.id || "").toLowerCase();
+      const normalizedClients = Array.isArray(clients) ? clients : [];
+
+      const exactMatches = normalizedClients.filter((c) => {
+        const appClientId = normalizeSearchText(c?.clientId); // short app id
+        const mongoId = normalizeSearchText(c?._id || c?.id);
         return appClientId === normalizedQuery || mongoId === normalizedQuery;
       });
 
@@ -200,7 +225,78 @@ export default function ClientRanking({ clientId: propClientId = null }) {
         return;
       }
 
-      toast.error("No player found. Enter an exact Client ID (e.g., ggd65) or paste the full Mongo ID.");
+      // Name search fallback:
+      // If search didn't match by exact IDs, try to match by name.
+      const nameMatches = normalizedClients.filter((c) => {
+        const name = normalizeSearchText(c?.name);
+        return name && name.includes(normalizedQuery);
+      });
+
+      const pickFrom = nameMatches.length > 0 ? nameMatches : normalizedClients;
+
+      // If API returned one candidate, select it.
+      if (pickFrom.length === 1) {
+        applySelectedClient({
+          _id: pickFrom[0]?._id || pickFrom[0]?.id,
+          name: pickFrom[0]?.name,
+          clientId: pickFrom[0]?.clientId,
+        });
+        return;
+      }
+
+      // If multiple candidates, open suggestions for user to choose.
+      if (pickFrom.length > 1) {
+        setClientSuggestions(
+          pickFrom.map((c) => ({
+            _id: c?._id || c?.id,
+            name: c?.name || "Unknown",
+            clientId: c?.clientId || "",
+            email: c?.email || "",
+          }))
+        );
+        setSuggestionsOpen(true);
+        setHighlightedIndex(0);
+        toast.message("Select a player from the suggestions.");
+        return;
+      }
+
+      // If backend search returns nothing for name, do a bounded local search.
+      if (normalizedClients.length === 0 && /[a-z]/i.test(query)) {
+        const fallback = await getAppClients({ page: 1, limit: 500 });
+        const all = fallback?.data?.clients || fallback?.data || [];
+        const allNormalized = Array.isArray(all) ? all : [];
+        const matches = allNormalized.filter((c) => {
+          const name = normalizeSearchText(c?.name);
+          const clientId = normalizeSearchText(c?.clientId);
+          return (name && name.includes(normalizedQuery)) || (clientId && clientId.includes(normalizedQuery));
+        });
+        if (matches.length === 1) {
+          applySelectedClient({
+            _id: matches[0]?._id || matches[0]?.id,
+            name: matches[0]?.name,
+            clientId: matches[0]?.clientId,
+          });
+          return;
+        }
+        if (matches.length > 1) {
+          setClientSuggestions(
+            matches.slice(0, 50).map((c) => ({
+              _id: c?._id || c?.id,
+              name: c?.name || "Unknown",
+              clientId: c?.clientId || "",
+              email: c?.email || "",
+            }))
+          );
+          setSuggestionsOpen(true);
+          setHighlightedIndex(0);
+          toast.message("Select a player from the suggestions.");
+          return;
+        }
+      }
+
+      toast.error(
+        "No player found. Search by name, enter an exact Client ID (e.g., ggd65), or paste the full Mongo ID."
+      );
     } catch (e) {
       toast.error(e?.message || "Could not search players. Please try again.");
     } finally {

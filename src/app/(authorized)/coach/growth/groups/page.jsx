@@ -5,6 +5,8 @@ import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
 import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
 import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
+import DeleteGroupModal from "@/components/modals/growth/DeleteGroupModal";
+import RemoveClientsFromGroupModal from "@/components/modals/growth/RemoveClientsFromGroupModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { format, parseISO } from "date-fns";
-import { Eye, Search, Users } from "lucide-react";
+import { Eye, Search, Users, UserMinus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -212,6 +214,30 @@ function GroupRow({ group, index, onViewReport }) {
               Add
             </Button>
           </AddClientsToGroupModal>
+
+          <RemoveClientsFromGroupModal
+            group={group}
+            onSuccess={() => {
+              mutate("api/growth/groups");
+            }}
+          >
+            <Button variant="ghost" size="sm" className="h-8">
+              <UserMinus className="h-4 w-4 mr-1" />
+              Remove
+            </Button>
+          </RemoveClientsFromGroupModal>
+
+          <DeleteGroupModal
+            group={group}
+            onSuccess={() => {
+              mutate("api/growth/groups");
+            }}
+          >
+            <Button variant="ghost" size="sm" className="h-8 text-red-600 hover:text-red-700">
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
+          </DeleteGroupModal>
         </div>
       </TableCell>
     </TableRow>

@@ -43,7 +43,9 @@ export default function Page() {
   const [q, setQuery] = useState("");
 
   const swrKey = useMemo(() => buildSwrKey(page, limit, category, q), [page, limit, category, q]);
-  const { data, isLoading, error, mutate } = useSWR(swrKey, ingredientsFetcher);
+  const { data, isLoading, isValidating, error, mutate } = useSWR(swrKey, ingredientsFetcher, {
+    keepPreviousData: true,
+  });
 
   const handlePaginateChange = useCallback(({ page: newPage, limit: newLimit }) => {
     setPage(newPage);
@@ -59,11 +61,9 @@ export default function Page() {
     setPage(1);
   }, []);
 
-  if (isLoading) return <ContentLoader />;
-  if (error || !data?.success) return <ContentError title={error?.message || data?.message || "Failed to load ingredients"} />;
-
-  const ingredients = Array.isArray(data?.data) ? data.data : [];
-  const total = Number(data?.total) ?? 0;
+  const hasData = Boolean(data?.success);
+  const ingredients = hasData && Array.isArray(data?.data) ? data.data : [];
+  const total = hasData ? Number(data?.total) ?? 0 : 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
@@ -90,7 +90,21 @@ export default function Page() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {ingredients.length === 0 ? (
+            {error || (data && !data?.success) ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8">
+                  <ContentError
+                    title={error?.message || data?.message || "Failed to load ingredients"}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : !hasData && isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-[var(--dark-1)]/50 py-8">
+                  Loading ingredients…
+                </TableCell>
+              </TableRow>
+            ) : ingredients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-[var(--dark-1)]/50 py-8">
                   No ingredients found. Try adjusting search or add one.
@@ -120,6 +134,11 @@ export default function Page() {
           </TableBody>
         </Table>
       </div>
+      {(isValidating || isLoading) && (
+        <div className="mt-2 text-xs text-[var(--dark-1)]/50">
+          Updating results…
+        </div>
+      )}
       {total > 0 && (
         <div className="mt-4">
           <Paginate

@@ -20,7 +20,8 @@ export const newRecipeInitialState = {
 
   // Ingredient-to-recipe fields
   // mode: \"legacy\" (manual ingredients/calories) or \"lineItems\" (ingredient line items)
-  mode: "legacy",
+  // Default to Option B (ingredientLineItems) to match backend validation.
+  mode: "lineItems",
   // When in lineItems mode, frontend will build ingredientLineItems payload from this
   lineItems: [],
 }

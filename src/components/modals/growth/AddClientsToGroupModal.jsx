@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, onSuccess, children }) {
   const [open, setOpen] = useState(false);
@@ -137,15 +138,19 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="!max-w-[500px] max-h-[80vh] border-0 p-0 overflow-y-auto">
-        <DialogHeader className="bg-[var(--comp-2)] py-4 px-6 border-b-1">
-          <DialogTitle className="text-black text-[20px]">Add Clients to Group</DialogTitle>
+      <DialogContent className="!max-w-[720px] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="text-[18px]">Add players to group</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Pick a group and select the players you want to include.
+          </p>
         </DialogHeader>
 
-        <form className="px-6 py-4" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]">
+          <ScrollArea className="px-6 py-4 flex-1">
           {/* Group Selection - only show if not pre-selected */}
           {!preSelectedGroupId && (
-            <div className="mb-4">
+            <div className="mb-5">
               {groupsLoading ? (
                 <ContentLoader />
               ) : groupsError || groupsData?.status_code !== 200 ? (
@@ -155,11 +160,11 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
                 />
               ) : (
                 <SelectControl
-                  label="Select Group"
+                  label="Group"
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
                   options={groupOptions}
-                  className="text-[14px] [&_.label]:font-[400] block"
+                  className="text-[14px] block [&_.label]:font-[600]"
                   required
                 />
               )}
@@ -167,8 +172,8 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
           )}
 
           {/* Client Selection */}
-          <div className="mb-6">
-            <label className="label font-[600] text-[14px] block mb-2">Select Clients</label>
+          <div className="mb-2">
+            <label className="label font-[600] text-[14px] block mb-2">Players</label>
             {clientsLoading ? (
               <ContentLoader />
             ) : clientsError || clientsData?.status_code !== 200 ? (
@@ -178,7 +183,7 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
               />
             ) : (
               <SelectMultiple
-                label="Select clients to add"
+                label="Search and select players"
                 options={clientOptions}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
@@ -189,23 +194,35 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
             )}
             {selectedClientIds.length > 0 && (
               <p className="text-xs text-muted-foreground mt-2">
-                {selectedClientIds.length} client{selectedClientIds.length !== 1 ? "s" : ""} selected
+                {selectedClientIds.length} player{selectedClientIds.length !== 1 ? "s" : ""} selected
               </p>
             )}
           </div>
+          </ScrollArea>
 
           {/* Buttons */}
-          <div className="flex gap-3 justify-end">
-            <DialogClose ref={closeBtnRef} className="px-4 py-2 rounded-[8px] border-2">
-              Cancel
-            </DialogClose>
-            <Button
-              variant="wz"
-              type="submit"
-              disabled={loading || (!preSelectedGroupId && !selectedGroupId)}
-            >
-              {loading ? "Adding..." : "Add Clients"}
-            </Button>
+          <div className="px-6 py-4 border-t bg-background flex items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground">
+              Tip: use “Select All” to add everyone.
+            </div>
+            <div className="flex gap-3 justify-end">
+              <DialogClose ref={closeBtnRef} asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                variant="wz"
+                type="submit"
+                disabled={
+                  loading ||
+                  (!preSelectedGroupId && !selectedGroupId) ||
+                  selectedClientIds.length === 0
+                }
+              >
+                {loading ? "Adding..." : `Add (${selectedClientIds.length})`}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

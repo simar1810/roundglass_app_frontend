@@ -124,9 +124,17 @@ export function formatMetricName(metric) {
     return metricMap[metric];
   }
 
-  // Capitalize first letter and replace underscores with spaces
-  return metric
-    .split("_")
+  // Default formatting:
+  // - support underscores: "sub_fat" -> "Sub Fat"
+  // - support camelCase / PascalCase: "SupplementsPerClientStats" -> "Supplements Per Client Stats"
+  const normalized = String(metric)
+    .replace(/_/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .trim();
+
+  return normalized
+    .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
@@ -449,7 +457,6 @@ export function getTrendIcon(direction) {
  */
 export function exportToCSV(data, filename = "export", headers = null) {
   if (!data || !Array.isArray(data) || data.length === 0) {
-    console.warn("No data to export");
     return;
   }
 
@@ -508,7 +515,6 @@ export function exportToCSV(data, filename = "export", headers = null) {
  */
 export function exportComparisonToCSV(comparisonData, filename = "category-comparison") {
   if (!comparisonData) {
-    console.warn("No comparison data to export");
     return;
   }
 
@@ -572,7 +578,6 @@ export function exportComparisonToCSV(comparisonData, filename = "category-compa
  */
 export function exportTrendsToCSV(trendsData, filename = "trends-analysis") {
   if (!trendsData) {
-    console.warn("No trends data to export");
     return;
   }
 
@@ -621,7 +626,6 @@ export function exportTrendsToCSV(trendsData, filename = "trends-analysis") {
  */
 export function exportRankingsToCSV(rankingsData, filename = "client-rankings") {
   if (!rankingsData) {
-    console.warn("No rankings data to export");
     return;
   }
 
@@ -687,7 +691,6 @@ export function exportRankingsToCSV(rankingsData, filename = "client-rankings") 
  */
 export function exportCorrelationsToCSV(correlationsData, filename = "correlations-analysis") {
   if (!correlationsData) {
-    console.warn("No correlations data to export");
     return;
   }
 
@@ -754,7 +757,6 @@ export function exportCorrelationsToCSV(correlationsData, filename = "correlatio
  */
 export function exportDistributionToCSV(distributionData, filename = "distribution-analysis") {
   if (!distributionData) {
-    console.warn("No distribution data to export");
     return;
   }
 
@@ -864,7 +866,6 @@ export function exportDistributionToCSV(distributionData, filename = "distributi
  */
 export function exportPreferencesToCSV(preferencesData, filename = "preferences-analysis") {
   if (!preferencesData) {
-    console.warn("No preferences data to export");
     return;
   }
 

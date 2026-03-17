@@ -208,22 +208,48 @@ export function ClientGrowthTrendChart({ measurements = [] }) {
  */
 export function AgeGroupComparisonChart({ groupReport = null }) {
   const chartData = useMemo(() => {
-    if (!groupReport?.ageBuckets || !Array.isArray(groupReport.ageBuckets)) return [];
+    // Support both shapes:
+    // A) { ageBuckets: [{ totalPlayers, belowHeight, belowWeight, ...}] } (older)
+    // B) { buckets: [{ bucket, total, height: { belowP50 }, weight: { belowP50 } }] } (current)
+    const ageBuckets = Array.isArray(groupReport?.ageBuckets) ? groupReport.ageBuckets : null;
+    const buckets = Array.isArray(groupReport?.buckets) ? groupReport.buckets : null;
 
-    return groupReport.ageBuckets.map((bucket) => ({
-      ageGroup: formatAgeGroup(bucket.ageGroup || bucket.bucket || "Unknown"),
-      totalPlayers: bucket.totalPlayers || 0,
-      belowHeight: bucket.belowHeight || 0,
-      belowWeight: bucket.belowWeight || 0,
-      aboveHeight: (bucket.totalPlayers || 0) - (bucket.belowHeight || 0),
-      aboveWeight: (bucket.totalPlayers || 0) - (bucket.belowWeight || 0),
-      belowHeightPercent: bucket.totalPlayers
-        ? Math.round(((bucket.belowHeight || 0) / bucket.totalPlayers) * 100)
-        : 0,
-      belowWeightPercent: bucket.totalPlayers
-        ? Math.round(((bucket.belowWeight || 0) / bucket.totalPlayers) * 100)
-        : 0,
-    }));
+    if (ageBuckets) {
+      return ageBuckets.map((bucket) => ({
+        ageGroup: formatAgeGroup(bucket.ageGroup || bucket.bucket || "Unknown"),
+        totalPlayers: bucket.totalPlayers || 0,
+        belowHeight: bucket.belowHeight || 0,
+        belowWeight: bucket.belowWeight || 0,
+        aboveHeight: (bucket.totalPlayers || 0) - (bucket.belowHeight || 0),
+        aboveWeight: (bucket.totalPlayers || 0) - (bucket.belowWeight || 0),
+        belowHeightPercent: bucket.totalPlayers
+          ? Math.round(((bucket.belowHeight || 0) / bucket.totalPlayers) * 100)
+          : 0,
+        belowWeightPercent: bucket.totalPlayers
+          ? Math.round(((bucket.belowWeight || 0) / bucket.totalPlayers) * 100)
+          : 0,
+      }));
+    }
+
+    if (buckets) {
+      return buckets.map((b) => {
+        const totalPlayers = b.total || 0;
+        const belowHeight = b.height?.belowP50 || 0;
+        const belowWeight = b.weight?.belowP50 || 0;
+        return {
+          ageGroup: formatAgeGroup(b.bucket || "Unknown"),
+          totalPlayers,
+          belowHeight,
+          belowWeight,
+          aboveHeight: totalPlayers - belowHeight,
+          aboveWeight: totalPlayers - belowWeight,
+          belowHeightPercent: totalPlayers ? Math.round((belowHeight / totalPlayers) * 100) : 0,
+          belowWeightPercent: totalPlayers ? Math.round((belowWeight / totalPlayers) * 100) : 0,
+        };
+      });
+    }
+
+    return [];
   }, [groupReport]);
 
   if (chartData.length === 0) {
@@ -317,8 +343,14 @@ export function P50DistributionChart({ groupReport = null, type = "height" }) {
   const chartData = useMemo(() => {
     if (!groupReport) return [];
 
-    const total = groupReport.totalPlayers || 0;
-    const below = type === "height" ? groupReport.belowHeight || 0 : groupReport.belowWeight || 0;
+    // Support both shapes:
+    // A) { totalPlayers, belowHeight, belowWeight } (older)
+    // B) { overall: { total, height: { belowP50 }, weight: { belowP50 } } } (current)
+    const total = groupReport.totalPlayers ?? groupReport?.overall?.total ?? 0;
+    const below =
+      type === "height"
+        ? (groupReport.belowHeight ?? groupReport?.overall?.height?.belowP50 ?? 0)
+        : (groupReport.belowWeight ?? groupReport?.overall?.weight?.belowP50 ?? 0);
     const above = total - below;
 
     return [

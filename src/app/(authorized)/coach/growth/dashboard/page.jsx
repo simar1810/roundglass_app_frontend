@@ -12,19 +12,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { downloadGroupReportPDF, getAllGroups, getGroupReport } from "@/lib/fetchers/growth";
+import { getAllGroups, getGroupReport } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
 import { format, subMonths } from "date-fns";
 import {
     AlertTriangle,
     CalendarIcon,
-    Download,
-    FileText,
     Users,
     X
 } from "lucide-react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -36,11 +34,11 @@ export default function Page() {
   const [selectedGroupId, setSelectedGroupId] = useState(() => groupFromUrl || "");
   const [fromDate, setFromDate] = useState(() => subMonths(new Date(), 6)); // Default: 6 months ago
   const [toDate, setToDate] = useState(() => new Date()); // Default: today
-  const [ageGroups, setAgeGroups] = useState(["U14", "U16"]); // Default: U14 and U16
+  // Default: all age groups. If user unchecks all, we treat it as "all" (no filter).
+  const [ageGroups, setAgeGroups] = useState(["U14", "U16", "U18"]);
   const [standard, setStandard] = useState("IPA");
   const [fromDateOpen, setFromDateOpen] = useState(false);
   const [toDateOpen, setToDateOpen] = useState(false);
-  const [loadingPDF, setLoadingPDF] = useState(false);
 
   // Update selected group when URL parameter changes
   useEffect(() => {
@@ -60,7 +58,7 @@ export default function Page() {
 
   // Fetch group report when group is selected
   const reportKey = selectedGroupId
-    ? `growth/group-report/${selectedGroupId}?from=${format(fromDate, "yyyy-MM-dd")}&to=${format(toDate, "yyyy-MM-dd")}&ageGroup=${ageGroups.join(",")}&standard=${standard}`
+    ? `growth/group-report/${selectedGroupId}?from=${format(fromDate, "yyyy-MM-dd")}&to=${format(toDate, "yyyy-MM-dd")}&ageGroup=${ageGroups.length > 0 ? ageGroups.join(",") : "all"}&standard=${standard}`
     : null;
 
   const { isLoading: reportLoading, error: reportError, data: reportData } = useSWR(
@@ -69,7 +67,7 @@ export default function Page() {
       getGroupReport(selectedGroupId, {
         from: format(fromDate, "yyyy-MM-dd"),
         to: format(toDate, "yyyy-MM-dd"),
-        ageGroup: ageGroups,
+        ...(ageGroups.length > 0 ? { ageGroup: ageGroups } : {}),
         standard,
       })
   );
@@ -78,6 +76,11 @@ export default function Page() {
     if (!groupsData?.data) return [];
     return Array.isArray(groupsData.data) ? groupsData.data : [];
   }, [groupsData]);
+
+  const selectedGroup = useMemo(() => {
+    if (!selectedGroupId) return null;
+    return groups.find((g) => String(g._id) === String(selectedGroupId)) || null;
+  }, [groups, selectedGroupId]);
 
   const report = reportData?.data;
 
@@ -89,49 +92,15 @@ export default function Page() {
     );
   };
 
-  const handleDownloadPDF = async () => {
-    if (!selectedGroupId) {
-      toast.error("Please select a group first");
-      return;
-    }
-
-    try {
-      setLoadingPDF(true);
-      const group = groups.find((g) => g._id === selectedGroupId);
-      const filename = group
-        ? `growth-report-${group.name}-${format(new Date(), "yyyy-MM-dd")}.pdf`
-        : "growth-report.pdf";
-
-      await downloadGroupReportPDF(
-        selectedGroupId,
-        {
-          from: format(fromDate, "yyyy-MM-dd"),
-          to: format(toDate, "yyyy-MM-dd"),
-          ageGroup: ageGroups,
-          standard,
-        },
-        filename
-      );
-
-      toast.success("PDF report downloaded successfully");
-    } catch (error) {
-      const { getGrowthErrorMessage } = await import("@/lib/utils/growthErrors");
-      const errorMessage = getGrowthErrorMessage(
-        error.status || 500,
-        error.message || "Failed to download PDF",
-        error
-      );
-      toast.error(errorMessage);
-    } finally {
-      setLoadingPDF(false);
-    }
-  };
+  // Download/View Full Report actions removed (not required for this dashboard).
 
   // Calculate statistics
   const stats = useMemo(() => {
     if (!report) return null;
 
     const overall = report.overall || {};
+    // Don't treat "not computed yet" as 0.
+    if (overall.total === undefined || overall.total === null) return null;
     const total = overall.total || 0;
     const heightBelow = overall.height?.belowP50 || 0;
     const weightBelow = overall.weight?.belowP50 || 0;
@@ -207,6 +176,60 @@ export default function Page() {
                 ))}
               </SelectContent>
             </Select>
+          )}
+
+          {/* Group Clients (from populated groups endpoint) */}
+          {selectedGroup && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Players in group</div>
+                  <div className="text-xs text-slate-600 mt-0.5">
+                    Click a player to open their profile.
+                  </div>
+                </div>
+                <div className="text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2 py-1">
+                  {(Array.isArray(selectedGroup.clients) ? selectedGroup.clients.length : 0)} total
+                </div>
+              </div>
+
+              {Array.isArray(selectedGroup.clients) && selectedGroup.clients.length > 0 ? (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {selectedGroup.clients.map((c) => {
+                    const name = c?.name || "Unnamed";
+                    const id = c?._id;
+                    return (
+                      <Link
+                        key={String(id || c?.clientId || name)}
+                        href={id ? `/coach/clients/${id}` : "#"}
+                        className={cn(
+                          "group rounded-xl border bg-slate-50 hover:bg-white hover:shadow-sm transition-all px-3 py-2",
+                          !id && "pointer-events-none opacity-60"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-slate-900 truncate">
+                              {name}
+                            </div>
+                            <div className="text-[11px] text-slate-600 truncate">
+                              {c?.clientId ? `ID: ${c.clientId}` : "ID: —"}
+                            </div>
+                          </div>
+                          <div className="text-[11px] text-slate-500 group-hover:text-[var(--accent-1)]">
+                            Open
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-3 text-sm text-slate-600">
+                  No players in this group yet. Use “Add Clients to Group”.
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -445,28 +468,7 @@ export default function Page() {
                 standard={standard}
               />
 
-              {/* Action Buttons */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                    <Button
-                      variant="outline"
-                      onClick={handleDownloadPDF}
-                      disabled={loadingPDF}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      {loadingPDF ? "Generating..." : "Download PDF Report"}
-                    </Button>
-                    <Link href={`/coach/growth/groups/${selectedGroupId}/report`}>
-                      <Button variant="wz" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        View Full Report
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Action Buttons removed */}
             </>
           ) : (
             <Card>
