@@ -261,6 +261,11 @@ export function getAnalyticsSummary(params) {
     queryParams.categoryId = params.categoryId;
   }
 
+  // Optional group filter (coach groups)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
+  }
+
   // Optional client ID (for coach to focus on specific client)
   if (params.clientId) {
     queryParams.clientId = params.clientId;

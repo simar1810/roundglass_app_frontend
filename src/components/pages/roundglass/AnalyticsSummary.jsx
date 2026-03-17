@@ -6,6 +6,7 @@ import ContentLoader from "@/components/common/ContentLoader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
 import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import {
   calculateTrendDirection,
   formatMetricName,
@@ -54,11 +56,28 @@ function isMongoObjectId(value) {
   return /^[a-fA-F0-9]{24}$/.test(String(value || "").trim());
 }
 
+function toCountEntries(mapLike) {
+  if (!mapLike || typeof mapLike !== "object") return [];
+  return Object.entries(mapLike)
+    .map(([k, v]) => [String(k), Number(v)])
+    .filter(([k, v]) => k && Number.isFinite(v))
+    .sort((a, b) => b[1] - a[1]);
+}
+
+function pickFirstDistribution(obj, keys) {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (v && typeof v === "object" && Object.keys(v).length > 0) return v;
+  }
+  return null;
+}
+
 export default function AnalyticsSummary() {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
+  const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [focusQuery, setFocusQuery] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(""); // resolved Mongo _id used by analytics APIs
   const [isResolvingClient, setIsResolvingClient] = useState(false);
@@ -69,6 +88,8 @@ export default function AnalyticsSummary() {
   const searchSeqRef = useRef(0);
   const containerRef = useRef(null);
   const debounceRef = useRef(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailKind, setDetailKind] = useState(null); // "training" | "supplements" | "injuries"
 
   const categoryOptions = useMemo(() => {
     return client_categories.map((cat) => ({
@@ -76,6 +97,16 @@ export default function AnalyticsSummary() {
       label: cat.name || cat.title || "Unknown",
     }));
   }, [client_categories]);
+
+  const { data: groupsData } = useSWR("analytics-summary-groups", () => getAllGroups());
+  const groupOptions = useMemo(() => {
+    const list = groupsData?.data?.groups || groupsData?.data || [];
+    const arr = Array.isArray(list) ? list : [];
+    return arr.map((g) => ({
+      value: g?._id || g?.id,
+      label: g?.name || g?.title || "Unnamed group",
+    })).filter((g) => Boolean(g.value));
+  }, [groupsData]);
 
   const applySelectedClient = (c) => {
     const resolvedId = String(c?._id || "");
@@ -151,12 +182,16 @@ export default function AnalyticsSummary() {
       params.categoryId = selectedCategoryId;
     }
 
+    if (selectedGroupId && selectedGroupId !== "all") {
+      params.groupId = selectedGroupId;
+    }
+
     if (selectedClientId) {
       params.clientId = selectedClientId;
     }
 
     return params;
-  }, [selectedCategoryId, selectedClientId]);
+  }, [selectedCategoryId, selectedGroupId, selectedClientId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -166,12 +201,16 @@ export default function AnalyticsSummary() {
       keyParts.push(`category:${selectedCategoryId}`);
     }
 
+    if (selectedGroupId && selectedGroupId !== "all") {
+      keyParts.push(`group:${selectedGroupId}`);
+    }
+
     if (selectedClientId) {
       keyParts.push(`client:${selectedClientId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedCategoryId, selectedClientId]);
+  }, [selectedCategoryId, selectedGroupId, selectedClientId]);
 
   // Fetch summary data
   const { isLoading, error, data } = useSWR(swrKey, () => getAnalyticsSummary(apiParams));
@@ -239,6 +278,69 @@ export default function AnalyticsSummary() {
   const handleRefresh = () => {
     mutate(swrKey);
     toast.success("Data refreshed");
+  };
+
+  const openDetails = (kind) => {
+    setDetailKind(kind);
+    setDetailOpen(true);
+  };
+
+  const detailConfig = useMemo(() => {
+    if (detailKind === "training") {
+      const sections = [
+        { key: "frequencyDistribution", title: "Frequency distribution" },
+        { key: "trainingFrequencyDistribution", title: "Training frequency distribution" },
+        { key: "intensityDistribution", title: "Intensity distribution" },
+        { key: "durationDistribution", title: "Duration distribution" },
+        { key: "conditioningDaysDistribution", title: "Conditioning days distribution" },
+      ];
+      const map = trainingSummary || null;
+      return { title: "Training Summary", description: "Full breakdown of training aggregates.", sections, map };
+    }
+    if (detailKind === "supplements") {
+      const sections = [
+        { key: "supplementDistribution", title: "Supplements distribution" },
+        { key: "supplementsDistribution", title: "Supplements distribution (alt)" },
+        { key: "brandDistribution", title: "Brand distribution" },
+        { key: "purposeDistribution", title: "Purpose distribution" },
+        { key: "sourceDistribution", title: "Source distribution" },
+        { key: "frequencyDistribution", title: "Frequency distribution" },
+      ];
+      const map = supplementsSummary || null;
+      return { title: "Supplements Summary", description: "Full breakdown of supplement aggregates.", sections, map };
+    }
+    if (detailKind === "injuries") {
+      const sections = [
+        { key: "injuryTypeDistribution", title: "Injury type distribution" },
+        { key: "bodyPartDistribution", title: "Body part distribution" },
+        { key: "typeDistribution", title: "Type distribution (alt)" },
+      ];
+      const map = injuriesSummary || null;
+      return { title: "Injuries Summary", description: "Full breakdown of injury aggregates.", sections, map };
+    }
+    return null;
+  }, [detailKind, trainingSummary, supplementsSummary, injuriesSummary]);
+
+  const renderDistributionSection = (title, dist, badgeVariant = "secondary") => {
+    const entries = toCountEntries(dist);
+    if (entries.length === 0) return null;
+    return (
+      <div className="space-y-2">
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="max-h-[260px] overflow-auto rounded-md border">
+          <div className="divide-y">
+            {entries.map(([label, count]) => (
+              <div key={label} className="flex items-center justify-between gap-3 px-3 py-2">
+                <div className="text-sm min-w-0 truncate">{label}</div>
+                <Badge variant={badgeVariant} className="shrink-0">
+                  {count}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const resolveAndSetClient = async (raw) => {
@@ -326,11 +428,16 @@ export default function AnalyticsSummary() {
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
             {/* Category Filter */}
             <div>
               <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={(v) => {
+                  setSelectedCategoryId(v);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
@@ -343,6 +450,32 @@ export default function AnalyticsSummary() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Group Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Group (Optional)</label>
+              <Select
+                value={selectedGroupId}
+                onValueChange={(v) => {
+                  setSelectedGroupId(v);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {groupOptions.map((g) => (
+                    <SelectItem key={g.value} value={g.value}>
+                      {g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Filters players to those inside the selected group.
+              </p>
             </div>
 
             {/* Client Filter (Optional) */}
@@ -607,7 +740,15 @@ export default function AnalyticsSummary() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Training Summary */}
           {trainingSummary && (
-            <Card>
+            <Card
+              className="cursor-pointer hover:shadow-sm transition-shadow"
+              role="button"
+              tabIndex={0}
+              onClick={() => openDetails("training")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") openDetails("training");
+              }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Dumbbell className="h-5 w-5" />
@@ -616,16 +757,35 @@ export default function AnalyticsSummary() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {trainingSummary.topFrequencies &&
-                    Object.entries(trainingSummary.topFrequencies)
-                      .slice(0, 5)
-                      .map(([frequency, count]) => (
-                        <div key={frequency} className="flex items-center justify-between">
-                          <span className="text-sm">{frequency}</span>
-                          <Badge variant="secondary">{count} players</Badge>
-                        </div>
-                      ))}
-                  {!trainingSummary.topFrequencies && (
+                  {(() => {
+                    const dist =
+                      trainingSummary.topFrequencies ||
+                      pickFirstDistribution(trainingSummary, [
+                        "frequencyDistribution",
+                        "trainingFrequencyDistribution",
+                        "intensityDistribution",
+                        "durationDistribution",
+                        "conditioningDaysDistribution",
+                      ]);
+                    const entries = toCountEntries(dist).slice(0, 5);
+                    if (entries.length === 0) return null;
+                    return entries.map(([label, count]) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-sm">{label}</span>
+                        <Badge variant="secondary">{count} players</Badge>
+                      </div>
+                    ));
+                  })()}
+                  {!toCountEntries(
+                    trainingSummary.topFrequencies ||
+                      pickFirstDistribution(trainingSummary, [
+                        "frequencyDistribution",
+                        "trainingFrequencyDistribution",
+                        "intensityDistribution",
+                        "durationDistribution",
+                        "conditioningDaysDistribution",
+                      ])
+                  ).length && (
                     <div className="text-sm text-muted-foreground">
                       No training summary available for the selected filters.
                     </div>
@@ -637,7 +797,15 @@ export default function AnalyticsSummary() {
 
           {/* Supplements Summary */}
           {supplementsSummary && (
-            <Card>
+            <Card
+              className="cursor-pointer hover:shadow-sm transition-shadow"
+              role="button"
+              tabIndex={0}
+              onClick={() => openDetails("supplements")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") openDetails("supplements");
+              }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Pill className="h-5 w-5" />
@@ -646,16 +814,37 @@ export default function AnalyticsSummary() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {supplementsSummary.mostCommon &&
-                    Object.entries(supplementsSummary.mostCommon)
-                      .slice(0, 5)
-                      .map(([supplement, count]) => (
-                        <div key={supplement} className="flex items-center justify-between">
-                          <span className="text-sm">{supplement}</span>
-                          <Badge variant="secondary">{count} players</Badge>
-                        </div>
-                      ))}
-                  {!supplementsSummary.mostCommon && (
+                  {(() => {
+                    const dist =
+                      supplementsSummary.mostCommon ||
+                      pickFirstDistribution(supplementsSummary, [
+                        "supplementDistribution",
+                        "supplementsDistribution",
+                        "brandDistribution",
+                        "purposeDistribution",
+                        "sourceDistribution",
+                        "frequencyDistribution",
+                      ]);
+                    const entries = toCountEntries(dist).slice(0, 5);
+                    if (entries.length === 0) return null;
+                    return entries.map(([label, count]) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-sm">{label}</span>
+                        <Badge variant="secondary">{count} players</Badge>
+                      </div>
+                    ));
+                  })()}
+                  {!toCountEntries(
+                    supplementsSummary.mostCommon ||
+                      pickFirstDistribution(supplementsSummary, [
+                        "supplementDistribution",
+                        "supplementsDistribution",
+                        "brandDistribution",
+                        "purposeDistribution",
+                        "sourceDistribution",
+                        "frequencyDistribution",
+                      ])
+                  ).length && (
                     <div className="text-sm text-muted-foreground">
                       No supplements summary available for the selected filters.
                     </div>
@@ -667,7 +856,15 @@ export default function AnalyticsSummary() {
 
           {/* Injuries Summary */}
           {injuriesSummary && (
-            <Card>
+            <Card
+              className="cursor-pointer hover:shadow-sm transition-shadow"
+              role="button"
+              tabIndex={0}
+              onClick={() => openDetails("injuries")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") openDetails("injuries");
+              }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
@@ -676,16 +873,31 @@ export default function AnalyticsSummary() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {injuriesSummary.commonTypes &&
-                    Object.entries(injuriesSummary.commonTypes)
-                      .slice(0, 5)
-                      .map(([type, count]) => (
-                        <div key={type} className="flex items-center justify-between">
-                          <span className="text-sm">{type}</span>
-                          <Badge variant="destructive">{count} cases</Badge>
-                        </div>
-                      ))}
-                  {!injuriesSummary.commonTypes && (
+                  {(() => {
+                    const dist =
+                      injuriesSummary.commonTypes ||
+                      pickFirstDistribution(injuriesSummary, [
+                        "injuryTypeDistribution",
+                        "bodyPartDistribution",
+                        "typeDistribution",
+                      ]);
+                    const entries = toCountEntries(dist).slice(0, 5);
+                    if (entries.length === 0) return null;
+                    return entries.map(([label, count]) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-sm">{label}</span>
+                        <Badge variant="destructive">{count} cases</Badge>
+                      </div>
+                    ));
+                  })()}
+                  {!toCountEntries(
+                    injuriesSummary.commonTypes ||
+                      pickFirstDistribution(injuriesSummary, [
+                        "injuryTypeDistribution",
+                        "bodyPartDistribution",
+                        "typeDistribution",
+                      ])
+                  ).length && (
                     <div className="text-sm text-muted-foreground">
                       No injuries summary available for the selected filters.
                     </div>
@@ -696,6 +908,65 @@ export default function AnalyticsSummary() {
           )}
         </div>
       )}
+
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{detailConfig?.title || "Summary details"}</DialogTitle>
+            {detailConfig?.description && (
+              <DialogDescription>{detailConfig.description}</DialogDescription>
+            )}
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+            {detailConfig?.map ? (
+              <>
+                {detailConfig.sections.map((s) => {
+                  const dist = detailConfig.map?.[s.key];
+                  const badgeVariant =
+                    detailKind === "injuries" ? "destructive" : "secondary";
+                  return (
+                    <div key={s.key}>
+                      {renderDistributionSection(s.title, dist, badgeVariant)}
+                    </div>
+                  );
+                })}
+
+                {/* Fallback: show any other distribution-like objects */}
+                {(() => {
+                  const known = new Set(detailConfig.sections.map((s) => s.key));
+                  const extras = Object.entries(detailConfig.map || {})
+                    .filter(([k, v]) => !known.has(k) && v && typeof v === "object")
+                    .map(([k, v]) => ({ key: k, value: v }))
+                    .filter((x) => toCountEntries(x.value).length > 0)
+                    .slice(0, 6);
+                  if (extras.length === 0) return null;
+                  return (
+                    <div className="space-y-3">
+                      <div className="text-sm font-semibold text-muted-foreground">
+                        More breakdowns
+                      </div>
+                      {extras.map((x) => (
+                        <div key={x.key}>
+                          {renderDistributionSection(
+                            formatMetricName(x.key),
+                            x.value,
+                            detailKind === "injuries" ? "destructive" : "secondary"
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No details available.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Trends Summary */}
       {trends && (
@@ -834,54 +1105,6 @@ export default function AnalyticsSummary() {
           </Card>
         </div>
       )}
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Navigate to detailed analytics views</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/coach/roundglass/analytics?tab=category-comparison">
-              <Button variant="outline" className="w-full justify-between">
-                Category Comparison
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=trends">
-              <Button variant="outline" className="w-full justify-between">
-                Trends Analysis
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=rankings">
-              <Button variant="outline" className="w-full justify-between">
-                Player Rankings
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=correlations">
-              <Button variant="outline" className="w-full justify-between">
-                Correlations
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=distribution">
-              <Button variant="outline" className="w-full justify-between">
-                Distribution
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=preferences">
-              <Button variant="outline" className="w-full justify-between">
-                Preferences
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Empty State */}
       {!isLoading && !summaryData && (
