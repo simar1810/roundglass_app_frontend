@@ -198,7 +198,7 @@ export default function TeamDataExport({
                 <div className="space-y-2 text-xs">
                   <p className="font-semibold">What's included in the export:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Client information and profiles</li>
+                    <li>Player information and profiles</li>
                     <li>Health preferences and medical history</li>
                     <li>Training modules and statistics</li>
                     <li>Supplement usage data</li>

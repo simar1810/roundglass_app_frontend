@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/chart";
 import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
-import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -56,20 +55,10 @@ const COLORS = [
 ];
 
 export default function PreferencesAnalysis() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
   const [analysisType, setAnalysisType] = useState("all");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [activeTab, setActiveTab] = useState("training");
-
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("preferences-groups-list", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -89,10 +78,6 @@ export default function PreferencesAnalysis() {
       person: "coach", // Preferences analysis only available for coach
     };
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
@@ -102,15 +87,11 @@ export default function PreferencesAnalysis() {
     }
 
     return params;
-  }, [selectedCategoryId, selectedGroupId, analysisType]);
+  }, [selectedGroupId, analysisType]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/preferences-analysis", "coach"];
-
-    if (selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
 
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
@@ -121,7 +102,7 @@ export default function PreferencesAnalysis() {
     }
 
     return keyParts.join("|");
-  }, [selectedCategoryId, selectedGroupId, analysisType]);
+  }, [selectedGroupId, analysisType]);
 
   // Fetch preferences analysis data
   const { isLoading, error, data } = useSWR(swrKey, () => getPreferencesAnalysis(apiParams));
@@ -221,7 +202,6 @@ export default function PreferencesAnalysis() {
 
   const handleClearFilters = () => {
     setAnalysisType("all");
-    setSelectedCategoryId("all");
     setSelectedGroupId("all");
     setActiveTab("training");
   };
@@ -346,24 +326,6 @@ export default function PreferencesAnalysis() {
                   <SelectItem value="training">Training</SelectItem>
                   <SelectItem value="supplements">Supplements</SelectItem>
                   <SelectItem value="injuries">Injuries</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -707,7 +669,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Average Supplements per Client
+                        Average Supplements per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -719,7 +681,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Median Supplements per Client
+                        Median Supplements per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -731,7 +693,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Max Supplements per Client
+                        Max Supplements per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -871,7 +833,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Average Injuries per Client
+                        Average Injuries per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -883,7 +845,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Median Injuries per Client
+                        Median Injuries per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -895,7 +857,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Max Injuries per Client
+                        Max Injuries per Player
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

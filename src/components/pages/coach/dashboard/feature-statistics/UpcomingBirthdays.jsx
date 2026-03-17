@@ -32,7 +32,7 @@ export default function UpcomingBirthdays({ birthdays }) {
           <TableRow>
             <TableHead>Sr No</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Client ID</TableHead>
+            <TableHead>Player ID</TableHead>
             <TableHead>DOB</TableHead>
             <TableHead>Mobile Number</TableHead>
           </TableRow>

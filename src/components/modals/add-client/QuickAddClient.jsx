@@ -95,10 +95,10 @@ function SuccessClientCreated() {
   const clientLink = `${coachRefUrl}/loginClient?clientID=${clientId}`
   return <div className="px-4">
     <CircleCheckBig className="static w-[120px] h-[120px] text-[var(--accent-1)] aspect-square mx-auto" />
-    <h4 className="text-[var(--accent-1)] text-center mb-4">Client Added successfully!</h4>
-    <p className="text-[var(--dark-1)]/35 text-[14px] text-center">Your Client Account has been created</p>
-    <p className="text-[var(--dark-1)]/35 text-[14px] text-center">with Client ID #{clientId}</p>
-    <p className="font-bold mt-12">Client Link</p>
+    <h4 className="text-[var(--accent-1)] text-center mb-4">Player added successfully!</h4>
+    <p className="text-[var(--dark-1)]/35 text-[14px] text-center">Your Player Account has been created</p>
+    <p className="text-[var(--dark-1)]/35 text-[14px] text-center">with Player ID #{clientId}</p>
+    <p className="font-bold mt-12">Player Link</p>
     <div className="mb-8 flex border-1 rounded-[8px] overflow-clip">
       <p className="grow px-4 py-2">{clientLink}</p>
       <button

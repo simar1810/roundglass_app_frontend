@@ -35,7 +35,6 @@ import {
   getPercentileColor,
   normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
 import { AlertCircle, Award, RefreshCw, TrendingUp, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -78,8 +77,6 @@ const AVAILABLE_METRICS = [
 ];
 
 export default function ClientRanking({ clientId: propClientId = null }) {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
   const [clientId, setClientId] = useState(propClientId); // resolved Mongo _id used by APIs
   const [clientQuery, setClientQuery] = useState("");
@@ -92,7 +89,6 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const containerRef = useRef(null);
   const debounceRef = useRef(null);
   const [comparisonGroup, setComparisonGroup] = useState("all");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState([]);
 
@@ -221,7 +217,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       }
 
       if (exactMatches.length > 1) {
-        toast.error("Multiple players matched. Please enter an exact Client ID.");
+        toast.error("Multiple players matched. Please enter an exact Player ID.");
         return;
       }
 
@@ -295,7 +291,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       }
 
       toast.error(
-        "No player found. Search by name, enter an exact Client ID (e.g., ggd65), or paste the full Mongo ID."
+        "No player found. Search by name, enter an exact Player ID (e.g., ggd65), or paste the full Mongo ID."
       );
     } catch (e) {
       toast.error(e?.message || "Could not search players. Please try again.");
@@ -326,10 +322,6 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       params.comparisonGroup = comparisonGroup;
     }
 
-    if (comparisonGroup === "category" && selectedCategoryId) {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (comparisonGroup === "group" && selectedGroupId) {
       params.groupId = selectedGroupId;
     }
@@ -339,7 +331,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     }
 
     return params;
-  }, [clientId, comparisonGroup, selectedCategoryId, selectedGroupId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedGroupId, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -350,10 +342,6 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       comparisonGroup,
     ];
 
-    if (comparisonGroup === "category" && selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
-
     if (comparisonGroup === "group" && selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
@@ -363,7 +351,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     }
 
     return keyParts.join("|");
-  }, [clientId, comparisonGroup, selectedCategoryId, selectedGroupId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedGroupId, selectedMetrics]);
 
   // Fetch ranking data
   const { isLoading, error, data } = useSWR(
@@ -373,14 +361,6 @@ export default function ClientRanking({ clientId: propClientId = null }) {
 
   const rankingData = data?.data;
   const graphData = data?.graphData;
-
-  // Prepare category options
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("client-ranking-groups-list", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -490,7 +470,6 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       setClientQuery("");
     }
     setComparisonGroup("all");
-    setSelectedCategoryId("");
     setSelectedGroupId("");
     setSelectedMetrics([]);
     setSuggestionsOpen(false);
@@ -552,7 +531,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                   <input
                     type="text"
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Search by name or Client ID (e.g., ggd65)"
+                    placeholder="Search by name or Player ID (e.g., ggd65)"
                     value={clientQuery}
                     onChange={(e) => {
                       setClientQuery(e.target.value);
@@ -633,7 +612,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                                   <div className="min-w-0">
                                     <div className="text-sm font-medium truncate">{c.name}</div>
                                     <div className="text-[11px] text-muted-foreground truncate">
-                                      {c.clientId ? `Client ID: ${c.clientId}` : "—"}
+                                      {c.clientId ? `Player ID: ${c.clientId}` : "—"}
                                       {c.email ? ` · ${c.email}` : ""}
                                     </div>
                                   </div>
@@ -664,30 +643,10 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Players</SelectItem>
-                  <SelectItem value="category">Category</SelectItem>
                   <SelectItem value="group">Group</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Category Selector (if comparisonGroup="category") */}
-            {comparisonGroup === "category" && (
-              <div className="min-w-0">
-                <label className="text-sm font-medium mb-2 block">Category</label>
-                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categoryOptions.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Group Selector (if comparisonGroup="group") */}
             {comparisonGroup === "group" && (

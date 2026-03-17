@@ -26,7 +26,7 @@ export default function ClientCreatedNotiModal() {
           </h2>
           <p className="text-[14px] text-center mt-10 text-gray-400 font-semibold">
             Your Client Account has been created
-            <br /> with Client ID #123456
+            <br /> with Player ID #123456
           </p>
         </div>
         <div className="flex flex-col gap-0 mb-[100px]">

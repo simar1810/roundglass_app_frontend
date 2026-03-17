@@ -32,7 +32,6 @@ import {
   getPercentileColor,
   normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
 import {
   Activity,
   AlertTriangle,
@@ -73,10 +72,7 @@ function pickFirstDistribution(obj, keys) {
 }
 
 export default function AnalyticsSummary() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [focusQuery, setFocusQuery] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(""); // resolved Mongo _id used by analytics APIs
@@ -90,13 +86,6 @@ export default function AnalyticsSummary() {
   const debounceRef = useRef(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailKind, setDetailKind] = useState(null); // "training" | "supplements" | "injuries"
-
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("analytics-summary-groups", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -178,10 +167,6 @@ export default function AnalyticsSummary() {
       person: "coach",
     };
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
@@ -191,15 +176,11 @@ export default function AnalyticsSummary() {
     }
 
     return params;
-  }, [selectedCategoryId, selectedGroupId, selectedClientId]);
+  }, [selectedGroupId, selectedClientId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/analytics-summary", "coach"];
-
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
 
     if (selectedGroupId && selectedGroupId !== "all") {
       keyParts.push(`group:${selectedGroupId}`);
@@ -210,7 +191,7 @@ export default function AnalyticsSummary() {
     }
 
     return keyParts.join("|");
-  }, [selectedCategoryId, selectedGroupId, selectedClientId]);
+  }, [selectedGroupId, selectedClientId]);
 
   // Fetch summary data
   const { isLoading, error, data } = useSWR(swrKey, () => getAnalyticsSummary(apiParams));
@@ -281,7 +262,6 @@ export default function AnalyticsSummary() {
   };
 
   const handleClearFilters = () => {
-    setSelectedCategoryId("all");
     setSelectedGroupId("all");
     setFocusQuery("");
     setSelectedClientId("");
@@ -390,11 +370,11 @@ export default function AnalyticsSummary() {
       }
 
       if (exactMatches.length > 1) {
-        toast.error("Multiple players matched. Please enter an exact Client ID / Player ID.");
+        toast.error("Multiple players matched. Please enter an exact Player ID.");
         return;
       }
 
-      toast.error("No player found. Search by Client ID / Player ID (exact), or paste the full ID.");
+      toast.error("No player found. Search by Player ID (exact), or paste the full ID.");
     } catch (e) {
       toast.error(e?.message || "Could not search players. Please try again.");
     } finally {
@@ -442,29 +422,6 @@ export default function AnalyticsSummary() {
         </CardHeader>
         <CardContent className="print:p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select
-                value={selectedCategoryId}
-                onValueChange={(v) => {
-                  setSelectedCategoryId(v);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Group Filter */}
             <div>
               <label className="text-sm font-medium mb-2 block">Group (Optional)</label>
@@ -492,13 +449,13 @@ export default function AnalyticsSummary() {
             </div>
 
             {/* Client Filter (Optional) */}
-            <div>
+            <div className="md:col-span-2">
               <label className="text-sm font-medium mb-2 block">Focus on Player (Optional)</label>
               <div className="flex gap-2" ref={containerRef}>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Search by name or Client ID (e.g., ggd65)"
+                  placeholder="Search by name or Player ID (e.g., ggd65)"
                   value={focusQuery}
                   onChange={(e) => {
                     setFocusQuery(e.target.value);
@@ -579,7 +536,7 @@ export default function AnalyticsSummary() {
                                 <div className="min-w-0">
                                   <div className="text-sm font-medium truncate">{c.name}</div>
                                   <div className="text-[11px] text-muted-foreground truncate">
-                                    {c.clientId ? `Client ID: ${c.clientId}` : "—"}
+                                    {c.clientId ? `Player ID: ${c.clientId}` : "—"}
                                     {c.email ? ` · ${c.email}` : ""}
                                   </div>
                                 </div>

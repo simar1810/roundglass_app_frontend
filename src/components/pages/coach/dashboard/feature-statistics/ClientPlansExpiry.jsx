@@ -17,14 +17,14 @@ export default function ClientPlansExpiry({ plans }) {
     pagination.limit, pagination.current * pagination.limit
   )
   return <div>
-    <h5>Client Plan Expiry</h5>
+    <h5>Player Plan Expiry</h5>
     <div className="w-full bg-[var(--comp-1)] rounded-xl border-1 my-4 overflow-clip">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Sr No</TableHead>
-            <TableHead>Client Name</TableHead>
-            <TableHead>Client ID</TableHead>
+            <TableHead>Player Name</TableHead>
+            <TableHead>Player ID</TableHead>
             <TableHead>Expiry Date</TableHead>
           </TableRow>
         </TableHeader>

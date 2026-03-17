@@ -42,7 +42,6 @@ import {
     formatMetricName,
     normalizeMetricValue
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
 import { format, subMonths } from "date-fns";
 import {
     Activity,
@@ -80,25 +79,15 @@ const AVAILABLE_METRICS = [
 ];
 
 export default function TrendsAnalysis({ initialClientId = null }) {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
   const [startDate, setStartDate] = useState(() => subMonths(new Date(), 6));
   const [endDate, setEndDate] = useState(() => new Date());
   const [selectedClientIds, setSelectedClientIds] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [aggregate, setAggregate] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
-
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("trends-groups-list", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -157,16 +146,12 @@ export default function TrendsAnalysis({ initialClientId = null }) {
 
     params.aggregate = aggregate;
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
 
     return params;
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedCategoryId, selectedGroupId]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -183,16 +168,12 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     }
     keyParts.push(`aggregate:${aggregate}`);
 
-    if (selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
-
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedCategoryId, selectedGroupId]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId]);
 
   // Fetch trends data
   const { isLoading, error, data } = useSWR(
@@ -382,24 +363,6 @@ export default function TrendsAnalysis({ initialClientId = null }) {
               {/* <p className="text-[11px] text-muted-foreground mt-1">
                 Tip: use “Select All” in the dropdown to include everyone.
               </p> */}
-            </div>
-
-            {/* Category Filter */}
-            <div className="w-full min-w-0">
-              <label className="text-sm font-medium mb-3 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Group Filter */}
@@ -706,7 +669,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Client</TableHead>
+                    <TableHead>Player</TableHead>
                     <TableHead>Value</TableHead>
                   </TableRow>
                 </TableHeader>

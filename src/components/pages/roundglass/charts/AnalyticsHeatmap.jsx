@@ -143,9 +143,9 @@ export default function AnalyticsHeatmap({
           </Button>
         )}
       </div>
-      <div className="overflow-x-auto">
-        <div className="inline-block min-w-full">
-          <table className="w-full border-collapse">
+      <div className="overflow-x-auto w-full">
+        <div className="w-max">
+          <table className="border-collapse w-max">
             <thead>
               <tr>
                 <th className="border border-gray-300 p-2 text-left bg-gray-50 font-semibold">

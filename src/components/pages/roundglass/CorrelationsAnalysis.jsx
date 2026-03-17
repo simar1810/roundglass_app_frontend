@@ -36,7 +36,6 @@ import {
   getCorrelationColor,
 } from "@/lib/utils/roundglassAnalytics";
 import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/providers/global/hooks";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -69,22 +68,12 @@ const AVAILABLE_METRICS = [
 ];
 
 export default function CorrelationsAnalysis() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "correlation", direction: "desc" });
   const [selectedCorrelation, setSelectedCorrelation] = useState(null);
-
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("correlations-groups-list", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -125,16 +114,12 @@ export default function CorrelationsAnalysis() {
       params.metrics = selectedMetrics;
     }
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
 
     return params;
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId, selectedGroupId]);
+  }, [selectedClientIds, selectedMetrics, selectedGroupId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -152,16 +137,12 @@ export default function CorrelationsAnalysis() {
       keyParts.push(`metrics:${selectedMetrics.join(",")}`);
     }
 
-    if (selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
-
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId, selectedGroupId]);
+  }, [selectedClientIds, selectedMetrics, selectedGroupId]);
 
   // Fetch correlations data
   const { isLoading, error, data } = useSWR(swrKey, () => getCorrelations(apiParams));
@@ -386,24 +367,6 @@ export default function CorrelationsAnalysis() {
               />
             </div>
 
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Group Filter */}
             <div>
               <label className="text-sm font-medium mb-2 block">Group (Optional)</label>
@@ -451,9 +414,9 @@ export default function CorrelationsAnalysis() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <div className="inline-block min-w-full">
-                <table className="border-collapse">
+            <div className="overflow-x-auto w-full">
+              <div className="w-max">
+                <table className="border-collapse w-max">
                   <thead>
                     <tr>
                       <th className="border p-2 text-left font-medium bg-muted sticky left-0 z-20">

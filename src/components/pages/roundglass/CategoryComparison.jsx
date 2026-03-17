@@ -352,7 +352,7 @@ export default function CategoryComparison() {
       });
 
       // Create CSV header
-      const headers = ["Name", "Client ID", ...Array.from(metricKeys).map(formatMetricName)];
+      const headers = ["Name", "Player ID", ...Array.from(metricKeys).map(formatMetricName)];
       const rows = clientTableData.map((client) => {
         const row = [
           client.name || "—",

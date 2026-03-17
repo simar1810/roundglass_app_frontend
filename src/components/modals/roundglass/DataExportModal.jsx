@@ -191,8 +191,8 @@ export default function DataExportModal({
   const exportPreview = useMemo(() => {
     if (exportType === "client") {
       return {
-        type: "Client Data",
-        details: clientId ? `Client ID: ${clientId}` : "No client selected",
+        type: "Player Data",
+        details: clientId ? `Player ID: ${clientId}` : "No player selected",
         format: selectedFormat.toUpperCase(),
       };
     } else {
@@ -216,7 +216,7 @@ export default function DataExportModal({
             Export Data
           </DialogTitle>
           <DialogDescription>
-            Configure and export client or team data in your preferred format.
+            Configure and export player or team data in your preferred format.
           </DialogDescription>
         </DialogHeader>
 
@@ -228,7 +228,7 @@ export default function DataExportModal({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="client" className="gap-2">
                   <User className="h-4 w-4" />
-                  Client Data
+                  Player Data
                 </TabsTrigger>
                 <TabsTrigger value="team" className="gap-2">
                   <Users className="h-4 w-4" />
@@ -240,18 +240,18 @@ export default function DataExportModal({
               <TabsContent value="client" className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="clientId" className="text-sm font-medium">
-                    Client ID <span className="text-destructive">*</span>
+                    Player ID <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="clientId"
-                    placeholder="Enter client ID (MongoDB ObjectId)"
+                    placeholder="Enter player ID (MongoDB ObjectId)"
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     className="w-full"
                   />
                   {!clientId && (
                     <p className="text-sm text-muted-foreground">
-                      Please enter a valid client ID
+                      Please enter a valid player ID
                     </p>
                   )}
                 </div>

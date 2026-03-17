@@ -47,7 +47,7 @@ export default function Page() {
     <h3 className="text-2xl font-semibold mb-4">Welcome to Roundglass</h3>
     <h5 className="text-lg mb-1">Sign in to continue</h5>
     <p className="text-gray-600 text-sm mb-6">
-      Enter your Client ID to access your dashboard.
+      Enter your Player ID to access your dashboard.
     </p>
     <Input
       value={clientId}

@@ -229,7 +229,7 @@ function TabsClients({ clients = [] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Client ID</TableHead>
+                <TableHead>Player ID</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>City</TableHead>

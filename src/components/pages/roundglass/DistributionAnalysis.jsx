@@ -33,7 +33,6 @@ import {
     formatPercentile,
     normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
 import { BarChart3, Download, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -258,20 +257,10 @@ function BoxPlot({ data, metric }) {
 }
 
 export default function DistributionAnalysis() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
-
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
   const [selectedClientIds, setSelectedClientIds] = useState([]);
-
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
 
   const { data: groupsData } = useSWR("distribution-groups-list", () => getAllGroups());
   const groupOptions = useMemo(() => {
@@ -305,10 +294,6 @@ export default function DistributionAnalysis() {
       metric: selectedMetric,
     };
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
-    }
-
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
@@ -318,15 +303,11 @@ export default function DistributionAnalysis() {
     }
 
     return params;
-  }, [selectedMetric, selectedCategoryId, selectedGroupId, selectedClientIds]);
+  }, [selectedMetric, selectedGroupId, selectedClientIds]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/distribution", "coach", selectedMetric];
-
-    if (selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
-    }
 
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
@@ -337,7 +318,7 @@ export default function DistributionAnalysis() {
     }
 
     return keyParts.join("|");
-  }, [selectedMetric, selectedCategoryId, selectedGroupId, selectedClientIds]);
+  }, [selectedMetric, selectedGroupId, selectedClientIds]);
 
   // Fetch distribution data
   const { isLoading, error, data } = useSWR(
@@ -480,24 +461,6 @@ export default function DistributionAnalysis() {
                   {AVAILABLE_METRICS.map((metric) => (
                     <SelectItem key={metric.value} value={metric.value}>
                       {metric.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

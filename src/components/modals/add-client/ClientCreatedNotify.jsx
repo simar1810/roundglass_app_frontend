@@ -12,11 +12,11 @@ export default function ClientCreatedNotify() {
     <div className="p-2 pt-0">
       <Check className="text-[var(--accent-1)] w-[176px] h-[173px] mx-auto" />
       <h2 className="!font-semibold text-[var(--accent-1)] text-lg text-center">
-        Client Added Successfully
+        Player Added Successfully
       </h2>
       <p className="text-[14px] text-center mt-10 text-gray-400 font-semibold">
-        Your Client Account has been created
-        <br /> with Client ID #${clientId}
+        Your Player Account has been created
+        <br /> with Player ID #${clientId}
       </p>
     </div>
     <div className="flex flex-col gap-0 mb-[100px]">
@@ -27,7 +27,7 @@ export default function ClientCreatedNotify() {
         <button
           onClick={() => {
             copyText(`${coachRefUrl}/loginClient?clientID=${clientId}`)
-            toast.success("Client ID copied")
+            toast.success("Player ID copied")
           }}
           className="bg-[var(--accent-1)] rounded-r-md text-white px-4 py-[16px] text-sm font-medium hover:bg-[var(--accent-1)] transition"
         >

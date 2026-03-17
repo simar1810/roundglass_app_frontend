@@ -570,7 +570,7 @@ function DownlineClientList() {
 				<TableRow className="bg-white [&_th]:font-bold">
 					<TableHead>Name</TableHead>
 					<TableHead>Coach</TableHead>
-					<TableHead>Client ID</TableHead>
+					<TableHead>Player ID</TableHead>
 					<TableHead>Email</TableHead>
 					<TableHead>Mobile</TableHead>
 					<TableHead>City</TableHead>

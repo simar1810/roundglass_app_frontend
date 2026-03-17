@@ -43,7 +43,7 @@ export const clientPortfolioFields = [
   { id: 1, title: "Email ID", name: "email" },
   { id: 2, title: "Contact No.", name: "mobileNumber" },
   { id: 3, title: "Joined", name: "joiningDate" },
-  { id: 4, title: "Client ID", name: "clientId" },
+  { id: 4, title: "Player ID", name: "clientId" },
   { id: 5, title: "DOB", name: "dob" },
   { id: 6, title: "Age", name: "age" },
   // { id: 7, title: "Height", name: "height" },
