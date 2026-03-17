@@ -1,71 +1,67 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
+import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
+import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
-import AnalyticsMobileFilters from "@/components/common/AnalyticsMobileFilters";
-import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
-import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    ChartContainer,
+    ChartTooltip
+} from "@/components/ui/chart";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAppClients } from "@/lib/fetchers/app";
-import {
-  formatDateRange,
-  formatMetricName,
-  normalizeMetricValue,
-  calculateTrendDirection,
-  getTrendIcon,
-} from "@/lib/utils/roundglassAnalytics";
+import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { cn } from "@/lib/utils";
+import {
+    calculateTrendDirection,
+    formatDateRange,
+    formatMetricName,
+    normalizeMetricValue
+} from "@/lib/utils/roundglassAnalytics";
 import { format, subMonths } from "date-fns";
 import {
-  Activity,
-  CalendarIcon,
-  Download,
-  RefreshCw,
-  TrendingUp,
-  TrendingDown,
-  Minus,
+    Activity,
+    CalendarIcon,
+    Download,
+    Minus,
+    RefreshCw,
+    TrendingDown,
+    TrendingUp,
 } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    XAxis,
+    YAxis
+} from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 
 // Available metrics
 const AVAILABLE_METRICS = [
@@ -263,33 +259,6 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     }
   };
 
-  // Show message if no players selected
-  if (selectedClientIds.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-12">
-            <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Players Selected</h3>
-            <p className="text-muted-foreground">
-              Please select players and date range to view trends
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isLoading) return <ContentLoader />;
-
-  if (error || (data && data?.status_code !== 200)) {
-    return (
-      <ContentError
-        title={error?.message || data?.message || "Failed to load trends data"}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Filters Section */}
@@ -437,8 +406,28 @@ export default function TrendsAnalysis({ initialClientId = null }) {
         </CardContent>
       </Card>
 
+      {selectedClientIds.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Select players to continue</h3>
+              <p className="text-muted-foreground">
+                Pick one or more players above, then adjust the date range if needed.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <ContentLoader />
+      ) : error || (data && data?.status_code !== 200) ? (
+        <ContentError
+          title={error?.message || data?.message || "Failed to load trends data"}
+        />
+      ) : null}
+
       {/* Trend Indicators */}
-      {trendInfo && (
+      {selectedClientIds.length > 0 && !isLoading && !(error || (data && data?.status_code !== 200)) && trendInfo && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -515,7 +504,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
       )}
 
       {/* Line Chart */}
-      {lineChartData.length > 0 && (
+      {selectedClientIds.length > 0 && !isLoading && !(error || (data && data?.status_code !== 200)) && lineChartData.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -606,7 +595,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
       )}
 
       {/* Data Table */}
-      {tableData.length > 0 && (
+      {selectedClientIds.length > 0 && !isLoading && !(error || (data && data?.status_code !== 200)) && tableData.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Time-Series Data</CardTitle>
@@ -642,7 +631,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
       )}
 
       {/* Empty State */}
-      {!isLoading && !trendsData && (
+      {selectedClientIds.length > 0 && !isLoading && !(error || (data && data?.status_code !== 200)) && !trendsData && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-12">

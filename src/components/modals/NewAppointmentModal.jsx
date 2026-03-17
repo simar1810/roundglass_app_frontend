@@ -1,14 +1,14 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import FormControl from "@/components/FormControl";
-import { Search, ChevronDown } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { ChevronDown, Search } from "lucide-react";
 
 export default function NewAppointmentModal() {
   return (
@@ -103,7 +103,7 @@ export default function NewAppointmentModal() {
             <div className="relative">
               <Search className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <FormControl
-                placeholder="Search Client Here"
+                placeholder="Search Player Here"
                 className="w-full h-12 rounded-lg border-gray-200 pl-12 pr-4"
               />
             </div>

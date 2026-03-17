@@ -1,17 +1,17 @@
 "use client";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  sidebar__coachContent,
-  sidebar__coachFooter,
+    sidebar__coachContent,
+    sidebar__coachFooter,
 } from "@/config/data/sidebar";
 import useClickOutside from "@/hooks/useClickOutside";
 import useDebounce from "@/hooks/useDebounce";
@@ -26,13 +26,13 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import AddClientWithCheckup from "../modals/add-client/AddClientWithCheckup";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import ContentError from "./ContentError";
@@ -352,7 +352,7 @@ export function ClientSearchBar({ setModal }) {
       <div className="relative flex items-center">
         <Search className="w-[16px] h-[16px] text-[#808080] absolute left-3 top-1/2 -translate-y-1/2" />
         <Input
-          placeholder="Search Client..."
+          placeholder="Search Player..."
           onFocus={() => setOpen(true)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -386,7 +386,7 @@ function SearchedResults({ setModal, loading, data, query, setQuery }) {
     return (
       <ContentError
         className="!bg-[var(--comp-1)] !min-h-[150px] text-center mt-0 border-0"
-        title="No Client Found!"
+        title="No Player Found!"
       />
     );
 

@@ -3,33 +3,32 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 import { CustomCalendar } from "@/components/common/CustomCalender";
 import MonthYearPicker from "@/components/common/MonthYearPicker";
+import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { ClientwiseHistory } from "@/components/pages/coach/physical-club/ClientwiseHistory";
 import ClubHistoryPage from "@/components/pages/coach/physical-club/ClubHistory";
-import PhysicalClubReports from "@/components/pages/coach/physical-club/PhysicalClubReports";
 import ManualAttendance from "@/components/pages/coach/physical-club/ManualAttendance";
+import PhysicalClubReports from "@/components/pages/coach/physical-club/PhysicalClubReports";
 import QRCodeModal from "@/components/pages/coach/physical-club/QRCodeModal";
 import ShakeRequestsTable from "@/components/pages/coach/physical-club/ShakeRequestsTable";
+import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sendData } from "@/lib/api";
 import { exportToExcel } from "@/lib/excel";
 import { getPhysicalAttendance } from "@/lib/fetchers/app";
-import { _throwError } from "@/lib/formatter";
 import { physicalAttendanceExcelDownload } from "@/lib/physical-attendance";
-import { endOfDay, endOfMonth, getMonth, getYear, startOfDay, startOfMonth } from "date-fns";
-import { ClipboardCheck, Bell, Users, Building2, CalendarDays, ExternalLink, CalendarRange } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { sendData } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import { updateCoachField } from "@/providers/global/slices/coach";
-import { cn } from "@/lib/utils";
+import { endOfDay, endOfMonth, getMonth, getYear, startOfDay, startOfMonth } from "date-fns";
+import { Bell, Building2, CalendarDays, CalendarRange, ClipboardCheck, ExternalLink, Users } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
 
 const tabItems = [
   {
@@ -196,7 +195,7 @@ function ToolsBar({
   }
   return <div className="flex items-center justify-between gap-4 mb-4">
     <Input
-      placeholder="Search Client"
+      placeholder="Search Player"
       className="w-64 mr-auto"
       value={query}
       onChange={e => setQuery(e.target.value)}

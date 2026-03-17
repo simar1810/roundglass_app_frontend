@@ -41,7 +41,7 @@ const tabItems = [
   },
   {
     id: 2,
-    title: "Category Comparison",
+    title: "Group Comparison",
     value: "category-comparison",
   },
   {
@@ -209,23 +209,30 @@ export default function Page() {
         <CardContent>
           {/* Global Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Category Filter (applies to most tabs) */}
+            {selectedTab !== "category-comparison" ? (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+                <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categoryOptions.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Filters Summary, Distribution, Correlations, and Preferences.
+                </p>
+              </div>
+            ) : (
+              <div className="hidden md:block" />
+            )}
 
             {/* Date From Filter */}
             <div>
@@ -304,7 +311,7 @@ export default function Page() {
 
         {/* Tab Contents */}
         <TabsContent value="summary" className="mt-0">
-          <AnalyticsSummary />
+          <AnalyticsSummary categoryId={selectedCategoryId} />
         </TabsContent>
 
         <TabsContent value="category-comparison" className="mt-0">
@@ -312,7 +319,7 @@ export default function Page() {
         </TabsContent>
 
         <TabsContent value="trends" className="mt-0">
-          <TrendsAnalysis />
+          <TrendsAnalysis dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
         <TabsContent value="rankings" className="mt-0">
@@ -320,15 +327,15 @@ export default function Page() {
         </TabsContent>
 
         <TabsContent value="correlations" className="mt-0">
-          <CorrelationsAnalysis />
+          <CorrelationsAnalysis categoryId={selectedCategoryId} />
         </TabsContent>
 
         <TabsContent value="distribution" className="mt-0">
-          <DistributionAnalysis />
+          <DistributionAnalysis categoryId={selectedCategoryId} />
         </TabsContent>
 
         <TabsContent value="preferences" className="mt-0">
-          <PreferencesAnalysis />
+          <PreferencesAnalysis categoryId={selectedCategoryId} />
         </TabsContent>
       </Tabs>
     </div>

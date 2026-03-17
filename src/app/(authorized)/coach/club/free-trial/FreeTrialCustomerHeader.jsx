@@ -1,11 +1,9 @@
 import FormControl from "@/components/FormControl";
-import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
-import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { fetchBlobData } from "@/lib/apiClient";
 import { copyText } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { FolderInput, FolderOutput, Forward } from "lucide-react";
+import { Forward } from "lucide-react";
 import { toast } from "sonner";
 
 export default function FreeTrialCustomerHeader() {
@@ -41,7 +39,7 @@ export default function FreeTrialCustomerHeader() {
       <div className="flex gap-2 md:gap-6 items-center justify-start">
       <FormControl
         className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
-        placeholder="Search Client.."
+        placeholder="Search Player.."
       />
       <Button
         onClick={() => {

@@ -14,8 +14,18 @@ export default function Stories({ stories, coach=false }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [modalOpened, setModalOpened] = useState(false);
 
-  return <div className="bg-[var(--primary-1)] max-h-[60vh] md:max-h-[40vh] mt-2 p-3 shadow-md shadow-zinc-200 rounded-2xl overflow-y-auto">
-    <h4 className="mb-3 text-sm text-gray-800 font-bold">Results</h4>
+  return <div className="bg-[var(--primary-1)] max-h-[60vh] md:max-h-[44vh] mt-2 p-3 shadow-md shadow-zinc-200 rounded-2xl overflow-y-auto">
+    <div className="flex items-center justify-between gap-3 mb-3">
+      <div>
+        <h4 className="text-sm text-gray-800 font-bold">Updates</h4>
+        <p className="text-[11px] text-[var(--dark-2)] leading-[1.2] mt-0.5">
+          Share highlights, progress, and announcements with your players.
+        </p>
+      </div>
+      <div className="text-[11px] text-[var(--dark-2)] font-semibold">
+        {Array.isArray(stories) ? stories.length : 0} total
+      </div>
+    </div>
     <div className="grid md:grid-cols-6 gap-3 no-scrollbar">
       {coach && <AddStoryModal />}
       {/* here is the coach add new story */}
@@ -69,7 +79,7 @@ function DeleteStory({ id }) {
     }
   }
   return <DualOptionActionModal
-    description="Are you sure to delete this result?"
+    description="Are you sure you want to delete this update?"
     action={(setLoading, closeBtnRef) => deleteStory(setLoading, closeBtnRef)}
   >
     <AlertDialogTrigger className="bg-[var(--accent-1)] text-white p-[2px] absolute top-[10px] right-[10px] md:top-[2px] md:right-[2px] z-10 border-1 rounded-full">

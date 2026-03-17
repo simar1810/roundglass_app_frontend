@@ -1,57 +1,56 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { getAppClientPortfolioDetails, getAppClients } from "@/lib/fetchers/app";
 import { getClientRanking } from "@/lib/fetchers/roundglassAnalytics";
-import { getAppClientPortfolioDetails } from "@/lib/fetchers/app";
-import {
-  formatPercentile,
-  formatMetricName,
-  normalizeMetricValue,
-  getPercentileColor,
-  formatRank,
-} from "@/lib/utils/roundglassAnalytics";
 import { nameInitials } from "@/lib/formatter";
+import { cn } from "@/lib/utils";
+import {
+    formatMetricName,
+    formatPercentile,
+    formatRank,
+    getPercentileColor,
+    normalizeMetricValue,
+} from "@/lib/utils/roundglassAnalytics";
 import { useAppSelector } from "@/providers/global/hooks";
+import { AlertCircle, Award, RefreshCw, TrendingUp, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+    PolarAngleAxis,
+    PolarGrid,
+    PolarRadiusAxis,
+    Radar,
+    RadarChart,
+    ResponsiveContainer,
+} from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ResponsiveContainer,
-} from "recharts";
-import { RefreshCw, TrendingUp, TrendingDown, Award, AlertCircle, Users } from "lucide-react";
+
+function isMongoObjectId(value) {
+  return /^[a-fA-F0-9]{24}$/.test(String(value || "").trim());
+}
 
 // Metrics that should be hidden from the UI (not required in analytics view)
 const EXCLUDED_METRICS = new Set([
@@ -81,10 +80,58 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
-  const [clientId, setClientId] = useState(propClientId);
+  const [clientId, setClientId] = useState(propClientId); // resolved Mongo _id used by APIs
+  const [clientQuery, setClientQuery] = useState("");
+  const [isResolvingClient, setIsResolvingClient] = useState(false);
   const [comparisonGroup, setComparisonGroup] = useState("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState([]);
+
+  const resolveAndSetClient = async (raw) => {
+    const query = String(raw || "").trim();
+
+    if (!query) {
+      setClientId(null);
+      return;
+    }
+
+    // If user pasted Mongo _id, accept directly
+    if (isMongoObjectId(query)) {
+      setClientId(query);
+      return;
+    }
+
+    setIsResolvingClient(true);
+    try {
+      const res = await getAppClients({ page: 1, limit: 50, search: query });
+      const clients = res?.data?.clients || res?.data || [];
+      const normalizedQuery = query.toLowerCase();
+
+      const exactMatches = (Array.isArray(clients) ? clients : []).filter((c) => {
+        const appClientId = String(c?.clientId || "").toLowerCase(); // short app id
+        const mongoId = String(c?._id || c?.id || "").toLowerCase();
+        return appClientId === normalizedQuery || mongoId === normalizedQuery;
+      });
+
+      if (exactMatches.length === 1) {
+        const resolvedId = String(exactMatches[0]?._id || exactMatches[0]?.id || "");
+        if (!resolvedId) throw new Error("Could not resolve player.");
+        setClientId(resolvedId);
+        return;
+      }
+
+      if (exactMatches.length > 1) {
+        toast.error("Multiple players matched. Please enter an exact Client ID.");
+        return;
+      }
+
+      toast.error("No player found. Enter an exact Client ID (e.g., ggd65) or paste the full Mongo ID.");
+    } catch (e) {
+      toast.error(e?.message || "Could not search players. Please try again.");
+    } finally {
+      setIsResolvingClient(false);
+    }
+  };
 
   // Fetch client details
   const { isLoading: clientLoading, error: clientError, data: clientData } = useSWR(
@@ -243,42 +290,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     toast.success("Data refreshed");
   };
 
-  // Show message if no client selected (and not provided via prop)
-  if (!propClientId && !clientId) {
-    return (
-          <Card className="min-w-0">
-        <CardContent className="pt-6">
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Player Selected</h3>
-            <p className="text-muted-foreground">
-              Please select a player to view ranking data
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (clientLoading) return <ContentLoader />;
-
-  if (clientError || (clientData && clientData?.status_code !== 200)) {
-    return (
-      <ContentError
-        title={clientError?.message || clientData?.message || "Failed to load player data"}
-      />
-    );
-  }
-
-  if (isLoading) return <ContentLoader />;
-
-  if (error || (data && data?.status_code !== 200)) {
-    return (
-      <ContentError
-        title={error?.message || data?.message || "Failed to load ranking data"}
-      />
-    );
-  }
+  const needsClientSelection = !propClientId && !clientId;
 
   return (
     <div className="space-y-6">
@@ -326,13 +338,44 @@ export default function ClientRanking({ clientId: propClientId = null }) {
             {!propClientId && (
               <div className="min-w-0">
                 <label className="text-sm font-medium mb-2 block">Player</label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Enter player ID"
-                  value={clientId || ""}
-                  onChange={(e) => setClientId(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border rounded-md"
+                    placeholder="Enter Client ID (e.g., ggd65)"
+                    value={clientQuery}
+                    onChange={(e) => {
+                      setClientQuery(e.target.value);
+                      // Do not call APIs on every keystroke
+                      setClientId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") resolveAndSetClient(clientQuery);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => resolveAndSetClient(clientQuery)}
+                    disabled={isResolvingClient}
+                  >
+                    {isResolvingClient ? "Searching..." : "Search"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setClientQuery("");
+                      setClientId(null);
+                    }}
+                    disabled={isResolvingClient && !clientQuery}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                {/* <p className="text-[11px] text-muted-foreground mt-1">
+                  We’ll look up the player and use the internal ID for analytics.
+                </p> */}
               </div>
             )}
 
@@ -385,8 +428,37 @@ export default function ClientRanking({ clientId: propClientId = null }) {
         </CardContent>
       </Card>
 
+      {needsClientSelection ? (
+        <Card className="min-w-0">
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Select a player to continue</h3>
+              <p className="text-muted-foreground">
+                Enter a player ID above to load percentile rankings.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : clientLoading || isLoading ? (
+        <ContentLoader />
+      ) : clientError || (clientData && clientData?.status_code !== 200) ? (
+        <ContentError
+          title={clientError?.message || clientData?.message || "Failed to load player data"}
+        />
+      ) : error || (data && data?.status_code !== 200) ? (
+        <ContentError
+          title={error?.message || data?.message || "Failed to load ranking data"}
+        />
+      ) : null}
+
       {/* Summary Card */}
-      {summary && (
+      {!needsClientSelection &&
+        !clientLoading &&
+        !isLoading &&
+        !(clientError || (clientData && clientData?.status_code !== 200)) &&
+        !(error || (data && data?.status_code !== 200)) &&
+        summary && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="min-w-0">
             <CardHeader className="pb-2">
@@ -452,6 +524,11 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       )}
 
       {/* Charts Section */}
+      {!needsClientSelection &&
+        !clientLoading &&
+        !isLoading &&
+        !(clientError || (clientData && clientData?.status_code !== 200)) &&
+        !(error || (data && data?.status_code !== 200)) && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Radar Chart */}
         {radarChartData.length > 0 && (
@@ -547,9 +624,15 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           </Card>
         )}
       </div>
+      )}
 
       {/* Detailed Rankings Table */}
-      {percentileBarData.length > 0 && (
+      {!needsClientSelection &&
+        !clientLoading &&
+        !isLoading &&
+        !(clientError || (clientData && clientData?.status_code !== 200)) &&
+        !(error || (data && data?.status_code !== 200)) &&
+        percentileBarData.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Detailed Rankings</CardTitle>
@@ -605,7 +688,12 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       )}
 
       {/* Empty State */}
-      {!isLoading && !rankingData && (
+      {!needsClientSelection &&
+        !clientLoading &&
+        !isLoading &&
+        !(clientError || (clientData && clientData?.status_code !== 200)) &&
+        !(error || (data && data?.status_code !== 200)) &&
+        !rankingData && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-12">

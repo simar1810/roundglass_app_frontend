@@ -1,22 +1,21 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
-import { Badge } from "@/components/ui/badge";
-import useSWR, { mutate } from "swr";
-import { getClientsForMarathon } from "@/lib/fetchers/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { sendData } from "@/lib/api";
+import { getClientsForMarathon } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
 import { useState } from "react";
 import { toast } from "sonner";
-import { sendData } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import ContentLoader from "@/components/common/ContentLoader";
-import ContentError from "@/components/common/ContentError";
+import useSWR, { mutate } from "swr";
 
 export default function AssignMarathonModal({ marathonId }) {
   return (
@@ -70,7 +69,7 @@ function AssignMealPlanContainer({ marathonId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Client here"
+        placeholder="Search Player here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}

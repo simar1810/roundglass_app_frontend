@@ -1,16 +1,14 @@
 "use client";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import DashboardFeaturesDetails from "@/components/drawers/DashboardFeaturesDetails";
 // import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool"; // Commented out - carousel not needed
-import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
-import Stories from "@/components/pages/coach/dashboard/Stories";
 import AnalyticsOverview from "@/components/pages/coach/dashboard/AnalyticsOverview";
+import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCoachHome } from "@/lib/fetchers/app";
-import Link from "next/link";
-import { Trophy, Users } from "lucide-react";
 import { nameInitials } from "@/lib/formatter";
+import { Trophy, Users } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -33,15 +31,9 @@ function Container() {
     {/* Carousel commented out - not needed for academy */}
     {/* <ActivityTool activities={coachHomeData.activePrograms} /> */}
     <StatisticsCards />
-    
-    {/* Analytics Overview and Results - Better spacing */}
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <div className="lg:col-span-2">
-        <Stories stories={coachHomeData.story} coach={true} />
-      </div>
-      <div className="lg:col-span-3">
-        <AnalyticsOverview />
-      </div>
+
+    <div className="mt-4">
+      <AnalyticsOverview />
     </div>
     {/* Statistics sidebar (expiring meal plans, followups, etc.) disabled for now */}
     {/*

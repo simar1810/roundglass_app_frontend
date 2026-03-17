@@ -1,24 +1,24 @@
 "use client";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
-import FormControl from "../FormControl";
-import useSWR from "swr";
-import { getClientsForCustomWorkout, getClientsForWorkout } from "@/lib/fetchers/app";
-import ContentLoader from "../common/ContentLoader";
-import ContentError from "../common/ContentError";
-import { toast } from "sonner";
-import { use, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { nameInitials } from "@/lib/formatter";
-import { Button } from "../ui/button";
 import { sendData } from "@/lib/api";
-import { AlertDialogTrigger } from "../ui/alert-dialog";
+import { getClientsForCustomWorkout, getClientsForWorkout } from "@/lib/fetchers/app";
+import { nameInitials } from "@/lib/formatter";
 import { X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+import ContentError from "../common/ContentError";
+import ContentLoader from "../common/ContentLoader";
+import FormControl from "../FormControl";
+import { AlertDialogTrigger } from "../ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
 import DualOptionActionModal from "./DualOptionActionModal";
 
 export default function AssignWorkoutModal({
@@ -66,7 +66,7 @@ function AssignCustomWorkoutContainer({ workoutId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Client here"
+        placeholder="Search Player here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
@@ -139,7 +139,7 @@ function AssignWorkoutContainer({ workoutId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Client here"
+        placeholder="Search Player here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}

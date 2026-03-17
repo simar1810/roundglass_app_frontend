@@ -35,7 +35,6 @@ import {
   getCorrelationStrength,
   getCorrelationColor,
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -67,13 +66,11 @@ const AVAILABLE_METRICS = [
   { value: "height", label: "Height" },
 ];
 
-export default function CorrelationsAnalysis() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+export default function CorrelationsAnalysis({ categoryId = "all" }) {
 
   // State for filters
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "correlation", direction: "desc" });
   const [selectedCorrelation, setSelectedCorrelation] = useState(null);
 
@@ -90,14 +87,6 @@ export default function CorrelationsAnalysis() {
     }));
   }, [clientsData]);
 
-  // Prepare category options
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
-
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
@@ -112,12 +101,12 @@ export default function CorrelationsAnalysis() {
       params.metrics = selectedMetrics;
     }
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
+    if (categoryId && categoryId !== "all") {
+      params.categoryId = categoryId;
     }
 
     return params;
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
+  }, [selectedClientIds, selectedMetrics, categoryId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -131,12 +120,12 @@ export default function CorrelationsAnalysis() {
       keyParts.push(`metrics:${selectedMetrics.join(",")}`);
     }
 
-    if (selectedCategoryId) {
-      keyParts.push(`category:${selectedCategoryId}`);
+    if (categoryId) {
+      keyParts.push(`category:${categoryId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
+  }, [selectedClientIds, selectedMetrics, categoryId]);
 
   // Fetch correlations data
   const { isLoading, error, data } = useSWR(swrKey, () => getCorrelations(apiParams));
@@ -359,23 +348,6 @@ export default function CorrelationsAnalysis() {
               />
             </div>
 
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>

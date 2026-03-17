@@ -1,50 +1,154 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
+import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
+import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
-import AnalyticsMobileFilters from "@/components/common/AnalyticsMobileFilters";
-import AnalyticsResponsiveTable from "@/components/common/AnalyticsResponsiveTable";
-import AnalyticsResponsiveChart from "@/components/common/AnalyticsResponsiveChart";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { getCategoryComparison } from "@/lib/fetchers/roundglassAnalytics";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import {
-  formatMetricName,
-  formatPercentile,
-  getPercentileColor,
-  normalizeMetricValue,
+    formatMetricName,
+    normalizeMetricValue
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { Download, RefreshCw, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Legend,
+    XAxis,
+    YAxis
+} from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import { Download, RefreshCw, Users, TrendingUp, TrendingDown } from "lucide-react";
+
+function BoxPlot({ item }) {
+  if (!item) return null;
+  const min = Number(item.min);
+  const q1 = Number(item.q1);
+  const median = Number(item.median);
+  const q3 = Number(item.q3);
+  const max = Number(item.max);
+  if (![min, q1, median, q3, max].every(Number.isFinite)) return null;
+
+  const width = 520;
+  const height = 140;
+  const paddingX = 34;
+  const paddingTop = 26;
+  const paddingBottom = 36;
+  const range = max - min || 1;
+  const scaleX = (v) =>
+    paddingX + ((v - min) / range) * (width - paddingX * 2);
+
+  const xMin = scaleX(min);
+  const xQ1 = scaleX(q1);
+  const xMed = scaleX(median);
+  const xQ3 = scaleX(q3);
+  const xMax = scaleX(max);
+
+  const yMid = 70;
+  const boxH = 30;
+  const boxY = yMid - boxH / 2;
+  const tickY = height - 18;
+
+  const fmt = (v) => {
+    const abs = Math.abs(v);
+    if (abs >= 1000) return String(Math.round(v));
+    if (abs >= 100) return v.toFixed(0);
+    return v.toFixed(1);
+  };
+
+  return (
+    <div className="rounded-xl border bg-background/40 p-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+        <div>
+          <div className="text-sm font-semibold leading-tight">
+            {formatMetricName(item.label)}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-1">
+            IQR: {fmt(q1)}–{fmt(q3)} · Median: {fmt(median)}
+          </div>
+        </div>
+        <div className="text-[11px] text-muted-foreground tabular-nums">
+          Min {fmt(min)} · Q1 {fmt(q1)} · Med {fmt(median)} · Q3 {fmt(q3)} · Max{" "}
+          {fmt(max)}
+        </div>
+      </div>
+
+      <svg
+        width="100%"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${item.label} box plot`}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {/* guide rail */}
+        <line
+          x1={paddingX}
+          y1={yMid}
+          x2={width - paddingX}
+          y2={yMid}
+          stroke="hsl(var(--muted-foreground))"
+          strokeWidth="2"
+          opacity="0.22"
+        />
+
+        {/* whiskers */}
+        <line x1={xMin} y1={yMid} x2={xQ1} y2={yMid} stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.75" />
+        <line x1={xQ3} y1={yMid} x2={xMax} y2={yMid} stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.75" />
+
+        {/* caps */}
+        <line x1={xMin} y1={yMid - 12} x2={xMin} y2={yMid + 12} stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.75" />
+        <line x1={xMax} y1={yMid - 12} x2={xMax} y2={yMid + 12} stroke="hsl(var(--foreground))" strokeWidth="2" opacity="0.75" />
+
+        {/* IQR box */}
+        <rect
+          x={xQ1}
+          y={boxY}
+          width={Math.max(2, xQ3 - xQ1)}
+          height={boxH}
+          rx="10"
+          fill="hsl(var(--primary))"
+          opacity="0.14"
+          stroke="hsl(var(--primary))"
+          strokeWidth="2"
+        />
+
+        {/* median */}
+        <line x1={xMed} y1={boxY - 2} x2={xMed} y2={boxY + boxH + 2} stroke="hsl(var(--primary))" strokeWidth="3" />
+
+        {/* axis ticks + labels */}
+        {[{ x: xMin, t: "Min", v: min }, { x: xMed, t: "Median", v: median }, { x: xMax, t: "Max", v: max }].map((d) => (
+          <g key={d.t}>
+            <line x1={d.x} y1={yMid + 18} x2={d.x} y2={yMid + 26} stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.35" />
+            <text x={d.x} y={tickY} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+              {d.t}: {fmt(d.v)}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 // Available metrics for selection
 const AVAILABLE_METRICS = [
@@ -61,34 +165,40 @@ const AVAILABLE_METRICS = [
 ];
 
 export default function CategoryComparison() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+  const { data: groupsRes } = useSWR("growth/groups", () => getAllGroups());
+  const groups = useMemo(() => {
+    if (!groupsRes?.data) return [];
+    return Array.isArray(groupsRes.data) ? groupsRes.data : [];
+  }, [groupsRes]);
+
+  // Keep old name for minimal routing changes, but this view is group-based.
 
   // State for filters
-  const [comparisonType, setComparisonType] = useState("intra"); // "intra" or "inter"
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [comparisonType, setComparisonType] = useState("single"); // "single" or "multi"
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
-  // Prepare category options
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
+  // Prepare group options
+  const groupOptions = useMemo(() => {
+    return groups.map((g) => ({
+      value: g._id,
+      label: g.name || "Unnamed group",
     }));
-  }, [client_categories]);
+  }, [groups]);
 
   // Build API params
   const apiParams = useMemo(() => {
     const params = { person: "coach" };
     
-    if (comparisonType === "intra") {
-      if (selectedCategoryId) {
-        params.categoryId = selectedCategoryId;
+    if (comparisonType === "single") {
+      if (selectedGroupId) {
+        params.groupId = selectedGroupId;
       }
     } else {
-      if (selectedCategoryIds.length > 0) {
-        params.categoryIds = selectedCategoryIds;
+      if (selectedGroupIds.length > 0) {
+        params.groupIds = selectedGroupIds;
       }
     }
 
@@ -97,21 +207,21 @@ export default function CategoryComparison() {
     }
 
     return params;
-  }, [comparisonType, selectedCategoryId, selectedCategoryIds, selectedMetrics]);
+  }, [comparisonType, selectedGroupId, selectedGroupIds, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/category-comparison", "coach"];
-    if (apiParams.categoryId) keyParts.push(`categoryId:${apiParams.categoryId}`);
-    if (apiParams.categoryIds) keyParts.push(`categoryIds:${apiParams.categoryIds.join(",")}`);
+    if (apiParams.groupId) keyParts.push(`groupId:${apiParams.groupId}`);
+    if (apiParams.groupIds) keyParts.push(`groupIds:${apiParams.groupIds.join(",")}`);
     if (apiParams.metrics) keyParts.push(`metrics:${apiParams.metrics.join(",")}`);
     return keyParts.join("|");
   }, [apiParams]);
 
   // Fetch comparison data
   const { isLoading, error, data } = useSWR(
-    (comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
-    (comparisonType === "inter" && selectedCategoryIds.length > 0)
+    (comparisonType === "single" && selectedGroupId) || 
+    (comparisonType === "multi" && selectedGroupIds.length > 0)
       ? swrKey
       : null,
     () => getCategoryComparison(apiParams)
@@ -122,8 +232,8 @@ export default function CategoryComparison() {
 
   // Handle refresh
   const handleRefresh = () => {
-    if ((comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
-        (comparisonType === "inter" && selectedCategoryIds.length > 0)) {
+    if ((comparisonType === "single" && selectedGroupId) || 
+        (comparisonType === "multi" && selectedGroupIds.length > 0)) {
       mutate(swrKey);
       toast.success("Data refreshed");
     }
@@ -222,7 +332,7 @@ export default function CategoryComparison() {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", `category-comparison-${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute("download", `group-comparison-${new Date().toISOString().split("T")[0]}.csv`);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
@@ -236,35 +346,10 @@ export default function CategoryComparison() {
   };
 
 
-  // Show message if no category selected
-  const hasValidSelection = (comparisonType === "intra" && selectedCategoryId && selectedCategoryId !== "all") || 
-                             (comparisonType === "inter" && selectedCategoryIds.length > 0);
-  
-  if (!hasValidSelection) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Category Selected</h3>
-            <p className="text-muted-foreground">
-              Please select a category to view comparison data
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isLoading) return <ContentLoader />;
-
-  if (error || (data && data?.status_code !== 200)) {
-    return (
-      <ContentError
-        title={error?.message || data?.message || "Failed to load category comparison data"}
-      />
-    );
-  }
+  // Show message if no category selected (but still render filters)
+  const hasValidSelection =
+    (comparisonType === "single" && selectedGroupId) ||
+    (comparisonType === "multi" && selectedGroupIds.length > 0);
 
   return (
     <div className="space-y-6">
@@ -273,9 +358,9 @@ export default function CategoryComparison() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Category Comparison</CardTitle>
+              <CardTitle>Group Comparison</CardTitle>
               <CardDescription>
-                Compare players within or between categories
+                Compare health metrics within a group (or between groups)
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -310,40 +395,43 @@ export default function CategoryComparison() {
                 value={comparisonType}
                 onChange={(e) => {
                   setComparisonType(e.target.value);
-                  setSelectedCategoryId("");
-                  setSelectedCategoryIds([]);
+                  setSelectedGroupId("");
+                  setSelectedGroupIds([]);
                 }}
               >
-                <option value="intra">Intra-Category</option>
-                <option value="inter">Inter-Category</option>
+                <option value="single">Single Group</option>
+                <option value="multi">Multiple Groups</option>
               </select>
             </div>
 
-            {/* Category Selector(s) */}
-            {comparisonType === "intra" ? (
+            {/* Group Selector(s) */}
+            {comparisonType === "single" ? (
               <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
+                <label className="text-sm font-medium mb-2 block">Group</label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
                 >
-                  <option value="">Select category</option>
-                  {categoryOptions.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
+                  <option value="">Select group</option>
+                  {groupOptions.map((g) => (
+                    <option key={g.value} value={g.value}>
+                      {g.label}
                     </option>
                   ))}
                 </select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Manage groups in <a className="underline" href="/coach/growth/groups">Growth Groups</a>.
+                </p>
               </div>
             ) : (
               <div>
-                <label className="text-sm font-medium mb-2 block">Categories</label>
+                <label className="text-sm font-medium mb-2 block">Groups</label>
                 <SelectMultiple
-                  label="Select categories"
-                  options={categoryOptions}
-                  value={selectedCategoryIds}
-                  onChange={setSelectedCategoryIds}
+                  label="Select groups"
+                  options={groupOptions}
+                  value={selectedGroupIds}
+                  onChange={setSelectedGroupIds}
                   searchable
                 />
               </div>
@@ -364,16 +452,38 @@ export default function CategoryComparison() {
             {/* Comparison Type Badge */}
             <div className="flex items-end">
               <Badge
-                variant={comparisonData?.type === "inter" ? "default" : "secondary"}
+                variant={comparisonType === "multi" ? "default" : "secondary"}
                 className="text-sm"
               >
-                {comparisonData?.type === "inter" ? "Inter-Category" : "Intra-Category"}
+                {comparisonType === "multi" ? "Multiple Groups" : "Single Group"}
               </Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {!hasValidSelection ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Select group(s) to continue</h3>
+              <p className="text-muted-foreground">
+                Choose Single Group and pick 1 group, or choose Multiple Groups and pick 2+ groups.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <ContentLoader />
+      ) : error || (data && data?.status_code !== 200) ? (
+        <ContentError
+          title={error?.message || data?.message || "Failed to load category comparison data"}
+        />
+      ) : null}
+
+      {hasValidSelection && !isLoading && !(error || (data && data?.status_code !== 200)) && (
+      <>
       {/* Statistics Cards */}
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -419,19 +529,21 @@ export default function CategoryComparison() {
           )}
         </div>
       )}
+      </>
+      )}
 
       {/* Charts Section */}
       {graphData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start min-w-0">
           {/* Bar Chart */}
           {barChartData.length > 0 && (
-            <Card>
+            <Card className="min-w-0 overflow-hidden">
               <CardHeader>
                 <CardTitle>Metric Comparison</CardTitle>
                 <CardDescription>Comparison across categories</CardDescription>
               </CardHeader>
-              <CardContent>
-                <AnalyticsResponsiveChart className="analytics-chart-mobile">
+              <CardContent className="overflow-hidden">
+                <AnalyticsResponsiveChart className="analytics-chart-mobile overflow-hidden">
                   <ChartContainer
                     config={Object.fromEntries(
                       Object.keys(barChartData[0] || {})
@@ -446,9 +558,16 @@ export default function CategoryComparison() {
                     )}
                     className="h-full"
                   >
-                  <BarChart data={barChartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                  <BarChart data={barChartData} margin={{ top: 5, right: 20, left: 0, bottom: 28 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 10 }}
+                      angle={-20}
+                      textAnchor="end"
+                      height={70}
+                      interval="preserveStartEnd"
+                    />
                     <YAxis tick={{ fontSize: 12 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Legend />
@@ -469,16 +588,18 @@ export default function CategoryComparison() {
             </Card>
           )}
 
-          {/* Box Plot placeholder - would need custom implementation */}
-          {graphData.boxPlot && (
-            <Card>
+          {/* Box Plot (single-group/intra only; backend returns array per metric) */}
+          {Array.isArray(graphData?.boxPlot) && graphData.boxPlot.length > 0 && (
+            <Card className="min-w-0 overflow-hidden">
               <CardHeader>
                 <CardTitle>Distribution (Box Plot)</CardTitle>
-                <CardDescription>Statistical distribution visualization</CardDescription>
+                <CardDescription>Per-metric distribution for the selected group</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-80 flex items-center justify-center text-muted-foreground">
-                  Box plot visualization (custom implementation needed)
+              <CardContent className="overflow-hidden">
+                <div className="grid grid-cols-1 gap-3">
+                  {graphData.boxPlot.map((item) => (
+                    <BoxPlot key={item.label} item={item} />
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -492,7 +613,7 @@ export default function CategoryComparison() {
           <CardHeader>
             <CardTitle>Player Comparison</CardTitle>
             <CardDescription>
-              Detailed comparison of all players in the selected categories
+              Detailed comparison of players in the selected group(s)
             </CardDescription>
           </CardHeader>
           <CardContent>

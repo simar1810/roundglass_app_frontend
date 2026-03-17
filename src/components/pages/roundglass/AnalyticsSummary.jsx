@@ -1,68 +1,56 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
+import { getAppClients } from "@/lib/fetchers/app";
 import {
-  formatMetricName,
-  normalizeMetricValue,
-  formatPercentile,
-  getPercentileColor,
-  calculateTrendDirection,
+    calculateTrendDirection,
+    formatMetricName,
+    formatPercentile,
+    getPercentileColor,
+    normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
-import { useAppSelector } from "@/providers/global/hooks";
+import {
+    Activity,
+    AlertTriangle,
+    ArrowRight,
+    Award,
+    BarChart3,
+    Dumbbell,
+    Minus,
+    Pill,
+    RefreshCw,
+    TrendingDown,
+    TrendingUp,
+    Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import {
-  Users,
-  Activity,
-  Dumbbell,
-  Pill,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  BarChart3,
-  RefreshCw,
-  ArrowRight,
-  Award,
-} from "lucide-react";
 
-export default function AnalyticsSummary() {
-  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+function isMongoObjectId(value) {
+  return /^[a-fA-F0-9]{24}$/.test(String(value || "").trim());
+}
 
+export default function AnalyticsSummary({ categoryId = "all" }) {
   // State for filters
-  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
-  const [selectedClientId, setSelectedClientId] = useState("");
-
-  // Prepare category options
-  const categoryOptions = useMemo(() => {
-    return client_categories.map((cat) => ({
-      value: cat._id,
-      label: cat.name || cat.title || "Unknown",
-    }));
-  }, [client_categories]);
+  const [focusQuery, setFocusQuery] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState(""); // resolved Mongo _id used by analytics APIs
+  const [isResolvingClient, setIsResolvingClient] = useState(false);
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -70,8 +58,8 @@ export default function AnalyticsSummary() {
       person: "coach",
     };
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      params.categoryId = selectedCategoryId;
+    if (categoryId && categoryId !== "all") {
+      params.categoryId = categoryId;
     }
 
     if (selectedClientId) {
@@ -79,14 +67,14 @@ export default function AnalyticsSummary() {
     }
 
     return params;
-  }, [selectedCategoryId, selectedClientId]);
+  }, [categoryId, selectedClientId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/analytics-summary", "coach"];
 
-    if (selectedCategoryId && selectedCategoryId !== "all") {
-      keyParts.push(`category:${selectedCategoryId}`);
+    if (categoryId && categoryId !== "all") {
+      keyParts.push(`category:${categoryId}`);
     }
 
     if (selectedClientId) {
@@ -94,7 +82,7 @@ export default function AnalyticsSummary() {
     }
 
     return keyParts.join("|");
-  }, [selectedCategoryId, selectedClientId]);
+  }, [categoryId, selectedClientId]);
 
   // Fetch summary data
   const { isLoading, error, data } = useSWR(swrKey, () => getAnalyticsSummary(apiParams));
@@ -152,6 +140,52 @@ export default function AnalyticsSummary() {
     toast.success("Data refreshed");
   };
 
+  const resolveAndSetClient = async (raw) => {
+    const query = String(raw || "").trim();
+
+    if (!query) {
+      setSelectedClientId("");
+      return;
+    }
+
+    if (isMongoObjectId(query)) {
+      setSelectedClientId(query);
+      return;
+    }
+
+    setIsResolvingClient(true);
+    try {
+      const res = await getAppClients({ page: 1, limit: 50, search: query });
+      const clients = res?.data?.clients || res?.data || [];
+
+      const normalizedQuery = query.toLowerCase();
+      const exactMatches = (Array.isArray(clients) ? clients : [])
+        .filter((c) => {
+          const clientCode = String(c?.clientId || "").toLowerCase();
+          const mongoId = String(c?._id || c?.id || "").toLowerCase();
+          return clientCode === normalizedQuery || mongoId === normalizedQuery;
+        });
+
+      if (exactMatches.length === 1) {
+        const resolvedId = String(exactMatches[0]?._id || exactMatches[0]?.id || "");
+        if (!resolvedId) throw new Error("Could not resolve client.");
+        setSelectedClientId(resolvedId);
+        return;
+      }
+
+      if (exactMatches.length > 1) {
+        toast.error("Multiple players matched. Please enter an exact Client ID / Player ID.");
+        return;
+      }
+
+      toast.error("No player found. Search by Client ID / Player ID (exact), or paste the full ID.");
+    } catch (e) {
+      toast.error(e?.message || "Could not search players. Please try again.");
+    } finally {
+      setIsResolvingClient(false);
+    }
+  };
+
   if (isLoading) return <ContentLoader />;
 
   if (error || data?.status_code !== 200) {
@@ -189,39 +223,53 @@ export default function AnalyticsSummary() {
         </CardHeader>
         <CardContent className="print:p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
-            {/* Category Filter */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
-              <Select 
-                value={selectedCategoryId} 
-                onValueChange={(value) => {
-                  setSelectedCategoryId(value);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Client Filter (Optional) */}
             <div>
               <label className="text-sm font-medium mb-2 block">Focus on Player (Optional)</label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="Enter player ID"
-                value={selectedClientId || ""}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Search by Player ID"
+                  value={focusQuery}
+                  onChange={(e) => {
+                    setFocusQuery(e.target.value);
+                    // Don’t invalidate data on every keystroke; only apply after user action.
+                    setSelectedClientId("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") resolveAndSetClient(focusQuery);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => resolveAndSetClient(focusQuery)}
+                  disabled={isResolvingClient}
+                >
+                  {isResolvingClient ? "Searching..." : "Search"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setFocusQuery("");
+                    setSelectedClientId("");
+                  }}
+                  disabled={isResolvingClient && !focusQuery}
+                >
+                  Clear
+                </Button>
+              </div>
+              {selectedClientId ? (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Showing analytics for selected player.
+                </p>
+              ) : (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Tip: Enter the exact Client ID.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>

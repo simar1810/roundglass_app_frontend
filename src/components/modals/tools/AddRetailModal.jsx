@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  addProductToProductModule, addRetailReducer, changeFieldvalue,
-  generateRequestPayload, init, orderCreated, previousStage,
-  selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity
+    addProductToProductModule, addRetailReducer, changeFieldvalue,
+    generateRequestPayload, init, orderCreated, previousStage,
+    selectClient, setCurrentStage, setOrderMetaData, setProductAmountQuantity
 } from "@/config/state-reducers/add-retail";
 import { sendData } from "@/lib/api";
 import { getAppClients, getProductByBrand } from "@/lib/fetchers/app";
@@ -99,7 +99,7 @@ function Stage1() {
       name="search"
       value={query}
       onChange={e => setQuery(e.target.value)}
-      placeholder="Search Client here"
+      placeholder="Search Player here"
       className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
     />
     {clientName && <p className="mt-4 text-xs">

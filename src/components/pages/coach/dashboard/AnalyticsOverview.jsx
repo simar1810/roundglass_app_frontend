@@ -23,6 +23,45 @@ import useSWR from "swr";
 import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
 
+function clampPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function ProgressRow({ label, value, subLabel, tone = "accent" }) {
+  const pct = clampPercent(value);
+  const toneClasses =
+    tone === "green"
+      ? "bg-green-600"
+      : tone === "blue"
+        ? "bg-blue-600"
+        : tone === "purple"
+          ? "bg-purple-600"
+          : tone === "orange"
+            ? "bg-orange-600"
+            : "bg-[var(--accent-1)]";
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold leading-tight truncate">{label}</p>
+          {subLabel ? (
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-[1.2]">
+              {subLabel}
+            </p>
+          ) : null}
+        </div>
+        <div className="text-xs font-semibold tabular-nums">{pct}%</div>
+      </div>
+      <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full ${toneClasses}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsOverview() {
   const { isLoading, error, data } = useSWR(
     "dashboard-analytics-summary",
@@ -64,15 +103,25 @@ export default function AnalyticsOverview() {
   const playersWithSupplements = overview.clientsWithSupplements || 0;
 
   // Calculate percentages
-  const healthDataPercentage = totalPlayers > 0 
-    ? Math.round((playersWithHealthData / totalPlayers) * 100) 
+  const healthDataPercentage = totalPlayers > 0
+    ? (playersWithHealthData / totalPlayers) * 100
     : 0;
-  const trainingPercentage = totalPlayers > 0 
-    ? Math.round((playersWithTraining / totalPlayers) * 100) 
+  const trainingPercentage = totalPlayers > 0
+    ? (playersWithTraining / totalPlayers) * 100
+    : 0;
+  const supplementsPercentage = totalPlayers > 0
+    ? (playersWithSupplements / totalPlayers) * 100
     : 0;
 
+  const topPreferences = preferences && typeof preferences === "object"
+    ? Object.entries(preferences)
+        .filter(([, v]) => typeof v === "number" && Number.isFinite(v))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+    : [];
+
   return (
-    <Card className="h-full border border-border/60 shadow-sm">
+    <Card className="border border-border/60 shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -81,7 +130,7 @@ export default function AnalyticsOverview() {
               Analytics overview
             </CardTitle>
             <CardDescription className="text-xs mt-1">
-              High‑level snapshot of how your academy is doing today.
+              A longer, actionable snapshot of engagement and coverage.
             </CardDescription>
           </div>
           <Link href="/coach/roundglass/analytics">
@@ -92,171 +141,219 @@ export default function AnalyticsOverview() {
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-0">
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Users className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                Total players
-              </span>
-            </div>
-            <div className="text-2xl font-semibold leading-tight text-blue-900 dark:text-blue-100">
-              {totalPlayers}
-            </div>
-          </div>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* KPI column */}
+          <div className="space-y-3 lg:col-span-1">
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+              <div className="p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Users className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                    Total players
+                  </span>
+                </div>
+                <div className="text-2xl font-semibold leading-tight text-blue-900 dark:text-blue-100">
+                  {totalPlayers}
+                </div>
+                <div className="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-1.5">
+                  Active roster size
+                </div>
+              </div>
 
-          <div className="p-3 rounded-lg bg-green-50/70 dark:bg-green-950/60 border border-green-100 dark:border-green-900">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Activity className="w-4 h-4 text-green-600" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                With health data
-              </span>
+              <div className="p-3 rounded-lg bg-green-50/70 dark:bg-green-950/60 border border-green-100 dark:border-green-900">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Activity className="w-4 h-4 text-green-600" />
+                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                    With health data
+                  </span>
+                </div>
+                <div className="text-2xl font-semibold leading-tight text-green-900 dark:text-green-100">
+                  {playersWithHealthData}
+                </div>
+                <div className="text-[11px] text-green-600 dark:text-green-400 mt-1.5">
+                  {clampPercent(healthDataPercentage)}% coverage
+                </div>
+              </div>
             </div>
-            <div className="text-2xl font-semibold leading-tight text-green-900 dark:text-green-100">
-              {playersWithHealthData}
-            </div>
-            <div className="text-[11px] text-green-600 dark:text-green-400 mt-1.5">
-              {healthDataPercentage}% coverage
-            </div>
-          </div>
 
-          <div className="p-3 rounded-lg bg-purple-50/70 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Dumbbell className="w-4 h-4 text-purple-600" />
-              <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                Active training
-              </span>
-            </div>
-            <div className="text-2xl font-semibold leading-tight text-purple-900 dark:text-purple-100">
-              {playersWithTraining}
-            </div>
-            <div className="text-[11px] text-purple-600 dark:text-purple-400 mt-1.5">
-              {trainingPercentage}% active
-            </div>
-          </div>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+              <div className="p-3 rounded-lg bg-purple-50/70 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Dumbbell className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                    Active training
+                  </span>
+                </div>
+                <div className="text-2xl font-semibold leading-tight text-purple-900 dark:text-purple-100">
+                  {playersWithTraining}
+                </div>
+                <div className="text-[11px] text-purple-600 dark:text-purple-400 mt-1.5">
+                  {clampPercent(trainingPercentage)}% active
+                </div>
+              </div>
 
-          <div className="p-3 rounded-lg bg-orange-50/70 dark:bg-orange-950/60 border border-orange-100 dark:border-orange-900">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Pill className="w-4 h-4 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
-                With supplements
-              </span>
-            </div>
-            <div className="text-2xl font-semibold leading-tight text-orange-900 dark:text-orange-100">
-              {playersWithSupplements}
-            </div>
-          </div>
-        </div>
-
-        {/* Health Metrics Summary */}
-        {healthMetrics && Object.keys(healthMetrics).length > 0 && (
-          <div className="pt-3 border-t border-border/60">
-            <h5 className="text-xs font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
-              <Target className="w-3.5 h-3.5" />
-              Key health metrics
-            </h5>
-            <div className="grid grid-cols-2 gap-2.5">
-              {Object.entries(healthMetrics)
-                .filter(([metric]) =>
-                  ["bmi", "muscle", "fat", "weight", "rm", "bodyAge"].includes(metric)
-                )
-                .slice(0, 6)
-                .map(([metric, stats]) => {
-                  const displayValue =
-                    typeof stats === "object" && stats !== null
-                      ? stats.mean || stats.median || stats.value || "—"
-                      : stats;
-
-                  return (
-                    <div
-                      key={metric}
-                      className="flex items-center justify-between rounded-md bg-muted/60 px-2.5 py-2"
-                    >
-                      <span className="text-xs font-medium truncate">
-                        {formatMetricName(metric)}
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[11px] font-medium px-2 py-0.5 leading-none"
-                      >
-                        {normalizeMetricValue(displayValue, metric, 1)}
-                      </Badge>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="pt-3 border-t border-border/60">
-          <h5 className="text-xs font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
-            <Award className="w-3.5 h-3.5" />
-            Quick actions
-          </h5>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link href="/coach/roundglass/analytics?tab=summary">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-8 px-2.5 text-xs"
-              >
-                <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-                Summary
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=trends">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-8 px-2.5 text-xs"
-              >
-                <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-                Trends
-              </Button>
-            </Link>
-            <Link href="/coach/roundglass/analytics?tab=rankings">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-8 px-2.5 text-xs"
-              >
-                <Award className="w-3.5 h-3.5 mr-1.5" />
-                Rankings
-              </Button>
-            </Link>
-            <Link href="/coach/clients">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start h-8 px-2.5 text-xs"
-              >
-                <Users className="w-3.5 h-3.5 mr-1.5" />
-                Manage players
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Alerts/Warnings */}
-        {healthDataPercentage < 50 && totalPlayers > 0 && (
-          <div className="pt-3 border-t border-border/60">
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/70 border border-yellow-100 dark:border-yellow-800">
-              <AlertCircle className="w-3.5 h-3.5 text-yellow-600 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-yellow-900 dark:text-yellow-100">
-                  Low health data coverage
-                </p>
-                <p className="text-[11px] text-yellow-700 dark:text-yellow-300 mt-1 leading-relaxed">
-                  Only {healthDataPercentage}% of players have health data. Nudge players to
-                  complete their assessments to unlock better insights.
-                </p>
+              <div className="p-3 rounded-lg bg-orange-50/70 dark:bg-orange-950/60 border border-orange-100 dark:border-orange-900">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Pill className="w-4 h-4 text-orange-600" />
+                  <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                    With supplements
+                  </span>
+                </div>
+                <div className="text-2xl font-semibold leading-tight text-orange-900 dark:text-orange-100">
+                  {playersWithSupplements}
+                </div>
+                <div className="text-[11px] text-orange-600 dark:text-orange-400 mt-1.5">
+                  {clampPercent(supplementsPercentage)}% adoption
+                </div>
               </div>
             </div>
           </div>
-        )}
+
+        {/* Health Metrics Summary */}
+          {/* Coverage + insights */}
+          <div className="space-y-4 lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <ProgressRow
+                label="Health data coverage"
+                value={healthDataPercentage}
+                subLabel="Assessments completed / total players"
+                tone="green"
+              />
+              <ProgressRow
+                label="Training engagement"
+                value={trainingPercentage}
+                subLabel="Players with active training"
+                tone="purple"
+              />
+              <ProgressRow
+                label="Supplement adoption"
+                value={supplementsPercentage}
+                subLabel="Players using supplements"
+                tone="orange"
+              />
+            </div>
+
+            {healthMetrics && Object.keys(healthMetrics).length > 0 && (
+              <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+                <h5 className="text-xs font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+                  <Target className="w-3.5 h-3.5" />
+                  Key health metrics
+                </h5>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {Object.entries(healthMetrics)
+                    .filter(([metric]) =>
+                      ["bmi", "muscle", "fat", "weight", "rm", "bodyAge"].includes(metric)
+                    )
+                    .slice(0, 6)
+                    .map(([metric, stats]) => {
+                      const displayValue =
+                        typeof stats === "object" && stats !== null
+                          ? stats.mean || stats.median || stats.value || "—"
+                          : stats;
+
+                      return (
+                        <div
+                          key={metric}
+                          className="flex items-center justify-between rounded-md bg-muted/60 px-2.5 py-2"
+                        >
+                          <span className="text-xs font-medium truncate">
+                            {formatMetricName(metric)}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className="text-[11px] font-medium px-2 py-0.5 leading-none"
+                          >
+                            {normalizeMetricValue(displayValue, metric, 1)}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {topPreferences.length > 0 && (
+              <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+                <h5 className="text-xs font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  What players are focusing on
+                </h5>
+                <div className="flex flex-wrap gap-2">
+                  {topPreferences.map(([k, v]) => (
+                    <Badge key={k} variant="secondary" className="text-[11px] font-medium">
+                      {formatMetricName(k)} · {clampPercent(v)}%
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-border/60 bg-background/40 p-3">
+              <h5 className="text-xs font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
+                <Award className="w-3.5 h-3.5" />
+                Next best actions
+              </h5>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                <Link href="/coach/roundglass/analytics?tab=summary">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 text-xs"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+                    Summary
+                  </Button>
+                </Link>
+                <Link href="/coach/roundglass/analytics?tab=trends">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 text-xs"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
+                    Trends
+                  </Button>
+                </Link>
+                <Link href="/coach/roundglass/analytics?tab=rankings">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 text-xs"
+                  >
+                    <Award className="w-3.5 h-3.5 mr-1.5" />
+                    Rankings
+                  </Button>
+                </Link>
+                <Link href="/coach/clients">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start h-8 px-2.5 text-xs"
+                  >
+                    <Users className="w-3.5 h-3.5 mr-1.5" />
+                    Players
+                  </Button>
+                </Link>
+              </div>
+
+              {clampPercent(healthDataPercentage) < 50 && totalPlayers > 0 && (
+                <div className="mt-3 flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/70 border border-yellow-100 dark:border-yellow-800">
+                  <AlertCircle className="w-3.5 h-3.5 text-yellow-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-yellow-900 dark:text-yellow-100">
+                      Low health data coverage
+                    </p>
+                    <p className="text-[11px] text-yellow-700 dark:text-yellow-300 mt-1 leading-relaxed">
+                      Only {clampPercent(healthDataPercentage)}% of players have health data. Nudge players to
+                      complete their assessments to unlock better insights.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

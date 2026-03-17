@@ -1,15 +1,16 @@
 import FormControl from "@/components/FormControl";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { sendData } from "@/lib/api";
 import { getClientForMeals, getClientsForCustomMeals } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
+import { isBefore, parse } from "date-fns";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -21,7 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import DualOptionActionModal from "./DualOptionActionModal";
-import { isBefore, parse } from "date-fns";
 
 export default function AssignMealModal({
   plan,
@@ -114,7 +114,7 @@ function AssignCustomMealPlanContainer({ plan, planId }) {
     </div>}
     <div>
       <FormControl
-        placeholder="Search Client here"
+        placeholder="Search Player here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
@@ -184,7 +184,7 @@ function AssignMealPlanContainer({ planId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Client here"
+        placeholder="Search Player here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}

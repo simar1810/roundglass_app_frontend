@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Image from "next/image";
 import FormControl from "../FormControl";
 export default function AddSelectClientModal() {
   return (
@@ -17,7 +17,7 @@ export default function AddSelectClientModal() {
           <div className="flex items-center gap-2 mb-4">
             <FormControl
               type="text"
-              placeholder="Search Client here"
+              placeholder="Search Player here"
               className="w-full rounded-md px-4 py-2 text-sm "
             />
             <button className="text-green-600 border border-green-400 px-3 py-1 rounded-full text-sm">

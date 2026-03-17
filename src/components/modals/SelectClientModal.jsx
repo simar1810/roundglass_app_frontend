@@ -1,13 +1,13 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
-import FormControl from "../FormControl";
-import Image from "next/image";
 import { Search } from "lucide-react";
+import Image from "next/image";
+import FormControl from "../FormControl";
 
 export default function SelectClientModal() {
   return (
@@ -29,7 +29,7 @@ export default function SelectClientModal() {
             <FormControl
               type="text"
               name="search"
-              placeholder="Search Client here"
+              placeholder="Search Player here"
               className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent border-none ml-[-2px] p-0"
             />
           </div>

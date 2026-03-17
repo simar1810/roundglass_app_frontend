@@ -2,13 +2,12 @@ import { fetchData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
 
 /**
- * Get category comparison data (intra-category or inter-category)
+ * Get group comparison data (single-group or multi-group)
  * @param {Object} params - Comparison parameters
  * @param {string} params.person - "coach" or "client" (required)
- * @param {string} [params.categoryId] - Category ID for intra-category comparison
- * @param {string|string[]} [params.categoryIds] - Category IDs for inter-category comparison (comma-separated string or array)
+ * @param {string} [params.groupId] - Group ID for single-group comparison
+ * @param {string|string[]} [params.groupIds] - Group IDs for multi-group comparison (comma-separated string or array)
  * @param {string|string[]} [params.metrics] - Specific metrics to compare (comma-separated string or array, default: all)
- * @param {string} [params.comparisonType] - "intra" or "inter" (auto-detected if not provided)
  * @returns {Promise<Object>} API response with comparison data and graphData
  */
 export function getCategoryComparison(params) {
@@ -16,13 +15,13 @@ export function getCategoryComparison(params) {
     person: params.person, // "coach" or "client" (required)
   };
 
-  // Handle categoryId (intra-category) or categoryIds (inter-category)
-  if (params.categoryId) {
-    queryParams.categoryId = params.categoryId;
-  } else if (params.categoryIds) {
-    queryParams.categoryIds = Array.isArray(params.categoryIds)
-      ? params.categoryIds.join(",")
-      : params.categoryIds;
+  // Handle groupId (single) or groupIds (multi)
+  if (params.groupId) {
+    queryParams.groupId = params.groupId;
+  } else if (params.groupIds) {
+    queryParams.groupIds = Array.isArray(params.groupIds)
+      ? params.groupIds.join(",")
+      : params.groupIds;
   }
 
   // Handle metrics - can be array or comma-separated string
@@ -32,18 +31,16 @@ export function getCategoryComparison(params) {
       : params.metrics;
   }
 
-  // Optional comparisonType
-  if (params.comparisonType) {
-    queryParams.comparisonType = params.comparisonType;
-  }
-
   const endpoint = buildUrlWithQueryParams(
-    "app/roundglass/analytics/category-comparison",
+    "app/roundglass/analytics/group-comparison",
     queryParams
   );
 
   return fetchData(endpoint);
 }
+
+// Preferred name (keep old export for backward compatibility)
+export const getGroupComparison = getCategoryComparison;
 
 /**
  * Get time-series trends for health metrics
