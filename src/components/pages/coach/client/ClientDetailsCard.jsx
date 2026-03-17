@@ -742,7 +742,7 @@ function Header({ clientData }) {
           )}
         </div>
         <div className="flex gap-4">
-          <ClientStatus status={clientData.isActive} _id={clientData._id} />
+          {/* ClientStatus (Active/Inactive) intentionally hidden */}
           {/* Membership toggle commented out */}
           {/* {permit("club", roles) && (
             <ClientClubStatus

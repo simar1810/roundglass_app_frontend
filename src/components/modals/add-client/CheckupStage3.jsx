@@ -9,16 +9,20 @@ import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { onboardingQuestionaire } from "@/lib/fetchers/app";
 import { useAppSelector } from "@/providers/global/hooks";
 import { Camera } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWR from "swr";
 
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
+  const [saving, setSaving] = useState(false);
   const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
   const { isLoading, error, data: questionSections } = useSWR("onboarding-questionaire", () => onboardingQuestionaire());
   async function createClient() {
+    if (saving) return;
     try {
+      setSaving(true);
       const secs = questionSections.data.sections || [];
       const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
       const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID, extraFields);
@@ -32,6 +36,8 @@ export default function CheckupStage3() {
       mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -145,8 +151,9 @@ export default function CheckupStage3() {
         variant="wz"
         onClick={createClient}
         className="grow"
+        disabled={saving}
       >
-        Save
+        {saving ? "Saving..." : "Save"}
       </Button>
     </div>
   </div>

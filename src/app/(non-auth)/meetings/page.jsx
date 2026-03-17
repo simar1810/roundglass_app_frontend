@@ -31,7 +31,7 @@ export default function Page() {
       </TabsList>
       <TabsContent value="client">
         <div className="mt-4">
-          <Label htmlFor="search" className="mb-2"><h5>Enter Client ID</h5></Label>
+          <Label htmlFor="search" className="mb-2"><h5>Enter Player ID</h5></Label>
           <div className="flex gap-4">
             <Input
               value={query}

@@ -35,6 +35,7 @@ import {
   formatPercentile,
 } from "@/lib/utils/roundglassAnalytics";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -252,11 +253,20 @@ function BoxPlot({ data, metric }) {
   );
 }
 
-export default function DistributionAnalysis({ categoryId = "all" }) {
+export default function DistributionAnalysis() {
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
   const [selectedMetric, setSelectedMetric] = useState("bmi");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedClientIds, setSelectedClientIds] = useState([]);
+
+  const categoryOptions = useMemo(() => {
+    return client_categories.map((cat) => ({
+      value: cat._id,
+      label: cat.name || cat.title || "Unknown",
+    }));
+  }, [client_categories]);
 
   // Fetch clients
   const { data: clientsData } = useSWR("distribution-clients-list", () =>
@@ -267,7 +277,7 @@ export default function DistributionAnalysis({ categoryId = "all" }) {
     if (!clientsData?.data || !Array.isArray(clientsData.data)) return [];
     return clientsData.data.map((client) => ({
       value: client._id,
-      label: client.name || "Unknown",
+      label: `${client.name || "Unknown"}${client.clientId ? ` (${client.clientId})` : ""}`,
     }));
   }, [clientsData]);
 
@@ -278,8 +288,8 @@ export default function DistributionAnalysis({ categoryId = "all" }) {
       metric: selectedMetric,
     };
 
-    if (categoryId && categoryId !== "all") {
-      params.categoryId = categoryId;
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
     }
 
     if (selectedClientIds.length > 0) {
@@ -287,14 +297,14 @@ export default function DistributionAnalysis({ categoryId = "all" }) {
     }
 
     return params;
-  }, [selectedMetric, categoryId, selectedClientIds]);
+  }, [selectedMetric, selectedCategoryId, selectedClientIds]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/distribution", "coach", selectedMetric];
 
-    if (categoryId) {
-      keyParts.push(`category:${categoryId}`);
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
     }
 
     if (selectedClientIds.length > 0) {
@@ -302,7 +312,7 @@ export default function DistributionAnalysis({ categoryId = "all" }) {
     }
 
     return keyParts.join("|");
-  }, [selectedMetric, categoryId, selectedClientIds]);
+  }, [selectedMetric, selectedCategoryId, selectedClientIds]);
 
   // Fetch distribution data
   const { isLoading, error, data } = useSWR(
@@ -435,6 +445,24 @@ export default function DistributionAnalysis({ categoryId = "all" }) {
                   {AVAILABLE_METRICS.map((metric) => (
                     <SelectItem key={metric.value} value={metric.value}>
                       {metric.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

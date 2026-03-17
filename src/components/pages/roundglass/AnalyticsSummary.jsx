@@ -7,38 +7,46 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import { getAppClients } from "@/lib/fetchers/app";
+import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import {
-    calculateTrendDirection,
-    formatMetricName,
-    formatPercentile,
-    getPercentileColor,
-    normalizeMetricValue,
+  calculateTrendDirection,
+  formatMetricName,
+  formatPercentile,
+  getPercentileColor,
+  normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
-    Activity,
-    AlertTriangle,
-    ArrowRight,
-    Award,
-    BarChart3,
-    Dumbbell,
-    Minus,
-    Pill,
-    RefreshCw,
-    TrendingDown,
-    TrendingUp,
-    Users,
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Award,
+  BarChart3,
+  Dumbbell,
+  Minus,
+  Pill,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -46,11 +54,92 @@ function isMongoObjectId(value) {
   return /^[a-fA-F0-9]{24}$/.test(String(value || "").trim());
 }
 
-export default function AnalyticsSummary({ categoryId = "all" }) {
+export default function AnalyticsSummary() {
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+
   // State for filters
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [focusQuery, setFocusQuery] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(""); // resolved Mongo _id used by analytics APIs
   const [isResolvingClient, setIsResolvingClient] = useState(false);
+  const [clientSuggestions, setClientSuggestions] = useState([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchSeqRef = useRef(0);
+  const containerRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  const categoryOptions = useMemo(() => {
+    return client_categories.map((cat) => ({
+      value: cat._id,
+      label: cat.name || cat.title || "Unknown",
+    }));
+  }, [client_categories]);
+
+  const applySelectedClient = (c) => {
+    const resolvedId = String(c?._id || "");
+    if (!resolvedId) {
+      toast.error("Could not resolve player.");
+      return;
+    }
+    setSelectedClientId(resolvedId);
+    setFocusQuery(`${c?.name || "Player"}${c?.clientId ? ` (${c.clientId})` : ""}`);
+    setSuggestionsOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  useEffect(() => {
+    const onMouseDown = (e) => {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(e.target)) {
+        setSuggestionsOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
+
+  useEffect(() => {
+    const q = String(focusQuery || "").trim();
+    if (!q) {
+      setClientSuggestions([]);
+      setSuggestionsLoading(false);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const seq = ++searchSeqRef.current;
+      setSuggestionsLoading(true);
+      try {
+        const res = await getAppClients({ page: 1, limit: 20, search: q });
+        if (seq !== searchSeqRef.current) return;
+        const list = res?.data?.clients || res?.data || [];
+        const normalized = Array.isArray(list) ? list : [];
+        setClientSuggestions(
+          normalized.map((c) => ({
+            _id: c?._id || c?.id,
+            name: c?.name || "Unknown",
+            clientId: c?.clientId || "",
+            email: c?.email || "",
+          }))
+        );
+        setSuggestionsOpen(true);
+        setHighlightedIndex(-1);
+      } catch {
+        if (seq !== searchSeqRef.current) return;
+        setClientSuggestions([]);
+      } finally {
+        if (seq === searchSeqRef.current) setSuggestionsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [focusQuery]);
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -58,8 +147,8 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
       person: "coach",
     };
 
-    if (categoryId && categoryId !== "all") {
-      params.categoryId = categoryId;
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
     }
 
     if (selectedClientId) {
@@ -67,14 +156,14 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
     }
 
     return params;
-  }, [categoryId, selectedClientId]);
+  }, [selectedCategoryId, selectedClientId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/analytics-summary", "coach"];
 
-    if (categoryId && categoryId !== "all") {
-      keyParts.push(`category:${categoryId}`);
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      keyParts.push(`category:${selectedCategoryId}`);
     }
 
     if (selectedClientId) {
@@ -82,7 +171,7 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
     }
 
     return keyParts.join("|");
-  }, [categoryId, selectedClientId]);
+  }, [selectedCategoryId, selectedClientId]);
 
   // Fetch summary data
   const { isLoading, error, data } = useSWR(swrKey, () => getAnalyticsSummary(apiParams));
@@ -90,7 +179,19 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
   const summaryData = data?.data;
   const overview = summaryData?.overview;
   const healthMetrics = summaryData?.healthMetrics;
-  const preferences = summaryData?.preferences;
+  // Backend payloads for this endpoint have varied over time; support a few common shapes.
+  const preferences =
+    summaryData?.preferences ||
+    summaryData?.preferencesSummary ||
+    summaryData?.preferenceSummary ||
+    summaryData?.preferences_analysis ||
+    null;
+  const trainingSummary =
+    preferences?.training || summaryData?.training || summaryData?.trainingSummary || null;
+  const supplementsSummary =
+    preferences?.supplements || summaryData?.supplements || summaryData?.supplementsSummary || null;
+  const injuriesSummary =
+    preferences?.injuries || summaryData?.injuries || summaryData?.injuriesSummary || null;
   const trends = summaryData?.trends;
   const rankings = summaryData?.rankings;
 
@@ -167,9 +268,12 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
         });
 
       if (exactMatches.length === 1) {
-        const resolvedId = String(exactMatches[0]?._id || exactMatches[0]?.id || "");
-        if (!resolvedId) throw new Error("Could not resolve client.");
-        setSelectedClientId(resolvedId);
+        applySelectedClient({
+          _id: exactMatches[0]?._id || exactMatches[0]?.id,
+          name: exactMatches[0]?.name,
+          clientId: exactMatches[0]?.clientId,
+          email: exactMatches[0]?.email,
+        });
         return;
       }
 
@@ -223,22 +327,63 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
         </CardHeader>
         <CardContent className="print:p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 no-print">
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Client Filter (Optional) */}
             <div>
               <label className="text-sm font-medium mb-2 block">Focus on Player (Optional)</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2" ref={containerRef}>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Search by Player ID"
+                  placeholder="Search by name or Client ID (e.g., ggd65)"
                   value={focusQuery}
                   onChange={(e) => {
                     setFocusQuery(e.target.value);
                     // Don’t invalidate data on every keystroke; only apply after user action.
                     setSelectedClientId("");
+                    setSuggestionsOpen(true);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") resolveAndSetClient(focusQuery);
+                    if (e.key === "Enter") {
+                      if (suggestionsOpen && highlightedIndex >= 0 && clientSuggestions[highlightedIndex]) {
+                        applySelectedClient(clientSuggestions[highlightedIndex]);
+                      } else {
+                        resolveAndSetClient(focusQuery);
+                      }
+                    }
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      if (!suggestionsOpen) setSuggestionsOpen(true);
+                      setHighlightedIndex((i) => Math.min(i + 1, clientSuggestions.length - 1));
+                    }
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setHighlightedIndex((i) => Math.max(i - 1, 0));
+                    }
+                    if (e.key === "Escape") {
+                      setSuggestionsOpen(false);
+                      setHighlightedIndex(-1);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (clientSuggestions.length > 0) setSuggestionsOpen(true);
                   }}
                 />
                 <Button
@@ -261,13 +406,56 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
                   Clear
                 </Button>
               </div>
+              {suggestionsOpen && (suggestionsLoading || clientSuggestions.length > 0) && (
+                <div className="relative">
+                  <div className="absolute z-20 mt-2 w-full rounded-md border bg-background shadow-lg overflow-hidden">
+                    {suggestionsLoading ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Searching…</div>
+                    ) : (
+                      <div className="max-h-64 overflow-auto">
+                        {clientSuggestions.map((c, idx) => {
+                          const active = idx === highlightedIndex;
+                          return (
+                            <button
+                              type="button"
+                              key={String(c._id) + String(c.clientId) + idx}
+                              className={[
+                                "w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors",
+                                active ? "bg-muted" : "",
+                              ].join(" ")}
+                              onMouseEnter={() => setHighlightedIndex(idx)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applySelectedClient(c);
+                              }}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium truncate">{c.name}</div>
+                                  <div className="text-[11px] text-muted-foreground truncate">
+                                    {c.clientId ? `Client ID: ${c.clientId}` : "—"}
+                                    {c.email ? ` · ${c.email}` : ""}
+                                  </div>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground tabular-nums">
+                                  {String(c._id || "").slice(-6)}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               {selectedClientId ? (
                 <p className="text-[11px] text-muted-foreground mt-1">
                   Showing analytics for selected player.
                 </p>
               ) : (
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Tip: Enter the exact Client ID.
+                    
                 </p>
               )}
             </div>
@@ -415,10 +603,10 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
       )}
 
       {/* Preferences Summary */}
-      {preferences && (
+      {(trainingSummary || supplementsSummary || injuriesSummary) && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Training Summary */}
-          {preferences.training && (
+          {trainingSummary && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -428,8 +616,8 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {preferences.training.topFrequencies &&
-                    Object.entries(preferences.training.topFrequencies)
+                  {trainingSummary.topFrequencies &&
+                    Object.entries(trainingSummary.topFrequencies)
                       .slice(0, 5)
                       .map(([frequency, count]) => (
                         <div key={frequency} className="flex items-center justify-between">
@@ -437,13 +625,18 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
                           <Badge variant="secondary">{count} players</Badge>
                         </div>
                       ))}
+                  {!trainingSummary.topFrequencies && (
+                    <div className="text-sm text-muted-foreground">
+                      No training summary available for the selected filters.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Supplements Summary */}
-          {preferences.supplements && (
+          {supplementsSummary && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -453,8 +646,8 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {preferences.supplements.mostCommon &&
-                    Object.entries(preferences.supplements.mostCommon)
+                  {supplementsSummary.mostCommon &&
+                    Object.entries(supplementsSummary.mostCommon)
                       .slice(0, 5)
                       .map(([supplement, count]) => (
                         <div key={supplement} className="flex items-center justify-between">
@@ -462,13 +655,18 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
                           <Badge variant="secondary">{count} players</Badge>
                         </div>
                       ))}
+                  {!supplementsSummary.mostCommon && (
+                    <div className="text-sm text-muted-foreground">
+                      No supplements summary available for the selected filters.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Injuries Summary */}
-          {preferences.injuries && (
+          {injuriesSummary && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -478,8 +676,8 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {preferences.injuries.commonTypes &&
-                    Object.entries(preferences.injuries.commonTypes)
+                  {injuriesSummary.commonTypes &&
+                    Object.entries(injuriesSummary.commonTypes)
                       .slice(0, 5)
                       .map(([type, count]) => (
                         <div key={type} className="flex items-center justify-between">
@@ -487,6 +685,11 @@ export default function AnalyticsSummary({ categoryId = "all" }) {
                           <Badge variant="destructive">{count} cases</Badge>
                         </div>
                       ))}
+                  {!injuriesSummary.commonTypes && (
+                    <div className="text-sm text-muted-foreground">
+                      No injuries summary available for the selected filters.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

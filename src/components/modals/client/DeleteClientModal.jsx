@@ -29,11 +29,13 @@ export default function DeleteClientModal({
     try {
       setLoading(true);
       const response = await sendData(`app/deleteClient?id=${_id}`, {}, "DELETE");
-      if (!response.status) throw new Error(response.error);
+      if (!response?.status) throw new Error(response?.error || response?.message || "Failed to delete client");
       toast.success(response.message);
       mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
+      // Close the dialog before navigating (avoids null ref on unmount).
+      onClose?.();
+      closeBtnRef.current?.click?.();
       router.push("/coach/clients");
-      closeBtnRef.current.click();
     } catch (error) {
       toast.error(error.message);
     } finally {

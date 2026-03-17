@@ -96,7 +96,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     if (!clientsData?.data || !Array.isArray(clientsData.data)) return [];
     return clientsData.data.map((client) => ({
       value: client._id,
-      label: client.name || "Unknown",
+      label: `${client.name || "Unknown"}${client.clientId ? ` (${client.clientId})` : ""}`,
     }));
   }, [clientsData]);
 

@@ -15,6 +15,7 @@ import { copyText } from "@/lib/utils";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { CircleCheckBig, Copy } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -44,11 +45,14 @@ function QuickAddClientContainer() {
 }
 function FormContainer() {
   const { dispatch, ...state } = useCurrentStateContext();
+  const [saving, setSaving] = useState(false);
 
   const coachId = useAppSelector(state => state.coach.data.coachId);
 
   async function quickAddClient() {
+    if (saving) return;
     try {
+      setSaving(true);
       const data = {
         name: state.name,
         mobileNumber: state.mobileNumber,
@@ -61,6 +65,8 @@ function FormContainer() {
       mutate((key) => typeof key === 'string' && key.startsWith('getAppClients'));
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -76,8 +82,9 @@ function FormContainer() {
       variant="wz"
       className="block mt-20 mb-4 mx-auto"
       onClick={quickAddClient}
+      disabled={saving}
     >
-      Save
+      {saving ? "Saving..." : "Save"}
     </Button>
   </div>
 }

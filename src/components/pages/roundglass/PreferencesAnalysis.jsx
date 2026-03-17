@@ -28,6 +28,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -53,10 +54,20 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ];
 
-export default function PreferencesAnalysis({ categoryId = "all" }) {
+export default function PreferencesAnalysis() {
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
+
   // State for filters
   const [analysisType, setAnalysisType] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [activeTab, setActiveTab] = useState("training");
+
+  const categoryOptions = useMemo(() => {
+    return client_categories.map((cat) => ({
+      value: cat._id,
+      label: cat.name || cat.title || "Unknown",
+    }));
+  }, [client_categories]);
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -64,8 +75,8 @@ export default function PreferencesAnalysis({ categoryId = "all" }) {
       person: "coach", // Preferences analysis only available for coach
     };
 
-    if (categoryId && categoryId !== "all") {
-      params.categoryId = categoryId;
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
     }
 
     if (analysisType !== "all") {
@@ -73,14 +84,14 @@ export default function PreferencesAnalysis({ categoryId = "all" }) {
     }
 
     return params;
-  }, [categoryId, analysisType]);
+  }, [selectedCategoryId, analysisType]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/preferences-analysis", "coach"];
 
-    if (categoryId) {
-      keyParts.push(`category:${categoryId}`);
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
     }
 
     if (analysisType !== "all") {
@@ -88,7 +99,7 @@ export default function PreferencesAnalysis({ categoryId = "all" }) {
     }
 
     return keyParts.join("|");
-  }, [categoryId, analysisType]);
+  }, [selectedCategoryId, analysisType]);
 
   // Fetch preferences analysis data
   const { isLoading, error, data } = useSWR(swrKey, () => getPreferencesAnalysis(apiParams));
@@ -303,6 +314,24 @@ export default function PreferencesAnalysis({ categoryId = "all" }) {
                   <SelectItem value="training">Training</SelectItem>
                   <SelectItem value="supplements">Supplements</SelectItem>
                   <SelectItem value="injuries">Injuries</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

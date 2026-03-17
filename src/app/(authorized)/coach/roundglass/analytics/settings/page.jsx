@@ -1,12 +1,15 @@
 "use client";
 
-import AnalyticsSettings from "@/components/pages/roundglass/AnalyticsSettings";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AnalyticsSettingsPage() {
-  return (
-    <div className="content-container space-y-6">
-      <AnalyticsSettings />
-    </div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/coach/roundglass/analytics");
+  }, [router]);
+
+  return null;
 }
 

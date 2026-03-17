@@ -36,6 +36,7 @@ import {
   getCorrelationColor,
 } from "@/lib/utils/roundglassAnalytics";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -66,13 +67,22 @@ const AVAILABLE_METRICS = [
   { value: "height", label: "Height" },
 ];
 
-export default function CorrelationsAnalysis({ categoryId = "all" }) {
+export default function CorrelationsAnalysis() {
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data);
 
   // State for filters
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "correlation", direction: "desc" });
   const [selectedCorrelation, setSelectedCorrelation] = useState(null);
+
+  const categoryOptions = useMemo(() => {
+    return client_categories.map((cat) => ({
+      value: cat._id,
+      label: cat.name || cat.title || "Unknown",
+    }));
+  }, [client_categories]);
 
   // Fetch clients
   const { data: clientsData } = useSWR("correlations-clients-list", () =>
@@ -83,7 +93,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
     if (!clientsData?.data || !Array.isArray(clientsData.data)) return [];
     return clientsData.data.map((client) => ({
       value: client._id,
-      label: client.name || "Unknown",
+      label: `${client.name || "Unknown"}${client.clientId ? ` (${client.clientId})` : ""}`,
     }));
   }, [clientsData]);
 
@@ -101,15 +111,19 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
       params.metrics = selectedMetrics;
     }
 
-    if (categoryId && categoryId !== "all") {
-      params.categoryId = categoryId;
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
     }
 
     return params;
-  }, [selectedClientIds, selectedMetrics, categoryId]);
+  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
+    // If user is selecting specific players, require at least 3 to run correlations.
+    // Keep UI usable (don't hard-error and hide filters).
+    if (selectedClientIds.length > 0 && selectedClientIds.length < 3) return null;
+
     const keyParts = ["roundglass/correlations", "coach"];
 
     if (selectedClientIds.length > 0) {
@@ -120,12 +134,12 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
       keyParts.push(`metrics:${selectedMetrics.join(",")}`);
     }
 
-    if (categoryId) {
-      keyParts.push(`category:${categoryId}`);
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedClientIds, selectedMetrics, categoryId]);
+  }, [selectedClientIds, selectedMetrics, selectedCategoryId]);
 
   // Fetch correlations data
   const { isLoading, error, data } = useSWR(swrKey, () => getCorrelations(apiParams));
@@ -279,16 +293,6 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
     return "bg-red-600";
   };
 
-  if (isLoading) return <ContentLoader />;
-
-  if (error || data?.status_code !== 200) {
-    return (
-      <ContentError
-        title={error?.message || data?.message || "Failed to load correlations data"}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Filters Section */}
@@ -348,12 +352,45 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
               />
             </div>
 
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {selectedClientIds.length > 0 && selectedClientIds.length < 3 && (
+            <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Select at least <span className="font-semibold text-foreground">3 players</span> to run correlations for a specific cohort.
+              (Currently selected: {selectedClientIds.length})
+            </div>
+          )}
         </CardContent>
       </Card>
 
+      {/* Loading / Error (keep filters visible above) */}
+      {isLoading && <ContentLoader />}
+
+      {!isLoading && (error || (swrKey && data?.status_code && data?.status_code !== 200)) && (
+        <ContentError
+          title={error?.message || data?.message || "Failed to load correlations data"}
+        />
+      )}
+
       {/* Correlation Heatmap */}
-      {heatmapData.labels.length > 0 && (
+      {!isLoading && !error && data?.status_code === 200 && heatmapData.labels.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Correlation Heatmap</CardTitle>
@@ -367,15 +404,15 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
                 <table className="border-collapse">
                   <thead>
                     <tr>
-                      <th className="border p-2 text-left font-medium bg-muted sticky left-0 z-10">
+                      <th className="border p-2 text-left font-medium bg-muted sticky left-0 z-20">
                         Metric
                       </th>
                       {heatmapData.labels.map((label) => (
                         <th
                           key={label}
-                          className="border p-2 text-center font-medium bg-muted min-w-[100px]"
+                          className="border bg-muted font-medium align-bottom h-[140px] min-w-[44px] w-[44px] p-1 text-center"
                         >
-                          <div className="transform -rotate-45 origin-center whitespace-nowrap">
+                          <div className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[11px] leading-tight mx-auto">
                             {formatMetricName(label)}
                           </div>
                         </th>
@@ -385,7 +422,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
                   <tbody>
                     {heatmapData.labels.map((metric1, rowIndex) => (
                       <tr key={metric1}>
-                        <td className="border p-2 font-medium bg-muted sticky left-0 z-10">
+                        <td className="border p-2 font-medium bg-muted sticky left-0 z-10 whitespace-nowrap">
                           {formatMetricName(metric1)}
                         </td>
                         {heatmapData.matrix[rowIndex].map((correlation, colIndex) => {
@@ -395,7 +432,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
                             <td
                               key={`${metric1}-${metric2}`}
                               className={cn(
-                                "border p-2 text-center cursor-pointer hover:opacity-80 transition-opacity",
+                                "border p-1 text-center cursor-pointer hover:opacity-80 transition-opacity min-w-[44px] w-[44px] h-[44px] text-[11px] leading-none",
                                 isDiagonal
                                   ? "bg-gray-100"
                                   : getHeatmapColor(correlation),
@@ -458,7 +495,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
       )}
 
       {/* Scatter Plots */}
-      {scatterPlotData.length > 0 && (
+      {!isLoading && !error && data?.status_code === 200 && scatterPlotData.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {scatterPlotData
             .filter((dataset) => Math.abs(dataset.correlation) >= 0.3) // Only show significant correlations
@@ -532,7 +569,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
       )}
 
       {/* Correlation Table */}
-      {correlationList.length > 0 && (
+      {!isLoading && !error && data?.status_code === 200 && correlationList.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Correlation Details</CardTitle>
@@ -646,7 +683,7 @@ export default function CorrelationsAnalysis({ categoryId = "all" }) {
       )}
 
       {/* Empty State */}
-      {!isLoading && !correlationsData && (
+      {!isLoading && !error && data?.status_code === 200 && !correlationsData && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-12">

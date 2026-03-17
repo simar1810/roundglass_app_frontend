@@ -136,15 +136,26 @@ function BoxPlot({ item }) {
         {/* median */}
         <line x1={xMed} y1={boxY - 2} x2={xMed} y2={boxY + boxH + 2} stroke="hsl(var(--primary))" strokeWidth="3" />
 
-        {/* axis ticks + labels */}
-        {[{ x: xMin, t: "Min", v: min }, { x: xMed, t: "Median", v: median }, { x: xMax, t: "Max", v: max }].map((d) => (
-          <g key={d.t}>
-            <line x1={d.x} y1={yMid + 18} x2={d.x} y2={yMid + 26} stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.35" />
-            <text x={d.x} y={tickY} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
-              {d.t}: {fmt(d.v)}
-            </text>
-          </g>
-        ))}
+        {/* axis ticks + labels (collision-safe) */}
+        <line x1={xMin} y1={yMid + 18} x2={xMin} y2={yMid + 26} stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.35" />
+        <line x1={xMed} y1={yMid + 18} x2={xMed} y2={yMid + 26} stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.35" />
+        <line x1={xMax} y1={yMid + 18} x2={xMax} y2={yMid + 26} stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.35" />
+
+        <text x={xMin} y={tickY} textAnchor="start" fontSize="11" fill="hsl(var(--muted-foreground))">
+          Min: {fmt(min)}
+        </text>
+        <text x={xMax} y={tickY} textAnchor="end" fontSize="11" fill="hsl(var(--muted-foreground))">
+          Max: {fmt(max)}
+        </text>
+        {Math.min(Math.abs(xMed - xMin), Math.abs(xMax - xMed)) > 70 ? (
+          <text x={xMed} y={tickY} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+            Median: {fmt(median)}
+          </text>
+        ) : (
+          <text x={xMed} y={tickY - 12} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+            Median: {fmt(median)}
+          </text>
+        )}
       </svg>
     </div>
   );
@@ -268,13 +279,33 @@ export default function CategoryComparison() {
   const clientTableData = useMemo(() => {
     if (!comparisonData?.comparison?.clients) return [];
 
-    let clients = [...comparisonData.comparison.clients];
+    // Backend shape (intra): clients[] = { clientId, name, metrics: { bmi: { value, percentile }, ... } }
+    const rawClients = Array.isArray(comparisonData.comparison.clients)
+      ? comparisonData.comparison.clients
+      : [];
+
+    // De-dupe by clientId (some data sets can contain duplicates)
+    const seen = new Set();
+    let clients = rawClients.filter((c) => {
+      const id = String(c?.clientId || c?._id || c?.id || "");
+      if (!id) return true;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
 
     // Sort if sortConfig is set
     if (sortConfig.key) {
       clients.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
+        const key = sortConfig.key;
+        const aValue =
+          key === "name"
+            ? a?.name
+            : a?.metrics?.[key]?.value ?? a?.[key];
+        const bValue =
+          key === "name"
+            ? b?.name
+            : b?.metrics?.[key]?.value ?? b?.[key];
 
         if (aValue === null || aValue === undefined) return 1;
         if (bValue === null || bValue === undefined) return -1;
@@ -306,23 +337,19 @@ export default function CategoryComparison() {
     }
 
     try {
-      // Get all unique metric keys from clients
       const metricKeys = new Set();
       clientTableData.forEach((client) => {
-        Object.keys(client).forEach((key) => {
-          if (key !== "_id" && key !== "name" && key !== "email" && typeof client[key] === "number") {
-            metricKeys.add(key);
-          }
-        });
+        const metrics = client?.metrics && typeof client.metrics === "object" ? client.metrics : {};
+        Object.keys(metrics).forEach((k) => metricKeys.add(k));
       });
 
       // Create CSV header
-      const headers = ["Name", "Email", ...Array.from(metricKeys).map(formatMetricName)];
+      const headers = ["Name", "Client ID", ...Array.from(metricKeys).map(formatMetricName)];
       const rows = clientTableData.map((client) => {
         const row = [
           client.name || "—",
-          client.email || "—",
-          ...Array.from(metricKeys).map((key) => client[key] ?? "—"),
+          client.clientId || client._id || client.id || "—",
+          ...Array.from(metricKeys).map((key) => client?.metrics?.[key]?.value ?? "—"),
         ];
         return row.join(",");
       });
@@ -654,17 +681,17 @@ export default function CategoryComparison() {
                 </TableHeader>
                 <TableBody>
                   {clientTableData.map((client) => (
-                    <TableRow key={client._id || client.id}>
+                    <TableRow key={client.clientId || client._id || client.id}>
                       <TableCell className="font-medium">{client.name || "—"}</TableCell>
                       {selectedMetrics.length > 0
                         ? selectedMetrics.map((metric) => (
                             <TableCell key={metric}>
-                              {normalizeMetricValue(client[metric], metric)}
+                              {normalizeMetricValue(client?.metrics?.[metric]?.value, metric)}
                             </TableCell>
                           ))
                         : AVAILABLE_METRICS.slice(0, 5).map((metric) => (
                             <TableCell key={metric.value}>
-                              {normalizeMetricValue(client[metric.value], metric.value)}
+                              {normalizeMetricValue(client?.metrics?.[metric.value]?.value, metric.value)}
                             </TableCell>
                           ))}
                     </TableRow>

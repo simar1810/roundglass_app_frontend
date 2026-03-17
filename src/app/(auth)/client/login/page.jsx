@@ -52,7 +52,7 @@ export default function Page() {
     <Input
       value={clientId}
       onChange={e => setClientId(e.target.value)}
-      placeholder="Enter Client ID"
+      placeholder="Enter Player ID"
       className="mb-4 bg-[var(--comp-1)]"
     />
     <Button

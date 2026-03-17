@@ -184,9 +184,6 @@ function Header({ clientData }) {
             <p className="text-[14px] text-[var(--dark-2)] font-semibold leading-[1]">ID #{clientData.clientId}</p>
             <div className="w-1 h-full bg-[var(--dark-1)]/50"></div>
           </div>
-          <div className={`text-center rounded-[4px] ${clientData.isActive ? "bg-[var(--accent-1)] hover:bg-[var(--accent-1)]" : "bg-[var(--accent-2)] hover:bg-[var(--accent-2)]"} text-white font-bold py-[2px] px-2  text-[12px] gap-1`}>
-            {clientData.isActive ? <>Active</> : <>In Active</>}
-          </div>
         </div>
         {clientData._id && (
           <div className="flex-shrink-0">
