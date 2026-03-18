@@ -160,7 +160,7 @@ export function getClientRanking(params) {
  */
 export function getCorrelations(params) {
   const queryParams = {
-    person: "coach", // Must be coach (required)
+    person: params.person || "coach", // coach or user (backend enforces for user)
   };
 
   // Handle clientIds - can be array or comma-separated string
@@ -206,7 +206,7 @@ export function getCorrelations(params) {
  */
 export function getDistribution(params) {
   const queryParams = {
-    person: "coach", // Must be coach (required)
+    person: params.person || "coach", // coach or user (backend enforces for user)
     metric: params.metric, // Required
   };
 

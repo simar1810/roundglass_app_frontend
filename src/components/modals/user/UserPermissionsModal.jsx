@@ -50,7 +50,7 @@ export default function UserPermissionsModal({ open, onClose, user, onSuccess })
     try {
       setLoading(true);
       
-      const response = await sendData("app/users/permissions", {
+      const response = await sendData("app/user/permissions?person=coach", {
         id: user._id,
         permissions: selectedPermissions
       }, "PUT");

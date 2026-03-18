@@ -36,6 +36,7 @@ import { getAppClients } from "@/lib/fetchers/app";
 import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
+import { getUserType } from "@/lib/permissions";
 import {
     calculateTrendDirection,
     formatDateRange,
@@ -128,7 +129,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person: "coach",
+      person: getUserType() === "user" ? "user" : "coach",
       metric: selectedMetric,
     };
 

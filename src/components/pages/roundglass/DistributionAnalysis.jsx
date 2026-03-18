@@ -28,6 +28,7 @@ import {
 import { getAppClients } from "@/lib/fetchers/app";
 import { getDistribution } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getUserType } from "@/lib/permissions";
 import {
     formatMetricName,
     formatPercentile,
@@ -290,7 +291,7 @@ export default function DistributionAnalysis() {
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person: "coach", // Distribution only available for coach
+      person: getUserType() === "user" ? "user" : "coach",
       metric: selectedMetric,
     };
 

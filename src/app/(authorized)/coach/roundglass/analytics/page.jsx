@@ -9,6 +9,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import AnalyticsErrorBoundary from "@/components/common/AnalyticsErrorBoundary";
 import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
+import RequireScope from "@/components/common/RequireScope";
 
 // Import all analytics components
 import AnalyticsSummary from "@/components/pages/roundglass/AnalyticsSummary";
@@ -76,45 +77,46 @@ export default function Page() {
   const defaultCategoryIdsForExport = [];
 
   return (
-    <AnalyticsErrorBoundary
-      message="An error occurred while loading the analytics dashboard. Please try refreshing the page."
-      onReset={() => window.location.reload()}
-    >
-      <div className="content-container space-y-6">
-      {/* Header Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-6 w-6" />
-                Roundglass Analytics
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Comprehensive analytics and insights for your players
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <TeamDataExport
-                defaultCategoryIds={defaultCategoryIdsForExport}
-                defaultFormat="excel"
-                variant="outline"
-                size="sm"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Global date filters removed (each tab can manage its own date range if needed). */}
-        </CardContent>
-      </Card>
-
-      {/* Tabs Navigation */}
-      <Tabs
-        value={selectedTab}
-        onValueChange={handleTabChange}
-        className="w-full"
+    <RequireScope scope="analytics">
+      <AnalyticsErrorBoundary
+        message="An error occurred while loading the analytics dashboard. Please try refreshing the page."
+        onReset={() => window.location.reload()}
       >
+        <div className="content-container space-y-6">
+        {/* Header Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-6 w-6" />
+                  Roundglass Analytics
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Comprehensive analytics and insights for your players
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <TeamDataExport
+                  defaultCategoryIds={defaultCategoryIdsForExport}
+                  defaultFormat="excel"
+                  variant="outline"
+                  size="sm"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Global date filters removed (each tab can manage its own date range if needed). */}
+          </CardContent>
+        </Card>
+
+        {/* Tabs Navigation */}
+        <Tabs
+          value={selectedTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-6">
           {tabItems.map((tab) => (
             <TabsTrigger
@@ -155,9 +157,10 @@ export default function Page() {
         <TabsContent value="preferences" className="mt-0">
           <PreferencesAnalysis />
         </TabsContent>
-      </Tabs>
-    </div>
-    </AnalyticsErrorBoundary>
+        </Tabs>
+      </div>
+      </AnalyticsErrorBoundary>
+    </RequireScope>
   );
 }
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { getRecipes } from "@/lib/fetchers/app";
 import { useState } from "react";
 import useSWR from "swr";
+import RequireScope from "@/components/common/RequireScope";
 
 export default function Page() {
   const { isLoading, error, data } = useSWR("getRecipes", getRecipes);
@@ -18,15 +19,19 @@ export default function Page() {
   if (error || !data.success) return <ContentError title={error || data.message} />
   const recipes = data.data.filter(recipe => recipe?.title?.toLowerCase()?.includes(query?.toLowerCase()));
 
-  return <div className="content-container mt-8 md:mt-0">
-    <Header value={query} onChange={value => setQuery(value)} />
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-      {recipes.map(plan => <RecipeDisplayCard
-        key={plan._id}
-        plan={plan}
-      />)}
-    </div>
-  </div>
+  return (
+    <RequireScope scope="recipes">
+      <div className="content-container mt-8 md:mt-0">
+        <Header value={query} onChange={value => setQuery(value)} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
+          {recipes.map(plan => <RecipeDisplayCard
+            key={plan._id}
+            plan={plan}
+          />)}
+        </div>
+      </div>
+    </RequireScope>
+  );
 }
 
 function Header({ value, onChange }) {

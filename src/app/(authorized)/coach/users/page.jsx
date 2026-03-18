@@ -69,7 +69,7 @@ export default function UsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const response = await sendData("app/users", { id: userId }, "DELETE");
+      const response = await sendData("app/user", { id: userId }, "DELETE");
       if (response.status_code === 200) {
         toast.success("User deleted successfully");
         fetchUsers();

@@ -25,6 +25,7 @@ import {
 import { getAppClients } from "@/lib/fetchers/app";
 import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getUserType } from "@/lib/permissions";
 import {
   calculateTrendDirection,
   formatMetricName,
@@ -164,7 +165,7 @@ export default function AnalyticsSummary() {
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person: "coach",
+      person: getUserType() === "user" ? "user" : "coach",
     };
 
     if (selectedGroupId && selectedGroupId !== "all") {

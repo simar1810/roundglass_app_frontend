@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
 	try {
-		const { refreshToken, _id, userType, userData } = await request.json();
+		const { refreshToken, _id, userType, userData, appUserRole, userScopes } =
+			await request.json();
 
 		const response = NextResponse.json(
 			{ status_code: 200, message: "Logged in successfully" },
@@ -27,6 +28,24 @@ export async function POST(request) {
 		if (userType) {
 			response.cookies.set("userType", userType, {
 				httpOnly: false, // Allow client-side access
+				secure: process.env.NODE_ENV === "production",
+				path: "/",
+				maxAge: 60 * 60 * 24 * 7,
+			});
+		}
+
+		if (appUserRole) {
+			response.cookies.set("appUserRole", String(appUserRole), {
+				httpOnly: false,
+				secure: process.env.NODE_ENV === "production",
+				path: "/",
+				maxAge: 60 * 60 * 24 * 7,
+			});
+		}
+
+		if (Array.isArray(userScopes)) {
+			response.cookies.set("userScopes", JSON.stringify(userScopes), {
+				httpOnly: false,
 				secure: process.env.NODE_ENV === "production",
 				path: "/",
 				maxAge: 60 * 60 * 24 * 7,

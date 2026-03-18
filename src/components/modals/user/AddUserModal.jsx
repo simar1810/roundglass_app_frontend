@@ -127,7 +127,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
       submitData.append("permissions", JSON.stringify(selectedPermissions));
       if (selectedFile) submitData.append("file", selectedFile);
 
-      const response = await sendDataWithFormData("app/users", submitData, "POST");
+      const response = await sendDataWithFormData("app/user?person=coach", submitData, "POST");
 
       if (response.status_code === 200) {
         if (selectedPermissions.length > 0) {
@@ -137,7 +137,7 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                 id: response.data._id,
                 permissions: selectedPermissions
               };
-              await sendData("app/users/permissions", permissionsData, "PUT");
+              await sendData("app/user/permissions?person=coach", permissionsData, "PUT");
             }
           } catch (permissionsError) {
             // Don't fail the entire request if permissions update fails

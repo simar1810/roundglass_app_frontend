@@ -2,6 +2,7 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import RequireScope from "@/components/common/RequireScope";
 import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
 import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
 import { AgeGroupComparisonChart, P50DistributionChart } from "@/components/pages/growth/GrowthCharts";
@@ -116,7 +117,8 @@ export default function Page() {
   }, [report]);
 
   return (
-    <div className="content-container space-y-6">
+    <RequireScope scope="growth">
+      <div className="content-container space-y-6">
       {/* Header Section */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -495,7 +497,8 @@ export default function Page() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </RequireScope>
   );
 }
 

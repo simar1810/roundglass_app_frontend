@@ -7,16 +7,41 @@ export async function DELETE(request) {
       { status: 200 }
     );
 
-    response.cookies.set('token', "", {
+    response.cookies.set("token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       maxAge: 0,
     });
-    response.cookies.set('_id', "", {
-      httpOnly: true,
+    response.cookies.set("_id", "", {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
+      maxAge: 0,
+    });
+
+    response.cookies.set("userType", "", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+    response.cookies.set("userPermissions", "", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+    response.cookies.set("appUserRole", "", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+    response.cookies.set("userScopes", "", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
       maxAge: 0,
     });
 

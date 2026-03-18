@@ -57,6 +57,44 @@ export function getUserType() {
   return 'coach';
 }
 
+export function getAppUserRole() {
+  if (typeof window === "undefined") return null;
+  try {
+    const cookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("appUserRole="));
+    if (!cookie) return null;
+    return decodeURIComponent(cookie.split("=")[1] || "") || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getUserScopes() {
+  if (typeof window === "undefined") return [];
+  try {
+    const cookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("userScopes="));
+    if (!cookie) return [];
+    const raw = decodeURIComponent(cookie.split("=")[1] || "");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function hasScope(requiredScope) {
+  const userType = getUserType();
+  if (userType !== "user") return true;
+  if (!requiredScope) return true;
+
+  const scopes = getUserScopes();
+  if (scopes.includes("all")) return true;
+  return scopes.includes(requiredScope);
+}
+
 // Check if user has permission for a specific tab
 export function hasTabPermission(tabName) {
   const userType = getUserType();

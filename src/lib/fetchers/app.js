@@ -133,7 +133,7 @@ export function getAppClientPortfolioDetails(_id) {
 }
 
 export function getClientPreferences(clientId) {
-  return fetchData(`app/roundglass/client-preference?person=coach&clientId=${clientId}`);
+  return fetchData(`app/roundglass/client-preference?clientId=${clientId}`);
 }
 
 export function getClientStatsForCoach(clientId) {
@@ -473,8 +473,8 @@ export async function retrieveBankDetails(query) {
 // Users management functions
 export function getUsers(coachId = null) {
   const endpoint = coachId
-    ? `app/users?person=coach&coachId=${coachId}`
-    : "app/users?person=coach";
+    ? `app/user?person=coach&coachId=${coachId}`
+    : "app/user?person=coach";
   return fetchData(endpoint);
 }
 
@@ -483,7 +483,7 @@ export async function createUser(userData) {
   try {
     const { permissions, ...userDataWithoutPermissions } = userData;
 
-    const createResponse = await sendData("app/users", userData, "POST");
+    const createResponse = await sendData("app/user?person=coach", userData, "POST");
 
     if (createResponse.status_code === 200 && permissions && permissions.length > 0) {
       try {
@@ -495,7 +495,7 @@ export async function createUser(userData) {
             permissions: permissions
           };
 
-          await sendData("app/users/permissions", permissionsData, "PUT");
+          await sendData("app/user/permissions?person=coach", permissionsData, "PUT");
         }
       } catch (permissionsError) {
         // Don't fail the entire request if permissions update fails
@@ -509,33 +509,33 @@ export async function createUser(userData) {
 }
 
 export function updateUser(userData) {
-  return sendData("app/users", userData, "PUT");
+  return sendData("app/user?person=coach", userData, "PUT");
 }
 
 export function deleteUser(userId) {
-  return sendData("app/users", { id: userId }, "DELETE");
+  return sendData("app/user", { id: userId }, "DELETE");
 }
 
 // Client assignment functions
 export function addClientToUser(userId, clientId) {
-  return sendData("app/users/clients/add", { userId, clientId }, "POST");
+  return sendData("app/user/clients/add?person=coach", { userId, clientId }, "POST");
 }
 
 export function removeClientFromUser(userId, clientId) {
-  return sendData("app/users/clients/remove", { userId, clientId }, "POST");
+  return sendData("app/user/clients/remove?person=coach", { userId, clientId }, "POST");
 }
 
 export function assignClientsToUser(userId, clientIds) {
-  return sendData("app/users/clients/assign", { userId, clientIds }, "PUT");
+  return sendData("app/user/clients/assign?person=coach", { userId, clientIds }, "PUT");
 }
 
 export function getUserClients(userId, page = 1, limit = 10) {
-  return fetchData(`app/users/assignments/${userId}/clients?page=${page}&limit=${limit}`);
+  return fetchData(`app/user/assignments/${userId}/clients?person=coach&page=${page}&limit=${limit}`);
 }
 
 export const getAvailableClients = withClientFilter((page = 1, limit = 1000, search = "") => {
   const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
-  return fetchData(`app/users/clients/available?page=${page}&limit=${limit}${searchParam}`);
+  return fetchData(`app/user/clients/available?person=coach&page=${page}&limit=${limit}${searchParam}`);
 });
 
 export const fetchClubSubscription = function (coachId) {
@@ -550,7 +550,7 @@ export async function retrieveClientList() {
 // User login function
 export async function loginUser(userData) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/users/actions?person=user`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/user/actions?person=user`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -563,16 +563,22 @@ export async function loginUser(userData) {
     const responseData = await response.json();
 
     if (responseData.status_code === 200) {
+      if (!responseData?.data?.refreshToken) {
+        throw new Error("Login succeeded but no token was returned by the server.");
+      }
       const authHeaderResponse = await fetch("/api/login", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
-          _id: responseData.data.createdBy._id,
+          // Backend uses refreshToken as bearer for sub-users as well.
+          refreshToken: responseData.data.refreshToken,
+          _id: responseData.data._id,
           userType: "user",
-          userData: responseData.data
+          userData: responseData.data,
+          appUserRole: responseData.data.role,
+          userScopes: responseData.data.permissionOverrides || responseData.data.scopes || [],
         })
       });
 

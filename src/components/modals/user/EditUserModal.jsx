@@ -77,7 +77,7 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
         submitData.append("file", selectedFile);
       }
 
-      const response = await sendDataWithFormData("app/users?person=coach", submitData, "PUT");
+      const response = await sendDataWithFormData("app/user?person=coach", submitData, "PUT");
 
       if (response.status_code === 200) {
         toast.success("User updated successfully!");

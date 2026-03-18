@@ -37,6 +37,7 @@ import {
 } from "@/lib/utils/roundglassAnalytics";
 import { cn } from "@/lib/utils";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getUserType } from "@/lib/permissions";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -103,7 +104,7 @@ export default function CorrelationsAnalysis() {
   // Build API params
   const apiParams = useMemo(() => {
     const params = {
-      person: "coach", // Correlations only available for coach
+      person: getUserType() === "user" ? "user" : "coach",
     };
 
     if (selectedClientIds.length > 0) {

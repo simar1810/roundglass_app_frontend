@@ -5,12 +5,22 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
+function withPersonIfNeeded(endpoint, cookieStore) {
+  // Only auto-append for sub-users; coaches/clients have many explicit per-endpoint person values already.
+  const userType = cookieStore?.get("userType")?.value;
+  if (userType !== "user") return endpoint;
+  if (!endpoint || typeof endpoint !== "string") return endpoint;
+  if (endpoint.includes("person=")) return endpoint;
+  return endpoint.includes("?") ? `${endpoint}&person=user` : `${endpoint}?person=user`;
+}
+
 export async function fetchData(endpoint, expireUserSession) {
   try {
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
+    const finalEndpoint = withPersonIfNeeded(endpoint, cookieStore);
 
-    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+    const response = await fetch(`${API_ENDPOINT}/${finalEndpoint}`, {
       headers: {
         Authorization: `Bearer ${TOKEN}`,
         "Accept-Encoding": "gzip, deflate, br",
@@ -56,8 +66,9 @@ export async function sendData(
 
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
+    const finalEndpoint = withPersonIfNeeded(endpoint, cookieStore);
 
-    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+    const response = await fetch(`${API_ENDPOINT}/${finalEndpoint}`, {
       method,
       headers: {
         Accept: "application/json",
@@ -100,8 +111,9 @@ export async function sendDataWithFormData(
 
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
+    const finalEndpoint = withPersonIfNeeded(endpoint, cookieStore);
 
-    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+    const response = await fetch(`${API_ENDPOINT}/${finalEndpoint}`, {
       method,
       headers: {
         Accept: "application/json",
@@ -133,11 +145,12 @@ export async function sendFile(endpoint, file) {
   try {
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
+    const finalEndpoint = withPersonIfNeeded(endpoint, cookieStore);
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_ENDPOINT}/${endpoint}`, {
+    const response = await fetch(`${API_ENDPOINT}/${finalEndpoint}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${TOKEN}`,
@@ -157,12 +170,13 @@ export async function sendFileWithQuery(endpoint, file, queryText) {
   try {
     const cookieStore = await cookies();
     const TOKEN = cookieStore.get("token")?.value;
+    const finalEndpoint = withPersonIfNeeded(endpoint, cookieStore);
 
     const formData = new FormData();
     formData.append("file", file);
     formData.append("query", queryText);
 
-    const url = `${API_ENDPOINT}/${endpoint}`;
+    const url = `${API_ENDPOINT}/${finalEndpoint}`;
 
     const response = await fetch(url, {
       method: "PUT",

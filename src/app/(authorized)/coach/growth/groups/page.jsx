@@ -2,6 +2,7 @@
 
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import RequireScope from "@/components/common/RequireScope";
 import FormControl from "@/components/FormControl";
 import AddClientsToGroupModal from "@/components/modals/growth/AddClientsToGroupModal";
 import CreateGroupModal from "@/components/modals/growth/CreateGroupModal";
@@ -69,7 +70,8 @@ export default function Page() {
   };
 
   return (
-    <div className="content-container space-y-6">
+    <RequireScope scope="growth">
+      <div className="content-container space-y-6">
       {/* Header Section */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -144,7 +146,8 @@ export default function Page() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </RequireScope>
   );
 }
 
