@@ -13,9 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAppClients } from "@/lib/fetchers/app";
+import { getAllGroups } from "@/lib/fetchers/growth";
 import { useAppSelector } from "@/providers/global/hooks";
 import { ChevronDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
 
@@ -27,7 +28,7 @@ const initialQuery = {
 
 export default function Page() {
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [statusFilter, setStatusFilter] = useState("all"); // all, pending, active, inactive
+  const [selectedGroups, setSelectedGroups] = useState([])
   const [query, setQuery] = useState(() => initialQuery);
   const { client_categories = [] } = useAppSelector(state => state.coach.data);
 
@@ -44,6 +45,37 @@ export default function Page() {
     () => getAppClients({ limit: 10000 }) // Fetch all clients
   );
 
+  const { data: groupsRes } = useSWR(
+    "api/growth/groups",
+    () => getAllGroups()
+  );
+
+  const groups = useMemo(
+    () => (Array.isArray(groupsRes?.data) ? groupsRes.data : []),
+    [groupsRes]
+  );
+
+  const groupIdToName = useMemo(() => new Map(groups.map(g => [g._id, g.name])), [groups]);
+
+  const clientIdToGroupIds = useMemo(() => {
+    const map = new Map();
+    for (const group of groups) {
+      const members = Array.isArray(group?.clients) ? group.clients : [];
+      for (const client of members) {
+        const id = client?._id;
+        if (!id) continue;
+        const prev = map.get(id) || [];
+        prev.push(group._id);
+        map.set(id, prev);
+      }
+    }
+    return map;
+  }, [groups]);
+
+  useEffect(() => {
+    setQuery(prev => ({ ...prev, page: 1 }));
+  }, [selectedCategories, selectedGroups]);
+
   if (isLoading) return <ContentLoader />
 
   if (error || data?.status_code !== 200) return <ContentError title={error || data?.message} />
@@ -51,26 +83,20 @@ export default function Page() {
   // Get all clients from API response and implement frontend pagination
   const allClients = Array.isArray(data?.data) ? data.data : [];
 
-  // Apply status filter
-  let filteredClients = allClients;
-  if (statusFilter === "pending") {
-    filteredClients = allClients.filter(client => !client.isVerified);
-  } else if (statusFilter === "active") {
-    filteredClients = allClients.filter(client => client.isVerified && client.isActive);
-  } else if (statusFilter === "inactive") {
-    filteredClients = allClients.filter(client => client.isVerified && !client.isActive);
+  // Apply category filter
+  let clients = allClients;
+  if (selectedCategories.length > 0) {
+    clients = clients.filter(client =>
+      client?.categories?.some(category => selectedCategories.includes(category))
+    );
   }
 
-  // Apply category filter
-  let clients = [];
-  if (selectedCategories.length > 0) {
-    for (const client of filteredClients) {
-      if (client.categories.find(category => selectedCategories.includes(category))) {
-        clients.push(client);
-      }
-    }
-  } else {
-    clients = filteredClients;
+  // Apply group filter
+  if (selectedGroups.length > 0) {
+    clients = clients.filter(client => {
+      const memberships = clientIdToGroupIds.get(client?._id) || [];
+      return memberships.some(groupId => selectedGroups.includes(groupId));
+    });
   }
 
   // Apply pagination after filtering
@@ -82,18 +108,16 @@ export default function Page() {
 
   return <div className="mt-8 content-container">
     <div className="flex flex-col gap-4 md:gap-0 md:flex-row items-start justify-between mb-6">
-      <StatusFilter
-        statusFilter={statusFilter}
-        setStatusFilter={(filter) => {
-          setStatusFilter(filter);
-          setQuery(prev => ({ ...prev, page: 1 })); // Reset to page 1 when filter changes
-        }}
-      />
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
         <Header
           selectedCategories={selectedCategories}
           setSelectedCategories={setSelectedCategories}
           categories={client_categories}
+        />
+        <GroupsFilter
+          groups={groups}
+          selectedGroups={selectedGroups}
+          setSelectedGroups={setSelectedGroups}
         />
         <TeamDataExport
           defaultCategoryIds={selectedCategories}
@@ -108,6 +132,8 @@ export default function Page() {
       {currentClients.map((client, index) => <ClientListItemStatus
         key={index}
         categories={categories}
+        groups={clientIdToGroupIds.get(client?._id) || []}
+        groupNames={groupIdToName}
         client={client}
       />)}
     </div>
@@ -208,37 +234,69 @@ function Header({
   )
 }
 
-function StatusFilter({ statusFilter, setStatusFilter }) {
+function GroupsFilter({ groups = [], selectedGroups, setSelectedGroups }) {
+  const handleToggle = (groupId) => {
+    setSelectedGroups((prev) =>
+      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId],
+    )
+  }
+
+  const handleSelectAll = () => {
+    const allIds = groups.map((g) => g._id)
+    setSelectedGroups(allIds)
+  }
+
+  const handleReset = () => {
+    setSelectedGroups([])
+  }
+
+  const getSelectedNames = () => {
+    if (!groups.length) return "Groups"
+    if (selectedGroups.length === 0) return "Select groups"
+    if (selectedGroups.length === groups.length) return "All groups"
+    if (selectedGroups.length === 1) {
+      const g = groups.find((x) => x._id === selectedGroups[0])
+      return g?.name || "1 group"
+    }
+    return `${selectedGroups.length} groups`
+  }
+
   return (
-    <div className="flex gap-1 border border-gray-200 rounded-md p-1">
-      <Button
-        variant={statusFilter === "all" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => setStatusFilter("all")}
-      >
-        All
-      </Button>
-      <Button
-        variant={statusFilter === "pending" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => setStatusFilter("pending")}
-      >
-        Pending
-      </Button>
-      <Button
-        variant={statusFilter === "active" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => setStatusFilter("active")}
-      >
-        Active
-      </Button>
-      <Button
-        variant={statusFilter === "inactive" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => setStatusFilter("inactive")}
-      >
-        Inactive
-      </Button>
+    <div className="w-full max-w-xs">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-between bg-transparent"
+            disabled={!groups.length}
+          >
+            {getSelectedNames()}
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="start">
+          <DropdownMenuLabel>Filter Groups</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <div className="flex gap-1 p-1">
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs flex-1" onClick={handleSelectAll}>
+              Select All
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs flex-1" onClick={handleReset}>
+              Reset
+            </Button>
+          </div>
+          <DropdownMenuSeparator />
+          {groups.map((g) => (
+            <DropdownMenuCheckboxItem
+              key={g._id}
+              checked={selectedGroups.includes(g._id)}
+              onCheckedChange={() => handleToggle(g._id)}
+            >
+              {g.name}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

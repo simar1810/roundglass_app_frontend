@@ -28,7 +28,9 @@ import ClientUpdateCategories from "./ClientUpdateCategories";
 
 export default function ClientListItemStatus({
   client,
-  categories
+  categories,
+  groups = [],
+  groupNames
 }) {
   const [modal, setModal] = useState();
   const [modalOpened, setModalOpened] = useState(false);
@@ -44,6 +46,18 @@ export default function ClientListItemStatus({
         >
           {categories.get(category)}
         </Badge>)}
+      {Array.isArray(groups) && groups.length > 0 && Boolean(groupNames) && groups
+        .filter(groupId => groupNames?.has?.(groupId))
+        .slice(0, 3)
+        .map(groupId => (
+          <Badge
+            key={groupId}
+            variant="secondary"
+            className="text-[8px] font-bold"
+          >
+            {groupNames.get(groupId)}
+          </Badge>
+        ))}
     </div>
     <div className="flex gap-4 items-center w-full">
     {client.isVerified
@@ -78,6 +92,18 @@ export default function ClientListItemStatus({
         >
           {categories.get(category)}
         </Badge>)}
+      {Array.isArray(groups) && groups.length > 0 && Boolean(groupNames) && groups
+        .filter(groupId => groupNames?.has?.(groupId))
+        .slice(0, 3)
+        .map(groupId => (
+          <Badge
+            key={groupId}
+            variant="secondary"
+            className="text-[8px] font-bold"
+          >
+            {groupNames.get(groupId)}
+          </Badge>
+        ))}
     </div>
 
     {client.isVerified
