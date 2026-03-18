@@ -79,22 +79,6 @@ export default function ProfileModal() {
                 </label>
               </div>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <p className="text-[12px]">
-                Select if client is your lead (Inactive) or Customer (Active)
-              </p>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1 text-sm">
-                  <input type="radio" value="Active" />
-                  Active
-                </label>
-                <label className="flex items-center gap-1 text-sm">
-                  <input type="radio" value="Inactive" />
-                  Inactive
-                </label>
-              </div>
-            </div>
           </div>
 
           <button className="bg-[var(--accent-1)] hover:bg-[var(--accent-1)] text-white font-bold w-[236px] py-3 rounded mt-2">

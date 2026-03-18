@@ -120,30 +120,6 @@ export default function CheckupStage3() {
           type="date"
         />}
       </div>
-
-      <div className="flex flex-col gap-2">
-        <p className="text-[12px]">
-          Select if client is your lead (Inactive) or Customer (Active)
-        </p>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-1 text-sm">
-            <input
-              onChange={e => dispatch(changeFieldvalue("activeType", "active"))}
-              checked={state.activeType === "active"}
-              type="radio"
-            />
-            Active
-          </label>
-          <label className="flex items-center gap-1 text-sm">
-            <input
-              onChange={e => dispatch(changeFieldvalue("activeType", "inactive"))}
-              checked={state.activeType === "inactive"}
-              type="radio"
-            />
-            Inactive
-          </label>
-        </div>
-      </div>
     </div>
     <div className="mt-6 flex items-center gap-4">
       <Button variant="wz_outline" className="grow" onClick={() => dispatch(setCurrentStage(2))}>Previous</Button>

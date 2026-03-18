@@ -3,7 +3,6 @@ import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
 // import ActivityTool from "@/components/pages/coach/dashboard/ActivityTool"; // Commented out - carousel not needed
 import AnalyticsOverview from "@/components/pages/coach/dashboard/AnalyticsOverview";
-import StatisticsCards from "@/components/pages/coach/dashboard/StatisticsCards";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCoachHome } from "@/lib/fetchers/app";
 import { nameInitials } from "@/lib/formatter";
@@ -30,11 +29,7 @@ function Container() {
   return <>
     {/* Carousel commented out - not needed for academy */}
     {/* <ActivityTool activities={coachHomeData.activePrograms} /> */}
-    <StatisticsCards />
-
-    <div className="mt-4">
-      <AnalyticsOverview />
-    </div>
+    <AnalyticsOverview />
     {/* Statistics sidebar (expiring meal plans, followups, etc.) disabled for now */}
     {/*
     <DashboardFeaturesDetails

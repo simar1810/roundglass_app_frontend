@@ -141,8 +141,8 @@ export default function AnalyticsOverview() {
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <CardContent className="pt-0 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 min-h-[520px]">
           {/* KPI column */}
           <div className="space-y-3 lg:col-span-1">
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
@@ -153,7 +153,7 @@ export default function AnalyticsOverview() {
                     Total players
                   </span>
                 </div>
-                <div className="text-2xl font-semibold leading-tight text-blue-900 dark:text-blue-100">
+                <div className="text-3xl font-semibold leading-tight text-blue-900 dark:text-blue-100">
                   {totalPlayers}
                 </div>
                 <div className="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-1.5">
@@ -168,7 +168,7 @@ export default function AnalyticsOverview() {
                     With health data
                   </span>
                 </div>
-                <div className="text-2xl font-semibold leading-tight text-green-900 dark:text-green-100">
+                <div className="text-3xl font-semibold leading-tight text-green-900 dark:text-green-100">
                   {playersWithHealthData}
                 </div>
                 <div className="text-[11px] text-green-600 dark:text-green-400 mt-1.5">
@@ -185,7 +185,7 @@ export default function AnalyticsOverview() {
                     Active training
                   </span>
                 </div>
-                <div className="text-2xl font-semibold leading-tight text-purple-900 dark:text-purple-100">
+                <div className="text-3xl font-semibold leading-tight text-purple-900 dark:text-purple-100">
                   {playersWithTraining}
                 </div>
                 <div className="text-[11px] text-purple-600 dark:text-purple-400 mt-1.5">
@@ -200,7 +200,7 @@ export default function AnalyticsOverview() {
                     With supplements
                   </span>
                 </div>
-                <div className="text-2xl font-semibold leading-tight text-orange-900 dark:text-orange-100">
+                <div className="text-3xl font-semibold leading-tight text-orange-900 dark:text-orange-100">
                   {playersWithSupplements}
                 </div>
                 <div className="text-[11px] text-orange-600 dark:text-orange-400 mt-1.5">
@@ -212,7 +212,7 @@ export default function AnalyticsOverview() {
 
         {/* Health Metrics Summary */}
           {/* Coverage + insights */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4 lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <ProgressRow
                 label="Health data coverage"

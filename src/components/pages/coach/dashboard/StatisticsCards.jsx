@@ -21,25 +21,19 @@ export default function StatisticsCards() {
     title={error || data?.message || "Please try again later!"}
   />
   const statistics = data.data;
+  const appCardsBase = dashboardCards.app.filter(item => item.id !== 1); // remove "Active Players"
   const appCards = organisation !== "Herbalife"
-    ? dashboardCards.app.filter(item => item.id !== 4)
-    : dashboardCards.app
+    ? appCardsBase.filter(item => item.id !== 4) // hide "Orders" for non-Herbalife
+    : appCardsBase
   return <>
     <h4 className="mb-4">Overview</h4>
     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-      {organisation !== "Herbalife" && <DashboardInfoCard
-        trendUp={Math.random() > 0.5}
-        quantity={statistics.clients - statistics.members}
-        title="Pending Players"
-        icon="/svgs/person.svg"
-      />}
       {appCards.map(item => <DashboardInfoCard
         key={item.id}
         trendUp={Math.random() > 0.5}
         quantity={statistics[item.name]}
         {...item}
       />)}
-      {/* <ClubCards statistics={statistics} /> */}
     </div>
   </>
 }
