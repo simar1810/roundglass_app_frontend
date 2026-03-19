@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/chart";
 import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { useAppSelector } from "@/providers/global/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -58,6 +59,7 @@ export default function PreferencesAnalysis() {
   // State for filters
   const [analysisType, setAnalysisType] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [activeTab, setActiveTab] = useState("training");
 
   const { data: groupsData } = useSWR("preferences-groups-list", () => getAllGroups());
@@ -71,6 +73,17 @@ export default function PreferencesAnalysis() {
       }))
       .filter((g) => Boolean(g.value));
   }, [groupsData]);
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
+  const categoryOptions = useMemo(
+    () =>
+      client_categories
+        .map((category) => ({
+          value: category?._id,
+          label: category?.name || "Unnamed category",
+        }))
+        .filter((category) => Boolean(category.value)),
+    [client_categories]
+  );
 
   // Build API params
   const apiParams = useMemo(() => {
@@ -81,13 +94,16 @@ export default function PreferencesAnalysis() {
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
+    }
 
     if (analysisType !== "all") {
       params.analysisType = analysisType;
     }
 
     return params;
-  }, [selectedGroupId, analysisType]);
+  }, [selectedGroupId, selectedCategoryId, analysisType]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -96,13 +112,16 @@ export default function PreferencesAnalysis() {
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
+    }
 
     if (analysisType !== "all") {
       keyParts.push(`type:${analysisType}`);
     }
 
     return keyParts.join("|");
-  }, [selectedGroupId, analysisType]);
+  }, [selectedGroupId, selectedCategoryId, analysisType]);
 
   // Fetch preferences analysis data
   const { isLoading, error, data } = useSWR(swrKey, () => getPreferencesAnalysis(apiParams));
@@ -203,6 +222,7 @@ export default function PreferencesAnalysis() {
   const handleClearFilters = () => {
     setAnalysisType("all");
     setSelectedGroupId("all");
+    setSelectedCategoryId("all");
     setActiveTab("training");
   };
 
@@ -342,6 +362,24 @@ export default function PreferencesAnalysis() {
                   {groupOptions.map((g) => (
                     <SelectItem key={g.value} value={g.value}>
                       {g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

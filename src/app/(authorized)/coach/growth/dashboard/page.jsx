@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAllGroups, getGroupReport } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
 import { format, subMonths } from "date-fns";
 import {
     AlertTriangle,
@@ -21,8 +22,8 @@ import {
     Users,
     X
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -34,9 +35,41 @@ export default function Page() {
   const [selectedGroupId, setSelectedGroupId] = useState(() => groupFromUrl || "");
   const [fromDate, setFromDate] = useState(() => subMonths(new Date(), 6)); // Default: 6 months ago
   const [toDate, setToDate] = useState(() => new Date()); // Default: today
-  // Default: all age groups. If user unchecks all, we treat it as "all" (no filter).
-  const [ageGroups, setAgeGroups] = useState(["U14", "U16", "U18"]);
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [standard, setStandard] = useState("IPA");
+  useEffect(() => {
+    if (!Array.isArray(client_categories) || client_categories.length === 0) {
+      setSelectedCategoryIds([]);
+      return;
+    }
+
+    // Default-select U14/U16/U18 style categories when available.
+    const defaultCategoryIds = client_categories
+      .filter((category) => {
+        const name = String(category?.name || "").toLowerCase().replace(/\s+/g, "");
+        return (
+          name === "u14" ||
+          name === "u16" ||
+          name === "u18" ||
+          name === "under14" ||
+          name === "under16" ||
+          name === "under18"
+        );
+      })
+      .map((category) => category._id)
+      .filter(Boolean);
+
+    if (defaultCategoryIds.length > 0) {
+      setSelectedCategoryIds(defaultCategoryIds);
+      return;
+    }
+
+    // If no U14/U16/U18 category exists, default to all categories.
+    const allCategoryIds = client_categories.map((category) => category?._id).filter(Boolean);
+    setSelectedCategoryIds(allCategoryIds);
+  }, [client_categories]);
+
   const [fromDateOpen, setFromDateOpen] = useState(false);
   const [toDateOpen, setToDateOpen] = useState(false);
 
@@ -58,7 +91,7 @@ export default function Page() {
 
   // Fetch group report when group is selected
   const reportKey = selectedGroupId
-    ? `growth/group-report/${selectedGroupId}?from=${format(fromDate, "yyyy-MM-dd")}&to=${format(toDate, "yyyy-MM-dd")}&ageGroup=${ageGroups.length > 0 ? ageGroups.join(",") : "all"}&standard=${standard}`
+    ? `growth/group-report/${selectedGroupId}?from=${format(fromDate, "yyyy-MM-dd")}&to=${format(toDate, "yyyy-MM-dd")}&categoryIds=${selectedCategoryIds.length > 0 ? selectedCategoryIds.join(",") : "all"}&standard=${standard}`
     : null;
 
   const { isLoading: reportLoading, error: reportError, data: reportData } = useSWR(
@@ -67,7 +100,7 @@ export default function Page() {
       getGroupReport(selectedGroupId, {
         from: format(fromDate, "yyyy-MM-dd"),
         to: format(toDate, "yyyy-MM-dd"),
-        ...(ageGroups.length > 0 ? { ageGroup: ageGroups } : {}),
+        ...(selectedCategoryIds.length > 0 ? { categoryIds: selectedCategoryIds } : {}),
         standard,
       })
   );
@@ -84,11 +117,11 @@ export default function Page() {
 
   const report = reportData?.data;
 
-  const handleAgeGroupToggle = (ageGroup) => {
-    setAgeGroups((prev) =>
-      prev.includes(ageGroup)
-        ? prev.filter((g) => g !== ageGroup)
-        : [...prev, ageGroup]
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
@@ -323,25 +356,30 @@ export default function Page() {
                 </Popover>
               </div>
 
-              {/* Age Groups */}
+              {/* Categories */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Age Groups</label>
+                <label className="text-sm font-medium mb-2 block">Categories</label>
                 <div className="flex flex-wrap gap-3 p-3 border rounded-lg">
-                  {["U14", "U16", "U18"].map((ageGroup) => (
-                    <div key={ageGroup} className="flex items-center space-x-2">
+                  {client_categories.map((category) => (
+                    <div key={category._id} className="flex items-center space-x-2">
                       <Checkbox
-                        id={ageGroup}
-                        checked={ageGroups.includes(ageGroup)}
-                        onCheckedChange={() => handleAgeGroupToggle(ageGroup)}
+                        id={`category-${category._id}`}
+                        checked={selectedCategoryIds.includes(category._id)}
+                        onCheckedChange={() => handleCategoryToggle(category._id)}
                       />
                       <label
-                        htmlFor={ageGroup}
+                        htmlFor={`category-${category._id}`}
                         className="text-sm font-medium leading-none cursor-pointer"
                       >
-                        {ageGroup}
+                        {category.name}
                       </label>
                     </div>
                   ))}
+                  {client_categories.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No categories available.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -464,7 +502,7 @@ export default function Page() {
               {/* Intervention Alerts */}
               <InterventionAlertsSection
                 report={report}
-                ageGroups={ageGroups}
+                selectedCategoryIds={selectedCategoryIds}
                 standard={standard}
               />
 
@@ -568,7 +606,7 @@ function AgeGroupCard({ bucket }) {
   );
 }
 
-function InterventionAlertsSection({ report, ageGroups, standard }) {
+function InterventionAlertsSection({ report, selectedCategoryIds, standard }) {
   // Note: The API doesn't provide individual client data in the report
   // This section would need to be implemented when backend provides client-level data
   // For now, we'll show a placeholder with the count

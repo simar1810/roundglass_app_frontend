@@ -27,6 +27,7 @@ import { getAppClientPortfolioDetails, getAppClients } from "@/lib/fetchers/app"
 import { getClientRanking } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { nameInitials } from "@/lib/formatter";
+import { useAppSelector } from "@/providers/global/hooks";
 import { cn } from "@/lib/utils";
 import {
   formatMetricName,
@@ -90,6 +91,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const debounceRef = useRef(null);
   const [comparisonGroup, setComparisonGroup] = useState("all");
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [selectedMetrics, setSelectedMetrics] = useState([]);
 
   const applySelectedClient = (c) => {
@@ -325,13 +327,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     if (comparisonGroup === "group" && selectedGroupId) {
       params.groupId = selectedGroupId;
     }
+    if (comparisonGroup === "category" && selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
+    }
 
     if (selectedMetrics.length > 0) {
       params.metrics = selectedMetrics;
     }
 
     return params;
-  }, [clientId, comparisonGroup, selectedGroupId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedGroupId, selectedCategoryId, selectedMetrics]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -345,13 +350,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     if (comparisonGroup === "group" && selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
+    if (comparisonGroup === "category" && selectedCategoryId && selectedCategoryId !== "all") {
+      keyParts.push(`category:${selectedCategoryId}`);
+    }
 
     if (selectedMetrics.length > 0) {
       keyParts.push(`metrics:${selectedMetrics.join(",")}`);
     }
 
     return keyParts.join("|");
-  }, [clientId, comparisonGroup, selectedGroupId, selectedMetrics]);
+  }, [clientId, comparisonGroup, selectedGroupId, selectedCategoryId, selectedMetrics]);
 
   // Fetch ranking data
   const { isLoading, error, data } = useSWR(
@@ -363,6 +371,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const graphData = data?.graphData;
 
   const { data: groupsData } = useSWR("client-ranking-groups-list", () => getAllGroups());
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
   const groupOptions = useMemo(() => {
     const list = groupsData?.data?.groups || groupsData?.data || [];
     const arr = Array.isArray(list) ? list : [];
@@ -373,6 +382,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       }))
       .filter((g) => Boolean(g.value));
   }, [groupsData]);
+  const categoryOptions = useMemo(
+    () =>
+      client_categories
+        .map((category) => ({
+          value: category?._id,
+          label: category?.name || "Unnamed category",
+        }))
+        .filter((category) => Boolean(category.value)),
+    [client_categories]
+  );
 
   // Prepare radar chart data (exclude metrics we don't want to show)
   const radarChartData = useMemo(() => {
@@ -471,6 +490,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
     }
     setComparisonGroup("all");
     setSelectedGroupId("");
+    setSelectedCategoryId("all");
     setSelectedMetrics([]);
     setSuggestionsOpen(false);
     setHighlightedIndex(-1);
@@ -644,6 +664,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                 <SelectContent>
                   <SelectItem value="all">All Players</SelectItem>
                   <SelectItem value="group">Group</SelectItem>
+                  <SelectItem value="category">Category</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -660,6 +681,26 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                     {groupOptions.map((g) => (
                       <SelectItem key={g.value} value={g.value}>
                         {g.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Category Selector (if comparisonGroup="category") */}
+            {comparisonGroup === "category" && (
+              <div className="min-w-0">
+                <label className="text-sm font-medium mb-2 block">Category</label>
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categoryOptions.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

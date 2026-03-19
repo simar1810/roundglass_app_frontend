@@ -36,6 +36,7 @@ import { getAppClients } from "@/lib/fetchers/app";
 import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
     calculateTrendDirection,
     formatDateRange,
@@ -85,11 +86,23 @@ export default function TrendsAnalysis({ initialClientId = null }) {
   const [endDate, setEndDate] = useState(() => new Date());
   const [selectedClientIds, setSelectedClientIds] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [aggregate, setAggregate] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
 
   const { data: groupsData } = useSWR("trends-groups-list", () => getAllGroups());
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
+  const categoryOptions = useMemo(
+    () =>
+      client_categories
+        .map((category) => ({
+          value: category?._id,
+          label: category?.name || "Unnamed category",
+        }))
+        .filter((category) => Boolean(category.value)),
+    [client_categories]
+  );
   const groupOptions = useMemo(() => {
     const list = groupsData?.data?.groups || groupsData?.data || [];
     const arr = Array.isArray(list) ? list : [];
@@ -149,9 +162,12 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
+    }
 
     return params;
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId, selectedCategoryId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -171,9 +187,12 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     if (selectedGroupId) {
       keyParts.push(`group:${selectedGroupId}`);
     }
+    if (selectedCategoryId) {
+      keyParts.push(`category:${selectedCategoryId}`);
+    }
 
     return keyParts.join("|");
-  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId]);
+  }, [selectedMetric, selectedClientIds, startDate, endDate, aggregate, selectedGroupId, selectedCategoryId]);
 
   // Fetch trends data
   const { isLoading, error, data } = useSWR(
@@ -377,6 +396,24 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                   {groupOptions.map((g) => (
                     <SelectItem key={g.value} value={g.value}>
                       {g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div className="w-full min-w-0">
+              <label className="text-sm font-medium mb-3 block">Category (Optional)</label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

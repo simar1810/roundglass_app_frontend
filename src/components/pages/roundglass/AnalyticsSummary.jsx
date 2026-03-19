@@ -25,6 +25,7 @@ import {
 import { getAppClients } from "@/lib/fetchers/app";
 import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
   calculateTrendDirection,
   formatMetricName,
@@ -74,6 +75,7 @@ function pickFirstDistribution(obj, keys) {
 export default function AnalyticsSummary() {
   // State for filters
   const [selectedGroupId, setSelectedGroupId] = useState("all");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [focusQuery, setFocusQuery] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(""); // resolved Mongo _id used by analytics APIs
   const [isResolvingClient, setIsResolvingClient] = useState(false);
@@ -96,6 +98,17 @@ export default function AnalyticsSummary() {
       label: g?.name || g?.title || "Unnamed group",
     })).filter((g) => Boolean(g.value));
   }, [groupsData]);
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
+  const categoryOptions = useMemo(
+    () =>
+      client_categories
+        .map((category) => ({
+          value: category?._id,
+          label: category?.name || "Unnamed category",
+        }))
+        .filter((category) => Boolean(category.value)),
+    [client_categories]
+  );
 
   const applySelectedClient = (c) => {
     const resolvedId = String(c?._id || "");
@@ -170,13 +183,16 @@ export default function AnalyticsSummary() {
     if (selectedGroupId && selectedGroupId !== "all") {
       params.groupId = selectedGroupId;
     }
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      params.categoryId = selectedCategoryId;
+    }
 
     if (selectedClientId) {
       params.clientId = selectedClientId;
     }
 
     return params;
-  }, [selectedGroupId, selectedClientId]);
+  }, [selectedGroupId, selectedCategoryId, selectedClientId]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
@@ -185,13 +201,16 @@ export default function AnalyticsSummary() {
     if (selectedGroupId && selectedGroupId !== "all") {
       keyParts.push(`group:${selectedGroupId}`);
     }
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      keyParts.push(`category:${selectedCategoryId}`);
+    }
 
     if (selectedClientId) {
       keyParts.push(`client:${selectedClientId}`);
     }
 
     return keyParts.join("|");
-  }, [selectedGroupId, selectedClientId]);
+  }, [selectedGroupId, selectedCategoryId, selectedClientId]);
 
   // Fetch summary data
   const { isLoading, error, data } = useSWR(swrKey, () => getAnalyticsSummary(apiParams));
@@ -263,6 +282,7 @@ export default function AnalyticsSummary() {
 
   const handleClearFilters = () => {
     setSelectedGroupId("all");
+    setSelectedCategoryId("all");
     setFocusQuery("");
     setSelectedClientId("");
     setSuggestionsOpen(false);
@@ -561,6 +581,29 @@ export default function AnalyticsSummary() {
                     
                 </p>
               )}
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={(v) => {
+                  setSelectedCategoryId(v);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

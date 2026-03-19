@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { getCategoryComparison } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
     formatMetricName,
     normalizeMetricValue
@@ -182,12 +183,14 @@ export default function CategoryComparison() {
     return Array.isArray(groupsRes.data) ? groupsRes.data : [];
   }, [groupsRes]);
 
-  // Keep old name for minimal routing changes, but this view is group-based.
-
   // State for filters
+  const [comparisonMode, setComparisonMode] = useState("group"); // "group" | "category"
   const [comparisonType, setComparisonType] = useState("single"); // "single" or "multi"
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all"); // category filter in group mode
+  const [selectedCompareCategoryId, setSelectedCompareCategoryId] = useState("");
+  const [selectedCompareCategoryIds, setSelectedCompareCategoryIds] = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -198,18 +201,38 @@ export default function CategoryComparison() {
       label: g.name || "Unnamed group",
     }));
   }, [groups]);
+  const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
+  const categoryOptions = useMemo(
+    () =>
+      client_categories
+        .map((category) => ({
+          value: category?._id,
+          label: category?.name || "Unnamed category",
+        }))
+        .filter((category) => Boolean(category.value)),
+    [client_categories]
+  );
 
   // Build API params
   const apiParams = useMemo(() => {
     const params = { person: "coach" };
-    
-    if (comparisonType === "single") {
-      if (selectedGroupId) {
-        params.groupId = selectedGroupId;
+
+    if (comparisonMode === "group") {
+      if (comparisonType === "single") {
+        if (selectedGroupId) params.groupId = selectedGroupId;
+      } else if (selectedGroupIds.length > 0) {
+        params.groupIds = selectedGroupIds;
+      }
+
+      // Optional category filter only in group mode.
+      if (selectedCategoryId && selectedCategoryId !== "all") {
+        params.categoryId = selectedCategoryId;
       }
     } else {
-      if (selectedGroupIds.length > 0) {
-        params.groupIds = selectedGroupIds;
+      if (comparisonType === "single") {
+        if (selectedCompareCategoryId) params.categoryId = selectedCompareCategoryId;
+      } else if (selectedCompareCategoryIds.length > 0) {
+        params.categoryIds = selectedCompareCategoryIds;
       }
     }
 
@@ -218,21 +241,38 @@ export default function CategoryComparison() {
     }
 
     return params;
-  }, [comparisonType, selectedGroupId, selectedGroupIds, selectedMetrics]);
+  }, [
+    comparisonMode,
+    comparisonType,
+    selectedGroupId,
+    selectedGroupIds,
+    selectedCategoryId,
+    selectedCompareCategoryId,
+    selectedCompareCategoryIds,
+    selectedMetrics,
+  ]);
 
   // Build SWR key
   const swrKey = useMemo(() => {
     const keyParts = ["roundglass/category-comparison", "coach"];
+    keyParts.push(`mode:${comparisonMode}`);
+    keyParts.push(`type:${comparisonType}`);
     if (apiParams.groupId) keyParts.push(`groupId:${apiParams.groupId}`);
     if (apiParams.groupIds) keyParts.push(`groupIds:${apiParams.groupIds.join(",")}`);
+    if (apiParams.categoryIds) keyParts.push(`categoryIds:${apiParams.categoryIds.join(",")}`);
     if (apiParams.metrics) keyParts.push(`metrics:${apiParams.metrics.join(",")}`);
+    if (apiParams.categoryId) keyParts.push(`category:${apiParams.categoryId}`);
     return keyParts.join("|");
-  }, [apiParams]);
+  }, [apiParams, comparisonMode, comparisonType]);
 
   // Fetch comparison data
   const { isLoading, error, data } = useSWR(
-    (comparisonType === "single" && selectedGroupId) || 
-    (comparisonType === "multi" && selectedGroupIds.length > 0)
+    (comparisonMode === "group" &&
+      ((comparisonType === "single" && selectedGroupId) ||
+        (comparisonType === "multi" && selectedGroupIds.length > 0))) ||
+      (comparisonMode === "category" &&
+        ((comparisonType === "single" && selectedCompareCategoryId) ||
+          (comparisonType === "multi" && selectedCompareCategoryIds.length > 0)))
       ? swrKey
       : null,
     () => getCategoryComparison(apiParams)
@@ -243,17 +283,27 @@ export default function CategoryComparison() {
 
   // Handle refresh
   const handleRefresh = () => {
-    if ((comparisonType === "single" && selectedGroupId) || 
-        (comparisonType === "multi" && selectedGroupIds.length > 0)) {
+    if (
+      (comparisonMode === "group" &&
+        ((comparisonType === "single" && selectedGroupId) ||
+          (comparisonType === "multi" && selectedGroupIds.length > 0))) ||
+      (comparisonMode === "category" &&
+        ((comparisonType === "single" && selectedCompareCategoryId) ||
+          (comparisonType === "multi" && selectedCompareCategoryIds.length > 0)))
+    ) {
       mutate(swrKey);
       toast.success("Data refreshed");
     }
   };
 
   const handleClearFilters = () => {
+    setComparisonMode("group");
     setComparisonType("single");
     setSelectedGroupId("");
     setSelectedGroupIds([]);
+    setSelectedCategoryId("all");
+    setSelectedCompareCategoryId("");
+    setSelectedCompareCategoryIds([]);
     setSelectedMetrics([]);
     setSortConfig({ key: null, direction: "asc" });
   };
@@ -383,8 +433,12 @@ export default function CategoryComparison() {
 
   // Show message if no category selected (but still render filters)
   const hasValidSelection =
-    (comparisonType === "single" && selectedGroupId) ||
-    (comparisonType === "multi" && selectedGroupIds.length > 0);
+    (comparisonMode === "group" &&
+      ((comparisonType === "single" && selectedGroupId) ||
+        (comparisonType === "multi" && selectedGroupIds.length > 0))) ||
+    (comparisonMode === "category" &&
+      ((comparisonType === "single" && selectedCompareCategoryId) ||
+        (comparisonType === "multi" && selectedCompareCategoryIds.length > 0)));
 
   return (
     <div className="space-y-6">
@@ -424,9 +478,24 @@ export default function CategoryComparison() {
         </CardHeader>
         <CardContent className="print:p-4">
           {/* Desktop Filters */}
-          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 no-print items-start">
             {/* Comparison Type Selector */}
             <div>
+              <label className="text-sm font-medium mb-2 block">Compare By</label>
+              <select
+                className="w-full px-3 py-2 border rounded-md mb-2"
+                value={comparisonMode}
+                onChange={(e) => {
+                  setComparisonMode(e.target.value);
+                  setSelectedGroupId("");
+                  setSelectedGroupIds([]);
+                  setSelectedCompareCategoryId("");
+                  setSelectedCompareCategoryIds([]);
+                }}
+              >
+                <option value="group">Groups</option>
+                <option value="category">Categories</option>
+              </select>
               <label className="text-sm font-medium mb-2 block">Comparison Type</label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
@@ -435,15 +504,21 @@ export default function CategoryComparison() {
                   setComparisonType(e.target.value);
                   setSelectedGroupId("");
                   setSelectedGroupIds([]);
+                  setSelectedCompareCategoryId("");
+                  setSelectedCompareCategoryIds([]);
                 }}
               >
-                <option value="single">Single Group</option>
-                <option value="multi">Multiple Groups</option>
+                <option value="single">
+                  {comparisonMode === "group" ? "Single Group" : "Single Category"}
+                </option>
+                <option value="multi">
+                  {comparisonMode === "group" ? "Multiple Groups" : "Multiple Categories"}
+                </option>
               </select>
             </div>
 
-            {/* Group Selector(s) */}
-            {comparisonType === "single" ? (
+            {/* Group/Category Selector(s) */}
+            {comparisonMode === "group" && comparisonType === "single" ? (
               <div>
                 <label className="text-sm font-medium mb-2 block">Group</label>
                 <select
@@ -462,7 +537,7 @@ export default function CategoryComparison() {
                   Manage groups in <a className="underline" href="/coach/growth/groups">Growth Groups</a>.
                 </p>
               </div>
-            ) : (
+            ) : comparisonMode === "group" ? (
               <div>
                 <label className="text-sm font-medium mb-2 block">Groups</label>
                 <SelectMultiple
@@ -473,10 +548,37 @@ export default function CategoryComparison() {
                   searchable
                 />
               </div>
+            ) : comparisonType === "single" ? (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Category</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={selectedCompareCategoryId}
+                  onChange={(e) => setSelectedCompareCategoryId(e.target.value)}
+                >
+                  <option value="">Select category</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Categories</label>
+                <SelectMultiple
+                  label="Select categories"
+                  options={categoryOptions}
+                  value={selectedCompareCategoryIds}
+                  onChange={setSelectedCompareCategoryIds}
+                  searchable
+                />
+              </div>
             )}
 
             {/* Metrics Selector */}
-            <div>
+            <div className="min-w-0">
               <label className="text-sm font-medium mb-2 block">Metrics</label>
               <SelectMultiple
                 label="Select metrics (all if empty)"
@@ -484,8 +586,34 @@ export default function CategoryComparison() {
                 value={selectedMetrics}
                 onChange={setSelectedMetrics}
                 searchable
+                className="w-full min-w-0"
               />
             </div>
+
+            {comparisonMode === "group" ? (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Category Filter (Optional)</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                >
+                  <option value="all">All categories</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <label className="text-sm font-medium mb-2 block">Mode</label>
+                <div className="min-h-[40px] py-2 flex items-center text-sm text-muted-foreground break-words">
+                  Category comparison
+                </div>
+              </div>
+            )}
 
             {/* Comparison Type Badge */}
             <div className="flex items-end">
@@ -493,7 +621,13 @@ export default function CategoryComparison() {
                 variant={comparisonType === "multi" ? "default" : "secondary"}
                 className="text-sm"
               >
-                {comparisonType === "multi" ? "Multiple Groups" : "Single Group"}
+                {comparisonMode === "group"
+                  ? comparisonType === "multi"
+                    ? "Multiple Groups"
+                    : "Single Group"
+                  : comparisonType === "multi"
+                  ? "Multiple Categories"
+                  : "Single Category"}
               </Badge>
             </div>
           </div>
@@ -505,9 +639,15 @@ export default function CategoryComparison() {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Select group(s) to continue</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                {comparisonMode === "group"
+                  ? "Select group(s) to continue"
+                  : "Select category(ies) to continue"}
+              </h3>
               <p className="text-muted-foreground">
-                Choose Single Group and pick 1 group, or choose Multiple Groups and pick 2+ groups.
+                {comparisonMode === "group"
+                  ? "Choose Single Group and pick 1 group, or choose Multiple Groups and pick 2+ groups."
+                  : "Choose Single Category and pick 1 category, or choose Multiple Categories and pick 2+ categories."}
               </p>
             </div>
           </CardContent>
@@ -578,7 +718,11 @@ export default function CategoryComparison() {
             <Card className="min-w-0 overflow-hidden">
               <CardHeader>
                 <CardTitle>Metric Comparison</CardTitle>
-                <CardDescription>Comparison across categories</CardDescription>
+                <CardDescription>
+                  {comparisonMode === "group"
+                    ? "Comparison across selected group data"
+                    : "Comparison across selected categories"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="overflow-hidden">
                 <AnalyticsResponsiveChart className="analytics-chart-mobile overflow-hidden">
@@ -666,7 +810,9 @@ export default function CategoryComparison() {
           <CardHeader>
             <CardTitle>Player Comparison</CardTitle>
             <CardDescription>
-              Detailed comparison of players in the selected group(s)
+              {comparisonMode === "group"
+                ? "Detailed comparison of players in the selected group(s)"
+                : "Detailed comparison of players in the selected category(ies)"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -737,7 +883,9 @@ export default function CategoryComparison() {
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
               <p className="text-muted-foreground">
-                Please select a category to view comparison data
+                {comparisonMode === "group"
+                  ? "No data found for selected group filters."
+                  : "No data found for selected category(ies). Categories with no clients are skipped."}
               </p>
             </div>
           </CardContent>

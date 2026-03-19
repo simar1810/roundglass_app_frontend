@@ -115,7 +115,7 @@ export function deleteGroup(groupId) {
  * @param {Object} [filters] - Filter options
  * @param {string} [filters.from] - Start date filter (YYYY-MM-DD)
  * @param {string} [filters.to] - End date filter (YYYY-MM-DD)
- * @param {string|string[]} [filters.ageGroup] - Age groups: "U14", "U16", "U18" (comma-separated string or array)
+ * @param {string|string[]} [filters.categoryIds] - Category IDs (comma-separated string or array)
  * @param {string} [filters.standard="IPA"] - Standard: "IPA" or "IAP" (default: "IPA")
  * @returns {Promise<Object>} API response with group report data
  */
@@ -128,12 +128,12 @@ export function getGroupReport(groupId, filters = {}) {
   if (filters.to) queryParams.to = filters.to;
   if (filters.standard) queryParams.standard = filters.standard;
 
-  // Handle ageGroup - can be array or comma-separated string
-  if (filters.ageGroup) {
-    if (Array.isArray(filters.ageGroup)) {
-      queryParams.ageGroup = filters.ageGroup.join(",");
+  // Handle categoryIds - can be array or comma-separated string
+  if (filters.categoryIds) {
+    if (Array.isArray(filters.categoryIds)) {
+      queryParams.categoryIds = filters.categoryIds.join(",");
     } else {
-      queryParams.ageGroup = filters.ageGroup;
+      queryParams.categoryIds = filters.categoryIds;
     }
   }
 
