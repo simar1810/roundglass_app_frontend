@@ -51,14 +51,14 @@ export default function InputOTPContainer() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          refreshToken: user.webRefreshTokenList?.pop(), 
+          refreshToken: user.refreshToken,
           _id: user._id,
           userType: "coach"
         })
       })
       const authHeaderData = await authHeaderResponse.json()
       if (authHeaderData.status_code !== 200) throw new Error(authHeaderData.message);
-      dispatchRedux(store({ ...user, refreshToken: response.refreshToken }));
+      dispatchRedux(store({ ...user, refreshToken: user.refreshToken }));
 
       if (isFirstTime) {
         dispatch(coachfirstTimeRegistration(user.coachId));

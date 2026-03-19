@@ -66,6 +66,23 @@ export default function InputMobileNumber() {
           isFirstTime: res.data.isFirstTime,
         },
       });
+
+      // Persist signin token immediately; register relies on this Authorization token.
+      const authHeaderResponse = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken: res.data.user.refreshToken,
+          _id: res.data.user._id,
+          userType: "coach",
+        }),
+      });
+      const authHeaderData = await authHeaderResponse.json();
+      if (authHeaderData.status_code !== 200) {
+        throw new Error(authHeaderData.message || "Failed to set authentication token");
+      }
     } catch (err) {
       // Check if error message indicates unregistered user
       const errorMessage = err.message?.toLowerCase() || "";

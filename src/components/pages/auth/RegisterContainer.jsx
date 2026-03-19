@@ -3,7 +3,6 @@ import FormControl from "@/components/FormControl";
 import { SelectOrganisation } from "@/components/modals/coach/UpdateDetailsModal";
 import { Button } from "@/components/ui/button";
 import { setFieldValue } from "@/config/state-reducers/login";
-import { sendData } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppDispatch } from "@/providers/global/hooks";
 import { updateCoachField } from "@/providers/global/slices/coach";
@@ -22,7 +21,29 @@ export default function RegisterContainer() {
   async function registerCoach() {
     try {
       setLoading(true);
-      const response = await sendData("app/register", state.registration);
+      const refreshToken = state.user?.refreshToken || state.refreshToken;
+      if (!refreshToken) {
+        throw new Error("Missing auth token. Please sign in again.");
+      }
+
+      const payload = {
+        ...state.registration,
+        coachId: state.user?.coachId || state.registration?.coachId,
+      };
+      const registerResponse = await fetch(
+        "/api/app/register",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${refreshToken}`,
+          },
+          body: JSON.stringify(payload),
+          credentials: "include",
+        }
+      );
+      const response = await registerResponse.json();
       if (response.status_code !== 200) throw new Error(response.message);
       dispatchRedux(updateCoachField(response.data))
       toast.success(response.message);
