@@ -38,6 +38,7 @@ export default function Page() {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [standard, setStandard] = useState("IPA");
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   useEffect(() => {
     if (!Array.isArray(client_categories) || client_categories.length === 0) {
       setSelectedCategoryIds([]);
@@ -359,28 +360,80 @@ export default function Page() {
               {/* Categories */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Categories</label>
-                <div className="flex flex-wrap gap-3 p-3 border rounded-lg">
-                  {client_categories.map((category) => (
-                    <div key={category._id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`category-${category._id}`}
-                        checked={selectedCategoryIds.includes(category._id)}
-                        onCheckedChange={() => handleCategoryToggle(category._id)}
-                      />
-                      <label
-                        htmlFor={`category-${category._id}`}
-                        className="text-sm font-medium leading-none cursor-pointer"
-                      >
-                        {category.name}
-                      </label>
-                    </div>
-                  ))}
-                  {client_categories.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      No categories available.
-                    </p>
-                  )}
-                </div>
+                <Popover open={categoryDropdownOpen} onOpenChange={setCategoryDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">
+                        {selectedCategoryIds.length > 0
+                          ? `${selectedCategoryIds.length} categor${selectedCategoryIds.length === 1 ? "y" : "ies"} selected`
+                          : "Select categories"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {client_categories.length} total
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-3" align="start">
+                    {client_categories.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No categories available.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Choose one or more categories
+                          </p>
+                          <div className="flex items-center gap-3">
+                            {client_categories.length > 0 && (
+                              <button
+                                type="button"
+                                className="text-xs text-blue-600 hover:underline"
+                                onClick={() => {
+                                  const allSelected = selectedCategoryIds.length === client_categories.length;
+                                  if (allSelected) {
+                                    setSelectedCategoryIds([]);
+                                    return;
+                                  }
+                                  setSelectedCategoryIds(
+                                    client_categories.map((category) => category?._id).filter(Boolean)
+                                  );
+                                }}
+                              >
+                                {selectedCategoryIds.length === client_categories.length
+                                  ? "Deselect all"
+                                  : "Select all"}
+                              </button>
+                            )}
+                            {selectedCategoryIds.length > 0 && (
+                              <button
+                                type="button"
+                                className="text-xs text-blue-600 hover:underline"
+                                onClick={() => setSelectedCategoryIds([])}
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                          {client_categories.map((category) => (
+                            <label
+                              key={category._id}
+                              htmlFor={`category-${category._id}`}
+                              className="flex items-center gap-2 rounded px-1 py-1 hover:bg-slate-50 cursor-pointer"
+                            >
+                              <Checkbox
+                                id={`category-${category._id}`}
+                                checked={selectedCategoryIds.includes(category._id)}
+                                onCheckedChange={() => handleCategoryToggle(category._id)}
+                              />
+                              <span className="text-sm truncate">{category.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Standard */}
