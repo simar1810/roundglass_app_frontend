@@ -24,6 +24,29 @@ import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { mutate } from "swr";
 
+const toSafeNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeUserClientStats = (user) => {
+  const explicitActive = toSafeNumber(user?.activeClients);
+  const explicitPending = toSafeNumber(user?.pendingClients);
+  const totalClients = toSafeNumber(user?.totalClients);
+  const assignedFromArray = Array.isArray(user?.clients) ? user.clients.length : 0;
+
+  const activeClients = Math.max(explicitActive || assignedFromArray, 0);
+  const pendingFromTotal = Math.max(totalClients - activeClients, 0);
+  const pendingClients = Math.max(explicitPending || pendingFromTotal, 0);
+
+  return {
+    ...user,
+    activeClients,
+    pendingClients,
+    clientsOverviewStatus: activeClients > 0 ? "Active" : "Pending"
+  };
+};
+
 export default function UsersPage() {
   const router = useRouter();
   const coach = useAppSelector(state => state.coach.data);
@@ -54,7 +77,8 @@ export default function UsersPage() {
       const coachId = coach?._id;
       const response = await getUsers(coachId);
       if (response.status_code === 200) {
-        setUsers(response.data);
+        const normalizedUsers = (response.data || []).map(normalizeUserClientStats);
+        setUsers(normalizedUsers);
       } else {
         throw new Error(response.message || "Failed to fetch users");
       }
@@ -124,14 +148,14 @@ export default function UsersPage() {
             <Card key={user._id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-0 md:pb-3">
                 <div className="flex flex-col md:flex-row gap-4 md:gap-1 items-start md:items-center justify-center md:justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user.profilePhoto} />
                       <AvatarFallback>{nameInitials(user.name)}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">{user.name || "No Name"}</CardTitle>
-                      <p className="text-sm text-gray-600">ID: {user.userId}</p>
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg break-words">{user.name || "No Name"}</CardTitle>
+                      <p className="text-sm text-gray-600 break-all">ID: {user.userId}</p>
                     </div>
                   </div>
                   <div className="flex md:space-x-1">
@@ -198,6 +222,20 @@ export default function UsersPage() {
                       <Badge variant="outline">{user.permissions.length} assigned</Badge>
                     </div>
                   )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Overview:</span>
+                    <Badge variant={user.clientsOverviewStatus === "Active" ? "default" : "secondary"}>
+                      {user.clientsOverviewStatus}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Active Clients:</span>
+                    <span>{user.activeClients}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Pending Clients:</span>
+                    <span>{user.pendingClients}</span>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
@@ -215,8 +253,12 @@ export default function UsersPage() {
         <AddUserModal
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
+          onSuccess={(createdUser) => {
             setShowAddModal(false);
+            if (createdUser) {
+              setSelectedUser(createdUser);
+              setShowClientAssignmentModal(true);
+            }
             fetchUsers();
           }}
         />

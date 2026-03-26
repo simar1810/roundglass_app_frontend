@@ -18,31 +18,46 @@ import {
   Store,
   Footprints,
   LayoutDashboard,
+  ListTodo,
+  TrendingUp,
+  BarChart3,
   Bot,
   FileText,
   FolderOpen,
   MessageCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { AVAILABLE_USER_PERMISSIONS, USER_PERMISSION_IDS } from "@/config/data/user-permissions";
 import { sendDataWithFormData, sendData, fetchData } from "@/lib/api";
 import { createUser } from "@/lib/fetchers/app";
 
-// Define available permissions with their descriptions and icons
-const AVAILABLE_PERMISSIONS = [
-  { id: 1, name: "Meal Plans", description: "Access to meals and recipes", icon: Soup, color: "text-orange-500" },
-  // { id: 2, name: "Feed", description: "Access to feed and news", icon: Newspaper, color: "text-blue-500" },
-  // { id: 3, name: "Wallet", description: "Access to wallet and payments", icon: CircleDollarSign, color: "text-green-500" },
-  // { id: 4, name: "Retail", description: "Access to retail products", icon: Store, color: "text-pink-500" },
-  // { id: 5, name: "Chats", description: "Access to chat and messaging", icon: MessageCircle, color: "text-purple-500" },
-  // { id: 6, name: "Workout", description: "Access to workout plans", icon: Dumbbell, color: "text-purple-500" },
-  // { id: 7, name: "Marathon", description: "Access to marathon features", icon: Footprints, color: "text-red-500" },
-  // { id: 8, name: "Club", description: "Access to club activities", icon: LayoutDashboard, color: "text-indigo-500" },
-  // { id: 9, name: "Invoice", description: "Access to invoices", icon: LayoutDashboard, color: "text-indigo-500" },
-];
+const PERMISSION_ICON_MAP = {
+  [USER_PERMISSION_IDS.GROWTH_TRACKING]: { icon: TrendingUp, color: "text-emerald-500" },
+  [USER_PERMISSION_IDS.ANALYTICS]: { icon: BarChart3, color: "text-blue-500" },
+  [USER_PERMISSION_IDS.MEAL_PLANS]: { icon: Soup, color: "text-orange-500" },
+  [USER_PERMISSION_IDS.HEALTH_MATRIX_FIELDS]: { icon: FileText, color: "text-cyan-500" },
+  [USER_PERMISSION_IDS.QUESTIONAIRE]: { icon: ListTodo, color: "text-purple-500" },
+  [USER_PERMISSION_IDS.CATEGORIES]: { icon: FolderOpen, color: "text-amber-500" },
+};
+
+const AVAILABLE_PERMISSIONS = AVAILABLE_USER_PERMISSIONS.map(permission => ({
+  ...permission,
+  icon: PERMISSION_ICON_MAP[permission.id]?.icon || LayoutDashboard,
+  color: PERMISSION_ICON_MAP[permission.id]?.color || "text-gray-500"
+}));
 
 // Group permissions by category for tab organization
 const PERMISSION_CATEGORIES = {
-  "Core Features": [1], // Meal Plans
+  "Core Features": [
+    USER_PERMISSION_IDS.MEAL_PLANS,
+    USER_PERMISSION_IDS.GROWTH_TRACKING,
+    USER_PERMISSION_IDS.ANALYTICS
+  ],
+  "Tools": [
+    USER_PERMISSION_IDS.HEALTH_MATRIX_FIELDS,
+    USER_PERMISSION_IDS.QUESTIONAIRE,
+    USER_PERMISSION_IDS.CATEGORIES
+  ],
   // "Business & Tools": [4, 5], // Retail, Chats
   // "Fitness & Health": [6, 7], // Workout, Marathon
   // "Community": [8, 9] // Club, Invoice
@@ -51,8 +66,8 @@ const PERMISSION_CATEGORIES = {
 export default function AddUserModal({ open, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: "",
-    userId: "",
-    password: ""
+    password: "",
+    confirmPassword: ""
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -104,11 +119,27 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
     });
   }, []);
 
+  const isStrongPassword = useCallback((password = "") => {
+    // At least 8 chars, 1 upper, 1 lower, 1 number, 1 special.
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    return passwordRegex.test(password);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.userId || !formData.password) {
+    if (!formData.name || !formData.password) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!isStrongPassword(formData.password)) {
+      toast.error("Password must be at least 8 characters and include uppercase, lowercase, number, and special character.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Password and confirm password do not match");
       return;
     }
 
@@ -122,7 +153,6 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
 
       const submitData = new FormData();
       submitData.append("name", formData.name);
-      submitData.append("userId", formData.userId);
       submitData.append("password", formData.password);
       submitData.append("permissions", JSON.stringify(selectedPermissions));
       if (selectedFile) submitData.append("file", selectedFile);
@@ -145,7 +175,13 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
         }
 
         toast.success("User created successfully!");
-        onSuccess();
+        // Pass created user payload so parent can open client assignment modal.
+        const createdUserPayload = {
+          ...(response?.data || {}),
+          _id: response?.data?._id || response?.data?.id,
+          name: response?.data?.name || formData.name,
+        };
+        onSuccess?.(createdUserPayload);
         resetForm();
       } else {
         throw new Error(response.message || "Failed to create user");
@@ -160,8 +196,8 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
   const resetForm = () => {
     setFormData({
       name: "",
-      userId: "",
-      password: ""
+      password: "",
+      confirmPassword: ""
     });
     setSelectedFile(null);
     setPreview(null);
@@ -201,15 +237,14 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="userId" className="text-sm font-medium text-gray-700">User ID *</Label>
+                <Label htmlFor="userId" className="text-sm font-medium text-gray-700">User ID (Auto-generated)</Label>
                 <Input
                   id="userId"
                   name="userId"
-                  value={formData.userId}
-                  onChange={handleInputChange}
-                  placeholder="Enter unique user ID"
-                  className="h-10"
-                  required
+                  value=""
+                  placeholder="User ID"
+                  className="h-10 bg-gray-50"
+                  readOnly
                 />
               </div>
             </div>
@@ -224,6 +259,25 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
                 onChange={handleInputChange}
                 placeholder="Enter secure password"
                 className="h-10"
+                minLength={8}
+                required
+              />
+              <p className="text-xs text-gray-500">
+                Must contain at least 8 characters, including uppercase, lowercase, number, and special character.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">Confirm Password *</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Re-enter password"
+                className="h-10"
+                minLength={8}
                 required
               />
             </div>

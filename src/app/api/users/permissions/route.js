@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AVAILABLE_USER_PERMISSIONS } from "@/config/data/user-permissions";
 
 export async function PUT(request) {
   try {
@@ -18,8 +19,7 @@ export async function PUT(request) {
       );
     }
 
-    // Validate permission numbers (1-8 are valid)
-    const validPermissions = [1, 2, 3, 4, 5, 6, 7, 8];
+    const validPermissions = AVAILABLE_USER_PERMISSIONS.map(permission => permission.id);
     const invalidPermissions = permissions.filter(p => !validPermissions.includes(p));
     
     if (invalidPermissions.length > 0) {

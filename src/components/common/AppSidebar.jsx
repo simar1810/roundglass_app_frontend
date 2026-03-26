@@ -40,6 +40,9 @@ import Loader from "./Loader";
 
 export default function AppSidebar() {
   const [Modal, setModal] = useState();
+  const [liveUserType, setLiveUserType] = useState(() => getUserType());
+  const [liveUserPermissions, setLiveUserPermissions] = useState(() => getUserPermissions());
+  const [permissionsVersion, setPermissionsVersion] = useState(null);
   const { organisation, features, clubType } = useAppSelector((state) => state.coach.data);
 
   let sidebarItems = sidebar__coachContent;
@@ -52,8 +55,88 @@ export default function AppSidebar() {
   }
 
   // Filter sidebar items based on user permissions
-  const userType = getUserType();
-  const userPermissions = getUserPermissions();
+  const userType = liveUserType;
+  const userPermissions = liveUserPermissions;
+
+  useEffect(() => {
+    const syncPermissionsFromCookies = () => {
+      setLiveUserType(getUserType());
+      setLiveUserPermissions(getUserPermissions());
+    };
+
+    syncPermissionsFromCookies();
+    window.addEventListener("focus", syncPermissionsFromCookies);
+    window.addEventListener("user-permissions-updated", syncPermissionsFromCookies);
+
+    return () => {
+      window.removeEventListener("focus", syncPermissionsFromCookies);
+      window.removeEventListener("user-permissions-updated", syncPermissionsFromCookies);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (liveUserType !== "user") return;
+
+    let pollingInterval;
+
+    const applyLatestPermissions = async () => {
+      const response = await fetch("/api/users/me/permissions", {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok || data?.status_code !== 200) return;
+
+      const nextPermissions = Array.isArray(data?.data?.permissions)
+        ? data.data.permissions
+          .map((permission) => Number(permission))
+          .filter((permission) => Number.isFinite(permission))
+        : [];
+      const nextVersion = Number(data?.data?.permissionsVersion);
+
+      document.cookie = `userPermissions=${encodeURIComponent(JSON.stringify(nextPermissions))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+      setLiveUserPermissions(nextPermissions);
+      if (Number.isFinite(nextVersion)) setPermissionsVersion(nextVersion);
+    };
+
+    const checkPermissionsVersion = async () => {
+      try {
+        const response = await fetch("/api/users/me/permissions/version", {
+          method: "GET",
+          cache: "no-store",
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (response.status === 401) return;
+        if (!response.ok || data?.status_code !== 200) return;
+
+        const nextVersion = Number(data?.data?.permissionsVersion);
+        if (!Number.isFinite(nextVersion)) return;
+
+        if (permissionsVersion === null) {
+          // First sync: pull full permissions immediately so UI doesn't rely
+          // on potentially stale cookie values.
+          await applyLatestPermissions();
+          setPermissionsVersion(nextVersion);
+          return;
+        }
+
+        if (nextVersion !== permissionsVersion) {
+          await applyLatestPermissions();
+        }
+      } catch (error) {
+        // Silently ignore polling errors and retry on next interval.
+      }
+    };
+
+    checkPermissionsVersion();
+    pollingInterval = setInterval(checkPermissionsVersion, 20000);
+
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
+  }, [liveUserType, permissionsVersion]);
 
   sidebarItems = sidebarItems.filter(item => {
     // If no permission specified, always show

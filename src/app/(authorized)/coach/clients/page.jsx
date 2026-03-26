@@ -12,13 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getAppClients } from "@/lib/fetchers/app";
+import { getAppClients, getUserClients, getUsers } from "@/lib/fetchers/app";
 import { getAllGroups } from "@/lib/fetchers/growth";
 import { useAppSelector } from "@/providers/global/hooks";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const initialQuery = {
   page: 1,
@@ -30,7 +31,11 @@ export default function Page() {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [selectedGroups, setSelectedGroups] = useState([])
   const [query, setQuery] = useState(() => initialQuery);
-  const { client_categories = [] } = useAppSelector(state => state.coach.data);
+  const coach = useAppSelector(state => state.coach.data);
+  const { client_categories = [] } = coach;
+  // clientId -> { userId, userName }
+  const [clientManagedByMap, setClientManagedByMap] = useState(new Map());
+  const [selectedManagedByUserId, setSelectedManagedByUserId] = useState("all");
 
   const categories = useMemo(() => {
     const map = new Map();
@@ -48,6 +53,11 @@ export default function Page() {
   const { data: groupsRes } = useSWR(
     "api/growth/groups",
     () => getAllGroups()
+  );
+
+  const { data: usersRes } = useSWR(
+    coach?._id ? `api/users?coachId=${coach._id}` : null,
+    () => getUsers(coach?._id)
   );
 
   const groups = useMemo(
@@ -71,6 +81,51 @@ export default function Page() {
     }
     return map;
   }, [groups]);
+
+  // Build mapping: clientId -> user.name (who manages the player)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function buildClientManagedBy() {
+      const users =
+        usersRes?.status_code === 200 && Array.isArray(usersRes?.data)
+          ? usersRes.data
+          : [];
+      const allClients = Array.isArray(data?.data) ? data.data : [];
+      if (!users.length || !allClients.length) return;
+
+      const clientIdSet = new Set(allClients.map(c => c?._id).filter(Boolean));
+      // clientId -> single manager (per your business rule).
+      const map = new Map();
+      for (const user of users) {
+        if (!user?._id) continue;
+        const response = await getUserClients(user._id, 1, 1000);
+        if (response?.status_code !== 200) continue;
+
+        const assignedClients = response?.data?.clients || [];
+        for (const assignedClient of assignedClients) {
+          const id = assignedClient?._id;
+          if (!id || !clientIdSet.has(id)) continue;
+          // Keep first manager encountered; duplicates indicate backend issue.
+          if (!map.has(id)) {
+            map.set(id, {
+              userId: user._id,
+              userName: user?.name || user?.userId || "",
+            });
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setClientManagedByMap(map);
+      }
+    }
+
+    buildClientManagedBy();
+    return () => {
+      cancelled = true;
+    };
+  }, [usersRes, data?.data]);
 
   useEffect(() => {
     setQuery(prev => ({ ...prev, page: 1 }));
@@ -99,6 +154,14 @@ export default function Page() {
     });
   }
 
+  // Apply managed-by user filter
+  if (selectedManagedByUserId !== "all") {
+    clients = clients.filter((client) => {
+      const entry = clientManagedByMap.get(client?._id);
+      return entry?.userId === selectedManagedByUserId;
+    });
+  }
+
   // Apply pagination after filtering
   const totalClients = clients.length;
   const totalPages = Math.ceil(totalClients / query.limit);
@@ -114,6 +177,11 @@ export default function Page() {
           setSelectedCategories={setSelectedCategories}
           categories={client_categories}
         />
+          <ManagedByUserFilter
+            users={Array.isArray(usersRes?.data) ? usersRes.data : []}
+            selectedUserId={selectedManagedByUserId}
+            onChange={setSelectedManagedByUserId}
+          />
         <GroupsFilter
           groups={groups}
           selectedGroups={selectedGroups}
@@ -135,6 +203,7 @@ export default function Page() {
         groups={clientIdToGroupIds.get(client?._id) || []}
         groupNames={groupIdToName}
         client={client}
+        managedByUserName={clientManagedByMap.get(client?._id)?.userName}
       />)}
     </div>
 
@@ -299,4 +368,34 @@ function GroupsFilter({ groups = [], selectedGroups, setSelectedGroups }) {
       </DropdownMenu>
     </div>
   )
+}
+
+function ManagedByUserFilter({ users = [], selectedUserId, onChange }) {
+  const getLabel = () => {
+    if (!users.length) return "Managed user";
+    if (!selectedUserId || selectedUserId === "all") return "Managed user";
+    const u = users.find((x) => x._id === selectedUserId);
+    return u?.name || "Managed user";
+  };
+
+  return (
+    <div className="w-full max-w-xs">
+      <Select
+        value={selectedUserId}
+        onValueChange={(value) => onChange(value)}
+      >
+        <SelectTrigger className="bg-transparent">
+          <SelectValue placeholder={getLabel()} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All managed users</SelectItem>
+          {users.map((user) => (
+            <SelectItem key={user._id} value={user._id}>
+              {user?.name || user?.userId || "User"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }

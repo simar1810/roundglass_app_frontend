@@ -563,14 +563,38 @@ export async function loginUser(userData) {
     const responseData = await response.json();
 
     if (responseData.status_code === 200) {
+      // Backend sometimes returns refresh tokens as array of strings or objects.
+      // We need a reliable refreshToken so /api/login can set the httpOnly `token` cookie.
+      const createdBy = responseData?.data?.createdBy || {};
+      const webRefreshTokenList = createdBy?.webRefreshTokenList;
+      const lastToken = Array.isArray(webRefreshTokenList) && webRefreshTokenList.length > 0
+        ? webRefreshTokenList[webRefreshTokenList.length - 1]
+        : undefined;
+
+      const refreshToken =
+        (typeof lastToken === "string" ? lastToken : (
+          lastToken?.refreshToken ||
+          lastToken?.token ||
+          lastToken?.webRefreshToken ||
+          lastToken?.value
+        )) ||
+        createdBy?.refreshToken ||
+        createdBy?.token ||
+        responseData?.data?.refreshToken ||
+        responseData?.data?.token;
+
+      if (!refreshToken) {
+        throw new Error("Missing refresh token from user login response");
+      }
+
       const authHeaderResponse = await fetch("/api/login", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          refreshToken: responseData.data.createdBy.webRefreshTokenList?.pop(),
-          _id: responseData.data.createdBy._id,
+          refreshToken,
+          _id: createdBy._id,
           userType: "user",
           userData: responseData.data
         })

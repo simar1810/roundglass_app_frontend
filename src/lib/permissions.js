@@ -1,9 +1,15 @@
 // Permission management utilities
+import { USER_PERMISSION_IDS } from "@/config/data/user-permissions";
 
 // Define tab permissions mapping
 export const TAB_PERMISSIONS = {
-  "statistics": 1, // Permission 1 = Meal Plan (for client data tabs)
-  "meal": 1, // Permission 1 = Meal Plan
+  "statistics": USER_PERMISSION_IDS.MEAL_PLANS,
+  "meal": USER_PERMISSION_IDS.MEAL_PLANS,
+  "growth": USER_PERMISSION_IDS.GROWTH_TRACKING,
+  "analytics": USER_PERMISSION_IDS.ANALYTICS,
+  "health-matrix-fields": USER_PERMISSION_IDS.HEALTH_MATRIX_FIELDS,
+  "questionaire": USER_PERMISSION_IDS.QUESTIONAIRE,
+  "categories": USER_PERMISSION_IDS.CATEGORIES,
   "feed": 2, // Permission 2 = Feed
   "wallet": 3, // Permission 3 = Wallet
   "retail": 4, // Permission 4 = Retail
@@ -29,7 +35,12 @@ export function getUserPermissions() {
       const permissionsValue = permissionsCookie.split('=')[1];
       // Decode URL encoding and parse JSON
       const decodedValue = decodeURIComponent(permissionsValue);
-      return JSON.parse(decodedValue);
+      const parsedPermissions = JSON.parse(decodedValue);
+      if (!Array.isArray(parsedPermissions)) return [];
+      // Normalize to numeric IDs so includes() checks are reliable.
+      return parsedPermissions
+        .map((permission) => Number(permission))
+        .filter((permission) => Number.isFinite(permission));
     }
   } catch (error) {
     // Silently handle error

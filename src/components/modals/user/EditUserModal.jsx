@@ -13,7 +13,8 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
   const [formData, setFormData] = useState({
     name: "",
     userId: "",
-    password: ""
+    password: "",
+    confirmPassword: ""
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -24,7 +25,8 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
       setFormData({
         name: user.name || "",
         userId: user.userId || "",
-        password: ""
+        password: "",
+        confirmPassword: ""
       });
       setPreview(user.profilePhoto || null);
     }
@@ -53,12 +55,29 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
     setPreview(user.profilePhoto || null);
   };
 
+  const isStrongPassword = (password = "") => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name || !formData.userId) {
       toast.error("Please fill in all required fields");
       return;
+    }
+
+    if (formData.password) {
+      if (!isStrongPassword(formData.password)) {
+        toast.error("New password must be at least 8 characters and include uppercase, lowercase, number, and special character.");
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        toast.error("New password and confirm password do not match");
+        return;
+      }
     }
 
     try {
@@ -97,7 +116,8 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
     setFormData({
       name: "",
       userId: "",
-      password: ""
+      password: "",
+      confirmPassword: ""
     });
     setSelectedFile(null);
     setPreview(null);
@@ -129,15 +149,16 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="userId">User ID *</Label>
+            <Label htmlFor="userId">User ID (Auto-generated)</Label>
             <Input
               id="userId"
               name="userId"
               value={formData.userId}
-              onChange={handleInputChange}
-              placeholder="Enter unique user ID"
-              required
+              placeholder="Auto-generated user ID"
+              className="bg-gray-50"
+              readOnly
             />
+            <p className="text-xs text-gray-500">User ID is system-generated and cannot be edited.</p>
           </div>
 
           <div className="space-y-2">
@@ -149,6 +170,23 @@ export default function EditUserModal({ open, onClose, user, onSuccess }) {
               value={formData.password}
               onChange={handleInputChange}
               placeholder="Enter new password"
+              minLength={8}
+            />
+            <p className="text-xs text-gray-500">
+              If changing password, use at least 8 characters with uppercase, lowercase, number, and special character.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="Re-enter new password"
+              minLength={8}
             />
           </div>
 

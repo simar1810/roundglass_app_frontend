@@ -30,7 +30,8 @@ export default function ClientListItemStatus({
   client,
   categories,
   groups = [],
-  groupNames
+  groupNames,
+  managedByUserName
 }) {
   const [modal, setModal] = useState();
   const [modalOpened, setModalOpened] = useState(false);
@@ -66,14 +67,28 @@ export default function ClientListItemStatus({
           <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
           <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
         </Avatar>
-        <p className="text-[12px] font-semibold mr-auto">{client.name}</p>
+        <div className="flex flex-col mr-auto min-w-0">
+          <p className="text-[12px] font-semibold truncate">{client.name}</p>
+          {managedByUserName && (
+            <p className="text-[10px] font-semibold text-[var(--accent-1)] truncate">
+              Managed by user : {managedByUserName}
+            </p>
+          )}
+        </div>
       </Link>
       : <div onClick={() => setModalOpened(true)} className="grow flex items-center gap-4">
         <Avatar className="w-[36px] h-[36px] !rounded-[8px]">
           <AvatarImage className="rounded-[8px]" src={client.profilePhoto} />
           <AvatarFallback className="rounded-[8px]">{nameInitials(client.name)}</AvatarFallback>
         </Avatar>
-        <p className="text-[12px] font-semibold">{client.name}</p>
+        <div className="flex flex-col min-w-0">
+          <p className="text-[12px] font-semibold truncate">{client.name}</p>
+          {managedByUserName && (
+            <p className="text-[10px] font-semibold text-[var(--accent-1)] truncate">
+              Managed by user : {managedByUserName}
+            </p>
+          )}
+        </div>
         {Boolean(client.rollno) && <p className="text-[var(--accent-1)] text-[12px] font-bold mr-auto cursor-pointer">
           #{client.rollno}
         </p>}

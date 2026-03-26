@@ -1,25 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import { AVAILABLE_USER_PERMISSIONS } from "@/config/data/user-permissions";
 import { sendData } from "@/lib/api";
-
-// Define available permissions with their descriptions
-const AVAILABLE_PERMISSIONS = [
-  { id: 1, name: "Meal Plans", description: "View and manage meal plans" },
-  // { id: 2, name: "Feed", description: "View and manage feed content" },
-  // { id: 3, name: "Wallet", description: "View wallet and payment features" },
-  // { id: 4, name: "Retail", description: "View retail orders and products" },
-  // { id: 5, name: "Chats", description: "Access chat and messaging features" },
-  // { id: 6, name: "Workouts", description: "View and manage workout plans" },
-  // { id: 7, name: "Marathon", description: "View marathon tasks and progress" },
-  // { id: 8, name: "Club", description: "View club activities and members" },
-  // { id: 9, name: "Invoice", description: "View Create and Share Invoices" }
-];
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function UserPermissionsModal({ open, onClose, user, onSuccess }) {
   const [selectedPermissions, setSelectedPermissions] = useState([]);
@@ -56,6 +44,18 @@ export default function UserPermissionsModal({ open, onClose, user, onSuccess })
       }, "PUT");
       
       if (response.status_code === 200) {
+        const currentUserId = document.cookie
+          .split("; ")
+          .find(row => row.startsWith("_id="))
+          ?.split("=")[1];
+
+        // If the edited user is the currently logged-in user, update cookie immediately
+        // so feature access changes are applied without manual refresh.
+        if (currentUserId && currentUserId === user._id) {
+          document.cookie = `userPermissions=${encodeURIComponent(JSON.stringify(selectedPermissions))}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+          window.dispatchEvent(new Event("user-permissions-updated"));
+        }
+
         toast.success("User permissions updated successfully!");
         onSuccess();
         onClose();
@@ -90,7 +90,7 @@ export default function UserPermissionsModal({ open, onClose, user, onSuccess })
           <div className="space-y-4">
             <Label className="text-base font-semibold">Available Permissions</Label>
             <div className="grid gap-3">
-              {AVAILABLE_PERMISSIONS.map((permission) => (
+              {AVAILABLE_USER_PERMISSIONS.map((permission) => (
                 <Card key={permission.id} className="p-3">
                   <div className="flex items-start space-x-3">
                     <Checkbox

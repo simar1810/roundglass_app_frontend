@@ -1,4 +1,5 @@
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
+import { USER_PERMISSION_IDS } from "@/config/data/user-permissions";
 import {
   BarChart,
   ClipboardPlus,
@@ -92,7 +93,7 @@ export const sidebar__coachContent = [
     title: "Growth Tracking",
     icon: <TrendingUp className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/growth/dashboard",
-    permission: "coach", // or appropriate permission
+    permission: USER_PERMISSION_IDS.GROWTH_TRACKING,
     group: "main",
     items: [
       {
@@ -114,7 +115,7 @@ export const sidebar__coachContent = [
     title: "Analytics",
     icon: <BarChart className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/roundglass/analytics",
-    permission: "coach", // Only coaches can see this
+    permission: USER_PERMISSION_IDS.ANALYTICS,
     group: "main",
     items: [
       {
@@ -515,6 +516,7 @@ export const sidebar__coachContent = [
     title: "Categories",
     icon: <Tags className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools/categories",
+    permission: USER_PERMISSION_IDS.CATEGORIES,
     group: "tools",
   },
   {
@@ -522,6 +524,7 @@ export const sidebar__coachContent = [
     title: "Questionaire",
     icon: <ListTodo className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools/questionaire",
+    permission: USER_PERMISSION_IDS.QUESTIONAIRE,
     group: "tools",
   },
   {
@@ -529,6 +532,7 @@ export const sidebar__coachContent = [
     title: "Health Matrix Fields",
     icon: <ListTodo className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/tools/health-matrix-fields",
+    permission: USER_PERMISSION_IDS.HEALTH_MATRIX_FIELDS,
     group: "tools",
   },
   {
