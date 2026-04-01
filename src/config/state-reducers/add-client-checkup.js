@@ -157,18 +157,23 @@ export function stage1Completed(state, stage) {
 
 export function generateRequestPayload(state, coachId, existingClientID, extraFields = []) {
   const formData = new FormData();
+  const customFields = {};
 
   // Add hardcoded fields (always send full health matrix; hide-body-metrics feature removed)
   for (const field of fields.requestFields) {
     formData.append(field, state[field]);
   }
 
-  // Add each custom field as a separate body variable
+  // Send custom metrics under a single customFields object
   for (const field of extraFields) {
     if (state[field] !== undefined && state[field] !== null) {
-      formData.append(field, state[field]);
+      const value = String(state[field]).trim();
+      if (value !== "") {
+        customFields[field] = value;
+      }
     }
   }
+  formData.append("customFields", JSON.stringify(customFields));
 
   if (state.weightUnit?.toLowerCase() === "kg") {
     formData.append("weight", state["weightInKgs"]);

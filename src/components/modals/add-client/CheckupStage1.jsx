@@ -2,6 +2,7 @@ import FormControl from "@/components/FormControl";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { changeFieldvalue, changeHeightUnit, changeWeightUnit, setCurrentStage, stage1Completed } from "@/config/state-reducers/add-client-checkup";
+import { useHealthMatrixFieldsConfig } from "@/hooks/useHealthMatrixFieldsConfig";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { differenceInYears, format, isAfter, parse } from "date-fns";
 import Image from "next/image";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 
 export default function CheckupStage1() {
   const { dispatch, ...state } = useCurrentStateContext();
+  const { showVisceralFatInput } = useHealthMatrixFieldsConfig("client-add-stage1");
   return <div className="py-6 pt-4">
     <div className="flex flex-col items-start md:flex-row md:items-center gap-6 mb-6">
       <p className="font-semibold text-sm">Select Player type</p>
@@ -170,15 +172,17 @@ export default function CheckupStage1() {
       </div>
 
       {/* VF & Age */}
-      <FormControl
-        label="Visceral Fat (optional)"
-        type="text"
-        placeholder="Enter Visceral Fat"
-        value={state.visceral_fat}
-        onChange={(e) =>
-          dispatch(changeFieldvalue("visceral_fat", e.target.value))
-        }
-      />
+      {showVisceralFatInput && (
+        <FormControl
+          label="Visceral Fat (optional)"
+          type="text"
+          placeholder="Enter Visceral Fat"
+          value={state.visceral_fat}
+          onChange={(e) =>
+            dispatch(changeFieldvalue("visceral_fat", e.target.value))
+          }
+        />
+      )}
 
       <FormControl
         label="Age"

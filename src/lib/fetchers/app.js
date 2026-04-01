@@ -525,12 +525,20 @@ export function removeClientFromUser(userId, clientId) {
   return sendData("app/users/clients/remove", { userId, clientId }, "POST");
 }
 
-export function assignClientsToUser(userId, clientIds) {
-  return sendData("app/users/clients/assign", { userId, clientIds }, "PUT");
+export function assignClientsToUser(userId, clientIds, options = {}) {
+  const payload = { userId, clientIds };
+  if (Array.isArray(options?.categoryIds)) {
+    payload.categoryIds = options.categoryIds;
+  }
+  return sendData("app/users/clients/assign", payload, "PUT");
 }
 
 export function getUserClients(userId, page = 1, limit = 10) {
   return fetchData(`app/users/assignments/${userId}/clients?page=${page}&limit=${limit}`);
+}
+
+export function getHealthMatrixFieldsList() {
+  return fetchData("app/health-matrix/fields-list");
 }
 
 export const getAvailableClients = withClientFilter((page = 1, limit = 1000, search = "") => {

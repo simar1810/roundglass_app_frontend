@@ -9,6 +9,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { getUserType, hasTabPermission } from "@/lib/permissions";
 import { useAppSelector } from "@/providers/global/hooks";
 import { Layers, Lock, Settings, Sparkles } from "lucide-react";
 import Image from "next/image";
@@ -42,6 +43,7 @@ const DEFAULT_FIELD_MAPPING = {
   visceral_fat: { icon: "/svgs/body.svg", label: "Visceral Fat" },
   sub_fat: { icon: "/svgs/body.svg", label: "Subcutaneous Fat" },
   ideal_weight: { icon: "/svgs/weight.svg", label: "Ideal Weight" },
+  bodyWater: { icon: "/svgs/body.svg", label: "Body Water" },
 };
 
 function FieldCard({ title, icon, range, isDefault }) {
@@ -113,13 +115,17 @@ function FieldCard({ title, icon, range, isDefault }) {
 
 const DEFAULT_HEALTH_MATRICES = [
   "bmi", "muscle", "fat", "rm", "ideal_weight",
-  "bodyAge", "visceral_fat", "weight", "sub_fat"
+  "bodyAge", "visceral_fat", "weight", "sub_fat", "bodyWater"
 ]
 
 export default function Page() {
   const { features = [] } = useAppSelector(state => state.coach.data)
+  const userType = getUserType();
+  const hasFeatureAccess = features.includes(7);
+  const hasUserPermission = hasTabPermission("health-matrix-fields");
+  const canAccess = userType === "coach" ? hasFeatureAccess : hasUserPermission;
 
-  if (!features.includes(7)) return <div className="content-container content-height-screen flex flex-col items-center justify-center h-full text-center">
+  if (!canAccess) return <div className="content-container content-height-screen flex flex-col items-center justify-center h-full text-center">
     <Lock className="h-6 w-6 text-gray-400 mb-2" />
     <p className="text-sm text-gray-500 max-w-[60ch]">
       This feature is not available for your account. Please contact support for more information.&nbsp;

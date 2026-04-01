@@ -681,7 +681,7 @@ export function generateAgeStandard(data) {
 
 export function calculateBodyWater(data) {
   const gender = data.gender?.toLowerCase();
-  const height = generateWeightStandard(data);
+  const height = Number(generateHeightStandard(data)) * 100;
   const weight = generateWeightStandard(data);
   const age = generateAgeStandard(data);
   if(gender === "male") {

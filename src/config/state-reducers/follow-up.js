@@ -110,7 +110,8 @@ export function init(data) {
 const fields = ["weightUnit", "height", "heightUnit", "notes", "bmi", "body_composition", "visceral_fat", "rm", "muscle", "fat", "ideal_weight", "bodyAge"];
 export function generateRequestPayload(state, forIdealWeight, extraFields = []) {
   const payload = {
-    healthMatrix: {}
+    healthMatrix: {},
+    customFields: {},
   };
   if (["kg", "kgs"].includes(state.healthMatrix["weightUnit"]?.toLowerCase())) {
     payload.healthMatrix.weight = String(state.healthMatrix.weightInKgs);
@@ -133,10 +134,13 @@ export function generateRequestPayload(state, forIdealWeight, extraFields = []) 
     })?.subcutaneousPercent
   );
 
-  // Add custom fields to healthMatrix
+  // Send custom metrics under customFields using fieldLabel keys
   for (const field of extraFields) {
     if (state.healthMatrix[field] !== undefined && state.healthMatrix[field] !== null) {
-      payload.healthMatrix[field] = String(state.healthMatrix[field]);
+      const value = String(state.healthMatrix[field]).trim();
+      if (value !== "") {
+        payload.customFields[field] = value;
+      }
     }
   }
 

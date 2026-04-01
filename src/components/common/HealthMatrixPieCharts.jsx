@@ -137,57 +137,83 @@ const healtMetrics = [
   },
 ];
 
-export default function HealthMetrics({ data, onUpdate }) {
+export default function HealthMetrics({
+  data,
+  onUpdate,
+  fields = healtMetrics,
+  showAll = false,
+  calculateByFormulaes = true,
+}) {
+  const rawKg = extractNumber(data.weightInKgs);
+  const rawPounds = extractNumber(data.weightInPounds);
+  const computedKg =
+    Number.isFinite(rawKg) && rawKg > 0
+      ? rawKg
+      : Number.isFinite(rawPounds) && rawPounds > 0
+        ? rawPounds * 0.453592
+        : undefined;
+  const computedPounds =
+    Number.isFinite(rawPounds) && rawPounds > 0
+      ? rawPounds
+      : Number.isFinite(rawKg) && rawKg > 0
+        ? rawKg / 0.453592
+        : undefined;
+
   const payload = {
-    bmi: extractNumber(data.bmi) || calculateBMIFinal(data),
-    muscle: extractNumber(data.muscle) || calculateSMPFinal(data),
-    fat: extractNumber(data.fat) || calculateBodyFatFinal(data),
-    rm: extractNumber(data.rm) || calculateBMRFinal(data),
-    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || calculateIdealWeightFinal(data),
-    bodyAge: extractNumber(data.bodyAge) || calculateBodyAgeFinal(data),
+    bmi: extractNumber(data.bmi) || (calculateByFormulaes ? calculateBMIFinal(data) : undefined),
+    muscle: extractNumber(data.muscle) || (calculateByFormulaes ? calculateSMPFinal(data) : undefined),
+    fat: extractNumber(data.fat) || (calculateByFormulaes ? calculateBodyFatFinal(data) : undefined),
+    rm: extractNumber(data.rm) || (calculateByFormulaes ? calculateBMRFinal(data) : undefined),
+    idealWeight: extractNumber(data.idealWeight) || data.ideal_weight || (calculateByFormulaes ? calculateIdealWeightFinal(data) : undefined),
+    ideal_weight: extractNumber(data.ideal_weight) || extractNumber(data.idealWeight) || (calculateByFormulaes ? calculateIdealWeightFinal(data) : undefined),
+    bodyAge: extractNumber(data.bodyAge) || (calculateByFormulaes ? calculateBodyAgeFinal(data) : undefined),
     visceral_fat: extractNumber(data.visceral_fat),
-    weightInKgs: updateWeightField() === "weightInKgs"
-      ? extractNumber(data.weightInKgs)
-      : undefined,
-    weightInPounds: updateWeightField() === "weightInPounds"
-      ? extractNumber(data.weightInPounds)
-      : undefined,
-    sub_fat: extractNumber(data.sub_fat) || calculateSubcutaneousFat(data)?.subcutaneousPercent,
-    bodyWater: extractNumber(data.bodyWater) || calculateBodyWater(data)
+    weightInKgs: computedKg,
+    weightInPounds: computedPounds,
+    sub_fat: extractNumber(data.sub_fat) || (calculateByFormulaes ? calculateSubcutaneousFat(data)?.subcutaneousPercent : undefined),
+    bodyWater: extractNumber(data.bodyWater) || (calculateByFormulaes ? calculateBodyWater(data) : undefined)
   };
 
-  function updateWeightField() {
-    if (["kgs", "kg"].includes(data?.weightUnit?.toLowerCase())) {
-      return "weightInKgs"
-    } else return "weightInPounds"
+  for (const key of Object.keys(data || {})) {
+    if (payload[key] === undefined || payload[key] === null || payload[key] === "") {
+      const parsed = extractNumber(data[key]);
+      payload[key] = Number.isFinite(parsed) ? parsed : data[key];
+    }
+  }
+  if (Number.isFinite(payload.weightInKgs)) {
+    payload.weightInKgs = Number(payload.weightInKgs.toFixed(2));
+  }
+  if (Number.isFinite(payload.weightInPounds)) {
+    payload.weightInPounds = Number(payload.weightInPounds.toFixed(2));
   }
 
   try {
     return (
       <>
-        {healtMetrics
-          .filter((metric) =>
-            !isNaN(payload[metric.name]) &&
-            payload[metric.name] !== 0 &&
-            payload[metric.name] !== ""
-          )
-          .map((metric) => (
+        {(Array.isArray(fields) && fields.length > 0 ? fields : healtMetrics)
+          .filter((metric) => {
+            if (showAll) return true;
+            const value = payload[metric.name];
+            return !isNaN(value) && value !== 0 && value !== "";
+          })
+          .map((metric, index) => (
             <MetricProgress
-              key={metric.id}
+              key={`${metric.name}-${metric.id ?? index}`}
               {...metric}
               value={payload[metric.name]}
-              maxPossibleValue={metric.getMaxValue({
+              title={metric.title || metric.label || metric.name}
+              maxPossibleValue={metric.getMaxValue?.({
                 value: payload[metric.name],
                 gender: data.gender
               })}
-              maxThreshold={metric.getMaxValue({
+              maxThreshold={metric.getMaxValue?.({
                 value: payload[metric.name],
                 gender: data.gender
-              })}
-              minThreshold={metric.getMinValue({
+              }) ?? 100}
+              minThreshold={metric.getMinValue?.({
                 value: payload[metric.name],
                 gender: data.gender
-              })}
+              }) ?? 0}
               name={metric.name}
               payload={payload}
               _id={data._id}
@@ -204,7 +230,7 @@ export default function HealthMetrics({ data, onUpdate }) {
 }
 
 export function MetricProgress({
-  value = 15,
+  value = 0,
   title = "Muscle",
   maxThreshold = 100,
   minThreshold,

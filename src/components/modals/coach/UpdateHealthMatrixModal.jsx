@@ -32,7 +32,7 @@ const SVG_ICONS = [
 
 const DEFAULT_FIELDS_ENUM = [
   "bmi", "muscle", "fat", "rm", "ideal_weight",
-  "bodyAge", "visceral_fat", "weight", "sub_fat"
+  "bodyAge", "visceral_fat", "weight", "sub_fat", "bodyWater"
 ];
 
 const DEFAULT_FIELD_LABELS = {
@@ -44,8 +44,14 @@ const DEFAULT_FIELD_LABELS = {
   bodyAge: "Body Age",
   visceral_fat: "Visceral Fat",
   weight: "Weight",
-  sub_fat: "Subcutaneous Fat"
+  sub_fat: "Subcutaneous Fat",
+  bodyWater: "Body Water",
 };
+
+const normalizeHealthMatrixConfig = (source) => ({
+  defaultFields: Array.isArray(source?.defaultFields) ? source.defaultFields : [],
+  coachAddedFields: Array.isArray(source?.coachAddedFields) ? source.coachAddedFields : [],
+});
 
 export default function UpdateHealthMatrixModal({ data }) {
   const [open, setOpen] = useState(false);
@@ -54,13 +60,15 @@ export default function UpdateHealthMatrixModal({ data }) {
   const dispatch = useDispatch();
 
   // Initial state from props
-  const [defaultFields, setDefaultFields] = useState(data?.defaultFields || []);
-  const [coachAddedFields, setCoachAddedFields] = useState(data?.coachAddedFields || []);
+  const initialConfig = normalizeHealthMatrixConfig(data);
+  const [defaultFields, setDefaultFields] = useState(initialConfig.defaultFields);
+  const [coachAddedFields, setCoachAddedFields] = useState(initialConfig.coachAddedFields);
 
   useEffect(() => {
     if (open) {
-      setDefaultFields(data?.defaultFields || []);
-      setCoachAddedFields(data?.coachAddedFields || []);
+      const nextConfig = normalizeHealthMatrixConfig(data);
+      setDefaultFields(nextConfig.defaultFields);
+      setCoachAddedFields(nextConfig.coachAddedFields);
     }
   }, [open, data]);
 
@@ -106,6 +114,9 @@ export default function UpdateHealthMatrixModal({ data }) {
       if (coachAddedFields.some(f => !f.title || !f.fieldLabel)) {
         throw new Error("All custom fields must have a title and label");
       }
+      if (coachAddedFields.some((f) => Number(f.minValue) > Number(f.maxValue))) {
+        throw new Error("Min value cannot be greater than max value");
+      }
 
       const payload = {
         coachAddedFields: coachAddedFields.map(f => ({
@@ -118,11 +129,17 @@ export default function UpdateHealthMatrixModal({ data }) {
       };
 
       const response = await sendData("app/health-matrix/fields-list", payload, "POST");
-
-      if (response.status_code !== 200) throw new Error(response.message);
+      const isSuccess =
+        response?.status_code === 200 ||
+        response?.status_code === 201 ||
+        response?.success === true;
+      if (!isSuccess) throw new Error(response?.message || "Failed to update health matrix fields");
 
       // Update local state and redux
-      dispatch(updateCoachField({ coachHealthMatrixFields: payload }));
+      const nextConfig = normalizeHealthMatrixConfig(response?.data || payload);
+      dispatch(updateCoachField({ coachHealthMatrixFields: nextConfig }));
+      setDefaultFields(nextConfig.defaultFields);
+      setCoachAddedFields(nextConfig.coachAddedFields);
       toast.success("Health matrix fields updated successfully");
       setOpen(false);
 

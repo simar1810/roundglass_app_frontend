@@ -47,6 +47,17 @@ const normalizeUserClientStats = (user) => {
   };
 };
 
+const getUserCategoryAccessCount = (user) => {
+  const categoryIds = Array.isArray(user?.categoryIds)
+    ? user.categoryIds
+    : Array.isArray(user?.clientCategoryAccess)
+      ? user.clientCategoryAccess
+      : Array.isArray(user?.categories)
+        ? user.categories
+        : [];
+  return new Set(categoryIds.map((id) => String(id))).size;
+};
+
 export default function UsersPage() {
   const router = useRouter();
   const coach = useAppSelector(state => state.coach.data);
@@ -222,6 +233,10 @@ export default function UsersPage() {
                       <Badge variant="outline">{user.permissions.length} assigned</Badge>
                     </div>
                   )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Category Access:</span>
+                    <Badge variant="outline">{getUserCategoryAccessCount(user)} assigned</Badge>
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Overview:</span>
                     <Badge variant={user.clientsOverviewStatus === "Active" ? "default" : "secondary"}>

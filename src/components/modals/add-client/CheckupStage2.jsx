@@ -1,10 +1,9 @@
 import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_FORM_FIELDS } from "@/config/data/health-matrix";
 import { setCurrentStage, updateMatrices, changeFieldvalue } from "@/config/state-reducers/add-client-checkup";
 import { calculateBMIFinal, calculateBMRFinal, calculateBodyAgeFinal, calculateBodyFatFinal, calculateIdealWeightFinal, calculateSMPFinal, calculateSubcutaneousFat } from "@/lib/client/statistics";
+import { useHealthMatrixFieldsConfig } from "@/hooks/useHealthMatrixFieldsConfig";
 import useCurrentStateContext from "@/providers/CurrentStateContext"
-import { useAppSelector } from "@/providers/global/hooks";
 import { differenceInYears, parse } from "date-fns";
 import { useEffect, useMemo } from "react";
 
@@ -13,54 +12,9 @@ function getWeight(state) {
   return `${state.weightInPounds} Lbs`
 }
 
-const SVG_ICONS = [
-  "/svgs/body.svg",      // 0
-  "/svgs/check.svg",     // 1
-  "/svgs/checklist.svg", // 2
-  "/svgs/bmi.svg",       // 3
-  "/svgs/cutlery.svg",   // 4
-  "/svgs/fat.svg",       // 5
-  "/svgs/fats.svg",      // 6
-  "/svgs/muscle.svg",    // 7
-  "/svgs/meta.svg",      // 8
-  "/svgs/person.svg",    // 9
-  "/svgs/weight.svg",    // 10
-  "/svgs/flame-icon.svg",// 11
-  "/svgs/marathon.svg",  // 12
-  "/svgs/users-icon.svg",// 13
-];
-
 export default function CheckupStage2() {
   const { dispatch, ...state } = useCurrentStateContext();
-  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
-
-  const formFields = useMemo(() => {
-    if (!coachHealthMatrixFields) return DEFAULT_FORM_FIELDS;
-
-    const { defaultFields = [], coachAddedFields = [] } = coachHealthMatrixFields;
-
-    // Filter default fields
-    const activeDefaultFields = DEFAULT_FORM_FIELDS.filter(field =>
-      [...defaultFields, "weightInKgs", "weightInPounds"].includes(field.name) ||
-      // Handle mapping discrepancies if any (e.g., ideal_weight vs idealWeight)
-      (field.name === "ideal_weight" && (defaultFields.includes("ideal_weight") || defaultFields.includes("idealWeight")))
-    );
-
-    // Map coach added fields
-    const customFields = coachAddedFields.map(field => ({
-      label: field.title,
-      value: "0", // Default or placeholder
-      info: `Range: ${field.minValue} - ${field.maxValue}`,
-      icon: SVG_ICONS[field.svg] || "/svgs/checklist.svg",
-      name: field.fieldLabel,
-      title: field.title, // For HealthMetrics to use as title
-      id: field._id || field.fieldLabel, // Unique ID
-      getMaxValue: () => field.maxValue,
-      getMinValue: () => field.minValue,
-    }));
-
-    return [...activeDefaultFields, ...customFields];
-  }, [coachHealthMatrixFields]);
+  const { formFields, isLoading, isFallback } = useHealthMatrixFieldsConfig("client-add");
 
 
   const age = state.dob
@@ -81,6 +35,12 @@ export default function CheckupStage2() {
   }, [formFields]); // Depend on formFields to update when they change
 
   return <div className="p-6 pt-0">
+    {isLoading && <p className="text-xs text-muted-foreground mb-3">Loading health matrix field settings...</p>}
+    {isFallback && process.env.NODE_ENV !== "production" && (
+      <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        Health matrix settings API unavailable. Rendering fallback defaults in dev mode.
+      </div>
+    )}
     <div className="grid grid-cols-2 sm:grid-cols-2 gap-y-1 text-sm border-b border-gray-200 py-4">
       <div>
         Name: <span className="font-semibold">{state.name}</span>

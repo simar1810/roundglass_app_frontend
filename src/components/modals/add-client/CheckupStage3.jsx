@@ -2,12 +2,12 @@ import FormControl from "@/components/FormControl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { changeFieldvalue, changeNextFollowUpType, createdClient, generateRequestPayload, setCurrentStage } from "@/config/state-reducers/add-client-checkup";
+import { useHealthMatrixFieldsConfig } from "@/hooks/useHealthMatrixFieldsConfig";
 import { sendDataWithFormData } from "@/lib/api";
 import { _throwError } from "@/lib/formatter";
 import { getObjectUrl } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { onboardingQuestionaire } from "@/lib/fetchers/app";
-import { useAppSelector } from "@/providers/global/hooks";
 import { Camera } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,16 +17,15 @@ import useSWR from "swr";
 export default function CheckupStage3() {
   const { dispatch, file, ...state } = useCurrentStateContext();
   const [saving, setSaving] = useState(false);
-  const { coachHealthMatrixFields } = useAppSelector(state => state.coach.data);
+  const { customFieldLabels } = useHealthMatrixFieldsConfig("client-add-submit");
   const { isLoading, error, data: questionSections } = useSWR("onboarding-questionaire", () => onboardingQuestionaire());
   async function createClient() {
     if (saving) return;
     try {
       setSaving(true);
       const secs = questionSections.data.sections || [];
-      const extraFields = coachHealthMatrixFields?.coachAddedFields?.map(f => f.fieldLabel) || [];
-      const data = generateRequestPayload({ ...state, file }, undefined, state.existingClientID, extraFields);
-      const response = await sendDataWithFormData("app/createClient", data);
+      const payloadData = generateRequestPayload({ ...state, file }, undefined, state.existingClientID, customFieldLabels);
+      const response = await sendDataWithFormData("app/createClient", payloadData);
       if (response.status_code !== 200) throw new Error(response.message || "Please try again later!");
       toast.success(response.message);
       if (secs.length > 0) {

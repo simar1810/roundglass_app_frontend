@@ -115,4 +115,14 @@ export const DEFAULT_FORM_FIELDS = [
     getMaxValue: () => 260,
     getMinValue: () => 1,
   },
+  {
+    title: "Body Water",
+    value: "26",
+    optimalRangeText: "Optimal Range:\nMatched actual age or lower,\nHigher Poor Health",
+    icon: "/svgs/body.svg",
+    name: "bodyWater",
+    id: 11,
+    getMaxValue: ({ gender }) => gender === "male" ? 73 : 60,
+    getMinValue: ({ gender }) => gender === "male" ? 43 : 41,
+  },
 ];
