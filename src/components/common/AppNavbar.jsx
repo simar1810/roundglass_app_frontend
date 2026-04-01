@@ -1,6 +1,7 @@
 "use client"
 import useClickOutside from "@/hooks/useClickOutside";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { getUserType } from "@/lib/permissions";
 import { permit } from "@/lib/permit";
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import { destroy } from "@/providers/global/slices/coach";
@@ -27,9 +28,32 @@ export default function AppNavbar() {
   const [Modal, setModal] = useState();
   const {toggleSidebar} = useSidebar()
   const data = useAppSelector(state => state.coach.data)
+  const [userProfile, setUserProfile] = useState({ name: "", profilePhoto: "" });
+
+  useEffect(() => {
+    const userType = getUserType();
+    if (userType !== "user" || typeof window === "undefined") {
+      setUserProfile({ name: "", profilePhoto: "" });
+      return;
+    }
+
+    try {
+      const storedUserData = localStorage.getItem("userData");
+      const parsedUserData = storedUserData ? JSON.parse(storedUserData) : {};
+      setUserProfile({
+        name: String(parsedUserData?.name || "").trim(),
+        profilePhoto: parsedUserData?.profilePhoto || "",
+      });
+    } catch {
+      setUserProfile({ name: "", profilePhoto: "" });
+    }
+  }, []);
+
   if (!data) return <></>
 
   const { profilePhoto, name } = data;
+  const displayName = userProfile.name || name;
+  const displayPhoto = userProfile.profilePhoto || profilePhoto;
   const openSidebar = () => {
     toggleSidebar();
   }
@@ -42,8 +66,8 @@ export default function AppNavbar() {
     {Modal || <></>}
     <ClientSearchBar setModal={setModal} />
     <UserOptions
-      profilePhoto={profilePhoto}
-      name={name}
+      profilePhoto={displayPhoto}
+      name={displayName}
       />
       </div>
   </nav>
