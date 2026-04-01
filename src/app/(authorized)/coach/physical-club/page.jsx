@@ -195,7 +195,7 @@ function ToolsBar({
   }
   return <div className="flex items-center justify-between gap-4 mb-4">
     <Input
-      placeholder="Search Player"
+      placeholder="Search Athlete"
       className="w-64 mr-auto"
       value={query}
       onChange={e => setQuery(e.target.value)}

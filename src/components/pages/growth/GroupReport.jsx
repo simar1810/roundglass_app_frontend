@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
-import { downloadGroupReportPDF } from "@/lib/fetchers/growth";
 import { format } from "date-fns";
 import { Download, FileText } from "lucide-react";
 import { useState } from "react";
@@ -108,7 +107,7 @@ export default function GroupReport({
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="font-medium">Total Players</TableCell>
+                  <TableCell className="font-medium">Total Athlete</TableCell>
                   <TableCell className="text-center font-bold">{overall.total || 0}</TableCell>
                   <TableCell className="text-center">—</TableCell>
                   <TableCell className="text-center">—</TableCell>
@@ -264,7 +263,7 @@ function AgeBucketCard({ bucket }) {
       <CardContent className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Total Players</span>
+            <span className="text-sm font-medium">Total Athlete</span>
             <span className="text-2xl font-bold">{total}</span>
           </div>
         </div>
@@ -344,7 +343,7 @@ function AgeBucketTable({ bucket }) {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="font-medium">Total Players</TableCell>
+                <TableCell className="font-medium">Total Athlete</TableCell>
                 <TableCell className="text-center font-bold">{total}</TableCell>
                 <TableCell className="text-center">—</TableCell>
                 <TableCell className="text-center">—</TableCell>

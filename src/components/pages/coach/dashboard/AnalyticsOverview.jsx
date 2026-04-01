@@ -1,27 +1,26 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
 import { Badge } from "@/components/ui/badge";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Activity, 
-  Dumbbell, 
-  Pill, 
-  AlertCircle,
-  ArrowRight,
-  Target,
-  Award
-} from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import { formatMetricName, normalizeMetricValue } from "@/lib/utils/roundglassAnalytics";
+import {
+    Activity,
+    AlertCircle,
+    ArrowRight,
+    Award,
+    BarChart3,
+    Dumbbell,
+    Pill,
+    Target,
+    TrendingUp,
+    Users
+} from "lucide-react";
+import Link from "next/link";
 import useSWR from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
-import ContentError from "@/components/common/ContentError";
 
 function clampPercent(value) {
   const n = Number(value);
@@ -97,20 +96,20 @@ export default function AnalyticsOverview() {
   const preferences = summaryData?.preferences || {};
 
   // Calculate improvement trends
-  const totalPlayers = overview.totalClients || 0;
+  const totalAthlete = overview.totalClients || 0;
   const playersWithHealthData = overview.clientsWithHealthData || 0;
   const playersWithTraining = overview.clientsWithTraining || 0;
   const playersWithSupplements = overview.clientsWithSupplements || 0;
 
   // Calculate percentages
-  const healthDataPercentage = totalPlayers > 0
-    ? (playersWithHealthData / totalPlayers) * 100
+  const healthDataPercentage = totalAthlete > 0
+    ? (playersWithHealthData / totalAthlete) * 100
     : 0;
-  const trainingPercentage = totalPlayers > 0
-    ? (playersWithTraining / totalPlayers) * 100
+  const trainingPercentage = totalAthlete > 0
+    ? (playersWithTraining / totalAthlete) * 100
     : 0;
-  const supplementsPercentage = totalPlayers > 0
-    ? (playersWithSupplements / totalPlayers) * 100
+  const supplementsPercentage = totalAthlete > 0
+    ? (playersWithSupplements / totalAthlete) * 100
     : 0;
 
   const topPreferences = preferences && typeof preferences === "object"
@@ -154,7 +153,7 @@ export default function AnalyticsOverview() {
                   </span>
                 </div>
                 <div className="text-3xl font-semibold leading-tight text-blue-900 dark:text-blue-100">
-                  {totalPlayers}
+                  {totalAthlete}
                 </div>
                 <div className="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-1.5">
                   Active roster size
@@ -223,13 +222,13 @@ export default function AnalyticsOverview() {
               <ProgressRow
                 label="Training engagement"
                 value={trainingPercentage}
-                subLabel="Players with active training"
+                subLabel="Athlete with active training"
                 tone="purple"
               />
               <ProgressRow
                 label="Supplement adoption"
                 value={supplementsPercentage}
-                subLabel="Players using supplements"
+                subLabel="Athlete using supplements"
                 tone="orange"
               />
             </div>
@@ -332,12 +331,12 @@ export default function AnalyticsOverview() {
                     className="w-full justify-start h-8 px-2.5 text-xs"
                   >
                     <Users className="w-3.5 h-3.5 mr-1.5" />
-                    Players
+                    Athlete
                   </Button>
                 </Link>
               </div>
 
-              {clampPercent(healthDataPercentage) < 50 && totalPlayers > 0 && (
+              {clampPercent(healthDataPercentage) < 50 && totalAthlete > 0 && (
                 <div className="mt-3 flex items-start gap-2.5 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/70 border border-yellow-100 dark:border-yellow-800">
                   <AlertCircle className="w-3.5 h-3.5 text-yellow-600 mt-0.5" />
                   <div className="flex-1">

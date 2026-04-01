@@ -8,27 +8,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
 import {
-  createSweatRateEntry,
-  deleteSweatRateEntry,
-  getSweatRateEntries,
-  getSweatRateSummary,
-  updateSweatRateEntry,
+    createSweatRateEntry,
+    deleteSweatRateEntry,
+    getSweatRateEntries,
+    getSweatRateSummary,
+    updateSweatRateEntry,
 } from "@/lib/fetchers/sweatRate";
 import { CalendarClock, Droplets, Pencil, Save, Trash2, TrendingUp, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -81,7 +81,7 @@ export default function SweatRatePage() {
     const arr = Array.isArray(list) ? list : [];
     return arr.map((client) => ({
       _id: client?._id || client?.id,
-      name: client?.name || "Unknown Player",
+      name: client?.name || "Unknown Athlete",
       clientId: client?.clientId || "",
     })).filter((client) => Boolean(client._id));
   }, [data]);
@@ -324,7 +324,7 @@ export default function SweatRatePage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
-              <Label>Player</Label>
+              <Label>Athlete</Label>
               <Select value={selectedClientId} onValueChange={setSelectedClientId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select player" />
@@ -402,7 +402,7 @@ export default function SweatRatePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRound className="h-5 w-5" />
-            Player Follow-up Overview
+            Athlete Follow-up Overview
           </CardTitle>
           <CardDescription>
             {selectedClient

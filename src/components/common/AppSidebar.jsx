@@ -435,7 +435,7 @@ export function ClientSearchBar({ setModal }) {
       <div className="relative flex items-center">
         <Search className="w-[16px] h-[16px] text-[#808080] absolute left-3 top-1/2 -translate-y-1/2" />
         <Input
-          placeholder="Search Player..."
+          placeholder="Search Athlete..."
           onFocus={() => setOpen(true)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -469,7 +469,7 @@ function SearchedResults({ setModal, loading, data, query, setQuery }) {
     return (
       <ContentError
         className="!bg-[var(--comp-1)] !min-h-[150px] text-center mt-0 border-0"
-        title="No Player Found!"
+        title="No Athlete Found!"
       />
     );
 

@@ -176,7 +176,7 @@ function SelectClients({
           ))}
           {filteredClients.length === 0 && (
             <div className="text-center text-gray-500 py-4">
-              No Players Found matching "{searchQuery}"
+              No Athlete Found matching "{searchQuery}"
             </div>
           )}
         </div>

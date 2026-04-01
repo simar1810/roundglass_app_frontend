@@ -25,7 +25,7 @@ export default function ClubSubscriptions({ subscriptions }) {
           <TableRow>
             <TableHead>Sr No</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Player ID</TableHead>
+            <TableHead>Athlete ID</TableHead>
             <TableHead>Mobile Number</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>

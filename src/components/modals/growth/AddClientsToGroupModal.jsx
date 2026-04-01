@@ -1,27 +1,27 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import ContentError from "@/components/common/ContentError";
+import ContentLoader from "@/components/common/ContentLoader";
+import SelectControl from "@/components/Select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
-import SelectControl from "@/components/Select";
-import { addClientsToGroup, getAllGroups } from "@/lib/fetchers/growth";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getAppClients } from "@/lib/fetchers/app";
-import { useState, useMemo, useRef } from "react";
+import { addClientsToGroup, getAllGroups } from "@/lib/fetchers/growth";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
-import ContentError from "@/components/common/ContentError";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
 
 export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, onSuccess, children }) {
   const [open, setOpen] = useState(false);
@@ -226,7 +226,7 @@ export default function AddClientsToGroupModal({ groupId: preSelectedGroupId, on
 
               <div className={preSelectedGroupId ? "md:col-span-3" : "md:col-span-2"}>
                 <div className="flex items-center justify-between gap-3 mb-2">
-                  <label className="label font-[600] text-[14px] block">Players</label>
+                  <label className="label font-[600] text-[14px] block">Athlete</label>
                   <div className="flex items-center gap-2">
                     {selectedClientIds.length > 0 && (
                       <Badge variant="secondary" className="text-[11px]">

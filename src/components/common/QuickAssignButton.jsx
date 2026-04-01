@@ -189,7 +189,7 @@ export default function QuickAssignButton({
                 {availableClients.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                    <p>No Players Found</p>
+                    <p>No Athlete Found</p>
                   </div>
                 )}
               </div>

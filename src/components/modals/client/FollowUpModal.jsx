@@ -1,42 +1,42 @@
+import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
 import FormControl from "@/components/FormControl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
-import { CalendarRange } from "lucide-react";
-import useCurrentStateContext, {
-  CurrentStateProvider,
-} from "@/providers/CurrentStateContext";
 import {
-  changeFieldvalue,
-  changeWeightUnit,
-  followUpReducer,
-  generateRequestPayload,
-  init,
-  setCurrentStage,
-  setHealthMatrices,
-  setNextFollowUpDate,
-  stage1Completed,
+    changeFieldvalue,
+    changeWeightUnit,
+    followUpReducer,
+    generateRequestPayload,
+    init,
+    setCurrentStage,
+    setHealthMatrices,
+    setNextFollowUpDate,
+    stage1Completed,
 } from "@/config/state-reducers/follow-up";
-import {
-  calculateBMIFinal,
-  calculateBMRFinal,
-  calculateBodyAgeFinal,
-  calculateBodyFatFinal,
-  calculateIdealWeightFinal,
-  calculateSMPFinal,
-  calculateSubcutaneousFat,
-} from "@/lib/client/statistics";
 import { useHealthMatrixFieldsConfig } from "@/hooks/useHealthMatrixFieldsConfig";
+import { sendData } from "@/lib/api";
+import {
+    calculateBMIFinal,
+    calculateBMRFinal,
+    calculateBodyAgeFinal,
+    calculateBodyFatFinal,
+    calculateIdealWeightFinal,
+    calculateSMPFinal,
+    calculateSubcutaneousFat,
+} from "@/lib/client/statistics";
+import { _throwError } from "@/lib/formatter";
+import { extractNumber } from "@/lib/utils";
+import useCurrentStateContext, {
+    CurrentStateProvider,
+} from "@/providers/CurrentStateContext";
+import { differenceInYears, parse } from "date-fns";
+import { CalendarRange } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { sendData } from "@/lib/api";
-import HealthMetrics from "@/components/common/HealthMatrixPieCharts";
-import { differenceInYears, parse } from "date-fns";
 import { mutate } from "swr";
-import { _throwError } from "@/lib/formatter";
-import { extractNumber } from "@/lib/utils";
 
 
 export default function FollowUpModal({ clientData }) {
@@ -44,11 +44,11 @@ export default function FollowUpModal({ clientData }) {
   return <Dialog>
     <DialogTrigger className="w-full bg-[var(--accent-1)] text-[var(--primary-1)] text-[14px] font-semibold pr-3 py-2 flex items-center justify-center gap-2 rounded-[8px]">
       <CalendarRange className="w-[18px] h-[18px]" />
-      Player Follow-up
+      Athlete Follow-up
     </DialogTrigger>
     <DialogContent className="!max-w-[650px] max-h-[70vh] border-b-1 p-0 gap-0 overflow-y-auto">
       <DialogHeader className="p-4 border-b-1">
-        <DialogTitle className="text-[24px]">Player Follow-up</DialogTitle>
+        <DialogTitle className="text-[24px]">Athlete Follow-up</DialogTitle>
       </DialogHeader>
       <CurrentStateProvider
         state={init(clientData)}

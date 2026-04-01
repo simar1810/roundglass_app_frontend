@@ -14,7 +14,7 @@ export const DEFAULT_FORM_FIELDS = [
   {
     label: "Muscle",
     value: "15%",
-    info: "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
+    info: "Optimal Range: 32–36% for men, 24–30% for women\nAthlete: 38–42%",
     icon: "/svgs/muscle.svg",
     name: "muscle",
     title: "Muscle",

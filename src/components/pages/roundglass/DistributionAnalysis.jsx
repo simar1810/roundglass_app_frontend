@@ -26,14 +26,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
-import { getDistribution } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
-import { useAppSelector } from "@/providers/global/hooks";
+import { getDistribution } from "@/lib/fetchers/roundglassAnalytics";
 import {
     formatMetricName,
     formatPercentile,
     normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { BarChart3, Download, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -522,11 +522,11 @@ export default function DistributionAnalysis() {
               </Select>
             </div>
 
-            {/* Client Selector */}
+            {/* Athlete Selector */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Players (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Athlete (Optional)</label>
               <SelectMultiple
-                label="Select players"
+                label="Select athletes"
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}

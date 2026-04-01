@@ -33,16 +33,16 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
-import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getTrendsAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/providers/global/hooks";
 import {
     calculateTrendDirection,
     formatDateRange,
     formatMetricName,
     normalizeMetricValue
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { format, subMonths } from "date-fns";
 import {
     Activity,
@@ -286,7 +286,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
     }
 
     try {
-      const headers = ["Date", "Player", "Value"];
+      const headers = ["Date", "Athlete", "Value"];
       const rows = tableData.map((row) => {
         const csvRow = [row.date, getClientName(row.clientId), row.value ?? "—"];
         return csvRow.join(",");
@@ -368,11 +368,11 @@ export default function TrendsAnalysis({ initialClientId = null }) {
               </Select>
             </div>
 
-            {/* Player Selector */}
+            {/* Athlete Selector */}
             <div className="w-full min-w-0">
-              <label className="text-sm font-medium mb-3 block">Players</label>
+              <label className="text-sm font-medium mb-3 block">Athlete</label>
               <SelectMultiple
-                label="Select players"
+                label="Select athletes"
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
@@ -496,7 +496,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                 htmlFor="aggregate"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Aggregate across selected players
+                Aggregate across selected athletes
               </Label>
             </div>
           )}
@@ -508,9 +508,9 @@ export default function TrendsAnalysis({ initialClientId = null }) {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Select players to continue</h3>
+              <h3 className="text-lg font-semibold mb-2">Select athletes to continue</h3>
               <p className="text-muted-foreground">
-                Pick one or more players above, then adjust the date range if needed.
+                Pick one or more athletes above, then adjust the date range if needed.
               </p>
             </div>
           </CardContent>
@@ -706,7 +706,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Player</TableHead>
+                    <TableHead>Athlete</TableHead>
                     <TableHead>Value</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -735,7 +735,7 @@ export default function TrendsAnalysis({ initialClientId = null }) {
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
               <p className="text-muted-foreground">
-                Please select players and date range to view trends
+                Please select athletes and date range to view trends
               </p>
             </div>
           </CardContent>

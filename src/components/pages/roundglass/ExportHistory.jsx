@@ -142,7 +142,7 @@ export default function ExportHistory({
     };
     return (
       <Badge variant="outline" className={colors[type] || ""}>
-        {type === "client" ? "Player Data" : "Team Data"}
+        {type === "client" ? "Athlete Data" : "Team Data"}
       </Badge>
     );
   };
@@ -242,7 +242,7 @@ export default function ExportHistory({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="client">Player Data</SelectItem>
+                    <SelectItem value="client">Athlete Data</SelectItem>
                     <SelectItem value="team">Team Data</SelectItem>
                   </SelectContent>
                 </Select>
@@ -305,7 +305,7 @@ export default function ExportHistory({
                           <div className="flex flex-col gap-1">
                             {exportItem.type === "client" ? (
                               <span className="text-sm">
-                                Player ID: {exportItem.clientId?.slice(-8) || "N/A"}
+                                Athlete ID: {exportItem.clientId?.slice(-8) || "N/A"}
                               </span>
                             ) : (
                               <span className="text-sm">

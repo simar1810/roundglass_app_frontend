@@ -39,7 +39,7 @@ export default function FreeTrialCustomerHeader() {
       <div className="flex gap-2 md:gap-6 items-center justify-start">
       <FormControl
         className="lg:min-w-[280px] [&_.input]:focus:shadow-2xl [&_.input]:bg-[var(--comp-1)] text-[12px] ml-auto"
-        placeholder="Search Player.."
+        placeholder="Search Athlete.."
       />
       <Button
         onClick={() => {

@@ -9,42 +9,42 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { getAppClientPortfolioDetails, getAppClients } from "@/lib/fetchers/app";
-import { getClientRanking } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getClientRanking } from "@/lib/fetchers/roundglassAnalytics";
 import { nameInitials } from "@/lib/formatter";
-import { useAppSelector } from "@/providers/global/hooks";
 import { cn } from "@/lib/utils";
 import {
-  formatMetricName,
-  formatPercentile,
-  formatRank,
-  getPercentileColor,
-  normalizeMetricValue,
+    formatMetricName,
+    formatPercentile,
+    formatRank,
+    getPercentileColor,
+    normalizeMetricValue,
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { AlertCircle, Award, RefreshCw, TrendingUp, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
+    PolarAngleAxis,
+    PolarGrid,
+    PolarRadiusAxis,
+    Radar,
+    RadarChart,
+    ResponsiveContainer,
 } from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -97,11 +97,11 @@ export default function ClientRanking({ clientId: propClientId = null }) {
   const applySelectedClient = (c) => {
     const resolvedId = String(c?._id || "");
     if (!resolvedId) {
-      toast.error("Could not resolve player.");
+      toast.error("Could not resolve athlete.");
       return;
     }
     setClientId(resolvedId);
-    setClientQuery(`${c?.name || "Player"}${c?.clientId ? ` (${c.clientId})` : ""}`);
+    setClientQuery(`${c?.name || "Athlete"}${c?.clientId ? ` (${c.clientId})` : ""}`);
     setSuggestionsOpen(false);
     setHighlightedIndex(-1);
   };
@@ -219,7 +219,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
       }
 
       if (exactMatches.length > 1) {
-        toast.error("Multiple players matched. Please enter an exact Player ID.");
+        toast.error("Multiple athletes matched. Please enter an exact Athlete ID.");
         return;
       }
 
@@ -254,7 +254,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
         );
         setSuggestionsOpen(true);
         setHighlightedIndex(0);
-        toast.message("Select a player from the suggestions.");
+        toast.message("Select an athlete from the suggestions.");
         return;
       }
 
@@ -287,16 +287,16 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           );
           setSuggestionsOpen(true);
           setHighlightedIndex(0);
-          toast.message("Select a player from the suggestions.");
+          toast.message("Select an athlete from the suggestions.");
           return;
         }
       }
 
       toast.error(
-        "No player found. Search by name, enter an exact Player ID (e.g., ggd65), or paste the full Mongo ID."
+        "No athlete found. Search by name, enter an exact Athlete ID (e.g., ggd65), or paste the full Mongo ID."
       );
     } catch (e) {
-      toast.error(e?.message || "Could not search players. Please try again.");
+      toast.error(e?.message || "Could not search athletes. Please try again.");
     } finally {
       setIsResolvingClient(false);
     }
@@ -514,13 +514,13 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                   <div>
                     <CardTitle className="text-xl">{client.name}</CardTitle>
                     <CardDescription>
-                      {client.email || client.mobileNumber || "Player details"}
+                      {client.email || client.mobileNumber || "Athlete details"}
                     </CardDescription>
                   </div>
                 </>
               ) : (
                 <div>
-                  <CardTitle className="text-xl">Player Rankings</CardTitle>
+                  <CardTitle className="text-xl">Athlete Rankings</CardTitle>
                   <CardDescription>Percentile rankings compared to peers</CardDescription>
                 </div>
               )}
@@ -536,22 +536,22 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <AnalyticsPrintButton
                 variant="outline"
                 size="sm"
-                title={client ? `${client.name} - Rankings Report` : "Player Rankings Report"}
+                title={client ? `${client.name} - Rankings Report` : "Athlete Rankings Report"}
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 no-print items-start">
-            {/* Client Selector */}
+            {/* Athlete Selector */}
             {!propClientId && (
               <div className="min-w-0" ref={containerRef}>
-                <label className="text-sm font-medium mb-2 block">Player</label>
+                <label className="text-sm font-medium mb-2 block">Athlete</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Search by name or Player ID (e.g., ggd65)"
+                    placeholder="Search by name or Athlete ID (e.g., ggd65)"
                     value={clientQuery}
                     onChange={(e) => {
                       setClientQuery(e.target.value);
@@ -632,7 +632,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                                   <div className="min-w-0">
                                     <div className="text-sm font-medium truncate">{c.name}</div>
                                     <div className="text-[11px] text-muted-foreground truncate">
-                                      {c.clientId ? `Player ID: ${c.clientId}` : "—"}
+                                      {c.clientId ? `Athlete ID: ${c.clientId}` : "—"}
                                       {c.email ? ` · ${c.email}` : ""}
                                     </div>
                                   </div>
@@ -662,7 +662,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Players</SelectItem>
+                  <SelectItem value="all">All Athlete</SelectItem>
                   <SelectItem value="group">Group</SelectItem>
                   <SelectItem value="category">Category</SelectItem>
                 </SelectContent>
@@ -729,9 +729,9 @@ export default function ClientRanking({ clientId: propClientId = null }) {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Select a player to continue</h3>
+              <h3 className="text-lg font-semibold mb-2">Select an athlete to continue</h3>
               <p className="text-muted-foreground">
-                Enter a player ID above to load percentile rankings.
+                Enter an athlete ID above to load percentile rankings.
               </p>
             </div>
           </CardContent>
@@ -740,7 +740,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
         <ContentLoader />
       ) : clientError || (clientData && clientData?.status_code !== 200) ? (
         <ContentError
-          title={clientError?.message || clientData?.message || "Failed to load player data"}
+          title={clientError?.message || clientData?.message || "Failed to load athlete data"}
         />
       ) : error || (data && data?.status_code !== 200) ? (
         <ContentError
@@ -998,7 +998,7 @@ export default function ClientRanking({ clientId: propClientId = null }) {
               <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Ranking Data Available</h3>
               <p className="text-muted-foreground">
-                Please select a player to view ranking data
+                Please select an athlete to view ranking data
               </p>
             </div>
           </CardContent>

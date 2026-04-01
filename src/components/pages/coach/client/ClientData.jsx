@@ -7,22 +7,24 @@ import FormControl from "@/components/FormControl";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import PDFRenderer from "@/components/modals/PDFRenderer";
 import ClientGrowthStatus from "@/components/pages/growth/ClientGrowthStatus";
+import ClientRanking from "@/components/pages/roundglass/ClientRanking";
+import TrendsAnalysis from "@/components/pages/roundglass/TrendsAnalysis";
 import Paginate from "@/components/Paginate";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer } from "@/components/ui/chart";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,22 +36,19 @@ import { trimString } from "@/lib/formatter";
 import { customMealDailyPDFData } from "@/lib/pdf";
 import { youtubeVideoId } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
-import { format, subMinutes, subMonths } from "date-fns";
-import { BarChart, BarChart2, Bot, Briefcase, CalendarIcon, Clock, Droplet, Dumbbell, Eye, FileDown, FileText, MoreVertical, RefreshCw, ShoppingBag, TrendingUp, Utensils } from "lucide-react";
+import { format, subMinutes } from "date-fns";
+import { BarChart, BarChart2, Briefcase, CalendarIcon, Clock, Eye, FileDown, FileText, MoreVertical, ShoppingBag, TrendingUp, Utensils } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import DisplayClientQuestionaire from "../questionaire/display/DisplayClientQuestionaire";
-import AIAgentHistory from "./AIAgentHistory";
 import ClientReports from "./ClientReports";
 import ClientStatisticsData from "./ClientStatisticsData";
 import PhysicalClub from "./PhysicalClub";
-import ClientRanking from "@/components/pages/roundglass/ClientRanking";
-import TrendsAnalysis from "@/components/pages/roundglass/TrendsAnalysis";
 
 const tabItems = [
   { icon: <BarChart2 className="w-[16px] h-[16px]" />, value: "statistics", label: "Statistics" },
@@ -60,7 +59,7 @@ const tabItems = [
   // { icon: <Users className="w-[16px] h-[16px]" />, value: "club", label: "Club" },
   // { icon: <Droplet className="w-[16px] h-[16px]" />, value: "water-log", label: "Water Log" },
   // { icon: <Bot className="w-[16px] h-[16px]" />, value: "ai-agent", label: "AI History" },
-  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Player Reports" },
+  { icon: <FileText className="w-[16px] h-[16px]" />, value: "client-reports", label: "Athlete Reports" },
   { icon: <FileText className="w-[16px] h-[16px]" />, value: "physical-club", label: "Physical Club", showIf: ({ features }) => features.includes(3) },
   { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "case-file", label: "Questionaire", },
   // { icon: <Briefcase className="w-[16px] h-[16px]" />, value: "adherence", label: "Adherence", },

@@ -140,7 +140,7 @@ export default function Page() {
     const weightBelow = overall.weight?.belowP50 || 0;
 
     return {
-      totalPlayers: total,
+      totalAthlete: total,
       heightBelowPercent: total > 0 ? ((heightBelow / total) * 100).toFixed(1) : 0,
       weightBelowPercent: total > 0 ? ((weightBelow / total) * 100).toFixed(1) : 0,
       // Note: Intervention count would need individual client data
@@ -217,7 +217,7 @@ export default function Page() {
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-slate-900">Players in group</div>
+                  <div className="text-sm font-semibold text-slate-900">Athlete in group</div>
                   <div className="text-xs text-slate-600 mt-0.5">
                     Click a player to open their profile.
                   </div>
@@ -480,11 +480,11 @@ export default function Page() {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Players
+                      Total Athlete
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{stats.totalPlayers}</div>
+                    <div className="text-3xl font-bold">{stats.totalAthlete}</div>
                     <p className="text-xs text-muted-foreground mt-1">Active in group</p>
                   </CardContent>
                 </Card>
@@ -608,7 +608,7 @@ function AgeGroupCard({ bucket }) {
       <CardContent className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Total Players</span>
+            <span className="text-sm font-medium">Total Athlete</span>
             <span className="text-lg font-bold">{total}</span>
           </div>
         </div>

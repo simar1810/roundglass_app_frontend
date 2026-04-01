@@ -229,7 +229,7 @@ function TabsClients({ clients = [] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Player ID</TableHead>
+                <TableHead>Athlete ID</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>City</TableHead>
@@ -258,7 +258,7 @@ function TabsClients({ clients = [] }) {
               {paginatedClients.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-                    No Players Found
+                    No Athlete Found
                   </TableCell>
                 </TableRow>
               )}

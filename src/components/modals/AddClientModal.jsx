@@ -1,9 +1,9 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 
 export default function AddClientModal() {
@@ -65,7 +65,7 @@ export default function AddClientModal() {
               {
                 label: "Muscle",
                 value: "15%",
-                info: "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
+                info: "Optimal Range: 32–36% for men, 24–30% for women\nAthlete: 38–42%",
                 icon: "/svgs/muscle.svg",
               },
               {

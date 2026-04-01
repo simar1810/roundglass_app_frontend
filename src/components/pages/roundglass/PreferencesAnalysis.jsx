@@ -1,51 +1,43 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
 } from "@/components/ui/chart";
-import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getPreferencesAnalysis } from "@/lib/fetchers/roundglassAnalytics";
 import { useAppSelector } from "@/providers/global/hooks";
+import { AlertTriangle, Download, Dumbbell, Pill, RefreshCw, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    XAxis,
+    YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { Download, RefreshCw, Dumbbell, Pill, AlertTriangle, Users } from "lucide-react";
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -429,7 +421,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Players with Training Data: {trainingData.totalClients || 0}
+                      Total Athlete with Training Data: {trainingData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -440,13 +432,13 @@ export default function PreferencesAnalysis() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Training Frequency Distribution</CardTitle>
-                    <CardDescription>Number of players by training frequency</CardDescription>
+                    <CardDescription>Number of athletes by training frequency</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Players",
+                          label: "Athlete",
                           color: "hsl(var(--chart-1))",
                         },
                       }}
@@ -511,7 +503,7 @@ export default function PreferencesAnalysis() {
                                       style={{ backgroundColor: data.payload.fill }}
                                     />
                                     <span className="text-sm font-medium">
-                                      {data.payload.name}: {data.value} players (
+                                      {data.payload.name}: {data.value} athletes (
                                       {((data.value / (trainingData.totalClients || 1)) * 100).toFixed(1)}%)
                                     </span>
                                   </div>
@@ -571,7 +563,7 @@ export default function PreferencesAnalysis() {
                         .map(([day, count]) => (
                           <div key={day} className="flex items-center justify-between">
                             <span className="text-sm">{day}</span>
-                            <Badge variant="secondary">{count} players</Badge>
+                            <Badge variant="secondary">{count} athletes</Badge>
                           </div>
                         ))}
                     </div>
@@ -617,7 +609,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Players with Supplements: {supplementsData.totalClients || 0}
+                      Total Athlete with Supplements: {supplementsData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -634,7 +626,7 @@ export default function PreferencesAnalysis() {
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Players",
+                          label: "Athlete",
                           color: "hsl(var(--chart-2))",
                         },
                       }}
@@ -673,7 +665,7 @@ export default function PreferencesAnalysis() {
                     <ChartContainer
                       config={{
                         count: {
-                          label: "Players",
+                          label: "Athlete",
                           color: "hsl(var(--chart-3))",
                         },
                       }}
@@ -707,7 +699,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Average Supplements per Player
+                        Average Supplements per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -719,7 +711,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Median Supplements per Player
+                        Median Supplements per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -731,7 +723,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Max Supplements per Player
+                        Max Supplements per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -781,7 +773,7 @@ export default function PreferencesAnalysis() {
                   <div className="flex items-center gap-2 mb-4">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span className="text-lg font-semibold">
-                      Total Players with Injuries: {injuriesData.totalClients || 0}
+                      Total Athlete with Injuries: {injuriesData.totalClients || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -871,7 +863,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Average Injuries per Player
+                        Average Injuries per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -883,7 +875,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Median Injuries per Player
+                        Median Injuries per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -895,7 +887,7 @@ export default function PreferencesAnalysis() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Max Injuries per Player
+                        Max Injuries per Athlete
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

@@ -1,58 +1,50 @@
 "use client";
 
+import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
-import AnalyticsPrintButton from "@/components/common/AnalyticsPrintButton";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { getCorrelations } from "@/lib/fetchers/roundglassAnalytics";
 import { getAppClients } from "@/lib/fetchers/app";
-import {
-  formatMetricName,
-  formatCorrelation,
-  getCorrelationStrength,
-  getCorrelationColor,
-} from "@/lib/utils/roundglassAnalytics";
-import { cn } from "@/lib/utils";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getCorrelations } from "@/lib/fetchers/roundglassAnalytics";
+import { cn } from "@/lib/utils";
+import {
+    formatMetricName,
+    getCorrelationColor,
+    getCorrelationStrength
+} from "@/lib/utils/roundglassAnalytics";
 import { useAppSelector } from "@/providers/global/hooks";
+import { Activity, Download, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+    CartesianGrid,
+    ResponsiveContainer,
+    Scatter,
+    ScatterChart,
+    Tooltip,
+    XAxis,
+    YAxis
+} from "recharts";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
-import { Download, RefreshCw, TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 // Available metrics
 const AVAILABLE_METRICS = [
@@ -139,7 +131,7 @@ export default function CorrelationsAnalysis() {
 
   // Build SWR key
   const swrKey = useMemo(() => {
-    // If user is selecting specific players, require at least 3 to run correlations.
+    // If user is selecting specific athletes, require at least 3 to run correlations.
     // Keep UI usable (don't hard-error and hide filters).
     if (selectedClientIds.length > 0 && selectedClientIds.length < 3) return null;
 
@@ -362,11 +354,11 @@ export default function CorrelationsAnalysis() {
         </CardHeader>
         <CardContent className="print:p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
-            {/* Player Selector */}
+            {/* Athlete Selector */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Players (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Athlete (Optional)</label>
               <SelectMultiple
-                label="Select players"
+                label="Select athletes"
                 options={clients}
                 value={selectedClientIds}
                 onChange={setSelectedClientIds}
@@ -425,7 +417,7 @@ export default function CorrelationsAnalysis() {
 
           {selectedClientIds.length > 0 && selectedClientIds.length < 3 && (
             <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              Select at least <span className="font-semibold text-foreground">3 players</span> to run correlations for a specific cohort.
+              Select at least <span className="font-semibold text-foreground">3 athletes</span> to run correlations for a specific cohort.
               (Currently selected: {selectedClientIds.length})
             </div>
           )}
@@ -742,7 +734,7 @@ export default function CorrelationsAnalysis() {
               <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Correlation Data Available</h3>
               <p className="text-muted-foreground">
-                Correlation analysis requires data from multiple clients. Please ensure you have
+                Correlation analysis requires data from multiple athletes. Please ensure you have
                 sufficient data.
               </p>
             </div>

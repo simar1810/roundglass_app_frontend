@@ -8,6 +8,7 @@ import { buildUrlWithQueryParams } from "../formatter";
  * @param {string} [params.groupId] - Group ID for single-group comparison
  * @param {string|string[]} [params.groupIds] - Group IDs for multi-group comparison (comma-separated string or array)
  * @param {string} [params.categoryId] - Category ID filter (optional)
+ * @param {string|string[]} [params.categoryIds] - Category IDs for multi-category comparison
  * @param {string|string[]} [params.metrics] - Specific metrics to compare (comma-separated string or array, default: all)
  * @returns {Promise<Object>} API response with comparison data and graphData
  */
@@ -25,9 +26,20 @@ export function getCategoryComparison(params) {
       : params.groupIds;
   }
 
-  // Optional category filter
+  // Optional category filter (single category)
   if (params.categoryId) {
     queryParams.categoryId = params.categoryId;
+    // Some backend validators only accept `categoryIds`.
+    if (!params.categoryIds) {
+      queryParams.categoryIds = params.categoryId;
+    }
+  }
+
+  // Optional category filters (multi-category comparison)
+  if (params.categoryIds) {
+    queryParams.categoryIds = Array.isArray(params.categoryIds)
+      ? params.categoryIds.join(",")
+      : params.categoryIds;
   }
 
   // Handle metrics - can be array or comma-separated string

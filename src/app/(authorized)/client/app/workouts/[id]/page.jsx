@@ -67,7 +67,7 @@ function WorkoutVideos({ workouts }) {
   if (filteredWorkouts.length <= 0) return <></>
   return <div className="md:ml-10">
     <h3 className="mb-4">{workoutVideo.title}</h3>
-    <VideoPlayer
+    <VideoAthlete
       src={workoutVideo.video_link}
       prev={() => selected === 0
         ? toast.error("This is the first video")
@@ -96,7 +96,7 @@ function WorkoutVideos({ workouts }) {
   </div>
 }
 
-function VideoPlayer({
+function VideoAthlete({
   src,
   prev,
   next,

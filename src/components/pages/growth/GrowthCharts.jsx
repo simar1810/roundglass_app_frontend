@@ -1,24 +1,24 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { formatAgeGroup } from "@/lib/utils/growth";
 import { format } from "date-fns";
+import { useMemo } from "react";
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 /**
  * Growth Charts Component
@@ -209,7 +209,7 @@ export function ClientGrowthTrendChart({ measurements = [] }) {
 export function AgeGroupComparisonChart({ groupReport = null }) {
   const chartData = useMemo(() => {
     // Support both shapes:
-    // A) { ageBuckets: [{ totalPlayers, belowHeight, belowWeight, ...}] } (older)
+    // A) { ageBuckets: [{ totalAthlete, belowHeight, belowWeight, ...}] } (older)
     // B) { buckets: [{ bucket, total, height: { belowP50 }, weight: { belowP50 } }] } (current)
     const ageBuckets = Array.isArray(groupReport?.ageBuckets) ? groupReport.ageBuckets : null;
     const buckets = Array.isArray(groupReport?.buckets) ? groupReport.buckets : null;
@@ -217,34 +217,34 @@ export function AgeGroupComparisonChart({ groupReport = null }) {
     if (ageBuckets) {
       return ageBuckets.map((bucket) => ({
         ageGroup: formatAgeGroup(bucket.ageGroup || bucket.bucket || "Unknown"),
-        totalPlayers: bucket.totalPlayers || 0,
+        totalAthlete: bucket.totalAthlete || 0,
         belowHeight: bucket.belowHeight || 0,
         belowWeight: bucket.belowWeight || 0,
-        aboveHeight: (bucket.totalPlayers || 0) - (bucket.belowHeight || 0),
-        aboveWeight: (bucket.totalPlayers || 0) - (bucket.belowWeight || 0),
-        belowHeightPercent: bucket.totalPlayers
-          ? Math.round(((bucket.belowHeight || 0) / bucket.totalPlayers) * 100)
+        aboveHeight: (bucket.totalAthlete || 0) - (bucket.belowHeight || 0),
+        aboveWeight: (bucket.totalAthlete || 0) - (bucket.belowWeight || 0),
+        belowHeightPercent: bucket.totalAthlete
+          ? Math.round(((bucket.belowHeight || 0) / bucket.totalAthlete) * 100)
           : 0,
-        belowWeightPercent: bucket.totalPlayers
-          ? Math.round(((bucket.belowWeight || 0) / bucket.totalPlayers) * 100)
+        belowWeightPercent: bucket.totalAthlete
+          ? Math.round(((bucket.belowWeight || 0) / bucket.totalAthlete) * 100)
           : 0,
       }));
     }
 
     if (buckets) {
       return buckets.map((b) => {
-        const totalPlayers = b.total || 0;
+        const totalAthlete = b.total || 0;
         const belowHeight = b.height?.belowP50 || 0;
         const belowWeight = b.weight?.belowP50 || 0;
         return {
           ageGroup: formatAgeGroup(b.bucket || "Unknown"),
-          totalPlayers,
+          totalAthlete,
           belowHeight,
           belowWeight,
-          aboveHeight: totalPlayers - belowHeight,
-          aboveWeight: totalPlayers - belowWeight,
-          belowHeightPercent: totalPlayers ? Math.round((belowHeight / totalPlayers) * 100) : 0,
-          belowWeightPercent: totalPlayers ? Math.round((belowWeight / totalPlayers) * 100) : 0,
+          aboveHeight: totalAthlete - belowHeight,
+          aboveWeight: totalAthlete - belowWeight,
+          belowHeightPercent: totalAthlete ? Math.round((belowHeight / totalAthlete) * 100) : 0,
+          belowWeightPercent: totalAthlete ? Math.round((belowWeight / totalAthlete) * 100) : 0,
         };
       });
     }
@@ -257,7 +257,7 @@ export function AgeGroupComparisonChart({ groupReport = null }) {
       <Card>
         <CardHeader>
           <CardTitle>Age Group Comparison</CardTitle>
-          <CardDescription>Players below standard by age group</CardDescription>
+          <CardDescription>Athlete below standard by age group</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-64 flex items-center justify-center text-muted-foreground">
@@ -272,7 +272,7 @@ export function AgeGroupComparisonChart({ groupReport = null }) {
     <Card>
       <CardHeader>
         <CardTitle>Age Group Comparison</CardTitle>
-        <CardDescription>Players below standard by age group</CardDescription>
+        <CardDescription>Athlete below standard by age group</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer
@@ -318,7 +318,7 @@ export function AgeGroupComparisonChart({ groupReport = null }) {
                       ))}
                       {payload[0]?.payload && (
                         <div className="text-xs text-muted-foreground mt-1 pt-1 border-t">
-                          Total: {payload[0].payload.totalPlayers} players
+                          Total: {payload[0].payload.totalAthlete} players
                         </div>
                       )}
                     </div>
@@ -344,9 +344,9 @@ export function P50DistributionChart({ groupReport = null, type = "height" }) {
     if (!groupReport) return [];
 
     // Support both shapes:
-    // A) { totalPlayers, belowHeight, belowWeight } (older)
+    // A) { totalAthlete, belowHeight, belowWeight } (older)
     // B) { overall: { total, height: { belowP50 }, weight: { belowP50 } } } (current)
-    const total = groupReport.totalPlayers ?? groupReport?.overall?.total ?? 0;
+    const total = groupReport.totalAthlete ?? groupReport?.overall?.total ?? 0;
     const below =
       type === "height"
         ? (groupReport.belowHeight ?? groupReport?.overall?.height?.belowP50 ?? 0)

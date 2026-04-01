@@ -1,10 +1,12 @@
 "use client"
 import ContentError from "@/components/common/ContentError";
 import ContentLoader from "@/components/common/ContentLoader";
+import AssignWorkoutModal from "@/components/modals/AssignModal";
 import DualOptionActionModal from "@/components/modals/DualOptionActionModal";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { sendData } from "@/lib/api";
 import { getCustomWorkoutPlans } from "@/lib/fetchers/app";
@@ -15,9 +17,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
-import { VideoPlayer } from "../../list/[id]/page";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import AssignWorkoutModal from "@/components/modals/AssignModal";
+import { VideoAthlete } from "../../list/[id]/page";
 
 export default function Page() {
   const { id } = useParams();
@@ -156,7 +156,7 @@ function WorkoutVideo({ src, name }) {
     <DialogContent className="p-0">
       <DialogTitle className="p-4 border-b-1">{name}</DialogTitle>
       <div className="p-4">
-        <VideoPlayer src={src} />
+        <VideoAthlete src={src} />
       </div>
     </DialogContent>
   </Dialog>

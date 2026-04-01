@@ -1,23 +1,23 @@
 import AddClientWithCheckup from "@/components/modals/add-client/AddClientWithCheckup";
 import { USER_PERMISSION_IDS } from "@/config/data/user-permissions";
 import {
-  BarChart,
-  ClipboardPlus,
-  Clock12,
-  Download,
-  Droplets,
-  FileChartColumn,
-  FileCheck,
-  Home,
-  ListTodo,
-  MapPin,
-  Play,
-  PlusCircle,
-  Soup,
-  Tags,
-  TrendingUp,
-  User,
-  Users
+    BarChart,
+    ClipboardPlus,
+    Clock12,
+    Download,
+    Droplets,
+    FileChartColumn,
+    FileCheck,
+    Home,
+    ListTodo,
+    MapPin,
+    Play,
+    PlusCircle,
+    Soup,
+    Tags,
+    TrendingUp,
+    User,
+    Users
 } from "lucide-react";
 
 export const sidebar__coachContent = [
@@ -40,7 +40,7 @@ export const sidebar__coachContent = [
   },
   {
     id: 3,
-    title: "Players",
+    title: "Athlete",
     icon: <Users className="min-w-[20px] min-h-[20px]" />,
     url: "/coach/clients",
     permission: "user-nested", // Always visible
@@ -49,7 +49,7 @@ export const sidebar__coachContent = [
       {
         id: 1,
         icon: <Users className="icon min-w-[20px] min-h-[20px]" />,
-        title: "All Players",
+        title: "All Athlete",
         url: "/coach/clients",
       },
       {
@@ -61,7 +61,7 @@ export const sidebar__coachContent = [
       {
         id: 3,
         icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Add Players with Checkup",
+        title: "Add Athlete with Checkup",
         type: "modal",
         Component: AddClientWithCheckup,
       },

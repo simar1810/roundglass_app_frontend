@@ -3,9 +3,9 @@ import { fetchData } from "@/lib/api";
 import { nameInitials } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import {
-  addDays, addYears, differenceInCalendarDays, format,
-  isBefore, isValid, parse, setDate,
-  startOfDay
+    addDays, addYears, differenceInCalendarDays, format,
+    isBefore, isValid, parse, setDate,
+    startOfDay
 } from "date-fns";
 import { ArrowRight, ChevronLeft, Download, RefreshCcw, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -371,7 +371,7 @@ function ClientsSidebar({
   return (
     <aside className="flex min-w-0 flex-col gap-4 px-2 md:px-0">
       <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">Players</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Athlete</h3>
       </div>
 
       {hasTopPerformers ? (

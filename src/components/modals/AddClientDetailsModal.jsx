@@ -1,26 +1,26 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { CalendarIcon } from "lucide-react";
 
-import FormControl from "../FormControl";
 import Image from "next/image";
+import FormControl from "../FormControl";
 
 export default function AddClientDetailsModal() {
   return (
     <Dialog>
       <DialogTrigger className="bg-[var(--accent-1)] text-white font-bold px-4 py-2 rounded-full">
-        Add Player details
+        Add Athlete details
       </DialogTrigger>
 
       <DialogContent className="!max-w-[656px] h-[600px] border-0 p-0 overflow-auto">
         <DialogHeader className="bg-gray-300 py-6 h-[56px]">
           <DialogTitle className="text-black text-sm ml-5">
-            Add Player
+            Add Athlete
           </DialogTitle>
         </DialogHeader>
 
@@ -33,7 +33,7 @@ export default function AddClientDetailsModal() {
 
           <div className="flex items-center gap-6 mb-6">
             <div>
-              <p className="font-semibold text-sm">Select Player type</p>
+              <p className="font-semibold text-sm">Select Athlete type</p>
               <label className="flex items-center gap-2">
                 <input type="radio" name="type" value="New" />
                 New

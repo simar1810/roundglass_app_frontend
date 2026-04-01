@@ -1,15 +1,15 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  addYears,
-  format,
-  isBefore,
-  setDate,
-  setMonth,
-} from "date-fns";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ddMMyyyy } from "@/config/data/regex";
+import {
+    addYears,
+    format,
+    isBefore,
+    setDate,
+    setMonth,
+} from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export default function UpcomingBirthdays({ birthdays }) {
   const [pagination, setpagination] = useState({
@@ -32,7 +32,7 @@ export default function UpcomingBirthdays({ birthdays }) {
           <TableRow>
             <TableHead>Sr No</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Player ID</TableHead>
+            <TableHead>Athlete ID</TableHead>
             <TableHead>DOB</TableHead>
             <TableHead>Mobile Number</TableHead>
           </TableRow>

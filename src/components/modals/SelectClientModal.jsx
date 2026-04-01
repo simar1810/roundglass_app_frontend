@@ -29,7 +29,7 @@ export default function SelectClientModal() {
             <FormControl
               type="text"
               name="search"
-              placeholder="Search Player here"
+              placeholder="Search Athlete here"
               className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent border-none ml-[-2px] p-0"
             />
           </div>

@@ -6,16 +6,14 @@ import { permit } from "@/lib/permit";
 import { useAppDispatch, useAppSelector } from "@/providers/global/hooks";
 import { destroy } from "@/providers/global/slices/coach";
 import { ChevronDown, LogOut, Menu, Search } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import PersonalBranding from "../modals/app/PersonalBranding";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
+    Avatar,
+    AvatarFallback,
+    AvatarImage
 } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
@@ -100,7 +98,7 @@ const features = [
   { id: 8, title: "Ideal Weight", link: "/coach/tools/ideal-weight" },
   { id: 9, title: "Workout", link: "/coach/tools/workouts" },
   // { id: 10, title: "Feed", link: "/coach/feed" },
-  { id: 11, title: "Clients", link: "/coach/clients" },
+  { id: 11, title: "Athlete", link: "/coach/clients" },
 ]
 
 export function SearchBar() {

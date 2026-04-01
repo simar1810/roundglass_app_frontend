@@ -1,34 +1,34 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoundglassDataExport } from "@/hooks/useRoundglassDataExport";
-import { useAppSelector } from "@/providers/global/hooks";
-import SelectMultiple from "@/components/SelectMultiple";
-import {
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Loader2,
-  User,
-  Users,
-  Info,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import {
+    Download,
+    FileSpreadsheet,
+    FileText,
+    Info,
+    Loader2,
+    User,
+    Users,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 // Available metrics for team export
 const AVAILABLE_METRICS = [
@@ -191,8 +191,8 @@ export default function DataExportModal({
   const exportPreview = useMemo(() => {
     if (exportType === "client") {
       return {
-        type: "Player Data",
-        details: clientId ? `Player ID: ${clientId}` : "No player selected",
+        type: "Athlete Data",
+        details: clientId ? `Athlete ID: ${clientId}` : "No player selected",
         format: selectedFormat.toUpperCase(),
       };
     } else {
@@ -228,7 +228,7 @@ export default function DataExportModal({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="client" className="gap-2">
                   <User className="h-4 w-4" />
-                  Player Data
+                  Athlete Data
                 </TabsTrigger>
                 <TabsTrigger value="team" className="gap-2">
                   <Users className="h-4 w-4" />
@@ -240,7 +240,7 @@ export default function DataExportModal({
               <TabsContent value="client" className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="clientId" className="text-sm font-medium">
-                    Player ID <span className="text-destructive">*</span>
+                    Athlete ID <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="clientId"

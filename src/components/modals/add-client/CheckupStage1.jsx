@@ -13,7 +13,7 @@ export default function CheckupStage1() {
   const { showVisceralFatInput } = useHealthMatrixFieldsConfig("client-add-stage1");
   return <div className="py-6 pt-4">
     <div className="flex flex-col items-start md:flex-row md:items-center gap-6 mb-6">
-      <p className="font-semibold text-sm">Select Player type</p>
+      <p className="font-semibold text-sm">Select Athlete type</p>
       <div className="flex items-center gap-4">
         <RadioGroup
           className="flex items-center gap-4"
@@ -30,7 +30,7 @@ export default function CheckupStage1() {
           </div>
         </RadioGroup>
       </div>
-      <p className="md:ml-auto">Player ID - <strong>{state.clientId}</strong></p>
+      <p className="md:ml-auto">Athlete ID - <strong>{state.clientId}</strong></p>
     </div>
 
     {/* Form Grid */}

@@ -1,9 +1,9 @@
-import { sortMealPlansByDates } from "./PlansAboutToExpire"
-import { useMemo, useState } from "react"
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { format, isBefore } from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { format, isBefore } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useMemo, useState } from "react"
+import { sortMealPlansByDates } from "./PlansAboutToExpire"
 
 export default function ClientPlansExpiry({ plans }) {
   const [pagination, setPagination] = useState({
@@ -17,14 +17,14 @@ export default function ClientPlansExpiry({ plans }) {
     pagination.limit, pagination.current * pagination.limit
   )
   return <div>
-    <h5>Player Plan Expiry</h5>
+    <h5>Athlete Plan Expiry</h5>
     <div className="w-full bg-[var(--comp-1)] rounded-xl border-1 my-4 overflow-clip">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Sr No</TableHead>
-            <TableHead>Player Name</TableHead>
-            <TableHead>Player ID</TableHead>
+            <TableHead>Athlete Name</TableHead>
+            <TableHead>Athlete ID</TableHead>
             <TableHead>Expiry Date</TableHead>
           </TableRow>
         </TableHeader>

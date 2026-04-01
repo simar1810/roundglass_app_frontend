@@ -591,7 +591,7 @@ const foodExclusionOptions = [
 
           {filteredClients.length === 0 && (
             <p className="text-gray-500 text-center col-span-full">
-              No Players Found.
+              No Athlete Found.
             </p>
           )}
         </div>

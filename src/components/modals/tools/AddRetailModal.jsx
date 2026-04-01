@@ -99,7 +99,7 @@ function Stage1() {
       name="search"
       value={query}
       onChange={e => setQuery(e.target.value)}
-      placeholder="Search Player here"
+      placeholder="Search Athlete here"
       className="w-full outline-none text-sm placeholder:text-gray-400 bg-transparent p-0"
     />
     {clientName && <p className="mt-4 text-xs">

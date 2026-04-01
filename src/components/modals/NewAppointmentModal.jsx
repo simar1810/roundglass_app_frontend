@@ -103,7 +103,7 @@ export default function NewAppointmentModal() {
             <div className="relative">
               <Search className="absolute left-1 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <FormControl
-                placeholder="Search Player Here"
+                placeholder="Search Athlete Here"
                 className="w-full h-12 rounded-lg border-gray-200 pl-12 pr-4"
               />
             </div>

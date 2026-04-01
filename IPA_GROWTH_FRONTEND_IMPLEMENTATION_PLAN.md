@@ -130,10 +130,10 @@ This document outlines the step-by-step plan to implement the IPA Growth Chart M
   - Standard selector (IPA/IAP - default: IPA)
   - "Apply Filters" button
 - Statistics cards row:
-  - Total Players (overall.total)
+  - Total Athlete (overall.total)
   - % Below Height Standard (calculated from overall.height.belowP50)
   - % Below Weight Standard (calculated from overall.weight.belowP50)
-  - Players Needing Intervention (count of clients with both scores = 0)
+  - Athlete Needing Intervention (count of clients with both scores = 0)
 - Age group breakdown:
   - Separate cards/sections for U14 and U16
   - Each showing:

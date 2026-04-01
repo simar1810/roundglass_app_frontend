@@ -124,10 +124,10 @@ export async function formatClientDataForExport(apiResponse, onProgress = null) 
 
   // Format client basic info
   const clientInfo = {
-    "Player ID": client?._id || "",
-    "Player Name": client?.name || "",
+    "Athlete ID": client?._id || "",
+    "Athlete Name": client?.name || "",
     "Email": client?.email || "",
-    "Player ID (Numeric)": client?.clientId || "",
+    "Athlete ID (Numeric)": client?.clientId || "",
     "Profile Photo": client?.profilePhoto || "",
   };
   formattedData.push(clientInfo);
@@ -311,10 +311,10 @@ export async function formatTeamDataForExport(apiResponse, onProgress = null) {
               formatted.clients.push({
                 "Category ID": category?._id || "",
                 "Category Name": category?.name || "",
-                "Player ID": client?._id || "",
-                "Player Name": client?.name || "",
-                "Player Email": client?.email || "",
-                "Player ID (Numeric)": client?.clientId || "",
+                "Athlete ID": client?._id || "",
+                "Athlete Name": client?.name || "",
+                "Athlete Email": client?.email || "",
+                "Athlete ID (Numeric)": client?.clientId || "",
                 "Profile Photo": client?.profilePhoto || "",
                 "Coach ID": client?.coach || "",
               });
@@ -339,7 +339,7 @@ export async function formatTeamDataForExport(apiResponse, onProgress = null) {
                 "Category ID": category?._id || "",
                 "Category Name": category?.name || "",
                 "Preference ID": pref?._id || "",
-                "Player ID": pref?.clientId || "",
+                "Athlete ID": pref?.clientId || "",
                 "Allergies": pref?.allergies || "",
                 "Medical History": pref?.medicalHistory || "",
                 "Family History": pref?.familyHistory || "",
@@ -441,8 +441,8 @@ export async function formatTeamDataForExport(apiResponse, onProgress = null) {
               formatted.comparison.push({
                 "Category ID": category?._id || "",
                 "Category Name": category?.name || "",
-                "Player ID": clientComp?.clientId || "",
-                "Player Name": clientComp?.name || "",
+                "Athlete ID": clientComp?.clientId || "",
+                "Athlete Name": clientComp?.name || "",
                 ...metricsData,
               });
             }

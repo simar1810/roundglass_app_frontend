@@ -570,7 +570,7 @@ function DownlineClientList() {
 				<TableRow className="bg-white [&_th]:font-bold">
 					<TableHead>Name</TableHead>
 					<TableHead>Coach</TableHead>
-					<TableHead>Player ID</TableHead>
+					<TableHead>Athlete ID</TableHead>
 					<TableHead>Email</TableHead>
 					<TableHead>Mobile</TableHead>
 					<TableHead>City</TableHead>
@@ -601,7 +601,7 @@ function DownlineClientList() {
 				{clients.length === 0 && (
 					<TableRow>
 						<TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-							No Players Found
+							No Athlete Found
 						</TableCell>
 					</TableRow>
 				)}

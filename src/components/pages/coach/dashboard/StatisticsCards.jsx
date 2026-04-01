@@ -21,7 +21,7 @@ export default function StatisticsCards() {
     title={error || data?.message || "Please try again later!"}
   />
   const statistics = data.data;
-  const appCardsBase = dashboardCards.app.filter(item => item.id !== 1); // remove "Active Players"
+  const appCardsBase = dashboardCards.app.filter(item => item.id !== 1); // remove "Active Athlete"
   const appCards = organisation !== "Herbalife"
     ? appCardsBase.filter(item => item.id !== 4) // hide "Orders" for non-Herbalife
     : appCardsBase

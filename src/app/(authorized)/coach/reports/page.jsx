@@ -1,30 +1,30 @@
 "use client";
 
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
-import useSWR from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
-import { retrieveReports } from "@/lib/fetchers/app";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { nameInitials, trimString } from "@/lib/formatter";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Image, Upload, X } from "lucide-react";
+import ContentLoader from "@/components/common/ContentLoader";
 import FormControl from "@/components/FormControl";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { sendDataWithFormData } from "@/lib/api";
+import { retrieveReports } from "@/lib/fetchers/app";
+import { nameInitials, trimString } from "@/lib/formatter";
+import { Image, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { sendData, sendDataWithFormData } from "@/lib/api";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
+import useSWR from "swr";
 
 export default function Page() {
   const [query, setQuery] = useState("");
@@ -55,7 +55,7 @@ export default function Page() {
           <TableHead className="w-[100px] text-center">Name</TableHead>
           <TableHead className="text-center">Email</TableHead>
           <TableHead className="text-center">Mobile Number</TableHead>
-          <TableHead className="text-center">Player ID</TableHead>
+          <TableHead className="text-center">Athlete ID</TableHead>
           <TableHead className="text-center">Roll No</TableHead>
           <TableHead className="text-center">Uploaded Reports</TableHead>
           <TableHead className="text-center">Total</TableHead>

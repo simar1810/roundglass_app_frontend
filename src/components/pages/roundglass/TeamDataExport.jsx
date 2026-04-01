@@ -1,26 +1,26 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useRoundglassDataExport } from "@/hooks/useRoundglassDataExport";
-import { useAppSelector } from "@/providers/global/hooks";
-import SelectMultiple from "@/components/SelectMultiple";
-import { Download, FileSpreadsheet, FileText, Loader2, Users, Info, HelpCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useRoundglassDataExport } from "@/hooks/useRoundglassDataExport";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { Download, FileSpreadsheet, FileText, HelpCircle, Info, Loader2, Users } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Available metrics for team export
 const AVAILABLE_METRICS = [
@@ -183,7 +183,7 @@ export default function TeamDataExport({
             Export Team Data
           </DialogTitle>
           <DialogDescription>
-            Export comprehensive team data including client information, preferences, health statistics, and comparison data.
+            Export comprehensive team data including athlete information, preferences, health statistics, and comparison data.
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -198,7 +198,7 @@ export default function TeamDataExport({
                 <div className="space-y-2 text-xs">
                   <p className="font-semibold">What's included in the export:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Player information and profiles</li>
+                    <li>Athlete information and profiles</li>
                     <li>Health preferences and medical history</li>
                     <li>Training modules and statistics</li>
                     <li>Supplement usage data</li>
@@ -349,7 +349,7 @@ export default function TeamDataExport({
                       <p className="font-semibold mb-1">Excel (.xlsx) Format:</p>
                       <ul className="list-disc list-inside space-y-1 ml-2">
                         <li>Single file with multiple sheets</li>
-                        <li>Organized by data type (Categories, Clients, Preferences, etc.)</li>
+                        <li>Organized by data type (Categories, Athlete, Preferences, etc.)</li>
                         <li>Best for analysis in Excel or Google Sheets</li>
                         <li>Supports formulas and formatting</li>
                         <li>Recommended for large datasets</li>
@@ -366,7 +366,7 @@ export default function TeamDataExport({
                       </ul>
                     </div>
                     <p className="text-xs text-muted-foreground pt-1 border-t">
-                      <strong>Note:</strong> Large exports (&gt;100 clients) may take longer to process.
+                      <strong>Note:</strong> Large exports (&gt;100 athletes) may take longer to process.
                     </p>
                   </div>
                 </TooltipContent>
@@ -375,10 +375,17 @@ export default function TeamDataExport({
             <RadioGroup
               value={selectedFormat}
               onValueChange={setSelectedFormat}
-              className="flex gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               disabled={isExporting}
             >
-              <div className="flex items-center space-x-2">
+              <div
+                className={cn(
+                  "flex items-center space-x-2 rounded-md border p-3 transition-colors",
+                  selectedFormat === "excel" ? "border-primary bg-primary/5" : "border-border",
+                  isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/60"
+                )}
+                onClick={() => !isExporting && setSelectedFormat("excel")}
+              >
                 <RadioGroupItem value="excel" id="format-excel" disabled={isExporting} />
                 <Label
                   htmlFor="format-excel"
@@ -391,7 +398,14 @@ export default function TeamDataExport({
                   <span>Excel (.xlsx)</span>
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div
+                className={cn(
+                  "flex items-center space-x-2 rounded-md border p-3 transition-colors",
+                  selectedFormat === "csv" ? "border-primary bg-primary/5" : "border-border",
+                  isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/60"
+                )}
+                onClick={() => !isExporting && setSelectedFormat("csv")}
+              >
                 <RadioGroupItem value="csv" id="format-csv" disabled={isExporting} />
                 <Label
                   htmlFor="format-csv"
@@ -411,14 +425,14 @@ export default function TeamDataExport({
                 {selectedFormat === "excel" ? (
                   <>
                     <p>• Single Excel file with organized sheets</p>
-                    <p>• Includes: Categories, Clients, Preferences, Health Stats, Training Stats, Supplement Stats, Injury Stats, Comparison, and Inter-Category Comparison</p>
+                    <p>• Includes: Categories, Athlete, Preferences, Health Stats, Training Stats, Supplement Stats, Injury Stats, Comparison, and Inter-Category Comparison</p>
                     <p>• Best for comprehensive analysis and reporting</p>
                   </>
                 ) : (
                   <>
                     <p>• Multiple CSV files will be created:</p>
                     <p className="ml-2">- team-data-export-categories.csv</p>
-                    <p className="ml-2">- team-data-export-clients.csv</p>
+                    <p className="ml-2">- team-data-export-athletes.csv</p>
                     <p className="ml-2">- team-data-export-preferences.csv</p>
                     <p className="ml-2">- team-data-export-health-stats.csv</p>
                     <p className="ml-2">- And more...</p>

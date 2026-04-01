@@ -8,46 +8,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { getAppClients } from "@/lib/fetchers/app";
-import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
+import { getAnalyticsSummary } from "@/lib/fetchers/roundglassAnalytics";
+import {
+    calculateTrendDirection,
+    formatMetricName,
+    formatPercentile,
+    getPercentileColor,
+    normalizeMetricValue,
+} from "@/lib/utils/roundglassAnalytics";
 import { useAppSelector } from "@/providers/global/hooks";
 import {
-  calculateTrendDirection,
-  formatMetricName,
-  formatPercentile,
-  getPercentileColor,
-  normalizeMetricValue,
-} from "@/lib/utils/roundglassAnalytics";
-import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  Award,
-  BarChart3,
-  Dumbbell,
-  Minus,
-  Pill,
-  RefreshCw,
-  TrendingDown,
-  TrendingUp,
-  Users,
+    Activity,
+    AlertTriangle,
+    Award,
+    BarChart3,
+    Dumbbell,
+    Minus,
+    Pill,
+    RefreshCw,
+    TrendingDown,
+    TrendingUp,
+    Users
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -113,11 +111,11 @@ export default function AnalyticsSummary() {
   const applySelectedClient = (c) => {
     const resolvedId = String(c?._id || "");
     if (!resolvedId) {
-      toast.error("Could not resolve player.");
+      toast.error("Could not resolve athlete.");
       return;
     }
     setSelectedClientId(resolvedId);
-    setFocusQuery(`${c?.name || "Player"}${c?.clientId ? ` (${c.clientId})` : ""}`);
+    setFocusQuery(`${c?.name || "Athlete"}${c?.clientId ? ` (${c.clientId})` : ""}`);
     setSuggestionsOpen(false);
     setHighlightedIndex(-1);
   };
@@ -390,13 +388,13 @@ export default function AnalyticsSummary() {
       }
 
       if (exactMatches.length > 1) {
-        toast.error("Multiple players matched. Please enter an exact Player ID.");
+        toast.error("Multiple athletes matched. Please enter an exact Athlete ID.");
         return;
       }
 
-      toast.error("No player found. Search by Player ID (exact), or paste the full ID.");
+      toast.error("No athlete found. Search by Athlete ID (exact), or paste the full ID.");
     } catch (e) {
-      toast.error(e?.message || "Could not search players. Please try again.");
+      toast.error(e?.message || "Could not search athletes. Please try again.");
     } finally {
       setIsResolvingClient(false);
     }
@@ -421,7 +419,7 @@ export default function AnalyticsSummary() {
             <div>
               <CardTitle>Analytics Summary</CardTitle>
               <CardDescription>
-                Comprehensive overview of all player analytics and metrics
+                Comprehensive overview of all athlete analytics and metrics
               </CardDescription>
             </div>
             <div className="flex gap-2 no-print">
@@ -464,18 +462,18 @@ export default function AnalyticsSummary() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Filters players to those inside the selected group.
+                Filters athletes to those inside the selected group.
               </p>
             </div>
 
             {/* Client Filter (Optional) */}
             <div className="md:col-span-2">
-              <label className="text-sm font-medium mb-2 block">Focus on Player (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Focus on Athlete (Optional)</label>
               <div className="flex gap-2" ref={containerRef}>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Search by name or Player ID (e.g., ggd65)"
+                  placeholder="Search by name or Athlete ID (e.g., ggd65)"
                   value={focusQuery}
                   onChange={(e) => {
                     setFocusQuery(e.target.value);
@@ -556,7 +554,7 @@ export default function AnalyticsSummary() {
                                 <div className="min-w-0">
                                   <div className="text-sm font-medium truncate">{c.name}</div>
                                   <div className="text-[11px] text-muted-foreground truncate">
-                                    {c.clientId ? `Player ID: ${c.clientId}` : "—"}
+                                    {c.clientId ? `Athlete ID: ${c.clientId}` : "—"}
                                     {c.email ? ` · ${c.email}` : ""}
                                   </div>
                                 </div>
@@ -574,7 +572,7 @@ export default function AnalyticsSummary() {
               )}
               {selectedClientId ? (
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Showing analytics for selected player.
+                  Showing analytics for selected athlete.
                 </p>
               ) : (
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -615,7 +613,7 @@ export default function AnalyticsSummary() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Players
+                Total Athlete
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -785,7 +783,7 @@ export default function AnalyticsSummary() {
                     return entries.map(([label, count]) => (
                       <div key={label} className="flex items-center justify-between">
                         <span className="text-sm">{label}</span>
-                        <Badge variant="secondary">{count} players</Badge>
+                        <Badge variant="secondary">{count} athletes</Badge>
                       </div>
                     ));
                   })()}
@@ -843,7 +841,7 @@ export default function AnalyticsSummary() {
                     return entries.map(([label, count]) => (
                       <div key={label} className="flex items-center justify-between">
                         <span className="text-sm">{label}</span>
-                        <Badge variant="secondary">{count} players</Badge>
+                        <Badge variant="secondary">{count} athletes</Badge>
                       </div>
                     ));
                   })()}
@@ -1049,7 +1047,7 @@ export default function AnalyticsSummary() {
                 <Award className="h-5 w-5" />
                 Top Performers
               </CardTitle>
-              <CardDescription>Players with highest average percentile rankings</CardDescription>
+              <CardDescription>Athlete with highest average percentile rankings</CardDescription>
             </CardHeader>
             <CardContent>
               {topPerformers.length > 0 ? (
@@ -1061,7 +1059,7 @@ export default function AnalyticsSummary() {
                     >
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">#{index + 1}</Badge>
-                        <span className="text-sm font-medium">Player {performer.clientId.slice(-6)}</span>
+                        <span className="text-sm font-medium">Athlete {performer.clientId.slice(-6)}</span>
                       </div>
                       <Badge variant="default">
                         {formatPercentile(performer.avgPercentile)}
@@ -1127,7 +1125,7 @@ export default function AnalyticsSummary() {
               <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Summary Data Available</h3>
               <p className="text-muted-foreground">
-                Analytics summary data will appear here once players have health data
+                Analytics summary data will appear here once athletes have health data
               </p>
             </div>
           </CardContent>

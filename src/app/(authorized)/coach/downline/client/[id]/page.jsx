@@ -1,15 +1,15 @@
 "use client";
-import useSWR from "swr";
-import ContentLoader from "@/components/common/ContentLoader";
 import ContentError from "@/components/common/ContentError";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { retrieveDownlineClientInformation } from "@/lib/fetchers/app";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { tabChange } from "@/lib/formatter";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import ContentLoader from "@/components/common/ContentLoader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { retrieveDownlineClientInformation } from "@/lib/fetchers/app";
+import { tabChange } from "@/lib/formatter";
+import Image from "next/image";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { UpdateDetails } from "../../coach/[id]/page";
 
 const tabItems = [
@@ -109,7 +109,7 @@ function TabsProfile({ profile }) {
           </div>
           <UpdateDetails
             actionType="UPDATE_CLIENT"
-            title="Player Details"
+            title="Athlete Details"
             user={profile}
           />
         </CardHeader>

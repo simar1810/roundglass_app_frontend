@@ -389,7 +389,7 @@ export default function PaymentLinkCreator() {
                     {filteredClients.length === 0 ? (
                       <div className="px-4 py-3 text-muted-foreground text-sm">
                         {clientSearch.trim()
-                          ? "No Players Found"
+                          ? "No Athlete Found"
                           : "Start typing to search clients..."}
                       </div>
                     ) : (

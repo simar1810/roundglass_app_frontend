@@ -22,13 +22,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { getCategoryComparison } from "@/lib/fetchers/roundglassAnalytics";
 import { getAllGroups } from "@/lib/fetchers/growth";
-import { useAppSelector } from "@/providers/global/hooks";
+import { getCategoryComparison } from "@/lib/fetchers/roundglassAnalytics";
 import {
     formatMetricName,
     normalizeMetricValue
 } from "@/lib/utils/roundglassAnalytics";
+import { useAppSelector } from "@/providers/global/hooks";
 import { Download, RefreshCw, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -402,7 +402,7 @@ export default function CategoryComparison() {
       });
 
       // Create CSV header
-      const headers = ["Name", "Player ID", ...Array.from(metricKeys).map(formatMetricName)];
+      const headers = ["Name", "Athlete ID", ...Array.from(metricKeys).map(formatMetricName)];
       const rows = clientTableData.map((client) => {
         const row = [
           client.name || "—",
@@ -445,14 +445,26 @@ export default function CategoryComparison() {
       {/* Header Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <CardTitle>Group Comparison</CardTitle>
               <CardDescription>
                 Compare health metrics within a group (or between groups)
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <Badge
+                variant={comparisonType === "multi" ? "default" : "secondary"}
+                className="text-sm"
+              >
+                {comparisonMode === "group"
+                  ? comparisonType === "multi"
+                    ? "Multiple Groups"
+                    : "Single Group"
+                  : comparisonType === "multi"
+                  ? "Multiple Categories"
+                  : "Single Category"}
+              </Badge>
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -477,158 +489,145 @@ export default function CategoryComparison() {
           </div>
         </CardHeader>
         <CardContent className="print:p-4">
-          {/* Desktop Filters */}
-          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 no-print items-start">
-            {/* Comparison Type Selector */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Compare By</label>
-              <select
-                className="w-full px-3 py-2 border rounded-md mb-2"
-                value={comparisonMode}
-                onChange={(e) => {
-                  setComparisonMode(e.target.value);
-                  setSelectedGroupId("");
-                  setSelectedGroupIds([]);
-                  setSelectedCompareCategoryId("");
-                  setSelectedCompareCategoryIds([]);
-                }}
-              >
-                <option value="group">Groups</option>
-                <option value="category">Categories</option>
-              </select>
-              <label className="text-sm font-medium mb-2 block">Comparison Type</label>
-              <select
-                className="w-full px-3 py-2 border rounded-md"
-                value={comparisonType}
-                onChange={(e) => {
-                  setComparisonType(e.target.value);
-                  setSelectedGroupId("");
-                  setSelectedGroupIds([]);
-                  setSelectedCompareCategoryId("");
-                  setSelectedCompareCategoryIds([]);
-                }}
-              >
-                <option value="single">
-                  {comparisonMode === "group" ? "Single Group" : "Single Category"}
-                </option>
-                <option value="multi">
-                  {comparisonMode === "group" ? "Multiple Groups" : "Multiple Categories"}
-                </option>
-              </select>
-            </div>
-
-            {/* Group/Category Selector(s) */}
-            {comparisonMode === "group" && comparisonType === "single" ? (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Group</label>
-                <select
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={selectedGroupId}
-                  onChange={(e) => setSelectedGroupId(e.target.value)}
-                >
-                  <option value="">Select group</option>
-                  {groupOptions.map((g) => (
-                    <option key={g.value} value={g.value}>
-                      {g.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Manage groups in <a className="underline" href="/coach/growth/groups">Growth Groups</a>.
-                </p>
-              </div>
-            ) : comparisonMode === "group" ? (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Groups</label>
-                <SelectMultiple
-                  label="Select groups"
-                  options={groupOptions}
-                  value={selectedGroupIds}
-                  onChange={setSelectedGroupIds}
-                  searchable
-                />
-              </div>
-            ) : comparisonType === "single" ? (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
-                <select
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={selectedCompareCategoryId}
-                  onChange={(e) => setSelectedCompareCategoryId(e.target.value)}
-                >
-                  <option value="">Select category</option>
-                  {categoryOptions.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Categories</label>
-                <SelectMultiple
-                  label="Select categories"
-                  options={categoryOptions}
-                  value={selectedCompareCategoryIds}
-                  onChange={setSelectedCompareCategoryIds}
-                  searchable
-                />
-              </div>
-            )}
-
-            {/* Metrics Selector */}
-            <div className="min-w-0">
-              <label className="text-sm font-medium mb-2 block">Metrics</label>
-              <SelectMultiple
-                label="Select metrics (all if empty)"
-                options={AVAILABLE_METRICS}
-                value={selectedMetrics}
-                onChange={setSelectedMetrics}
-                searchable
-                className="w-full min-w-0"
-              />
-            </div>
-
-            {comparisonMode === "group" ? (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Category Filter (Optional)</label>
-                <select
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
-                >
-                  <option value="all">All categories</option>
-                  {categoryOptions.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
+          <div className="no-print rounded-xl border bg-slate-50/60 p-4 md:p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
               <div className="min-w-0">
-                <label className="text-sm font-medium mb-2 block">Mode</label>
-                <div className="min-h-[40px] py-2 flex items-center text-sm text-muted-foreground break-words">
-                  Category comparison
-                </div>
+                <label className="text-sm font-medium mb-2 block">Compare By</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-md bg-white"
+                  value={comparisonMode}
+                  onChange={(e) => {
+                    setComparisonMode(e.target.value);
+                    setSelectedGroupId("");
+                    setSelectedGroupIds([]);
+                    setSelectedCompareCategoryId("");
+                    setSelectedCompareCategoryIds([]);
+                  }}
+                >
+                  <option value="group">Groups</option>
+                  <option value="category">Categories</option>
+                </select>
               </div>
-            )}
 
-            {/* Comparison Type Badge */}
-            <div className="flex items-end">
-              <Badge
-                variant={comparisonType === "multi" ? "default" : "secondary"}
-                className="text-sm"
-              >
-                {comparisonMode === "group"
-                  ? comparisonType === "multi"
-                    ? "Multiple Groups"
-                    : "Single Group"
-                  : comparisonType === "multi"
-                  ? "Multiple Categories"
-                  : "Single Category"}
-              </Badge>
+              <div className="min-w-0">
+                <label className="text-sm font-medium mb-2 block">Comparison Type</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-md bg-white"
+                  value={comparisonType}
+                  onChange={(e) => {
+                    setComparisonType(e.target.value);
+                    setSelectedGroupId("");
+                    setSelectedGroupIds([]);
+                    setSelectedCompareCategoryId("");
+                    setSelectedCompareCategoryIds([]);
+                  }}
+                >
+                  <option value="single">
+                    {comparisonMode === "group" ? "Single Group" : "Single Category"}
+                  </option>
+                  <option value="multi">
+                    {comparisonMode === "group" ? "Multiple Groups" : "Multiple Categories"}
+                  </option>
+                </select>
+              </div>
+
+              {comparisonMode === "group" && comparisonType === "single" ? (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Group</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md bg-white"
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                  >
+                    <option value="">Select group</option>
+                    {groupOptions.map((g) => (
+                      <option key={g.value} value={g.value}>
+                        {g.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : comparisonMode === "group" ? (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Groups</label>
+                  <SelectMultiple
+                    label="Select groups"
+                    options={groupOptions}
+                    value={selectedGroupIds}
+                    onChange={setSelectedGroupIds}
+                    searchable
+                  />
+                </div>
+              ) : comparisonType === "single" ? (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Category</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md bg-white"
+                    value={selectedCompareCategoryId}
+                    onChange={(e) => setSelectedCompareCategoryId(e.target.value)}
+                  >
+                    <option value="">Select category</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Categories</label>
+                  <SelectMultiple
+                    label="Select categories"
+                    options={categoryOptions}
+                    value={selectedCompareCategoryIds}
+                    onChange={setSelectedCompareCategoryIds}
+                    searchable
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div className="min-w-0">
+                <label className="text-sm font-medium mb-2 block">Metrics</label>
+                <SelectMultiple
+                  label="Select metrics (all if empty)"
+                  options={AVAILABLE_METRICS}
+                  value={selectedMetrics}
+                  onChange={setSelectedMetrics}
+                  searchable
+                  className="w-full min-w-0"
+                />
+              </div>
+
+              {comparisonMode === "group" ? (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Category Filter (Optional)</label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-md bg-white"
+                    value={selectedCategoryId}
+                    onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  >
+                    <option value="all">All categories</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Manage groups in <a className="underline" href="/coach/growth/groups">Growth Groups</a>.
+                  </p>
+                </div>
+              ) : (
+                <div className="min-w-0">
+                  <label className="text-sm font-medium mb-2 block">Mode</label>
+                  <div className="h-[42px] px-3 border rounded-md bg-white flex items-center text-sm text-muted-foreground">
+                    Category comparison
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -668,7 +667,7 @@ export default function CategoryComparison() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Players
+                Total Athlete
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -804,15 +803,15 @@ export default function CategoryComparison() {
         </div>
       )}
 
-      {/* Client Comparison Table */}
+      {/* Athlete Comparison Table */}
       {clientTableData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Player Comparison</CardTitle>
+            <CardTitle>Athlete Comparison</CardTitle>
             <CardDescription>
               {comparisonMode === "group"
-                ? "Detailed comparison of players in the selected group(s)"
-                : "Detailed comparison of players in the selected category(ies)"}
+                ? "Detailed comparison of athletes in the selected group(s)"
+                : "Detailed comparison of athletes in the selected category(ies)"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -885,7 +884,7 @@ export default function CategoryComparison() {
               <p className="text-muted-foreground">
                 {comparisonMode === "group"
                   ? "No data found for selected group filters."
-                  : "No data found for selected category(ies). Categories with no clients are skipped."}
+                  : "No data found for selected category(ies). Categories with no athletes are skipped."}
               </p>
             </div>
           </CardContent>

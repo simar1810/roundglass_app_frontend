@@ -11,6 +11,7 @@ import {
     getUserClients,
     removeClientFromUser
 } from "@/lib/fetchers/app";
+import { useAppSelector } from "@/providers/global/hooks";
 import {
     ChevronDown,
     ChevronUp,
@@ -23,7 +24,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useAppSelector } from "@/providers/global/hooks";
 
 export default function UserClientAssignmentModal({ open, onClose, user, onSuccess }) {
   const { client_categories = [] } = useAppSelector((state) => state.coach.data || {});
@@ -255,21 +255,21 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
       <DialogContent className="!max-w-[1080px] w-full h-[92vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-4 border-b bg-white">
           <DialogTitle className="text-2xl font-semibold text-gray-900 tracking-tight">
-            Manage Clients for {user?.name}
+            Manage Athlete for {user?.name}
           </DialogTitle>
           <p className="text-sm text-gray-600 mt-1">
-            Control category access and assign players from one place.
+            Control category access and assign athletes from one place.
           </p>
         </DialogHeader>
 
         <div className="px-6 py-3 border-b bg-gray-50/80">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="rounded-lg border px-3 py-2 bg-slate-50/50">
-              <p className="text-xs text-gray-500">Selected Clients</p>
+              <p className="text-xs text-gray-500">Selected Athlete</p>
               <p className="text-lg font-semibold text-gray-900">{selectedClients.length}</p>
             </div>
             <div className="rounded-lg border px-3 py-2 bg-slate-50/50">
-              <p className="text-xs text-gray-500">Assigned Clients</p>
+              <p className="text-xs text-gray-500">Assigned Athlete</p>
               <p className="text-lg font-semibold text-gray-900">{userClients.length}</p>
             </div>
             <div className="rounded-lg border px-3 py-2 bg-slate-50/50">
@@ -284,7 +284,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search players by name, ID, email or mobile..."
+                placeholder="Search athletes by name, ID, email or mobile..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white"
@@ -306,14 +306,14 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
             </Button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Search applies to both available and assigned player lists.
+            Search applies to both available and assigned athlete lists.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5 flex-1 overflow-y-auto px-6 py-5 bg-slate-50/40">
           <div className="space-y-4 flex flex-col">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-gray-900">Available Clients</h3>
+              <h3 className="text-base font-semibold text-gray-900">Available Athlete</h3>
               <Badge variant="outline">{filteredAvailableClients.length} visible</Badge>
             </div>
             <div className="border rounded-xl bg-white overflow-y-auto h-[720px] max-h-[720px] custom-scrollbar">
@@ -371,7 +371,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                   {filteredAvailableClients.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                      <p>No available clients match your search/filter</p>
+                      <p>No available athletes match your search/filter</p>
                     </div>
                   )}
                 </div>
@@ -381,7 +381,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
 
           <div className="space-y-4 flex flex-col min-h-0">
             <div className="flex items-center justify-between flex-shrink-0">
-              <h3 className="text-lg font-semibold text-gray-900">Assigned Clients</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Assigned Athlete</h3>
               <Badge variant="outline">{filteredUserClients.length} assigned</Badge>
             </div>
 
@@ -442,8 +442,8 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                       disabled={filteredAvailableClients.length === 0 || loadingClients}
                     >
                       {filterCategoryIds.length > 0
-                        ? `Select ${filteredAvailableClients.length} filtered clients`
-                        : "Select filtered clients"}
+                        ? `Select ${filteredAvailableClients.length} filtered athletes`
+                        : "Select filtered athletes"}
                     </Button>
                   </div>
                 )}
@@ -452,7 +452,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                   <div className="space-y-2 pt-2 border-t">
                     <h5 className="text-sm font-medium text-gray-900">Category Access for User</h5>
                     <p className="text-xs text-gray-500">
-                      User can access clients in these categories (backend enforced).
+                      User can access athletes in these categories (backend enforced).
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {client_categories.map((category) => {
@@ -530,7 +530,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                   {filteredUserClients.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                      <p>No assigned clients match your search/filter</p>
+                      <p>No assigned athletes match your search/filter</p>
                     </div>
                   )}
                 </div>
@@ -542,7 +542,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-white flex-shrink-0">
           <div className="text-sm text-gray-600">
             {selectedClients.length > 0 && (
-              <span>{selectedClients.length} client(s) selected for assignment</span>
+              <span>{selectedClients.length} athlete(s) selected for assignment</span>
             )}
           </div>
 
@@ -567,7 +567,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
               ) : (
                 <>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Assign {selectedClients.length} Client(s)
+                  Assign {selectedClients.length} Athlete(s)
                 </>
               )}
             </Button>

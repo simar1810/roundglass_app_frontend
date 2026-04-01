@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
-import { useAppSelector } from "@/providers/global/hooks";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/providers/global/hooks";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Comparison Group Selector Component
@@ -42,13 +42,13 @@ export default function ComparisonGroupSelector({
   const availableOptions = useMemo(() => {
     if (person === "client") {
       return [
-        { value: "all", label: "All Players" },
+        { value: "all", label: "All Athlete" },
         { value: "category", label: "My Category" },
       ];
     }
     // Coach view - show all options
     return [
-      { value: "all", label: "All Clients" },
+      { value: "all", label: "All Athlete" },
       { value: "category", label: "Category" },
     ];
   }, [person]);

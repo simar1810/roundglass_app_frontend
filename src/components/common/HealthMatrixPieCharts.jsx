@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   calculateBMIFinal,
   calculateBMRFinal,
@@ -11,12 +11,12 @@ import {
   calculateSubcutaneousFat,
 } from "@/lib/client/statistics";
 import { cn, extractNumber } from "@/lib/utils";
-import Image from "next/image";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Pencil } from "lucide-react";
-import FormControl from "../FormControl";
+import Image from "next/image";
 import { useRef, useState } from "react";
+import FormControl from "../FormControl";
 import { Button } from "../ui/button";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 
 const healtMetrics = [
   {
@@ -34,7 +34,7 @@ const healtMetrics = [
     title: "Muscle",
     value: "15%",
     optimalRangeText:
-      "Optimal Range: 32–36% for men, 24–30% for women\nAthletes: 38–42%",
+      "Optimal Range: 32–36% for men, 24–30% for women\nAthlete: 38–42%",
     icon: "/svgs/muscle.svg",
     name: "muscle",
     id: 2,

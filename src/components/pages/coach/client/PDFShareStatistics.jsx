@@ -1,13 +1,12 @@
-import React from "react";
 import {
-  Document,
-  Page,
-  Text,
-  View,
-  Image,
-  StyleSheet,
-  Font,
-  PDFViewer,
+    Document,
+    Font,
+    Image,
+    Page,
+    PDFViewer,
+    StyleSheet,
+    Text,
+    View,
 } from "@react-pdf/renderer";
 
 // Register custom font
@@ -562,7 +561,7 @@ function StatisticsPage1({ data, styles, brand }) {
         styles={styles}
         icon="/assets/SVG/muscle.svg"
         title="Muscle Percentage"
-        note="Optimal Range: 32%-36% for men, 24-30% for women, Athletes: 38-42%"
+        note="Optimal Range: 32%-36% for men, 24-30% for women, Athlete: 38-42%"
         value={musclePercentage}
         status="Healthy"
         percent={85}

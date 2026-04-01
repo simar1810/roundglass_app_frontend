@@ -66,7 +66,7 @@ function AssignCustomWorkoutContainer({ workoutId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Player here"
+        placeholder="Search Athlete here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
@@ -139,7 +139,7 @@ function AssignWorkoutContainer({ workoutId }) {
   return <div className="p-4 mb-auto text-sm space-y-6">
     <div>
       <FormControl
-        placeholder="Search Player here"
+        placeholder="Search Athlete here"
         className="w-full bg-gray-50 rounded-lg"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
