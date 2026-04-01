@@ -1,5 +1,6 @@
 import { fetchData, sendData } from "../api";
 import { buildUrlWithQueryParams } from "../formatter";
+import { withClientFilter } from "../middleware/clientFilter";
 
 /**
  * Create or update a client measurement
@@ -119,7 +120,7 @@ export function deleteGroup(groupId) {
  * @param {string} [filters.standard="IPA"] - Standard: "IPA" or "IAP" (default: "IPA")
  * @returns {Promise<Object>} API response with group report data
  */
-export function getGroupReport(groupId, filters = {}) {
+export const getGroupReport = withClientFilter((groupId, filters = {}) => {
   const queryParams = {
     person: "coach", // Required by backend auth middleware
   };
@@ -143,7 +144,7 @@ export function getGroupReport(groupId, filters = {}) {
   );
 
   return fetchData(endpoint);
-}
+});
 
 /**
  * Download PDF report for group analytics
@@ -159,9 +160,9 @@ export { downloadGroupReportPDF } from "../utils/growth";
  * Get all groups for the current coach
  * @returns {Promise<Object>} API response with list of groups
  */
-export function getAllGroups() {
+export const getAllGroups = withClientFilter(() => {
   // Backend endpoint: GET /api/growth/groups?person=coach
   const endpoint = buildUrlWithQueryParams("growth/groups", { person: "coach" });
   return fetchData(endpoint);
-}
+});
 

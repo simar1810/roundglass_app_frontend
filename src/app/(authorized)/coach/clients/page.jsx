@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getUserType } from "@/lib/permissions";
 
 const initialQuery = {
   page: 1,
@@ -28,6 +29,7 @@ const initialQuery = {
 }
 
 export default function Page() {
+  const isCoachView = getUserType() === "coach";
   const [selectedCategories, setSelectedCategories] = useState([])
   const [selectedGroups, setSelectedGroups] = useState([])
   const [query, setQuery] = useState(() => initialQuery);
@@ -87,6 +89,10 @@ export default function Page() {
     let cancelled = false;
 
     async function buildClientManagedBy() {
+      if (!isCoachView) {
+        if (!cancelled) setClientManagedByMap(new Map());
+        return;
+      }
       const users =
         usersRes?.status_code === 200 && Array.isArray(usersRes?.data)
           ? usersRes.data
@@ -125,7 +131,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [usersRes, data?.data]);
+  }, [isCoachView, usersRes, data?.data]);
 
   useEffect(() => {
     setQuery(prev => ({ ...prev, page: 1 }));
@@ -155,7 +161,7 @@ export default function Page() {
   }
 
   // Apply managed-by user filter
-  if (selectedManagedByUserId !== "all") {
+  if (isCoachView && selectedManagedByUserId !== "all") {
     clients = clients.filter((client) => {
       const entry = clientManagedByMap.get(client?._id);
       return entry?.userId === selectedManagedByUserId;
@@ -177,11 +183,13 @@ export default function Page() {
           setSelectedCategories={setSelectedCategories}
           categories={client_categories}
         />
+        {isCoachView && (
           <ManagedByUserFilter
             users={Array.isArray(usersRes?.data) ? usersRes.data : []}
             selectedUserId={selectedManagedByUserId}
             onChange={setSelectedManagedByUserId}
           />
+        )}
         <GroupsFilter
           groups={groups}
           selectedGroups={selectedGroups}
@@ -203,7 +211,7 @@ export default function Page() {
         groups={clientIdToGroupIds.get(client?._id) || []}
         groupNames={groupIdToName}
         client={client}
-        managedByUserName={clientManagedByMap.get(client?._id)?.userName}
+        managedByUserName={isCoachView ? clientManagedByMap.get(client?._id)?.userName : undefined}
       />)}
     </div>
 

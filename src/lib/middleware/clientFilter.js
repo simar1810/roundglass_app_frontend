@@ -82,8 +82,42 @@ export function withClientFilter(originalFetcher) {
               });
             };
 
+            const filterGroupLikeItem = (item) => {
+              if (!item || typeof item !== "object") return item;
+              const next = { ...item };
+              if (Array.isArray(next.clients)) {
+                next.clients = filterClients(next.clients);
+              }
+              if (Array.isArray(next.assignedClients)) {
+                next.assignedClients = filterClients(next.assignedClients);
+              }
+              if (Array.isArray(next.notAssignedClients)) {
+                next.notAssignedClients = filterClients(next.notAssignedClients);
+              }
+              if (Array.isArray(next.unassignedClients)) {
+                next.unassignedClients = filterClients(next.unassignedClients);
+              }
+              if (Array.isArray(next.assignedToOtherPlans)) {
+                next.assignedToOtherPlans = filterClients(next.assignedToOtherPlans);
+              }
+              return next;
+            };
+
             if (Array.isArray(response.data)) {
-              response.data = filterClients(response.data);
+              const looksLikeClientArray = response.data.some((item) =>
+                item && typeof item === "object" && ("_id" in item || "id" in item) && !Array.isArray(item?.clients)
+              );
+              const looksLikeGroupArray = response.data.some((item) =>
+                item && typeof item === "object" && Array.isArray(item?.clients)
+              );
+
+              if (looksLikeGroupArray) {
+                response.data = response.data.map(filterGroupLikeItem);
+              } else if (looksLikeClientArray) {
+                response.data = filterClients(response.data);
+              } else {
+                response.data = response.data.map(filterGroupLikeItem);
+              }
             } else {
               // Filter different client arrays in the response
               if (response.data.clients) {
