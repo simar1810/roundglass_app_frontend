@@ -178,7 +178,18 @@ export default function AddUserModal({ open, onClose, onSuccess }) {
         // Pass created user payload so parent can open client assignment modal.
         const createdUserPayload = {
           ...(response?.data || {}),
-          _id: response?.data?._id || response?.data?.id,
+          _id:
+            response?.data?._id ||
+            response?.data?.id ||
+            response?.data?.user?._id ||
+            response?.data?.user?.id ||
+            response?.user?._id ||
+            response?.user?.id,
+          id:
+            response?.data?.id ||
+            response?.data?._id ||
+            response?.data?.user?.id ||
+            response?.data?.user?._id,
           name: response?.data?.name || formData.name,
         };
         onSuccess?.(createdUserPayload);

@@ -39,6 +39,15 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   const [totalPages, setTotalPages] = useState(1);
   const [loadingClients, setLoadingClients] = useState(false);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const resolvedUserId = String(
+    user?._id ||
+    user?.id ||
+    user?.user?._id ||
+    user?.user?.id ||
+    user?.data?._id ||
+    user?.data?.id ||
+    ""
+  ).trim();
 
   useEffect(() => {
     if (open && user) {
@@ -49,11 +58,15 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
           : Array.isArray(user?.categories)
             ? user.categories
             : [];
-      setAccessCategoryIds(initialAccessCategories.map((id) => String(id)));
-      fetchUserClients();
-      fetchAvailableClients();
+      setAccessCategoryIds(
+        initialAccessCategories.map((id) => String(id || "").trim()).filter(Boolean)
+      );
+      if (resolvedUserId) {
+        fetchUserClients();
+        fetchAvailableClients();
+      }
     }
-  }, [open, user]);
+  }, [open, user, resolvedUserId]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -67,13 +80,16 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   }, [searchTerm]);
 
   const fetchUserClients = async () => {
+    if (!resolvedUserId) return;
     try {
       setLoadingClients(true);
-      const response = await getUserClients(user._id);
+      const response = await getUserClients(resolvedUserId);
       if (response.status_code === 200) {
         setUserClients(response.data.clients || []);
         const serverCategoryIds = Array.isArray(response?.data?.categoryIds)
-          ? response.data.categoryIds.map((id) => String(id))
+          ? response.data.categoryIds
+            .map((id) => String(id || "").trim())
+            .filter(Boolean)
           : [];
         if (serverCategoryIds.length > 0 || !Array.isArray(user?.categoryIds)) {
           setAccessCategoryIds(serverCategoryIds);
@@ -162,6 +178,10 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   };
 
   const handleAssignClients = async () => {
+    if (!resolvedUserId) {
+      toast.error("Valid user ID is required!");
+      return;
+    }
     if (selectedClients.length === 0) {
       toast.error("Please select at least one client to assign");
       return;
@@ -169,9 +189,15 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
 
     try {
       setLoading(true);
-      const clientIds = selectedClients.map(client => client._id);
-      const response = await assignClientsToUser(user._id, clientIds, {
-        categoryIds: accessCategoryIds,
+      const clientIds = selectedClients
+        .map((client) => String(client?._id || "").trim())
+        .filter(Boolean);
+      if (clientIds.length === 0) {
+        toast.error("No valid client IDs found for assignment.");
+        return;
+      }
+      const response = await assignClientsToUser(resolvedUserId, clientIds, {
+        categoryIds: accessCategoryIds.map((id) => String(id || "").trim()).filter(Boolean),
       });
 
       if (response.status_code === 200) {
@@ -191,9 +217,13 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   };
 
   const handleRemoveClient = async (client) => {
+    if (!resolvedUserId) {
+      toast.error("Valid user ID is required!");
+      return;
+    }
     try {
       setLoading(true);
-      const response = await removeClientFromUser(user._id, client._id);
+      const response = await removeClientFromUser(resolvedUserId, client._id);
 
       if (response.status_code === 200) {
         toast.success(`Removed ${client.name} from ${user.name}`);

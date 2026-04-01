@@ -526,9 +526,26 @@ export function removeClientFromUser(userId, clientId) {
 }
 
 export function assignClientsToUser(userId, clientIds, options = {}) {
-  const payload = { userId, clientIds };
-  if (Array.isArray(options?.categoryIds)) {
-    payload.categoryIds = options.categoryIds;
+  const normalizedUserId = String(userId || "").trim();
+  const normalizedClientIds = Array.isArray(clientIds)
+    ? clientIds
+      .map((id) => String(id || "").trim())
+      .filter(Boolean)
+    : [];
+  const normalizedCategoryIds = Array.isArray(options?.categoryIds)
+    ? options.categoryIds
+      .map((id) => String(id || "").trim())
+      .filter(Boolean)
+    : [];
+
+  const payload = {
+    userId: normalizedUserId,
+    id: normalizedUserId,
+    clientIds: normalizedClientIds,
+    clients: normalizedClientIds,
+  };
+  if (normalizedCategoryIds.length > 0) {
+    payload.categoryIds = normalizedCategoryIds;
   }
   return sendData("app/users/clients/assign", payload, "PUT");
 }
