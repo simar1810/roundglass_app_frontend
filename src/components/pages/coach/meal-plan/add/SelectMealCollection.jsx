@@ -15,7 +15,7 @@ import { Flame, PlusCircle, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 
-export default function SelectMealCollection({ children, index }) {
+export default function SelectMealCollection({ children, selectedDay, selectedMealType, index }) {
   return <Dialog>
     {children}
     {!Boolean(children) && <DialogTrigger className="w-full mt-4">
@@ -28,7 +28,7 @@ export default function SelectMealCollection({ children, index }) {
       <DialogHeader className="p-4 border-b-1">
         <DialogTitle>Add Meals</DialogTitle>
       </DialogHeader>
-      <RecipeesContainer index={index} />
+      <RecipeesContainer selectedDay={selectedDay} selectedMealType={selectedMealType} index={index} />
     </DialogContent>
   </Dialog>
 }
@@ -51,7 +51,7 @@ function getMealsEndpoint(query, showMyMeals, isInitialLoad) {
   return fetchData(`app/recipees?query=${query}`);
 }
 
-function RecipeesContainer({ index }) {
+function RecipeesContainer({ index, selectedDay, selectedMealType }) {
   const [query, setQuery] = useState("");
   const [showMyMeals, setShowMyMeals] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -184,7 +184,7 @@ function RecipeesContainer({ index }) {
         )}
         <RecipeModal type="new" />
       </div>
-      <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 no-scrollbar">
+      <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
         {recipees.map((recipe, index) => <RecipeDeatils
           key={index}
           recipe={recipe}
@@ -194,7 +194,7 @@ function RecipeesContainer({ index }) {
       </div>
       {selected && <Button
         onClick={() => {
-          dispatch(saveRecipe(selected, index))
+          dispatch(saveRecipe(selected, index, false, selectedDay, selectedMealType))
           closeRef.current.click()
         }}
         variant="wz"

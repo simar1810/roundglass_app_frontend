@@ -1,26 +1,39 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { DAYS } from "@/config/data/ui";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
   const { selectedPlans, selectedPlan, dispatch } = useCurrentStateContext() ?? {};
   const [activePlan, setActivePlan] = useState("");
 
-  const planKeys = useMemo(
-    () => (selectedPlans ? Object.keys(selectedPlans) : []),
-    [selectedPlans]
-  );
+  const normalizeMealTypeKey = useCallback((name) => {
+    if (typeof name !== "string") return "";
+    return name.trim().toLowerCase();
+  }, []);
+
+  const planKeys = useMemo(() => {
+    if (!selectedPlans) return [];
+    const keys = Object.keys(selectedPlans);
+    const isWeekly = keys.some((k) => DAYS.includes(k.toLowerCase()));
+    if (isWeekly) {
+      return DAYS.filter((d) => d in selectedPlans).concat(
+        keys.filter((k) => !DAYS.includes(k.toLowerCase()))
+      );
+    }
+    return keys;
+  }, [selectedPlans]);
 
   const formatPlanLabel = useCallback((planKey) => {
     if (planKey === null || planKey === undefined) return "";
@@ -77,29 +90,39 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
       if (!mealType || typeof mealType !== "object") return "";
       if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return "";
 
-      const firstMealTime = mealType.meals[0]?.time;
-      return typeof firstMealTime === "string" ? firstMealTime : "";
+      const firstMeal = mealType.meals[0] ?? {};
+      if (typeof firstMeal.time === "string" && firstMeal.time) {
+        return firstMeal.time;
+      }
+      if (typeof firstMeal.meal_time === "string" && firstMeal.meal_time) {
+        return firstMeal.meal_time;
+      }
+      return "";
     };
 
     Object.values(selectedPlans).forEach((planValue) => {
       getMealTypes(planValue).forEach((mealType) => {
         if (!mealType || typeof mealType !== "object") return;
 
-        const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
-        if (!mealName) return;
+        const rawMealName =
+          typeof mealType.mealType === "string" ? mealType.mealType : "";
+        const mealKey = normalizeMealTypeKey(rawMealName);
+        if (!mealKey) return;
 
         const existingDefault =
-          typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
+          typeof mealType.defaultMealTiming === "string"
+            ? mealType.defaultMealTiming
+            : "";
 
         const fallbackTiming = existingDefault || getFirstMealTime(mealType);
 
-        if (!(mealName in mealTypeDefaults)) {
-          mealTypeDefaults[mealName] = fallbackTiming;
+        if (!(mealKey in mealTypeDefaults)) {
+          mealTypeDefaults[mealKey] = fallbackTiming;
           return;
         }
 
-        if (!mealTypeDefaults[mealName] && fallbackTiming) {
-          mealTypeDefaults[mealName] = fallbackTiming;
+        if (!mealTypeDefaults[mealKey] && fallbackTiming) {
+          mealTypeDefaults[mealKey] = fallbackTiming;
         }
       });
     });
@@ -114,12 +137,14 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
           const mealTypesWithDefaults = planValue.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
 
-            const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
-            if (!mealName) return mealType;
+            const rawMealName =
+              typeof mealType.mealType === "string" ? mealType.mealType : "";
+            const mealKey = normalizeMealTypeKey(rawMealName);
+            if (!mealKey) return mealType;
 
             const fallbackTiming =
-              mealName in mealTypeDefaults
-                ? mealTypeDefaults[mealName]
+              mealKey in mealTypeDefaults
+                ? mealTypeDefaults[mealKey]
                 : typeof mealType.defaultMealTiming === "string"
                   ? mealType.defaultMealTiming
                   : getFirstMealTime(mealType);
@@ -160,12 +185,14 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
           const mealTypesWithDefaults = mealTypes.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
 
-            const mealName = typeof mealType.mealType === "string" ? mealType.mealType : "";
-            if (!mealName) return mealType;
+            const rawMealName =
+              typeof mealType.mealType === "string" ? mealType.mealType : "";
+            const mealKey = normalizeMealTypeKey(rawMealName);
+            if (!mealKey) return mealType;
 
             const fallbackTiming =
-              mealName in mealTypeDefaults
-                ? mealTypeDefaults[mealName]
+              mealKey in mealTypeDefaults
+                ? mealTypeDefaults[mealKey]
                 : typeof mealType.defaultMealTiming === "string"
                   ? mealType.defaultMealTiming
                   : getFirstMealTime(mealType);
@@ -239,6 +266,8 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
       }
 
       const sanitizedValue = typeof value === "string" ? value : "";
+      const targetMealKey = normalizeMealTypeKey(mealTypeName);
+      if (!targetMealKey) return;
       let hasChanges = false;
 
       const updatedPlans = Object.entries(selectedPlans).reduce((acc, [currentPlanKey, planValue]) => {
@@ -247,7 +276,11 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
 
           const updatedMealTypes = planValue.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
-            if (mealType.mealType !== mealTypeName) return mealType;
+
+            const currentMealKey = normalizeMealTypeKey(mealType.mealType);
+            if (!currentMealKey || currentMealKey !== targetMealKey) {
+              return mealType;
+            }
 
             const existingValue =
               typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
@@ -273,10 +306,19 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
 
             // Update ALL existing meals to use the new default timing
             // This ensures consistency when "set meal timing" is used
-            if (Array.isArray(mealType.meals) && mealType.meals.length > 0 && defaultChanged && sanitizedValue) {
+            if (
+              Array.isArray(mealType.meals) &&
+              mealType.meals.length > 0 &&
+              defaultChanged &&
+              sanitizedValue
+            ) {
               updatedMealType.meals = mealType.meals.map((meal) => ({
                 ...meal,
                 time: sanitizedValue,
+                meal_time:
+                  typeof meal.meal_time === "string" && meal.meal_time
+                    ? meal.meal_time
+                    : sanitizedValue,
               }));
             }
 
@@ -298,7 +340,11 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
 
           const updatedMealTypes = planValue.meals.map((mealType) => {
             if (!mealType || typeof mealType !== "object") return mealType;
-            if (mealType.mealType !== mealTypeName) return mealType;
+
+            const currentMealKey = normalizeMealTypeKey(mealType.mealType);
+            if (!currentMealKey || currentMealKey !== targetMealKey) {
+              return mealType;
+            }
 
             const existingValue =
               typeof mealType.defaultMealTiming === "string" ? mealType.defaultMealTiming : "";
@@ -324,10 +370,19 @@ export default function SetMealTimingsDialog({ trigger, open, onOpenChange }) {
 
             // Update ALL existing meals to use the new default timing
             // This ensures consistency when "set meal timing" is used
-            if (Array.isArray(mealType.meals) && mealType.meals.length > 0 && defaultChanged && sanitizedValue) {
+            if (
+              Array.isArray(mealType.meals) &&
+              mealType.meals.length > 0 &&
+              defaultChanged &&
+              sanitizedValue
+            ) {
               updatedMealType.meals = mealType.meals.map((meal) => ({
                 ...meal,
                 time: sanitizedValue,
+                meal_time:
+                  typeof meal.meal_time === "string" && meal.meal_time
+                    ? meal.meal_time
+                    : sanitizedValue,
               }));
             }
 

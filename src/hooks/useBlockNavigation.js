@@ -28,7 +28,7 @@ export default function useBlockNavigation({ shouldBlock, onAttemptToLeave }) {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [shouldBlock, onAttemptToLeave]);
+  }, [shouldBlock, pathname, router, onAttemptToLeave]);
 
   useEffect(() => {
     if (prevPath.current !== pathname) {
@@ -44,5 +44,5 @@ export default function useBlockNavigation({ shouldBlock, onAttemptToLeave }) {
         prevPath.current = pathname; // no block needed
       }
     }
-  }, [pathname]);
+  }, [shouldBlock, pathname, router, onAttemptToLeave]);
 }

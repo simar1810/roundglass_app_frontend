@@ -9,9 +9,9 @@ import {
   Document,
   StyleSheet,
   Image,
-  PDFViewer,
   Font
 } from '@react-pdf/renderer';
+import NamedPdfViewer from "@/components/pdf/NamedPdfViewer";
 import useSWR from 'swr';
 
 Font.register({
@@ -120,7 +120,7 @@ export default function PDFMealPlan({ data, brand }) {
   const styles = getStyles(brand)
 
   return (
-    <PDFViewer className="w-full h-full">
+    <NamedPdfViewer className="w-full h-full" fileNameBase={planName} title={planName}>
       <Document>
         <Page style={styles.page}>
           <View style={styles.header}>
@@ -158,6 +158,6 @@ export default function PDFMealPlan({ data, brand }) {
           </View>
         </Page>
       </Document>
-    </PDFViewer>
+    </NamedPdfViewer>
   );
 }

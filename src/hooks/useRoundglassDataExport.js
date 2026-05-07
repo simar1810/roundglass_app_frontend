@@ -298,7 +298,7 @@ export function useRoundglassDataExport() {
         setRetryCount(0);
       }
     },
-    [addExport]
+    [addExport, retryCount]
   );
 
   /**
@@ -548,7 +548,7 @@ export function useRoundglassDataExport() {
         setRetryCount(0);
       }
     },
-    [addExport]
+    [addExport, retryCount]
   );
 
   return {

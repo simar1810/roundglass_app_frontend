@@ -1,19 +1,28 @@
 "use client";
 
-import ContentError from "@/components/common/ContentError";
-import ContentLoader from "@/components/common/ContentLoader";
-import { Button } from "@/components/ui/button";
-import { getAppClients } from "@/lib/fetchers/app";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FiSearch } from "react-icons/fi";
-import { PiSparkleFill } from "react-icons/pi";
-import { toast } from "sonner";
+import { useState } from "react";
 import useSWR from "swr";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import ContentLoader from "@/components/common/ContentLoader";
+import ContentError from "@/components/common/ContentError";
+import { getAppClients } from "@/lib/fetchers/app";
+import { AI_MEAL_PLAN_STORAGE_KEY, getMealPlanStorageKey } from "@/config/state-data/custom-meal";
+import { useAppSelector } from "@/providers/global/hooks";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { PiSparkleFill } from "react-icons/pi";
+import { FiSearch } from "react-icons/fi";
 
 export default function Page() {
+
+  return <Container />
+}
+
+function Container() {
   const router = useRouter();
+  const coachId = useAppSelector((s) => s.coach?.data?._id) ?? null;
+  const aiKey = getMealPlanStorageKey(AI_MEAL_PLAN_STORAGE_KEY, coachId);
   const [isGenerating, setIsGenerating] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +30,7 @@ export default function Page() {
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
   const [selectedMode, setSelectedMode] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedClientName, setSelectedClientName] = useState("");
   const [dietType, setDietType] = useState(null);
   const [subOption, setSubOption] = useState(null);
   const [selectedHealthCondition, setSelectedHealthCondition] = useState([]);
@@ -51,21 +61,26 @@ export default function Page() {
       setCreditsMap((prev) => ({ ...prev, [clientId]: 0 }));
     }
   }
-  useEffect(() => {
-    const clients = data?.data || [];
-    if (clients.length > 0) {
-      clients.forEach((c) => {
-        if (!creditsMap[c._id]) fetchCredits(c._id);
-      });
-    }
-  }, [data]);
-  const handleAiGeneration = async (clientId, mode) => {
+  // Fetch credits only when user opens the Create AI Meal Plan flow for a client (not for all clients on load)
+  const openPreferenceModalForClient = (client, mode) => {
+    setSelectedClient(client._id);
+    setSelectedClientName(client.name || "Client");
+    setSelectedMode(mode);
+    setShowPreferenceModal(true);
+    setDropdownOpen(null);
+    fetchCredits(client._id);
+  };
+
+  const handleAiGeneration = async (clientId, mode, clientName = "Client") => {
     try {
       const selectedhealthCondString = selectedHealthCondition.join(", ");
-      const exclusions = selectedExclusions.join(", ")
+      const exclusions = selectedExclusions.join(", ");
       setIsGenerating(clientId);
       setDropdownOpen(null);
-      toast.loading(`Generating ${mode} AI meal plan...`);
+      toast.loading("AI meal plan is generating. We'll notify you when it's ready.", {
+        duration: 5000,
+        id: "ai-meal-plan-generating",
+      });
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_ENDPOINT}/app/meal-plan/ai/generate?clientId=${clientId}&mode=${mode}`,
@@ -85,33 +100,39 @@ export default function Page() {
       );
 
       const resData = await response.json();
-      toast.dismiss();
+      toast.dismiss("ai-meal-plan-generating");
       setIsGenerating(null);
 
       if (response.ok && resData.status_code === 200) {
-        toast.success("AI Meal Plan generated successfully!");
-        localStorage.setItem("aiMealPlan", JSON.stringify(resData.data));
-        await new Promise((r) => setTimeout(r, 1000));
-        router.push(`/coach/meals/add-custom/${mode}`);
+        localStorage.setItem(aiKey, JSON.stringify(resData.data));
         setDietType(null);
         setSubOption(null);
         setSearchExclusionTerm("");
         setSelectedExclusions([]);
         setSelectedHealthCondition([]);
         fetchCredits(clientId);
+
+        toast.success("AI meal plan is ready!", {
+          description: `For ${clientName} — ${mode} plan. View now or later from Meals & Recipes.`,
+          action: {
+            label: "View now",
+            onClick: () => router.push(`/coach/meals/add-custom/${mode}?source=ai`),
+          },
+          duration: 10000,
+        });
       } else {
         throw new Error(resData.message || "Failed to generate AI plan");
       }
     } catch (err) {
-      toast.dismiss();
+      toast.dismiss("ai-meal-plan-generating");
       setIsGenerating(null);
       toast.error(err.message || "Something went wrong!");
       console.error("Error:", err);
-        setDietType(null);
-        setSubOption(null);
-        setSearchExclusionTerm("");
-        setSelectedExclusions([]);
-        setSelectedHealthCondition([]);
+      setDietType(null);
+      setSubOption(null);
+      setSearchExclusionTerm("");
+      setSelectedExclusions([]);
+      setSelectedHealthCondition([]);
     }
   };
 const foodExclusionOptions = [
@@ -145,7 +166,7 @@ const foodExclusionOptions = [
   ));
   return (
     <main className="content-container content-height-screen relative">
-      {isGenerating && (
+      {false && isGenerating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm w-full">
           <div className="bg-white rounded-2xl shadow-xl px-6 py-16 w-full sm:w-[450px] text-center animate-fade-in">
             <div className="flex flex-col items-center justify-center">
@@ -172,7 +193,12 @@ const foodExclusionOptions = [
      {showPreferenceModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white w-[95%] sm:w-[500px] rounded-2xl shadow-lg p-6 relative max-h-[620px] overflow-y-auto no-scrollbar">
-            <h2 className="text-xl font-semibold text-left mb-6 py-2 pb-4 border-b-2 border-gray-50">Food Preference for this Client</h2>
+            <h2 className="text-xl font-semibold text-left mb-2 py-2 border-b-2 border-gray-50">Food Preference for this Client</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {creditsMap[selectedClient] !== undefined
+                ? `${creditsMap[selectedClient]} of 3 AI meal plan requests remaining for this client`
+                : "Checking credits..."}
+            </p>
             <div className="relative mb-4">
                <p className="text-sm text-gray-400 mb-2">Health Conditions</p>
               <div
@@ -410,13 +436,15 @@ const foodExclusionOptions = [
               className="bg-[#67BC2A] text-white hover:bg-green-600"
               onClick={() => {
                 setShowPreferenceModal(false);
-                handleAiGeneration(selectedClient, selectedMode);
-                }}> Continue
+                handleAiGeneration(selectedClient, selectedMode, selectedClientName || "Client");
+              }}
+            >
+              Continue
             </Button>
           </div>
          </div>
         </div>)}
-      <div className="flex flex-wrap gap-4 md:gap-0 items-center justify-between mt-4 mb-6 sticky top-0 bg-white z-20 pb-2">
+      <div className="flex flex-wrap gap-4 md:gap-2 items-center justify-between mt-4 mb-6 sticky top-0 bg-white z-20 pb-2">
         <h4 className="text-sm md:text-2xl font-semibold">Clients Lists for Meal Plan</h4>
 
         <div className="relative w-64">
@@ -435,7 +463,7 @@ const foodExclusionOptions = [
         className="overflow-y-auto no-scrollbar"
         style={{ maxHeight: "70vh" }}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+        <div className="grid grid-cols-1  lg:grid-cols-3 gap-6 pb-6">
           {filteredClients.map((client) => (
             <div
               key={client._id}
@@ -469,7 +497,7 @@ const foodExclusionOptions = [
                   <div className="flex items-center gap-1 bg-gray-100 mt-1 md:mt-0 px-2 md:pl-4 py-1 md:py-2 rounded-md">
                     <PiSparkleFill size={14} className="text-[#67BC2A]" />
                     <p className="text-[10px] text-[#67BC2A] font-medium ">
-                      {creditsMap[client._id]!==undefined ? `${creditsMap[client._id]} Credits Left` : "Loading..."} 
+                      AI plan available
                     </p>
                   </div>
                 </div>
@@ -496,6 +524,7 @@ const foodExclusionOptions = [
                           ? "bg-gray-300 cursor-not-allowed"
                           : "bg-[#67BC2A] text-white hover:bg-green-600"
                       }`}
+                      
                     >
                       {isGenerating === client._id
                         ? "Generating..."
@@ -505,23 +534,13 @@ const foodExclusionOptions = [
                       <div className="absolute top-10 right-0 bg-green-50 border border-gray-200 shadow-md rounded-md w-32 z-10">
                         <button
                           className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
-                          onClick={() =>{
-                                setSelectedClient(client._id);
-                                setSelectedMode("daily");
-                                setShowPreferenceModal(true);
-                                setDropdownOpen(null);
-                          }}
+                          onClick={() => openPreferenceModalForClient(client, "daily")}
                         >
                           Daily
                         </button>
                         <button
                           className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
-                          onClick={() =>{
-                                setSelectedClient(client._id);
-                                setSelectedMode("weekly");
-                                setShowPreferenceModal(true);
-                                setDropdownOpen(null);
-                          }}
+                          onClick={() => openPreferenceModalForClient(client, "weekly")}
                         >
                           Weekly
                         </button>
@@ -562,23 +581,13 @@ const foodExclusionOptions = [
                       <div className="absolute top-10 right-0 bg-green-50 border border-gray-200 shadow-md rounded-md w-32 z-10">
                         <button
                           className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
-                          onClick={() =>{
-                                setSelectedClient(client._id);
-                                setSelectedMode("daily");
-                                setShowPreferenceModal(true);
-                                setDropdownOpen(null);
-                          }}
+                          onClick={() => openPreferenceModalForClient(client, "daily")}
                         >
                           Daily
                         </button>
                         <button
                           className="block w-full text-left px-3 py-2 text-sm hover:bg-white"
-                          onClick={() =>{
-                                setSelectedClient(client._id);
-                                setSelectedMode("weekly");
-                                setShowPreferenceModal(true);
-                                setDropdownOpen(null);
-                          }}
+                          onClick={() => openPreferenceModalForClient(client, "weekly")}
                         >
                           Weekly
                         </button>
@@ -591,7 +600,7 @@ const foodExclusionOptions = [
 
           {filteredClients.length === 0 && (
             <p className="text-gray-500 text-center col-span-full">
-              No Athlete Found.
+              No clients found.
             </p>
           )}
         </div>

@@ -20,7 +20,7 @@ export function useTabsContentNavigation(defaultTab, tabItems) {
     if (tabItems.includes(params.get("tab"))) {
       setSelectedTab(params.get("tab"))
     }
-  }, [params])
+  }, [params, tabItems])
 
   return {
     selectedTab,

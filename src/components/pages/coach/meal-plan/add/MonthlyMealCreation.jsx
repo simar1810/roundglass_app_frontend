@@ -5,13 +5,15 @@ import { addNewPlanType, changeMonthlyDate, customWorkoutUpdateField, deleteMont
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Dialog } from "@radix-ui/react-dialog";
-import { addDays, format, isBefore, parse } from "date-fns";
+import { addDays, format, isBefore, isValid, parse } from "date-fns";
 import { Pen } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import MealPlanActionsMenu from "./MealPlanActionsMenu";
 
-export default function MonthlyMealCreation() {
+export default function MonthlyMealCreation({ viewType }) {
+  if (viewType === "vertical") return <></>
   const { dispatch, selectedPlans, selectedPlan } = useCurrentStateContext();
   const searchParams = useSearchParams();
   const creationType = searchParams.get("creationType");
@@ -25,11 +27,6 @@ export default function MonthlyMealCreation() {
         parse(dateB, "dd-MM-yyyy", new Date()),
       ) ? -1 : 1
     });
-
-  const nextDate = useMemo(
-    () => findNextDate(Object.keys(selectedPlans)),
-    [Object.keys(selectedPlans)]
-  )
 
   return <>
     <div className="flex items-center justify-between gap-2">
@@ -47,7 +44,7 @@ export default function MonthlyMealCreation() {
       </div>}
       {days.map((day, index) => {
         const parsedDate = parse(day, "dd-MM-yyyy", new Date());
-        const formattedDate = format(parsedDate, "EEE, dd MMM");
+        const formattedDate = isValid(parsedDate) ? format(parsedDate, "EEE, dd MMM") : day;
         
         return <div
           key={index}
@@ -68,23 +65,37 @@ export default function MonthlyMealCreation() {
         />
       </div>
       })}
-      <Button
-        onClick={() => dispatch(addNewPlanType(nextDate))}
-        variant="wz">
-        Add
-      </Button>
-      {/* <AddDayModal /> */}
+      <AddNextDay selectedPlans={selectedPlans} />
     </div>
   </>
+}
+
+export function AddNextDay() {
+  const { dispatch, selectedPlans } = useCurrentStateContext();
+  const planKeys = Object.keys(selectedPlans);
+  const nextDate = useMemo(
+    () => findNextDate(planKeys),
+    [planKeys.join(',')]
+  )
+  return <Button
+    onClick={() => dispatch(addNewPlanType(nextDate))}
+    variant="wz">
+    Add Date
+  </Button>
 }
 
 const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/
 
 function UpdateDate({ defaultValue = "" }) {
-  const [value, setValue] = useState(
-    regex.test(defaultValue)
-      ? format(parse(defaultValue, "dd-MM-yyyy", new Date()), "yyyy-MM-dd")
-      : "")
+  const [value, setValue] = useState(() => {
+    if (!regex.test(defaultValue)) return "";
+    try {
+      const parsed = parse(defaultValue, "dd-MM-yyyy", new Date());
+      return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : "";
+    } catch {
+      return "";
+    }
+  })
   const { dispatch } = useCurrentStateContext();
 
   const closeRef = useRef();
@@ -115,11 +126,20 @@ function UpdateDate({ defaultValue = "" }) {
             variant="wz"
             onClick={() => {
               if (!value) return;
-              dispatch(changeMonthlyDate({
-                prev: defaultValue,
-                new: format(parse(value, "yyyy-MM-dd", new Date()), "dd-MM-yyyy")
-              }))
-              closeRef.current.click();
+              try {
+                const parsed = parse(value, "yyyy-MM-dd", new Date());
+                if (!isValid(parsed)) {
+                  toast.error("Invalid date selected");
+                  return;
+                }
+                dispatch(changeMonthlyDate({
+                  prev: defaultValue,
+                  new: format(parsed, "dd-MM-yyyy")
+                }))
+                closeRef.current.click();
+              } catch (error) {
+                toast.error("Invalid date format");
+              }
             }}
             className="flex-1"
           >Save</Button>
@@ -141,14 +161,47 @@ function UpdateDate({ defaultValue = "" }) {
 }
 
 function findNextDate(keys) {
-  return format(
-    addDays(
-      keys
-        .map(date => parse(date, "dd-MM-yyyy", new Date()))
-        .sort((dateA, dateB) => isBefore(dateB, dateA) ? -1 : 1)
-        ?.at(0),
-      1
-    ),
-    "yyyy-MM-dd"
-  )
+  // Handle empty array - return today's date formatted
+  if (!keys || keys.length === 0) {
+    return format(new Date(), "yyyy-MM-dd");
+  }
+
+  // Parse and filter out invalid dates
+  const validDates = keys
+    .map(date => {
+      try {
+        const parsed = parse(date, "dd-MM-yyyy", new Date());
+        return isValid(parsed) ? parsed : null;
+      } catch {
+        return null;
+      }
+    })
+    .filter(date => date !== null);
+
+  // If no valid dates, return today's date
+  if (validDates.length === 0) {
+    return format(new Date(), "yyyy-MM-dd");
+  }
+
+  // Sort dates and get the latest one
+  const sortedDates = validDates.sort((dateA, dateB) => 
+    isBefore(dateB, dateA) ? -1 : 1
+  );
+  
+  const latestDate = sortedDates[0];
+  
+  // Validate the date before using it
+  if (!isValid(latestDate)) {
+    return format(new Date(), "yyyy-MM-dd");
+  }
+
+  // Add one day to the latest date
+  const nextDate = addDays(latestDate, 1);
+  
+  // Validate the result before formatting
+  if (!isValid(nextDate)) {
+    return format(new Date(), "yyyy-MM-dd");
+  }
+
+  return format(nextDate, "yyyy-MM-dd");
 }

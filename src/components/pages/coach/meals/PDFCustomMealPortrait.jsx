@@ -1,13 +1,13 @@
 import {
   Document,
   Page,
-  PDFViewer,
   StyleSheet,
   Text,
   View,
   Image,
   Font
 } from "@react-pdf/renderer";
+import NamedPdfViewer from "@/components/pdf/NamedPdfViewer";
 
 Font.register({
   family: "Roboto",
@@ -157,13 +157,13 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
 
   if (!Array.isArray(plans) || plans.length === 0) {
     return (
-      <PDFViewer className="w-full h-full">
+      <NamedPdfViewer className="w-full h-full" fileNameBase={title} title={title}>
         <Document>
           <Page size="A4" style={styles.page}>
             <Text>No meal data available</Text>
           </Page>
         </Document>
-      </PDFViewer>
+      </NamedPdfViewer>
     );
   }
 
@@ -216,7 +216,7 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
   };
 
   return (
-    <PDFViewer className="w-full h-full">
+    <NamedPdfViewer className="w-full h-full" fileNameBase={title} title={title}>
       <Document>
         <Page size="A4" style={styles.page}>
           <View style={styles.headerRow}>
@@ -347,7 +347,7 @@ export default function PDFCustomMealPortrait({ data = {}, brand = {} }) {
           )}
         </Page>
       </Document>
-    </PDFViewer>
+    </NamedPdfViewer>
   );
 }
 
