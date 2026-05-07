@@ -197,3 +197,9 @@ export function ensureHttps(url = "") {
   }
   return url;
 }
+
+export const checkArray = function (arr) {
+  return Array.isArray(arr)
+    ? arr
+    : []
+}

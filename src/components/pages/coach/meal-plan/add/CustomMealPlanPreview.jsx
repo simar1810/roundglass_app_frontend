@@ -141,7 +141,7 @@ export default function CustomMealPlanPreview({ customMealState }) {
     return () => {
       cancelled = true;
     };
-  }, [brands, obtainedPhoto]);
+  }, []);
 
   const primaryBrand = brands[0] || {};
   const latestBrand = brands.length > 0 ? brands[brands.length - 1] : {};
@@ -168,7 +168,7 @@ export default function CustomMealPlanPreview({ customMealState }) {
       includeGuidelines: true,
       includeSupplements: true,
     });
-  }, [customPlan, coach]);
+  }, []);
 
   // Only create brand object when assets are loaded to prevent re-renders
   const brand = useMemo(() => {
@@ -189,7 +189,7 @@ export default function CustomMealPlanPreview({ customMealState }) {
       primaryColor,
       textColor,
     };
-  }, [primaryBrand, brandLogo, coachLogo, primaryColor, textColor, assetsLoading]);
+  }, []);
 
   if (isLoading || assetsLoading) {
     return (

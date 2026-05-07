@@ -16,6 +16,7 @@ export default function SaveMealType({
   open: controlledOpen,
   onOpenChange,
   onSave,
+  selectedPlan,
 }) {
   const [value, setValue] = useState(defaulValue);
   const [internalOpen, setInternalOpen] = useState(false);
@@ -39,13 +40,13 @@ export default function SaveMealType({
   }, [open, defaulValue]);
 
   function saveMealTypeHandler() {
-    dispatch(saveMealType(value, type, index));
+    dispatch(saveMealType(value, type, index, selectedPlan));
     if (onSave) onSave(value);
     dialogCloseRef.current?.click();
   }
 
   function deleteMealTypeHandler() {
-    dispatch(saveMealType(value, "delete", index));
+    dispatch(saveMealType(value, "delete", index, selectedPlan));
     dialogCloseRef.current?.click();
   }
 

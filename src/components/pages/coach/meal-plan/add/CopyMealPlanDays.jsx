@@ -33,8 +33,9 @@ import {
   updateSlotSourcePlan,
 } from "@/providers/copy-meal-plan/reducer";
 import { defaultMealTypes, replaceMealPlanSelections } from "@/config/state-reducers/custom-meal";
-import { format, getDaysInMonth, parse } from "date-fns";
+import { isBefore, parse } from "date-fns";
 import { ChevronDown } from "lucide-react";
+import { DAYS } from "@/config/data/ui";
 import { cn } from "@/lib/utils";
 import SaveMealType from "./SaveMealType";
 
@@ -56,7 +57,7 @@ export default function CopyMealPlanDays({ trigger, open, onOpenChange }) {
     )}
     <DialogContent className="!max-w-4xl p-0 overflow-hidden max-h-[80vh] overflow-y-auto">
       <div className="border-b px-6 py-4">
-        <DialogTitle className="text-lg font-semibold text-gray-900">Copy Meal</DialogTitle>
+        <DialogTitle className="text-lg font-semibold text-gray-900">Copy Recipes</DialogTitle>
       </div>
       <CopyMealPlansContext
         initialState={initCopyPayload({
@@ -71,6 +72,18 @@ export default function CopyMealPlanDays({ trigger, open, onOpenChange }) {
 }
 
 const ADD_NEW_MEAL_TYPE_VALUE = "__add_new_meal_type__";
+
+/** Sort date strings (dd-MM-yyyy) chronologically. Leaves non-parseable keys at the end. */
+function sortDateKeys(dateKeys) {
+  if (!Array.isArray(dateKeys) || dateKeys.length === 0) return dateKeys;
+  return [...dateKeys].sort((a, b) => {
+    const dateA = parse(a, "dd-MM-yyyy", new Date());
+    const dateB = parse(b, "dd-MM-yyyy", new Date());
+    if (Number.isNaN(dateA.getTime())) return 1;
+    if (Number.isNaN(dateB.getTime())) return -1;
+    return isBefore(dateA, dateB) ? -1 : 1;
+  });
+}
 
 
 function Container() {
@@ -164,7 +177,6 @@ function Container() {
             <SelectValue placeholder="Select day" />
           </SelectTrigger>
           <SelectContent>
-            {planDays.length === 0 && <SelectItem value="day-1">Day 1</SelectItem>}
             {planDays.map((day) => (
               <SelectItem key={day} value={day}>{day.at(0)?.toUpperCase() + day.slice(1)}</SelectItem>
             ))}
@@ -225,6 +237,7 @@ function Container() {
                 <CopyMealPlanSlot
                   slot={slot}
                   dispatch={copyDispatch}
+                  // selectedPlan={selectedPlan}
                 />
               </div>
             );
@@ -287,12 +300,15 @@ function CopyDatesFromPreviousRow({ fromSlot, toSlot, dispatch }) {
 function CopyMealPlanSlot({ slot, dispatch }) {
   const { selectedPlans, mode, selectedPlan } = useCurrentStateContext();
 
-  const possibleModeDays = useMemo(
-    () => possiblePlayDaysForCustomMeal(mode, selectedPlan) ?? [],
-    [mode, selectedPlan],
-  );
-
   const planDays = Object.keys(selectedPlans ?? {});
+
+  const possibleModeDays = useMemo(() => {
+    const keys = Object.keys(selectedPlans ?? {});
+    if (!keys.length) return [];
+    if (mode === "monthly") return sortDateKeys(keys);
+    if (mode === "weekly") return [...keys].sort((a, b) => DAYS.indexOf(a) - DAYS.indexOf(b));
+    return keys;
+  }, [selectedPlans, mode]);
   const planMeals = Array.isArray(selectedPlans?.[slot.sourcePlan])
     ? selectedPlans[slot.sourcePlan]
     : [];
@@ -460,6 +476,7 @@ function CopyMealPlanSlot({ slot, dispatch }) {
           dispatch(updateSlotMealType(slot.id, trimmed));
         }
       }}
+      selectedPlan={selectedPlan}
     />
   </div>
 }
@@ -660,28 +677,3 @@ function DestinationMultiSelect({
   );
 }
 
-const possiblePlayDaysForCustomMeal = function (mode, ddMMyyyy) {
-  switch (mode) {
-    case "weekly":
-      return [
-        "mon", "tue", "wed",
-        "thu", "fri", "sat", "sun",
-      ]
-    case "monthly":
-      if (!ddMMyyyy) return [];
-      const date = parse(ddMMyyyy, "dd-MM-yyyy", new Date());
-      if (Number.isNaN(date?.getTime?.())) return [];
-      const daysInMonth = getDaysInMonth(date);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      return Array.from({ length: daysInMonth }, (_, i) => {
-        const currentDate = new Date(year, month, i + 1);
-        return format(currentDate, 'dd-MM-yyyy');
-      });
-
-
-    default:
-      return [];
-  }
-}

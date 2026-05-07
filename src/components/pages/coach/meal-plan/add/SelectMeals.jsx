@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { exportRecipe, reorderMealTypes, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { cn } from "@/lib/utils";
@@ -6,22 +7,24 @@ import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Minus, Move, Pen, PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Minus, Move, Pen, PlusCircle, Trash2, UtensilsCrossed } from "lucide-react";
+import { useMemo, useState } from "react";
 import EditSelectedMealDetails from "./EditSelectedMealDetails";
 import SaveMealType from "./SaveMealType";
+import { checkArray } from "@/lib/formatter";
 
-export default function SelectMeals() {
+export default function SelectMeals({
+  selectedPlan,
+  viewType
+}) {
   const {
     dispatch,
     selectedPlans,
-    selectedMealType,
-    selectedPlan
   } = useCurrentStateContext();
 
   const [activeId, setActiveId] = useState(null);
-
   const rawPlan = selectedPlans[selectedPlan];
+  const [selectedMealType, setSelectMealPlanType] = useState(rawPlan?.at(0)?.mealType)
 
   const isWeekly = rawPlan &&
   typeof rawPlan === "object" &&
@@ -49,14 +52,11 @@ export default function SelectMeals() {
   const mealTypes = isArray
     ? plan.map(m => m.mealType)
     : normalizedMeals.map(m => m.mealType);
-  const selectedMealTypeRecipee = isArray
-    ? plan.find(m => m.mealType === selectedMealType)?.meals || []
-    : normalizedMeals.find(m => m.mealType === selectedMealType)?.meals || [];
   const errorMessage = !mealTypes ?
     "Please select a date"
     : mealTypes?.length === 0 && "Please select a Type!"
 
-   const currentMeals = isArray ? plan : normalizedMeals || [];
+   const currentMeals = checkArray(isArray ? plan : normalizedMeals || [])
   const activeMeal = activeId ? currentMeals.find(m => m.mealType === activeId) : null;
 
   function onSortMeals(event) {
@@ -88,53 +88,167 @@ export default function SelectMeals() {
         onDragStart={handleDragStart}
         onDragEnd={onSortMeals}
       >
-        <SortableContext items={mealTypes || []}>
+        {viewType === "horizontal" && <SortableContext items={mealTypes || []}>
           {currentMeals.map((mealEntry, index) => (
             <SortableMealType
+              selectedMealType={selectedMealType}
+              setSelectMealPlanType={setSelectMealPlanType}
               key={mealEntry.mealType}
               index={index}
               type={mealEntry.mealType}
+              selectedPlan={selectedPlan}
             />
           ))}
-        </SortableContext>
+        </SortableContext>}
+        {viewType === "vertical" && <div></div>}
         <DragOverlay>
           {activeId && activeMeal ? (
             <MealTypeButton type={activeMeal.mealType} isSelected={activeMeal.mealType === selectedMealType} />
           ) : null}
         </DragOverlay>
       </DndContext>
-      <SaveMealType type="new" />
+      <SaveMealType type="new" selectedPlan={selectedPlan} />
     </div>
-    <div>
-      {selectedMealTypeRecipee.map((recipe, index) => <div key={index} className="flex items-center gap-4">
-        <EditSelectedMealDetails
-          key={`${recipe?._id}-${recipe.time}` || `${index}-${recipe.time}`}
-          index={index}
-          recipe={recipe}
-          defaultOpen={recipe.isNew || false}
-        />
-        <Minus
-          className="bg-[var(--accent-2)] text-white cursor-pointer ml-auto rounded-full px-[2px]"
-          strokeWidth={3}
-          onClick={() => dispatch(exportRecipe(index))}
-        />
-      </div>)}
-    </div>
-    <Button
-      onClick={() => dispatch(saveRecipe({}, undefined, true))}
-      className="bg-transparent hover:bg-transparent w-full h-[120px] border-1 mt-4 flex items-center justify-center rounded-[8px]"
-    >
-      <PlusCircle className="min-w-[32px] min-h-[32px] text-[var(--accent-1)]" />
-    </Button>
+    {currentMeals
+      .filter(({ mealType }) => (viewType === "vertical") || (mealType === selectedMealType))
+      .map((meal, index) => <MealTypesListing
+        key={meal.mealType}
+        index={index}
+        selectedPlan={selectedPlan}
+        meal={meal}
+        viewType={viewType}
+        selectedMealType={selectedMealType}
+      />)}
+    <NutrientsBreakdown mealsForSelectedType={
+      viewType === "horizontal"
+        ? currentMeals
+          .find(({ mealType }) => (mealType === selectedMealType))
+          ?.meals
+        : currentMeals
+          .flatMap(item => item.meals)}
+    />
   </div>
 }
 
-function SortableMealType({ type, index }) {
+function MealTypesListing({
+  index,
+  selectedPlan,
+  meal,
+  viewType,
+}) {
+  const { dispatch } = useCurrentStateContext();
+  const [open, setOpen] = useState(true);
+  const isVertical = viewType === "vertical";
+
+  return <Collapsible
+    open={isVertical ? open : true}
+    onOpenChange={isVertical ? setOpen : undefined}
+    className="bg-white mb-4 py-4 px-4 border-1 rounded-[10px]"
+  >
+    <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-2">
+      <div className="flex items-center gap-2">
+        {isVertical && (
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+              aria-label={`Toggle ${meal.mealType}`}
+            >
+              <ChevronDown
+                size={14}
+                className={cn("transition-transform duration-200", open && "rotate-180")}
+              />
+            </button>
+          </CollapsibleTrigger>
+        )}
+        <div className="h-2 w-2 rounded-full bg-blue-500" />
+        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+          {meal.mealType}
+        </h3>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <SaveMealType
+          type="edit"
+          index={index}
+          defaulValue={meal.mealType}
+          selectedPlan={selectedPlan}
+        >
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 px-3 text-xs font-medium text-slate-600 bg-slate-100 hover:text-slate-700"
+            >
+              <Pen size={14} className="mr-2 opacity-70" />
+              Edit
+            </Button>
+          </DialogTrigger>
+        </SaveMealType>
+        <Button
+          onClick={() => dispatch({
+            type: "DELETE_MEAL_TYPE_RECIPES",
+            payload: { selectedDay: selectedPlan, mealType: meal.mealType }
+          })}
+          variant="ghost"
+          className="group h-8 px-3 text-xs font-medium text-red-500 bg-red-50 hover:text-red-600 transition-colors"
+        >
+          <Trash2 size={14} className="mr-2 opacity-70 group-hover:opacity-100" />
+          Remove Dishes
+        </Button>
+      </div>
+    </div>
+    <CollapsibleContent>
+      <div className={cn(viewType === "vertical" && "grid md:grid-cols-2 gap-4")}>
+        {checkArray(meal.meals)
+          .map((recipe, recipeIndex) => <div key={recipeIndex} className="flex items-center gap-4 border-1 bg-slate-50 p-2 pt-0 rounded-[10px]">
+            <EditSelectedMealDetails
+              key={`${recipe?._id}-${recipe.time}` || `${recipeIndex}-${recipe.time}`}
+              index={recipeIndex}
+              recipe={recipe}
+              defaultOpen={recipe.isNew || false}
+              selectedDay={selectedPlan}
+              selectedMealType={meal.mealType}
+            />
+          <Minus
+            className="bg-[var(--accent-2)] text-white cursor-pointer ml-auto rounded-full px-[2px]"
+            strokeWidth={3}
+            onClick={() => dispatch(exportRecipe(recipeIndex, selectedPlan, meal.mealType))}
+          />
+        </div>)}
+      </div>
+      {checkArray(meal.meals).length === 0 && <div className="flex flex-col items-center justify-center min-h-40 p-8 rounded-xl border-1 border-dashed border-slate-200 bg-slate-50/50 transition-all">
+        <div className="relative mb-3">
+          <div className="absolute inset-0 rounded-full bg-blue-100 animate-ping opacity-20" />
+          <div className="relative bg-white p-3 rounded-full shadow-sm border border-slate-100">
+            <UtensilsCrossed size={24} className="text-slate-400" />
+          </div>
+        </div>
+        <div className="text-center">
+          <h4 className="text-sm font-semibold text-slate-700">
+            No meals added yet
+          </h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-[180px] leading-relaxed">
+            Select your preferred meals
+          </p>
+        </div>
+      </div>}
+      <Button
+        onClick={() => dispatch(saveRecipe({}, undefined, true, selectedPlan, meal.mealType))}
+        className="bg-transparent hover:bg-transparent w-full h-[120px] border-1 mt-4 flex items-center justify-center rounded-[8px]"
+        key={selectedPlan}
+      >
+        <PlusCircle className="min-w-[32px] min-h-[32px] text-[var(--accent-1)]" />
+      </Button>
+    </CollapsibleContent>
+  </Collapsible>
+}
+
+function SortableMealType({ selectedPlan, selectedMealType, setSelectMealPlanType, type, index }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: type,
   });
 
-  const { dispatch, selectedMealType } = useCurrentStateContext()
+  const { dispatch } = useCurrentStateContext()
 
   const isSelected = type === selectedMealType;
 
@@ -153,7 +267,7 @@ function SortableMealType({ type, index }) {
       <div className="relative">
         <Button
           variant={isSelected ? "wz" : "outline"}
-          onClick={() => dispatch(selectMealPlanType(type))}
+          onClick={() => setSelectMealPlanType(type)}
           className="pr-6 pl-8 font-bold whitespace-nowrap"
           disabled={isDragging}
         >
@@ -182,6 +296,7 @@ function SortableMealType({ type, index }) {
           type="edit"
           index={index}
           defaulValue={type}
+          selectedPlan={selectedPlan}
         >
           <DialogTrigger className="absolute top-1/2 translate-y-[-50%] right-[6px] cursor-pointer z-10" asChild>
             <Pen className={cn("w-[14px] h-[14px]", isSelected ? "text-white" : "text-[var(--accent-1)]")} />
@@ -203,4 +318,54 @@ function MealTypeButton({ type, isSelected }) {
       </Button>
     </div>
   );
+}
+
+function NutrientsBreakdown({ mealsForSelectedType }) {
+  const totals = useMemo(() => {
+      const parseNum = (val) => {
+        if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+        if (typeof val === "string") {
+          const n = parseFloat(val.replace(/,/g, ""));
+          return Number.isFinite(n) ? n : 0;
+        }
+        return 0;
+      };
+
+      return checkArray(mealsForSelectedType).reduce(
+        (acc, meal) => {
+          const caloriesVal =
+            typeof meal?.calories === "object"
+              ? meal?.calories?.total
+              : meal?.calories;
+          const proteinVal = meal?.protein ?? meal?.calories?.proteins;
+          const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
+          const fatsVal = meal?.fats ?? meal?.calories?.fats;
+  
+          acc.calories += parseNum(caloriesVal);
+          acc.protein += parseNum(proteinVal);
+          acc.carbohydrates += parseNum(carbsVal);
+          acc.fats += parseNum(fatsVal);
+          return acc;
+        },
+        { calories: 0, protein: 0, carbohydrates: 0, fats: 0 }
+      );
+    }, [mealsForSelectedType]);
+  return <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-4">
+    {[
+      { label: 'Calories', value: totals.calories, unit: 'kcal', color: 'text-blue-600' },
+      { label: 'Protein', value: totals.protein, unit: 'g', color: 'text-emerald-600' },
+      { label: 'Fats', value: totals.fats, unit: 'g', color: 'text-amber-600' },
+      { label: 'Carbs', value: totals.carbohydrates, unit: 'g', color: 'text-rose-600' }
+    ].map((stat) => (
+      <div key={stat.label} className="flex flex-col">
+        <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+          {stat.label}
+        </span>
+        <span className={`text-sm font-black ${stat.color}`}>
+          {stat.value.toFixed(1)}
+          <span className="ml-0.5 text-[10px] opacity-70">{stat.unit}</span>
+        </span>
+      </div>
+    ))}
+  </div>
 }

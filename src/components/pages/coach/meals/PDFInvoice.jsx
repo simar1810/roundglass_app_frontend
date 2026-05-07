@@ -6,8 +6,8 @@ import {
   Document,
   StyleSheet,
   Image,
-  PDFViewer,
 } from "@react-pdf/renderer";
+import NamedPdfViewer from "@/components/pdf/NamedPdfViewer";
 
 function getStyles(brand) {
   return StyleSheet.create({
@@ -148,7 +148,6 @@ export default function PDFInvoice({ data, brand }) {
   const {
     mobileNumber: coachPhoneNumber,
     city: coachCity
-
   } = useAppSelector(state => state.coach.data) ?? {}
   const {
     clientName,
@@ -162,12 +161,12 @@ export default function PDFInvoice({ data, brand }) {
     logoUrl,
   } = data;
   const styles = getStyles(brand)
+  const downloadBase = invoiceNo ? `Invoice-${invoiceNo}` : "Invoice";
   return (
-    <PDFViewer className="w-full h-full">
+    <NamedPdfViewer className="w-full h-full" fileNameBase={downloadBase} title={downloadBase}>
       <Document>
         <Page size="A4" style={styles.page}>
-          {/* <img src={brand.brandLogo} alt="" /> */}
-          <Image src={brand.brandLogo} style={styles.logo} />
+          {brand.brandLogo ? <Image src={brand.brandLogo} style={styles.logo} /> : null}
           <Text style={styles.headerText}>Receipt / invoice</Text>
 
           <View style={styles.headerRow}>
@@ -221,7 +220,6 @@ export default function PDFInvoice({ data, brand }) {
               <Text style={styles.tableCell}>Price</Text>
               <Text style={styles.tableCell}>Amount</Text>
             </View>
-
             {products.map((item, index) => (
               <View style={styles.tableRow} key={index}>
                 <Text style={[styles.tableCell, { flex: 0.5 }]}>{index + 1}</Text>
@@ -231,7 +229,7 @@ export default function PDFInvoice({ data, brand }) {
                 <Text style={styles.tableCell}>{item.quantity}</Text>
                 <Text style={styles.tableCell}>{item.price}</Text>
                 <Text style={styles.tableCell}>
-                  {(item.price * item.quantity).toFixed(1)}
+                  {(item.amount).toFixed(1)}
                 </Text>
               </View>
             ))}
@@ -239,11 +237,11 @@ export default function PDFInvoice({ data, brand }) {
 
           </View>
 
-          <Text style={styles.paragraph}>
+          {/* <Text style={styles.paragraph}>
             I understand that this order may be considered as an invitation to
             call upon me from time to time, with the understanding that I will
             under no obligation to buy.
-          </Text>
+          </Text> */}
 
           <View style={styles.signatureRow}>
             <Text>This is auto generated invoice</Text>
@@ -262,6 +260,6 @@ export default function PDFInvoice({ data, brand }) {
           </View>
         </Page>
       </Document>
-    </PDFViewer>
+    </NamedPdfViewer>
   );
 }

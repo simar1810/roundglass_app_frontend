@@ -1,21 +1,25 @@
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
-import CopyMealPlanModal from "./CopyMealPlanModal";
 import CopyMealPlanDays from "./CopyMealPlanDays";
+import CopyMealPlanModal from "./CopyMealPlanModal";
+import MealTypeBulkDelete from "./MealTypeBulkDelete";
+import RearrangeMealTypesDialog from "./RearrangeMealTypesDialog";
 import SetMealTimingsDialog from "./SetMealTimingsDialog";
 
 export default function MealPlanActionsMenu({
   toPlan,
+  selectedPlan,
   showStartFromToday = false,
+  showRearrangeMealTypes = false,
   onStartFromToday,
   onDefaultMealTimings,
 }) {
@@ -23,6 +27,8 @@ export default function MealPlanActionsMenu({
   const [copyMealsOpen, setCopyMealsOpen] = useState(false);
   const [copyRecipesOpen, setCopyRecipesOpen] = useState(false);
   const [setMealTimingsOpen, setSetMealTimingsOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [rearrangeOpen, setRearrangeOpen] = useState(false);
 
   const handleStartFromToday = () => {
     if (typeof onStartFromToday === "function") {
@@ -50,6 +56,18 @@ export default function MealPlanActionsMenu({
     if (typeof onDefaultMealTimings === "function") {
       onDefaultMealTimings();
     }
+  };
+
+  const handleBulkDeleteOpen = (event) => {
+    event?.preventDefault?.();
+    setBulkDeleteOpen(true)
+    setMenuOpen(false);
+  }
+
+  const handleRearrangeOpen = (event) => {
+    event?.preventDefault?.();
+    setMenuOpen(false);
+    setRearrangeOpen(true);
   };
 
   return (
@@ -96,6 +114,20 @@ export default function MealPlanActionsMenu({
           >
             Copy Recipes
           </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-sm font-medium text-muted-foreground focus:text-foreground"
+            onSelect={handleBulkDeleteOpen}
+          >
+            Meal Type Bulk Delete
+          </DropdownMenuItem>
+          {showRearrangeMealTypes && (
+            <DropdownMenuItem
+              className="text-sm font-medium text-muted-foreground focus:text-foreground"
+              onSelect={handleRearrangeOpen}
+            >
+              Rearrange Meal Types
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <CopyMealPlanModal
@@ -113,6 +145,17 @@ export default function MealPlanActionsMenu({
         trigger={false}
         open={setMealTimingsOpen}
         onOpenChange={setSetMealTimingsOpen}
+        />
+      <MealTypeBulkDelete
+        trigger={false}
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+      />
+      <RearrangeMealTypesDialog
+        trigger={false}
+        selectedPlan={selectedPlan || toPlan}
+        open={rearrangeOpen}
+        onOpenChange={setRearrangeOpen}
       />
     </>
   );

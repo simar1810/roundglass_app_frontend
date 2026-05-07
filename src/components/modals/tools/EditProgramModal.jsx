@@ -1,4 +1,3 @@
-import { UpdateAllowedRollnos } from "@/app/(authorized)/coach/tools/programs/add/page";
 import FormControl from "@/components/FormControl";
 import SelectMultiple from "@/components/SelectMultiple";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { UpdateAllowedRollnos } from "../club/LinkGenerator";
 
 export default function EditProgramModal({ program }) {
   return <Dialog>

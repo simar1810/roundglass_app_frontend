@@ -152,15 +152,15 @@ export async function formatClientDataForExport(apiResponse, onProgress = null) 
 
         // Add training modules
         if (pref?.trainingModule && Array.isArray(pref.trainingModule) && pref.trainingModule.length > 0) {
-          for (const module of pref.trainingModule) {
-            const modIndex = pref.trainingModule.indexOf(module);
+          for (const modulex of pref.trainingModule) {
+            const modIndex = pref.trainingModule.indexOf(modulex);
             const trainingData = {
               ...prefData,
               "Training Module Index": modIndex + 1,
-              "Training Frequency": module?.trainingFrequency || "",
-              "Training Duration": module?.duration || "",
-              "Training Intensity": module?.intensity || "",
-              "Conditioning Days": module?.conditioningDays || "",
+              "Training Frequency": modulex?.trainingFrequency || "",
+              "Training Duration": modulex?.duration || "",
+              "Training Intensity": modulex?.intensity || "",
+              "Conditioning Days": modulex?.conditioningDays || "",
             };
             formattedData.push(trainingData);
             processedItems++;

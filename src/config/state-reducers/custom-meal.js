@@ -1,6 +1,7 @@
-import { addDays, format, isBefore, parse } from "date-fns";
+import { addDays, format, isBefore, isValid, parse } from "date-fns";
 import { DAYS } from "../data/ui";
 import { customMealInitialState } from "../state-data/custom-meal";
+import { checkArray } from "@/lib/formatter";
 
 const BASE_MEAL_TYPES = [
   "Breakfast",
@@ -87,9 +88,6 @@ export function customMealReducer(state, action) {
         };
       }
     
-      const startDate = new Date();
-      const newPlans = {};
-    
       const existingDates = Object.keys(state.selectedPlans);
       const defaultTimingsMap = {};
     
@@ -102,17 +100,49 @@ export function customMealReducer(state, action) {
       }
         });
       });
-    
-      for (let i = 0; i < noOfDays; i++) {
-        const dateKey = format(addDays(startDate, i), "dd-MM-yyyy");
-      
-        newPlans[dateKey] = createDefaultMealTypes().map(meal => ({
-          ...meal,
-          defaultMealTiming:
-            defaultTimingsMap[meal.mealType] || meal.defaultMealTiming,
-        }));
+
+      // Determine start date: use the earliest existing date if available, otherwise use today
+      let startDate = new Date();
+      if (existingDates.length > 0) {
+        // Parse and sort existing dates to find the earliest (first) date
+        const parsedDates = existingDates
+          .map(date => {
+            try {
+              const parsed = parse(date, "dd-MM-yyyy", new Date());
+              return isValid(parsed) ? { original: date, parsed } : null;
+            } catch {
+              return null;
+            }
+          })
+          .filter(item => item !== null)
+          .sort((a, b) => isBefore(a.parsed, b.parsed) ? -1 : 1);
+        
+        // Use the earliest date as start date
+        if (parsedDates.length > 0) {
+          startDate = parsedDates[0].parsed;
+        }
       }
     
+      const newPlans = {};
+      const existingPlans = state.selectedPlans || {};
+
+      for (let i = 0; i < noOfDays; i++) {
+        const dateKey = format(addDays(startDate, i), "dd-MM-yyyy");
+        const existingPlan = existingPlans[dateKey];
+
+        if (existingPlan) {
+          // Preserve existing meal data for this date (meals, defaultMealTiming)
+          newPlans[dateKey] = existingPlan;
+        } else {
+          // New date: use default meal types with saved default timings
+          newPlans[dateKey] = createDefaultMealTypes().map(meal => ({
+            ...meal,
+            defaultMealTiming:
+              defaultTimingsMap[meal.mealType] || meal.defaultMealTiming,
+          }));
+        }
+      }
+
       return {
         ...state,
         selectedPlans: newPlans,
@@ -158,7 +188,8 @@ export function customMealReducer(state, action) {
         selectedMealType: selectMeal
       }
     case "SAVE_MEAL_TYPE": {
-      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const selectedPlan = action.payload.selectedPlan
+      const currentPlan = state.selectedPlans[selectedPlan];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
 
@@ -172,7 +203,7 @@ export function customMealReducer(state, action) {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: isArray
+            [selectedPlan]: isArray
               ? updatedMeals
               : { ...currentPlan, meals: updatedMeals },
           },
@@ -191,7 +222,7 @@ export function customMealReducer(state, action) {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: isArray
+            [selectedPlan]: isArray
               ? updatedMeals
               : { ...currentPlan, meals: updatedMeals },
           },
@@ -208,7 +239,7 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: isArray
+          [selectedPlan]: isArray
             ? updatedMeals
             : { ...currentPlan, meals: updatedMeals },
         },
@@ -216,12 +247,12 @@ export function customMealReducer(state, action) {
       };
     }
     case "SAVE_RECIPE": {
-      const { recipe, index, isNew } = action.payload;
-      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const { recipe, index, isNew, selectedDay, selectedMealType } = action.payload;
+      const currentPlan = state.selectedPlans[selectedDay];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
       const selectedMealTypeEntry = currentMeals?.find(
-        (mealType) => mealType?.mealType === state.selectedMealType
+        (mealType) => mealType?.mealType === selectedMealType
       );
 
       const mealTypeDefaultTiming =
@@ -238,6 +269,8 @@ export function customMealReducer(state, action) {
           : undefined;
 
       const defaultMealTiming = mealTypeDefaultTiming ?? firstMealTiming ?? "";
+      // Normalize method: API may return method (string) or recipe (array of steps), e.g. mostSearchedRecipes vs recipees search
+      const normalizedMethod = recipe.method || (Array.isArray(recipe.recipe) ? recipe.recipe.join("\n") : "") || "";
       const dishesPayload = !isNew
         ? {
           ...recipe,
@@ -245,7 +278,7 @@ export function customMealReducer(state, action) {
           image: recipe.image,
           description: recipe.description || "",
           ingredients: recipe.ingredients || "",
-          method: recipe.method || "",
+          method: normalizedMethod,
           fats: recipe.fats || recipe?.calories?.fats,
           calories: recipe?.calories?.total || recipe.calories,
           protein: recipe.protein || recipe?.calories?.proteins,
@@ -259,14 +292,14 @@ export function customMealReducer(state, action) {
           image: recipe.image,
           description: recipe.description || "",
           ingredients: recipe.ingredients || "",
-          method: recipe.method || "",
+          method: normalizedMethod,
           time: recipe.time ?? defaultMealTiming,
           isNew: false,
         };
 
       if (index || index === 0) {
         const updatedMeals = currentMeals.map((mealType) =>
-          mealType.mealType === state.selectedMealType
+          mealType.mealType === selectedMealType
             ? {
               ...mealType,
               meals: mealType.meals.map((meal, i) =>
@@ -280,7 +313,7 @@ export function customMealReducer(state, action) {
           ...state,
           selectedPlans: {
             ...state.selectedPlans,
-            [state.selectedPlan]: isArray
+            [selectedDay]: isArray
               ? updatedMeals
               : { ...currentPlan, meals: updatedMeals },
           },
@@ -288,7 +321,7 @@ export function customMealReducer(state, action) {
       }
 
       const updatedMeals = currentMeals.map((mealType) =>
-        mealType.mealType === state.selectedMealType
+        mealType.mealType === selectedMealType
           ? {
             ...mealType,
             meals: [
@@ -298,7 +331,7 @@ export function customMealReducer(state, action) {
                 dish_name: recipe.dish_name || recipe.title || recipe.name,
                 description: recipe.description || "",
                 ingredients: recipe.ingredients || "",
-                method: recipe.method || "",
+                method: normalizedMethod,
                 fats: recipe.fats || recipe?.calories?.fats,
                 calories: recipe.calories || recipe?.calories?.total,
                 protein: recipe.protein || recipe?.calories?.proteins,
@@ -316,22 +349,23 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: isArray
+          [selectedDay]: isArray
             ? updatedMeals
             : { ...currentPlan, meals: updatedMeals },
         },
       };
     }
     case "DELETE_RECIPE": {
-      const currentPlan = state.selectedPlans[state.selectedPlan];
+      const { idx, selectedDay, selectedMealType } = action.payload
+      const currentPlan = state.selectedPlans[selectedDay];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
 
       const updatedMeals = currentMeals.map((mealType) =>
-        mealType.mealType === state.selectedMealType
+        mealType.mealType === selectedMealType
           ? {
             ...mealType,
-            meals: mealType.meals.filter((_, index) => index !== action.payload),
+            meals: mealType.meals.filter((_, index) => index !== idx),
           }
           : mealType
       );
@@ -340,7 +374,7 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [state.selectedPlan]: isArray
+          [selectedDay]: isArray
             ? updatedMeals
             : { ...currentPlan, meals: updatedMeals },
         },
@@ -397,14 +431,25 @@ export function customMealReducer(state, action) {
         selectedMealType: "Breakfast"
       }
 
-    case "COPY_ALL_MEAL_PLANS":
+    case "COPY_ALL_MEAL_PLANS": {
+      const fromPlan = state.selectedPlans[action.payload.from];
+      if (fromPlan == null) {
+        return { ...state, selectedPlans: { ...state.selectedPlans } };
+      }
+      let cloned;
+      try {
+        cloned = structuredClone(fromPlan);
+      } catch {
+        cloned = JSON.parse(JSON.stringify(fromPlan));
+      }
       return {
         ...state,
         selectedPlans: {
           ...state.selectedPlans,
-          [action.payload.to]: state.selectedPlans[action.payload.from]
-        }
-      }
+          [action.payload.to]: cloned,
+        },
+      };
+    }
 
     case "COPY_MEAL_REPLACE_DESTINATIONS": {
       const { replacements = [] } = action.payload || {};
@@ -430,10 +475,13 @@ export function customMealReducer(state, action) {
           ? sourceMealEntry.meals.map((meal) => ({ ...meal }))
           : [];
 
-        const targetPlan = updatedPlans[toPlan] || [];
+        let targetPlan = updatedPlans[toPlan] || [];
         const targetIsArray = Array.isArray(targetPlan);
-        const targetMealsArray = targetIsArray ? targetPlan : targetPlan?.meals || [];
-
+        let targetMealsArray = targetIsArray ? targetPlan : targetPlan?.meals || [];
+        if (targetMealsArray.length === 0) {
+          targetMealsArray = createDefaultMealTypes();
+          targetPlan = targetMealsArray;
+        }
         const targetIndex = targetMealsArray.findIndex((meal) => meal.mealType === normalizedMealType);
 
         const nextMealsArray = targetIndex >= 0
@@ -721,8 +769,8 @@ export function customMealReducer(state, action) {
         }
       }
 
-      // Extract the meal plan ID from the AI response
-      const mealPlanId = action.payload.mealPlan?.id || action.payload.mealPlan?._id || action.payload.id;
+      // Extract the meal plan ID from the AI response (generate response or API fetch)
+      const mealPlanId = action.payload.mealPlan?.id || action.payload.mealPlan?._id || action.payload.id || action.payload._id;
 
       return {
         ...state,
@@ -767,6 +815,103 @@ export function customMealReducer(state, action) {
       };
     }
 
+    case "REORDER_MEAL_TYPES_ALL_PLANS": {
+      const { activeMealType, overMealType } = action.payload ?? {};
+      if (!activeMealType || !overMealType || activeMealType === overMealType) {
+        return state;
+      }
+
+      const reorderByMealType = (meals) => {
+        if (!Array.isArray(meals)) return meals;
+        const oldIndex = meals.findIndex((meal) => meal?.mealType === activeMealType);
+        const newIndex = meals.findIndex((meal) => meal?.mealType === overMealType);
+
+        if (
+          oldIndex === -1 ||
+          newIndex === -1 ||
+          oldIndex === newIndex ||
+          oldIndex < 0 ||
+          newIndex < 0 ||
+          oldIndex >= meals.length ||
+          newIndex >= meals.length
+        ) {
+          return meals;
+        }
+
+        const reordered = [...meals];
+        const [movedMeal] = reordered.splice(oldIndex, 1);
+        reordered.splice(newIndex, 0, movedMeal);
+        return reordered;
+      };
+
+      const updatedPlans = Object.entries(state.selectedPlans || {}).reduce((acc, [planKey, planValue]) => {
+        if (Array.isArray(planValue)) {
+          acc[planKey] = reorderByMealType(planValue);
+          return acc;
+        }
+
+        if (Array.isArray(planValue?.meals)) {
+          acc[planKey] = {
+            ...planValue,
+            meals: reorderByMealType(planValue.meals),
+          };
+          return acc;
+        }
+
+        acc[planKey] = planValue;
+        return acc;
+      }, {});
+
+      return {
+        ...state,
+        selectedPlans: updatedPlans,
+      };
+    }
+
+    case "SET_MEAL_TYPE_ORDER_ALL_PLANS": {
+      const { mealTypeOrder = [] } = action.payload ?? {};
+      if (!Array.isArray(mealTypeOrder) || mealTypeOrder.length === 0) {
+        return state;
+      }
+
+      const positionMap = new Map(mealTypeOrder.map((mealType, index) => [mealType, index]));
+
+      const sortMealsByOrder = (meals) => {
+        if (!Array.isArray(meals)) return meals;
+        return [...meals].sort((a, b) => {
+          const indexA = positionMap.get(a?.mealType);
+          const indexB = positionMap.get(b?.mealType);
+          if (indexA === undefined && indexB === undefined) return 0;
+          if (indexA === undefined) return 1;
+          if (indexB === undefined) return -1;
+          return indexA - indexB;
+        });
+      };
+
+      const updatedPlans = Object.entries(state.selectedPlans || {}).reduce((acc, [planKey, planValue]) => {
+        if (Array.isArray(planValue)) {
+          acc[planKey] = sortMealsByOrder(planValue);
+          return acc;
+        }
+
+        if (Array.isArray(planValue?.meals)) {
+          acc[planKey] = {
+            ...planValue,
+            meals: sortMealsByOrder(planValue.meals),
+          };
+          return acc;
+        }
+
+        acc[planKey] = planValue;
+        return acc;
+      }, {});
+
+      return {
+        ...state,
+        selectedPlans: updatedPlans,
+      };
+    }
+
     case "START_FROM_TODAY": {
       if (state.mode !== "monthly") return state
 
@@ -796,6 +941,43 @@ export function customMealReducer(state, action) {
       }
     }
 
+    case "DELETE_MEAL_TYPE_RECIPES": {
+      const { selectedDay, mealType } = action.payload
+      return {
+        ...state,
+        selectedPlans: {
+          ...state.selectedPlans,
+          [selectedDay]: state
+          .selectedPlans[selectedDay]
+          .map(type => type.mealType === mealType ? { mealType, meals: [] } : type)
+        }
+      }
+    }
+
+    case "BULK_DELETE_MEAL_TYPES": {
+      const { mealTypes } = action.payload
+      const mealTypesSet = new Set(mealTypes)
+      const availableKeys = Object.keys(state.selectedPlans)
+      return {
+        ...state,
+        selectedPlans: checkArray(availableKeys)
+          .reduce((acc, day) => {
+            const currentMeals = state.selectedPlans[day].map(({ mealType, meals }) => mealTypesSet.has(mealType)
+              ? { mealType, meals: [] }
+              : { mealType, meals })
+            return {
+              ...acc,
+              [day]: currentMeals
+            }
+          }, {})
+      }
+    }
+    case "IMPORT_MEALS": {
+      return {
+        ...state,
+        selectedPlans: action.payload
+      }
+    }
     default:
       return state;
   }
@@ -854,32 +1036,39 @@ export function changeSelectedPlan(payload) {
   }
 }
 
-export function saveMealType(mealType, type, index) {
+export function saveMealType(mealType, type, index, selectedPlan) {
   return {
     type: "SAVE_MEAL_TYPE",
     payload: {
       mealType,
       type,
-      index
+      index,
+      selectedPlan
     }
   }
 }
 
-export function saveRecipe(recipe, index, isNew) {
+export function saveRecipe(recipe, index, isNew, selectedDay, selectedMealType) {
   return {
     type: "SAVE_RECIPE",
     payload: {
       recipe,
       index,
-      isNew
+      isNew,
+      selectedDay,
+      selectedMealType
     }
   }
 }
 
-export function exportRecipe(payload) {
+export function exportRecipe(payload, selectedDay, selectedMealType) {
   return {
     type: "DELETE_RECIPE",
-    payload
+    payload: {
+      idx: payload,
+      selectedDay,
+      selectedMealType
+    }
   }
 }
 
@@ -999,6 +1188,25 @@ export function reorderMealTypes(oldIndex, newIndex) {
       newIndex
     }
   }
+}
+
+export function reorderMealTypesAllPlans(activeMealType, overMealType) {
+  return {
+    type: "REORDER_MEAL_TYPES_ALL_PLANS",
+    payload: {
+      activeMealType,
+      overMealType,
+    },
+  };
+}
+
+export function setMealTypeOrderAllPlans(mealTypeOrder) {
+  return {
+    type: "SET_MEAL_TYPE_ORDER_ALL_PLANS",
+    payload: {
+      mealTypeOrder,
+    },
+  };
 }
 
 export function startFromToday() {

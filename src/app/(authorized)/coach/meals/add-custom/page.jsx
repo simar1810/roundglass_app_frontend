@@ -3,6 +3,7 @@ import Stage1 from "@/components/pages/coach/meal-plan/add/Stage1";
 import Stage2 from "@/components/pages/coach/meal-plan/add/Stage2";
 import { changeStateDifferentCreationMeal, customMealIS, customMealReducer, selectWorkoutType } from "@/config/state-reducers/custom-meal";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
+import { SAVED_MEAL_PLAN_STORAGE_KEY } from "@/config/state-data/custom-meal";
 import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext"
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
@@ -13,6 +14,7 @@ export default function Page() {
     <CurrentStateProvider
       state={customMealIS("new")}
       reducer={customMealReducer}
+      localStorageHydrateKey={SAVED_MEAL_PLAN_STORAGE_KEY}
     >
       <CustomWorkoutContainer />
     </CurrentStateProvider>
@@ -57,7 +59,13 @@ function CustomWorkoutContainer() {
           guidelines: mealPlan.guidelines,
           supplements: mealPlan.supplements,
           id: mealPlan._id,
+          // For non-draft plans, remember the original plan id so that
+          // autosave can work on a separate draft copy without touching
+          // the assigned/original plan until explicit Save.
+          originalPlanId: creationType === "edit" && !mealPlan.draft ? mealPlan._id : undefined,
           noOfDays: mealPlan.noOfDays,
+          isAiGenerated: Boolean(mealPlan.isAiGenerated),
+          aiMealPlanId: mealPlan.isAiGenerated ? mealPlan._id : undefined,
         }))
       } else if (["daily", "weekly", "monthly"].includes(mode)) {
         dispatch(selectWorkoutType(mode))
