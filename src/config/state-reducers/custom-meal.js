@@ -284,7 +284,7 @@ export function customMealReducer(state, action) {
           protein: recipe.protein || recipe?.calories?.proteins,
           carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
           measure: recipe.measure,
-          isNew: !recipe.time || false,
+          isNew: false,
         }
         : {
           ...recipe,
@@ -337,7 +337,7 @@ export function customMealReducer(state, action) {
                 protein: recipe.protein || recipe?.calories?.proteins,
                 carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
                 measure: recipe.measure,
-                isNew: true,
+                isNew: Boolean(isNew),
                 time: recipe.time ?? defaultMealTiming
               },
             ],

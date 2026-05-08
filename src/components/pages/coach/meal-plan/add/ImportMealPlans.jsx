@@ -16,6 +16,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { buildImportPayload } from "@/lib/meal-plan-import";
 
+function escapeRegExp(value = "") {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export default function ImportMealPlans() {
     return (
         <Dialog>
@@ -46,13 +50,16 @@ function Container() {
     );
     const closeRef = useRef()
 
-    const searchRegex = useMemo(() => new RegExp(filters.query, "i"), [filters.query])
+    const searchRegex = useMemo(() => {
+        const safeQuery = escapeRegExp(filters.query.trim());
+        return new RegExp(safeQuery, "i");
+    }, [filters.query])
     const filteredPlans = useMemo(function () {
         if (!Array.isArray(data?.data)) return [];
         return checkArray(data?.data)
             .filter(plan => (
                 searchRegex.test(plan.title) &&
-                filters.mode.length === 0 || filters.mode.includes(plan.mode)
+                (filters.mode.length === 0 || filters.mode.includes(plan.mode))
             ))
     }, [data, filters])
 
@@ -81,10 +88,7 @@ function Container() {
             <div className="flex items-center gap-4">
                 <Input
                     value={filters.query}
-                    onChange={e => setFilters(prev => {
-                        console.log(e.target.value)
-                        return ({ ...prev, query: e.target.value })
-                    })}
+                    onChange={e => setFilters(prev => ({ ...prev, query: e.target.value }))}
                     placeholder="Search By Meal title"
                 />
                 <div>

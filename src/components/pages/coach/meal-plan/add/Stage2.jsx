@@ -20,7 +20,7 @@ import { _throwError, checkArray, format24hr_12hr } from "@/lib/formatter";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Clock, ListCollapse, SquarePen, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Clock, ListCollapse, PanelLeftClose, PanelLeftOpen, SquarePen, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -64,6 +64,7 @@ export default function Stage2({
 	const onToggleViewType = () => setViewType(prev => prev === "horizontal" ? "vertical" : "horizontal")
 	const [loading, setLoading] = useState(false);
 	const [previewOpen, setPreviewOpen] = useState(false);
+	const [metaCollapsed, setMetaCollapsed] = useState(false);
 	const [lastSavedAt, setLastSavedAt] = useState(null); // Date or null
 	const isFirstMountRef = useRef(true);
 	const stateRef = useRef(null);
@@ -529,6 +530,20 @@ export default function Stage2({
 					<div className="flex items-center justify-between">
 						<div className="flex p-1 bg-slate-100 rounded-xl border border-gray-200 gap-2">
 							<button
+								onClick={() => setMetaCollapsed(prev => !prev)}
+								className={`p-2 rounded-[8px] transition-all duration-200 ${metaCollapsed
+									? 'bg-white shadow-sm border border-gray-100'
+									: 'opacity-70 hover:opacity-100'
+									}`}
+								title={metaCollapsed ? "Show plan details panel" : "Hide plan details panel"}
+							>
+								{metaCollapsed ? (
+									<PanelLeftOpen className="w-5 h-5 text-slate-600" />
+								) : (
+									<PanelLeftClose className="w-5 h-5 text-slate-600" />
+								)}
+							</button>
+							<button
 								onClick={() => onToggleViewType("horizontal")}
 								className={`p-2 rounded-[8px] transition-all duration-200 ${viewType === 'horizontal'
 									? 'bg-white shadow-sm border border-gray-100'
@@ -558,8 +573,8 @@ export default function Stage2({
 					</div>
 				</div>
 			</div>
-			<div className={cn("grid gap-6 md:gap-4 md:divide-x-2", viewType === "vertical" ? "grid-cols-1 md:grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
-				<CustomMealMetaData viewType={viewType} />
+			<div className={cn("grid gap-6 md:gap-4", viewType === "vertical" || metaCollapsed ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:divide-x-2")}>
+				{!metaCollapsed && <CustomMealMetaData viewType={viewType} />}
 				<div className={cn("", viewType === "horizontal" && "border-1 p-4 rounded-[10px] bg-slate-50/20")}>
 					{viewType === "vertical" && (
 						<div className="flex items-center justify-between grow mb-4">

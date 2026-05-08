@@ -24,7 +24,7 @@ const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in";
 
 export default function AppNavbar() {
   const [Modal, setModal] = useState();
-  const {toggleSidebar} = useSidebar()
+  const { toggleSidebar } = useSidebar()
   const data = useAppSelector(state => state.coach.data)
   const [userProfile, setUserProfile] = useState({ name: "", profilePhoto: "" });
 
@@ -56,8 +56,15 @@ export default function AppNavbar() {
     toggleSidebar();
   }
   return <nav className="bg-white sticky top-0 py-4 px-4 md:px-10 flex items-center justify-between border-b-1 z-[30]">
-    <div>
-      <Menu onClick={openSidebar} size={30} className="text-gray-400 font-normal md:hidden" />
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={openSidebar}
+        className="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100 md:hidden"
+        aria-label="Toggle sidebar"
+      >
+        <Menu size={22} className="font-normal" />
+      </button>
     </div>
     {/* <SearchBar /> */}
     <div className="flex items-center justify-end gap-4 ">
