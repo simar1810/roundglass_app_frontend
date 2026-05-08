@@ -7,13 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { saveRecipe } from "@/config/state-reducers/custom-meal";
 import useDebounce from "@/hooks/useDebounce";
-import { fetchData } from "@/lib/api";
 import { getRecipes } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Flame, PlusCircle, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import useSWR from "swr";
 
 export default function SelectMealCollection({ children, selectedDay, selectedMealType, index }) {
   return <Dialog>
@@ -33,104 +31,145 @@ export default function SelectMealCollection({ children, selectedDay, selectedMe
   </Dialog>
 }
 
-function getMealsEndpoint(query, showMyMeals, isInitialLoad) {
-  // When toggle is ON (showMyMeals = true), fetch all coach recipes
-  if (showMyMeals) {
-    return getRecipes();
-  }
-  // When toggle is OFF, search recipes with query
-  // If it's initial load and query is empty, fetch most searched recipes
-  if (isInitialLoad && (!query || query.trim().length === 0)) {
-    // Fetch most searched recipes to show when modal first opens
-    return fetchData(`app/mostSearchedRecipes?person=coach`);
-  }
-  // When user is searching, require at least 3 characters
-  if (query.length < 3) {
-    return null; // Don't fetch if query is too short (unless it's initial load)
-  }
-  return fetchData(`app/recipees?query=${query}`);
-}
+const SEARCH_LIMIT = 20;
+const QUERY_CACHE_TTL_MS = 45 * 1000;
+const queryCache = new Map();
 
 function RecipeesContainer({ index, selectedDay, selectedMealType }) {
   const [query, setQuery] = useState("");
   const [showMyMeals, setShowMyMeals] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const debouncedSearchQuery = useDebounce(query, 1000);
-  
-  // When showMyMeals is true, use a static key to fetch all coach recipes
-  // When false, use query-based key for searching
-  // Track if it's initial load (empty query) to show popular meals
-  const isQueryEmpty = !query || query.trim().length === 0;
-  const endpoint = showMyMeals
-    ? `coach-recipes`
-    : isQueryEmpty && isInitialLoad
-    ? `popular-meals`
-    : `recipees/${debouncedSearchQuery}`
-  
-  const { isLoading, isValidating, error, data } = useSWR(
-    endpoint,
-    () => getMealsEndpoint(debouncedSearchQuery, showMyMeals, isInitialLoad && isQueryEmpty)
-  );
-  
+  const debouncedSearchQuery = useDebounce(query, 350);
+  const [forceSearchVersion, setForceSearchVersion] = useState(0);
+  const [page, setPage] = useState(1);
+  const [recipes, setRecipes] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: SEARCH_LIMIT, total: 0, hasMore: false });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [coachRecipes, setCoachRecipes] = useState([]);
+  const [isCoachRecipesLoading, setIsCoachRecipesLoading] = useState(false);
   const [selected, setSelected] = useState();
   const closeRef = useRef();
   const searchInputRef = useRef(null);
   const { dispatch } = useCurrentStateContext();
-  
+
   useEffect(() => {
     searchInputRef.current?.focus();
   }, []);
 
-  // Track when user starts typing to switch from popular meals to search
-  // Also reset to popular meals when query is cleared
   useEffect(() => {
-    if (query.trim().length > 0 && isInitialLoad) {
-      setIsInitialLoad(false);
-    } else if (query.trim().length === 0 && !isInitialLoad && !showMyMeals) {
-      // When user clears the search, show popular meals again
-      setIsInitialLoad(true);
-    }
-  }, [query, isInitialLoad, showMyMeals]);
+    setPage(1);
+    setRecipes([]);
+    setPagination({ page: 1, limit: SEARCH_LIMIT, total: 0, hasMore: false });
+    setErrorMessage("");
+  }, [debouncedSearchQuery, forceSearchVersion]);
 
-  // Handle toggle change - clear query when turning ON to show all recipes
   const handleToggleChange = (value) => {
     setShowMyMeals(value);
-    if (value) {
-      // When toggle is turned ON, clear the query to show all coach recipes
-      setQuery("");
-      setIsInitialLoad(true);
-    } else {
-      // When toggle is turned OFF, reset to show popular meals
-      setQuery("");
-      setIsInitialLoad(true);
-    }
+    setQuery("");
+    setPage(1);
+    setRecipes([]);
+    setErrorMessage("");
   };
 
-  // When showMyMeals is true, filter coach recipes client-side based on query
-  // When false, use the data from API search
-  let recipees = data?.data ?? [];
-  let showPopularLabel = false;
-  
-  if (showMyMeals && recipees.length > 0) {
-    // Filter coach recipes by search query (if query is empty, show all)
-    if (query.trim().length > 0) {
-      const searchLower = query.toLowerCase();
-      recipees = recipees.filter(recipe => 
-        recipe?.title?.toLowerCase()?.includes(searchLower) ||
-        recipe?.dish_name?.toLowerCase()?.includes(searchLower)
-      );
-    }
-  } else if (!showMyMeals && isQueryEmpty && isInitialLoad && recipees.length > 0) {
-    // Show popular meals label when showing initial popular meals
-    showPopularLabel = true;
-  }
-  
-  const hasError = Boolean(error) || (data && data?.status_code !== 200);
-  const showInitialLoader = isLoading && !data;
-  // Show search loading when user is searching (query exists and is >= 3 chars) and data is being fetched
-  const isSearching = !showMyMeals && query.trim().length >= 3 && (isLoading || isValidating) && !isInitialLoad;
+  useEffect(() => {
+    if (!showMyMeals) return;
+    let ignore = false;
+    setIsCoachRecipesLoading(true);
+    setErrorMessage("");
+    getRecipes()
+      .then((res) => {
+        if (ignore) return;
+        if (res?.status_code !== 200 || res?.success === false) {
+          setCoachRecipes([]);
+          setErrorMessage(res?.error || res?.message || "Failed to fetch recipes");
+          return;
+        }
+        setCoachRecipes(Array.isArray(res?.data) ? res.data : []);
+      })
+      .catch((err) => {
+        if (ignore) return;
+        setCoachRecipes([]);
+        setErrorMessage(err?.message || "Failed to fetch recipes");
+      })
+      .finally(() => {
+        if (!ignore) setIsCoachRecipesLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [showMyMeals]);
 
-  if (recipees.length === 0 && !isSearching && !showInitialLoader && !hasError) return <div className="p-4">
+  useEffect(() => {
+    if (showMyMeals) return;
+
+    const trimmedQuery = debouncedSearchQuery.trim();
+    const canFetch = trimmedQuery.length >= 2 || forceSearchVersion > 0;
+    if (!canFetch) {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    const isFirstPage = page === 1;
+    const cacheKey = `${trimmedQuery}::${page}::${SEARCH_LIMIT}::high`;
+    const cached = queryCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < QUERY_CACHE_TTL_MS) {
+      const list = Array.isArray(cached.payload?.data) ? cached.payload.data : [];
+      const nextPagination = cached.payload?.pagination || { page, limit: SEARCH_LIMIT, total: list.length, hasMore: false };
+      setRecipes((prev) => (isFirstPage ? list : [...prev, ...list]));
+      setPagination(nextPagination);
+      setErrorMessage("");
+      return;
+    }
+
+    const abortController = new AbortController();
+    setErrorMessage("");
+    if (isFirstPage) setIsLoading(true);
+    else setIsLoadingMore(true);
+
+    fetch(`/api/app/recipees?query=${encodeURIComponent(trimmedQuery)}&page=${page}&limit=${SEARCH_LIMIT}&priority=high`, {
+      method: "GET",
+      signal: abortController.signal,
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (payload?.status_code !== 200 || payload?.success === false) {
+          throw new Error(payload?.error || payload?.message || "Failed to fetch recipes");
+        }
+        queryCache.set(cacheKey, { timestamp: Date.now(), payload });
+        const list = Array.isArray(payload?.data) ? payload.data : [];
+        const nextPagination = payload?.pagination || { page, limit: SEARCH_LIMIT, total: list.length, hasMore: false };
+        setRecipes((prev) => (isFirstPage ? list : [...prev, ...list]));
+        setPagination(nextPagination);
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        setErrorMessage(err?.message || "Failed to fetch recipes");
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      });
+
+    return () => abortController.abort();
+  }, [showMyMeals, debouncedSearchQuery, page, forceSearchVersion]);
+
+  const handleExplicitSubmit = () => {
+    if (!query.trim()) return;
+    setForceSearchVersion((prev) => prev + 1);
+    setPage(1);
+    setRecipes([]);
+    setErrorMessage("");
+  };
+
+  const displayRecipes = showMyMeals ? coachRecipes : recipes;
+  const showInitialLoader = showMyMeals ? isCoachRecipesLoading : isLoading;
+  const canRenderResults = showMyMeals || debouncedSearchQuery.trim().length >= 2 || forceSearchVersion > 0;
+  const hasError = Boolean(errorMessage);
+
+  if (displayRecipes.length === 0 && !showInitialLoader && !hasError) return <div className="p-4">
     <div className="flex items-center gap-4">
       <Input
         ref={searchInputRef}
@@ -138,12 +177,21 @@ function RecipeesContainer({ index, selectedDay, selectedMealType }) {
         placeholder="Enter Meal Plan"
         value={query}
         onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleExplicitSubmit();
+          }
+        }}
       />
       <ShowMyMealsToggle
         myMealsSelected={showMyMeals}
         onChange={handleToggleChange}
       />
     </div>
+    {!showMyMeals && !canRenderResults && (
+      <p className="text-xs text-black/60 mt-3">Type at least 2 characters to search.</p>
+    )}
     <EmptyState 
       query={query}
       showMyMeals={showMyMeals}
@@ -159,39 +207,51 @@ function RecipeesContainer({ index, selectedDay, selectedMealType }) {
         placeholder="Enter Meal Plan"
         value={query}
         onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleExplicitSubmit();
+          }
+        }}
       />
       <ShowMyMealsToggle
         myMealsSelected={showMyMeals}
         onChange={handleToggleChange}
       />
     </div>
-    {showInitialLoader && !isSearching && <ContentLoader />}
-    {isSearching && <SearchLoadingTip />}
-    {hasError && !showInitialLoader && !isSearching && (
+    {showInitialLoader && <ContentLoader />}
+    {hasError && !showInitialLoader && (
       <EmptyState 
         query={query}
         showMyMeals={showMyMeals}
         onClearSearch={() => setQuery("")}
-        error={error || data?.message}
+        error={errorMessage}
       />
     )}
-    {!hasError && !showInitialLoader && !isSearching && <>
+    {!hasError && !showInitialLoader && <>
       <div className="mb-4 flex flex-col items-start md:flex-row md:items-center justify-between gap-2 md:gap-4">
-        {showPopularLabel ? (
-          <p className="text-black/70 text-sm font-semibold">Most Searched Meals</p>
-        ) : (
-          <p className="md:ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
-        )}
+        <p className="md:ml-auto text-black/70 text-sm font-bold">Can't find a Meal, Add your own</p>
         <RecipeModal type="new" />
       </div>
       <div className="max-h-[55vh] mb-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-        {recipees.map((recipe, index) => <RecipeDeatils
+        {displayRecipes.map((recipe, index) => <RecipeDeatils
           key={index}
           recipe={recipe}
           selected={selected}
           setSelected={setSelected}
         />)}
       </div>
+      {!showMyMeals && pagination?.hasMore && (
+        <Button
+          variant="outline"
+          className="w-full mb-3"
+          disabled={isLoadingMore}
+          onClick={() => setPage((prev) => prev + 1)}
+        >
+          {isLoadingMore ? "Loading..." : "Load more"}
+        </Button>
+      )}
+      {isLoadingMore && <SearchLoadingTip />}
       {selected && <Button
         onClick={() => {
           dispatch(saveRecipe(selected, index, false, selectedDay, selectedMealType))
