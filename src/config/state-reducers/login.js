@@ -8,7 +8,7 @@ export default function reducer(state, action) {
         stage: action.payload.stage,
         isFirstTime: action.payload.isFirstTime
       }
-      if (action.payload.stage === 2) {
+      if (action.payload.stage === 2 && action.payload.user) {
         newState.refreshToken = action.payload.user.refreshToken;
         newState.user = action.payload.user;
       }

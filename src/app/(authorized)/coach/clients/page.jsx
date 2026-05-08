@@ -21,6 +21,7 @@ import useSWR from "swr";
 import TeamDataExport from "@/components/pages/roundglass/TeamDataExport";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getUserType } from "@/lib/permissions";
+import { getClientRosterCoachLabel } from "@/lib/client/clientRosterCoach";
 
 const initialQuery = {
   page: 1,
@@ -205,14 +206,17 @@ export default function Page() {
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 divide-y-1">
-      {currentClients.map((client, index) => <ClientListItemStatus
-        key={index}
-        categories={categories}
-        groups={clientIdToGroupIds.get(client?._id) || []}
-        groupNames={groupIdToName}
-        client={client}
-        managedByUserName={isCoachView ? clientManagedByMap.get(client?._id)?.userName : undefined}
-      />)}
+      {currentClients.map((client, index) => (
+        <ClientListItemStatus
+          key={index}
+          categories={categories}
+          groups={clientIdToGroupIds.get(client?._id) || []}
+          groupNames={groupIdToName}
+          client={client}
+          rosterCoachLabel={getClientRosterCoachLabel(client)}
+          managedByUserName={isCoachView ? clientManagedByMap.get(client?._id)?.userName : undefined}
+        />
+      ))}
     </div>
 
     {/* Pagination */}

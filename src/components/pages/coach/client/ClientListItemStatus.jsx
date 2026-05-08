@@ -31,7 +31,8 @@ export default function ClientListItemStatus({
   categories,
   groups = [],
   groupNames,
-  managedByUserName
+  managedByUserName,
+  rosterCoachLabel,
 }) {
   const [modal, setModal] = useState();
   const [modalOpened, setModalOpened] = useState(false);
@@ -69,6 +70,11 @@ export default function ClientListItemStatus({
         </Avatar>
         <div className="flex flex-col mr-auto min-w-0">
           <p className="text-[12px] font-semibold truncate">{client.name}</p>
+          {rosterCoachLabel && (
+            <p className="text-[10px] font-semibold text-slate-600 truncate">
+              Coach : {rosterCoachLabel}
+            </p>
+          )}
           {managedByUserName && (
             <p className="text-[10px] font-semibold text-[var(--accent-1)] truncate">
               Managed by user : {managedByUserName}
@@ -83,6 +89,11 @@ export default function ClientListItemStatus({
         </Avatar>
         <div className="flex flex-col min-w-0">
           <p className="text-[12px] font-semibold truncate">{client.name}</p>
+          {rosterCoachLabel && (
+            <p className="text-[10px] font-semibold text-slate-600 truncate">
+              Coach : {rosterCoachLabel}
+            </p>
+          )}
           {managedByUserName && (
             <p className="text-[10px] font-semibold text-[var(--accent-1)] truncate">
               Managed by user : {managedByUserName}

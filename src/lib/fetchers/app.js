@@ -687,3 +687,21 @@ export function getClientWaterLog(date = null, page = null, limit = null) {
   }
   return fetchData(endpoint);
 }
+
+/** GET shared coaching team for the authenticated coach (Bearer token). */
+export function getCoachTeam() {
+  return fetchData("app/coach-team");
+}
+
+/** Create a shared team (first coach only; 400 if already in a team). */
+export function createCoachTeam() {
+  return sendData("app/coach-team", {}, "POST");
+}
+
+/**
+ * Add another coach by their public coachId string.
+ * @param {string} memberCoachId
+ */
+export function addCoachTeamMember(memberCoachId) {
+  return sendData("app/coach-team/member", { memberCoachId }, "POST");
+}

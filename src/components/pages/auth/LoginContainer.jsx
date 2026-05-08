@@ -25,7 +25,7 @@ export default function LoginContainer() {
 
   useEffect(function () {
     if (isLoggedIn) router.push("/coach/dashboard");
-  }, [])
+  }, [isLoggedIn, router])
 
   return <div className="grow">
     <Component />

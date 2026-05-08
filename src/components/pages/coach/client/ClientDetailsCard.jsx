@@ -36,6 +36,11 @@ import {
 } from "@/components/ui/menubar";
 import { notesColors } from "@/config/data/other-tools";
 import { clientPortfolioFields } from "@/config/data/ui";
+import {
+  getClientRosterCoachLabel,
+  getClientRosterCoachPublicId,
+  parseRosterCoach,
+} from "@/lib/client/clientRosterCoach";
 import useClickOutside from "@/hooks/useClickOutside";
 import { sendData } from "@/lib/api";
 import { generateWeightStandard } from "@/lib/client/statistics";
@@ -84,7 +89,10 @@ function findClientLatestWeight(matrices = []) {
 function ClientDetails({ clientData }) {
   const { activity_doc_ref: activities } = clientData;
   const [accordionValue, setAccordionValue] = useState(["personal-info", "training-info", "supplement-intake", "injury-log", "meal-recall"]);
-  
+  const rosterCoachShape = parseRosterCoach(clientData);
+  const rosterCoachLabel = !rosterCoachShape ? getClientRosterCoachLabel(clientData) : null;
+  const rosterCoachPublicId = !rosterCoachShape ? getClientRosterCoachPublicId(clientData) : null;
+
   async function sendAnalysis() {
     try {
       const response = await sendData(
@@ -280,6 +288,53 @@ function ClientDetails({ clientData }) {
                     </p>
                   </div>
                 ))}
+                {rosterCoachShape ? (
+                  <>
+                    <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                      <p className="font-medium">Roster coach</p>
+                      <p className="text-[var(--dark-2)]">
+                        {rosterCoachShape.name ||
+                          rosterCoachShape.email ||
+                          (rosterCoachShape.coachId
+                            ? `Coach ID ${rosterCoachShape.coachId}`
+                            : "—")}
+                      </p>
+                    </div>
+                    {rosterCoachShape.coachId &&
+                    (rosterCoachShape.name || rosterCoachShape.email) ? (
+                      <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                        <p className="font-medium">Coach ID</p>
+                        <p className="text-[var(--dark-2)] font-mono text-xs">
+                          {rosterCoachShape.coachId}
+                        </p>
+                      </div>
+                    ) : null}
+                    {rosterCoachShape.email && rosterCoachShape.name ? (
+                      <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                        <p className="font-medium">Coach email</p>
+                        <p className="text-[var(--dark-2)] break-all">{rosterCoachShape.email}</p>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    {rosterCoachLabel ? (
+                      <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                        <p className="font-medium">Roster coach</p>
+                        <p className="text-[var(--dark-2)]">{rosterCoachLabel}</p>
+                      </div>
+                    ) : null}
+                    {rosterCoachPublicId &&
+                      rosterCoachLabel !== `Coach ID ${rosterCoachPublicId}` && (
+                        <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
+                          <p className="font-medium">Coach ID</p>
+                          <p className="text-[var(--dark-2)] font-mono text-xs">
+                            {rosterCoachPublicId}
+                          </p>
+                        </div>
+                      )}
+                  </>
+                )}
                 {clientData?.healthMatrix?.height && (
                   <div className="text-[13px] grid grid-cols-[120px_1fr] items-center gap-3">
                     <p className="font-medium">Height</p>

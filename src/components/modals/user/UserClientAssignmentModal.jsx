@@ -11,6 +11,10 @@ import {
     getUserClients,
     removeClientFromUser
 } from "@/lib/fetchers/app";
+import {
+  getClientRosterCoachLabel,
+  parseRosterCoach,
+} from "@/lib/client/clientRosterCoach";
 import { useAppSelector } from "@/providers/global/hooks";
 import {
     ChevronDown,
@@ -126,11 +130,16 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
   const normalizedSearch = String(searchTerm || "").trim().toLowerCase();
   const matchClientWithQuery = (client) => {
     if (!normalizedSearch) return true;
+    const coachLabel = getClientRosterCoachLabel(client);
+    const rc = parseRosterCoach(client);
     const haystack = [
       client?.name,
       client?.email,
       client?.mobileNumber,
       client?.clientId,
+      coachLabel,
+      rc?.coachId,
+      rc?.email,
     ]
       .filter(Boolean)
       .join(" ")
@@ -326,6 +335,7 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                   {filteredAvailableClients.map((client) => {
                     const isAssigned = userClients.some(uc => uc._id === client._id);
                     const isSelected = selectedClients.some(sc => sc._id === client._id);
+                    const coachLine = getClientRosterCoachLabel(client);
 
                     return (
                       <label
@@ -357,6 +367,11 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                           <p className="text-xs text-gray-500 truncate">
                             {client.email || client.mobileNumber || client.clientId}
                           </p>
+                          {coachLine && (
+                            <p className="text-[11px] font-semibold text-slate-600 truncate mt-0.5">
+                              Coach : {coachLine}
+                            </p>
+                          )}
                         </div>
 
                         {isAssigned && (
@@ -494,7 +509,9 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
-                  {filteredUserClients.map((client) => (
+                  {filteredUserClients.map((client) => {
+                    const coachLine = getClientRosterCoachLabel(client);
+                    return (
                     <div
                       key={client._id}
                       className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white"
@@ -513,6 +530,11 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                         <p className="text-xs text-gray-500 truncate">
                           {client.email || client.mobileNumber || client.clientId}
                         </p>
+                        {coachLine && (
+                          <p className="text-[11px] font-semibold text-slate-600 truncate mt-0.5">
+                            Coach : {coachLine}
+                          </p>
+                        )}
                       </div>
 
                       <Button
@@ -525,7 +547,8 @@ export default function UserClientAssignmentModal({ open, onClose, user, onSucce
                         <UserMinus className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
+                  );
+                  })}
 
                   {filteredUserClients.length === 0 && (
                     <div className="text-center py-8 text-gray-500">

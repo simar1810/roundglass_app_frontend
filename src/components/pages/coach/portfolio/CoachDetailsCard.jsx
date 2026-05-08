@@ -31,6 +31,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import DeleteClientNudges from "../client/DeleteClientNudges";
+import SharedCoachingTeam from "./SharedCoachingTeam";
 
 const COACH_WEBSITE_BASE_LINK = "https://coaches.wellnessz.in"
 
@@ -102,6 +103,12 @@ ${inviteUrl}`)
           <p className="font-medium">{field.title}</p>
           <p className="text-[var(--dark-2)] col-span-3">:&nbsp;{coachData[field.name] || "—"}</p>
         </div>)}
+      </div>
+
+      <div className="pt-6 border-t border-slate-200 space-y-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">B2B</p>
+        <h4 className="text-lg font-semibold">Shared coaching team</h4>
+        <SharedCoachingTeam />
       </div>
 
       {/* <div className="flex items-center justify-between pb-2">

@@ -34,7 +34,7 @@ export default function InputMobileNumber() {
         "app/signin?authMode=mob&clientType=web",
         data
       );
-      if (res.status_code === 400) {
+      if (res.status_code !== 200 || res.success === false) {
         // Check if user is not registered
         const errorMessage = res.message?.toLowerCase() || "";
         if (errorMessage.includes("not registered") || errorMessage.includes("not found") || errorMessage.includes("does not exist")) {
@@ -56,33 +56,17 @@ export default function InputMobileNumber() {
           }
           return;
         }
-        throw new Error(res.message);
+        throw new Error(res.error || res.message || "Failed to send OTP");
       }
       dispatch({
         type: "UPDATE_CURRENT_STATE",
         payload: {
           stage: 2,
-          user: res.data.user,
+          user: res.data?.user,
           isFirstTime: res.data.isFirstTime,
         },
       });
-
-      // Persist signin token immediately; register relies on this Authorization token.
-      const authHeaderResponse = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          refreshToken: res.data.user.refreshToken,
-          _id: res.data.user._id,
-          userType: "coach",
-        }),
-      });
-      const authHeaderData = await authHeaderResponse.json();
-      if (authHeaderData.status_code !== 200) {
-        throw new Error(authHeaderData.message || "Failed to set authentication token");
-      }
+      toast.success(res.message || "OTP sent successfully");
     } catch (err) {
       // Check if error message indicates unregistered user
       const errorMessage = err.message?.toLowerCase() || "";
