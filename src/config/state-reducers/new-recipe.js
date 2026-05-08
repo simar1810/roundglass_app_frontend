@@ -52,6 +52,17 @@ export function setMode(mode) {
 export function generateRequestPayload(state) {
   const formData = new FormData();
   const isLineItemsMode = state.mode === "lineItems" && Array.isArray(state.lineItems) && state.lineItems.length > 0;
+  const toIngredientId = (item) => {
+    const raw = item?.ingredientId ?? item?.ingredient;
+    if (!raw) return "";
+    if (typeof raw === "string") return raw;
+    if (typeof raw === "object") {
+      if (typeof raw._id === "string") return raw._id;
+      if (typeof raw.$oid === "string") return raw.$oid;
+      if (raw._id && typeof raw._id === "object" && typeof raw._id.$oid === "string") return raw._id.$oid;
+    }
+    return "";
+  };
 
   // Always send basic fields
   if (state.title) formData.append("title", state.title);
@@ -65,10 +76,14 @@ export function generateRequestPayload(state) {
 
   if (isLineItemsMode) {
     const ingredientLineItems = state.lineItems
-      .filter(item => item && (item.ingredientId || item.ingredient) && Number(item.quantityGrams) > 0)
+      .map((item) => ({
+        ingredientId: toIngredientId(item),
+        quantityGrams: Number(item?.quantityGrams),
+      }))
+      .filter((item) => item.ingredientId && Number.isFinite(item.quantityGrams) && item.quantityGrams > 0)
       .map(item => ({
-        ingredientId: item.ingredientId || item.ingredient,
-        quantityGrams: Number(item.quantityGrams),
+        ingredientId: item.ingredientId,
+        quantityGrams: item.quantityGrams,
       }));
 
     if (ingredientLineItems.length > 0) {

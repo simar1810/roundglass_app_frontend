@@ -127,8 +127,33 @@ function NewRecipeContainer({ type }) {
 
     try {
       setLoading(true);
+      const rawLineItems = Array.isArray(state.lineItems) ? state.lineItems : [];
+      const transformedLineItems = rawLineItems
+        .map((item) => {
+          const rawId = item?.ingredientId ?? item?.ingredient;
+          let ingredientId = "";
+          if (typeof rawId === "string") ingredientId = rawId;
+          else if (rawId && typeof rawId === "object") {
+            ingredientId = rawId._id || rawId.$oid || rawId?._id?.$oid || "";
+          }
+          const quantityGrams = Number(item?.quantityGrams);
+          return { ingredientId, quantityGrams };
+        })
+        .filter((item) => item.ingredientId && Number.isFinite(item.quantityGrams) && item.quantityGrams > 0);
+
+      console.log("[RecipeModal] raw selected ingredients", rawLineItems);
+      console.log("[RecipeModal] transformed ingredientLineItems", transformedLineItems);
+
       const payload = generateRequestPayload(state);
+      const formEntries = [];
+      for (const [key, value] of payload.entries()) {
+        formEntries.push([key, value instanceof File ? `[File:${value.name}]` : value]);
+      }
+      console.log("[RecipeModal] final request FormData entries", formEntries);
+
       const response = await getLink(type, payload, state._id);
+      console.log("[RecipeModal] save response calories", response?.data?.calories);
+      console.log("[RecipeModal] save response ingredientLineItems", response?.data?.ingredientLineItems);
       if (response?.status_code !== 200) {
         const context = type === "new" ? "recipe_add" : "recipe_edit";
         const msg = getIngredientRecipeErrorMessage(response, context);
