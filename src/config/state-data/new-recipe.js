@@ -1,27 +1,22 @@
-export const newRecipeInitialState = {
-  // Recipe basics
-  title: "",
-  ingredients: "",
-  method: "",
+/** @typedef {{ ingredientId: string, quantityGrams: number, foodName?: string, foodCode?: string }} RecipeIngredientLineRow */
 
-  // Legacy calories fields
+export const newRecipeInitialState = {
+  title: "",
   proteins: "",
   carbs: "",
   fats: "",
   fibers: "",
   total: "",
-
-  // Image/file fields
+  ingredients: "",
+  method: "",
   file: null,
+  category: "",
+  subCategory: "",
+  defaultMeasure: "",
+
+  /** Mode A when non-empty: server computes macros + ingredients text from catalog lines. */
+  ingredientLineItems: /** @type {RecipeIngredientLineRow[]} */ ([]),
+
   image: "",
-
-  // For edit flow
-  _id: "",
-
-  // Ingredient-to-recipe fields
-  // mode: \"legacy\" (manual ingredients/calories) or \"lineItems\" (ingredient line items)
-  // Default to Option B (ingredientLineItems) to match backend validation.
-  mode: "lineItems",
-  // When in lineItems mode, frontend will build ingredientLineItems payload from this
-  lineItems: [],
+  _id: ""
 }

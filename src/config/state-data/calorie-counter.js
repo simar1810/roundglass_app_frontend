@@ -1,6 +1,8 @@
 export const calorieCounterInitialState = {
-  query: "rajma",
+  query: "",
   view: 1, // e.g. 1=to select the recipes, 2=result of selected recipes
   selected: [],
+  quantities: {},
+  selectedMeasures: {},
   dishesData: null
 }

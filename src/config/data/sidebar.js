@@ -11,8 +11,10 @@ import {
     Home,
     ListTodo,
     MapPin,
+    Package,
     Play,
     PlusCircle,
+    Salad,
     Soup,
     Tags,
     TrendingUp,
@@ -174,47 +176,7 @@ export const sidebar__coachContent = [
         icon: <ClipboardPlus className="icon min-w-[20px] min-h-[20px]" />,
         title: "Meal Plan",
         url: "/coach/meals/list-custom",
-        // items: [
-        //   {
-        //     id: 1,
-        //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Daily",
-        //     url: "/coach/meals/list-custom/?mode=daily",
-        //   },
-        //   {
-        //     id: 2,
-        //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Weekly",
-        //     url: "/coach/meals/list-custom/?mode=weekly",
-        //   },
-        //   {
-        //     id: 3,
-        //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-        //     title: "Monthly",
-        //     url: "/coach/meals/list-custom/?mode=monthly",
-        //   },
-        // ],
       },
-      // {
-      //   id: 3,
-      //   icon: <Hourglass className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "Routine Meal Plan",
-      //   url: "/coach/meals/list/",
-      //   items: [
-      //     {
-      //       id: 1,
-      //       icon: <ForkKnife className="icon min-w-[20px] min-h-[20px]" />,
-      //       title: "All Plans",
-      //       url: "/coach/meals/list/",
-      //     },
-      //     {
-      //       id: 2,
-      //       icon: <PlusCircle className="icon min-w-[20px] min-h-[20px]" />,
-      //       title: "Add",
-      //       url: "/coach/meals/add-plan",
-      //     },
-      //   ],
-      // },
       {
         id: 4,
         icon: <Soup className="icon min-w-[20px] min-h-[20px]" />,
@@ -222,37 +184,11 @@ export const sidebar__coachContent = [
         url: "/coach/meals/recipes",
       },
       {
-        id: 5,
-        icon: <Tags className="icon min-w-[20px] min-h-[20px]" />,
-        title: "Ingredients",
-        url: "/coach/meals/ingredients",
+        id: 6,
+        icon: <Package className="icon min-w-[20px] min-h-[20px]" />,
+        title: "Ingredient Catalog",
+        url: "/coach/meals/ingredients-catalog",
       },
-      // {
-      //   id: 5,
-      //   icon: <Salad className="icon min-w-[20px] min-h-[20px]" />,
-      //   title: "AI Generation",
-      //   url: "/coach/meals/ai",
-      //   // items: [
-      //   //   {
-      //   //     id: 1,
-      //   //     icon: <Sun className="icon min-w-[20px] min-h-[20px]" />,
-      //   //     title: "Daily",
-      //   //     url: "/coach/meals/ai/daily",
-      //   //   },
-      //   //   {
-      //   //     id: 2,
-      //   //     icon: <CalendarDays className="icon min-w-[20px] min-h-[20px]" />,
-      //   //     title: "Weekly",
-      //   //     url: "/coach/meals/ai/weekly",
-      //   //   },
-      //   //   {
-      //   //     id: 3,
-      //   //     icon: <CalendarRange className="icon min-w-[20px] min-h-[20px]" />,
-      //   //     title: "Monthly",
-      //   //     url: "/coach/meals/ai/monthly",
-      //   //   },
-      //   // ]
-      // },
     ],
   },
   // {

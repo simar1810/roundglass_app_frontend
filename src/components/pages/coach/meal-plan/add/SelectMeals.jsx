@@ -1,23 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { exportRecipe, reorderMealTypes, saveRecipe, selectMealPlanType } from "@/config/state-reducers/custom-meal";
+import { exportRecipe, reorderMealTypes, selectMealPlanType } from "@/config/state-reducers/custom-meal";
 import { cn } from "@/lib/utils";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, Clock3, Info, Minus, Move, Pen, PlusCircle, Trash2, UtensilsCrossed } from "lucide-react";
+import { ChevronDown, Minus, Move, Pen, PlusCircle, RefreshCw, Trash2, UtensilsCrossed } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import EditSelectedMealDetails from "./EditSelectedMealDetails";
+import RecipeModal from "@/components/modals/RecipeModal";
+import SelectMealCollection from "./SelectMealCollection";
 import SaveMealType from "./SaveMealType";
 import { checkArray } from "@/lib/formatter";
-import useDebounce from "@/hooks/useDebounce";
-
-const INLINE_RECIPE_SEARCH_LIMIT = 10;
-const INLINE_RECIPE_SEARCH_MIN_QUERY = 2;
-const INLINE_RECIPE_CACHE_TTL_MS = 60 * 1000;
-const inlineRecipeSearchCache = new Map();
+import { getServingNutrition } from "@/lib/nutrition/per100g";
 
 export default function SelectMeals({
   selectedPlan,
@@ -30,7 +27,10 @@ export default function SelectMeals({
 
   const [activeId, setActiveId] = useState(null);
   const rawPlan = selectedPlans[selectedPlan];
-  const [selectedMealType, setSelectMealPlanType] = useState(rawPlan?.at(0)?.mealType)
+
+  // const [selectedMealType, setSelectMealPlanType] = useState(rawPlan?.at(0)?.mealType)
+  const initialMealType = rawPlan?.at(0)?.mealType || null;
+  const [selectedMealType, setSelectMealPlanType] = useState(initialMealType);
 
   const isWeekly = rawPlan &&
   typeof rawPlan === "object" &&
@@ -50,15 +50,17 @@ export default function SelectMeals({
   const isArray = Array.isArray(plan);
 
   const normalizedMeals =  [
-    { mealType: "Breakfast", meals: Array.isArray(plan.breakfast) ? plan.breakfast : [] },
-    { mealType: "Lunch", meals: Array.isArray(plan.lunch) ? plan.lunch : [] },
-    { mealType: "Dinner", meals: Array.isArray(plan.dinner) ? plan.dinner : [] },
-    { mealType: "Snacks", meals: Array.isArray(plan.snacks) ? plan.snacks : [] },
-  ];
+    { mealType: "breakfast", meals: plan.breakfast },
+    { mealType: "lunch", meals: plan.lunch },
+    { mealType: "dinner", meals: plan.dinner },
+    { mealType: "snacks", meals: plan.snacks },
+  ].filter(item => Array.isArray(item.meals) && item.meals.length > 0)
   const mealTypes = isArray
     ? plan.map(m => m.mealType)
     : normalizedMeals.map(m => m.mealType);
-  const errorMessage = !mealTypes ? "Please select a date" : mealTypes?.length === 0 && "Please select a Type!"
+  const errorMessage = !mealTypes ?
+    "Please select a date"
+    : mealTypes?.length === 0 && "Please select a Type!"
 
    const currentMeals = checkArray(isArray ? plan : normalizedMeals || [])
   const activeMeal = activeId ? currentMeals.find(m => m.mealType === activeId) : null;
@@ -80,6 +82,22 @@ export default function SelectMeals({
   function handleDragStart(event) {
     setActiveId(event.active.id);
   }
+
+  //  For Selecting next meal type when current meal type is removed\
+  useEffect(() => {
+     if (!currentMeals?.length) {
+       setSelectMealPlanType(null);
+       return;
+     }
+
+     const exists = currentMeals.some(
+       (m) => m.mealType === selectedMealType
+     );
+
+     if (!exists) {
+       setSelectMealPlanType(currentMeals[0].mealType);
+     }
+  }, [currentMeals, selectedMealType]);
 
   return <div>
     <div className="pt-4 flex gap-4 overflow-x-auto pb-4 items-center">
@@ -142,7 +160,64 @@ function MealTypesListing({
 }) {
   const { dispatch } = useCurrentStateContext();
   const [open, setOpen] = useState(true);
+  const [addMealSearchOpen, setAddMealSearchOpen] = useState(false);
+  const [createRecipeOpen, setCreateRecipeOpen] = useState(false);
+  const [pendingMealAction, setPendingMealAction] = useState(null);
+  const [replacingRecipeIndex, setReplacingRecipeIndex] = useState(null);
+  const mealSelectedRef = useRef(false);
   const isVertical = viewType === "vertical";
+  const isReplacing = replacingRecipeIndex != null;
+
+  function openCreateRecipeModal() {
+    setAddMealSearchOpen(false);
+    setCreateRecipeOpen(true);
+  }
+
+  function startReplace(recipeIndex) {
+    setReplacingRecipeIndex(recipeIndex);
+    setAddMealSearchOpen(true);
+  }
+
+  function handleMealSelected(recipe) {
+    mealSelectedRef.current = true;
+    setPendingMealAction({
+      recipe,
+      replaceIndex: replacingRecipeIndex,
+    });
+    setAddMealSearchOpen(false);
+  }
+
+  function openCustomMealForm() {
+    setAddMealSearchOpen(false);
+    setPendingMealAction({
+      recipe: {},
+      replaceIndex: replacingRecipeIndex,
+    });
+  }
+
+  function clearPendingMealAction() {
+    setPendingMealAction(null);
+  }
+
+  function endReplaceFlow() {
+    setReplacingRecipeIndex(null);
+    clearPendingMealAction();
+  }
+
+  function handleBackToMealSearch() {
+    clearPendingMealAction();
+    setAddMealSearchOpen(true);
+  }
+
+  function handleMealSearchOpenChange(nextOpen) {
+    setAddMealSearchOpen(nextOpen);
+    if (nextOpen) return;
+    if (mealSelectedRef.current) {
+      mealSelectedRef.current = false;
+      return;
+    }
+    setReplacingRecipeIndex(null);
+  }
 
   return <Collapsible
     open={isVertical ? open : true}
@@ -204,27 +279,36 @@ function MealTypesListing({
     <CollapsibleContent>
       <div className={cn(viewType === "vertical" && "grid md:grid-cols-2 gap-4")}>
         {checkArray(meal.meals)
-          .map((recipe, recipeIndex) => (
+          .map((recipe, recipeIndex) => <div key={recipeIndex} className="flex items-center gap-3 border-1 bg-slate-50 p-2 pt-0 rounded-[10px]">
             <EditSelectedMealDetails
-              key={`${recipe?._id || recipe?.id || recipeIndex}-${recipeIndex}`}
+              key={`${recipe?._id}-${recipe.time}` || `${recipeIndex}-${recipe.time}`}
               index={recipeIndex}
               recipe={recipe}
-              defaultOpen={false}
               selectedDay={selectedPlan}
               selectedMealType={meal.mealType}
-            >
-              <InlineMealCard
-                recipe={recipe}
-                recipeIndex={recipeIndex}
-                selectedPlan={selectedPlan}
-                selectedMealType={meal.mealType}
-                onRemove={(e) => {
-                  e?.stopPropagation?.();
-                  dispatch(exportRecipe(recipeIndex, selectedPlan, meal.mealType));
-                }}
-              />
-            </EditSelectedMealDetails>
-          ))}
+              onReplaceRequest={() => startReplace(recipeIndex)}
+            />
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 text-xs font-medium"
+                onClick={() => startReplace(recipeIndex)}
+              >
+                <RefreshCw size={14} className="mr-1" />
+                Replace
+              </Button>
+              <button
+                type="button"
+                aria-label="Remove dish"
+                className="rounded-full bg-[var(--accent-2)] p-0.5 text-white"
+                onClick={() => dispatch(exportRecipe(recipeIndex, selectedPlan, meal.mealType))}
+              >
+                <Minus strokeWidth={3} size={18} />
+              </button>
+            </div>
+        </div>)}
       </div>
       {checkArray(meal.meals).length === 0 && <div className="flex flex-col items-center justify-center min-h-40 p-8 rounded-xl border-1 border-dashed border-slate-200 bg-slate-50/50 transition-all">
         <div className="relative mb-3">
@@ -242,364 +326,49 @@ function MealTypesListing({
           </p>
         </div>
       </div>}
-      <InlineRecipeSearch
-        selectedPlan={selectedPlan}
-        mealType={meal.mealType}
+      <RecipeModal
+        type="new"
+        open={createRecipeOpen}
+        onOpenChange={setCreateRecipeOpen}
       />
+      <SelectMealCollection
+        open={addMealSearchOpen}
+        onOpenChange={handleMealSearchOpenChange}
+        selectedDay={selectedPlan}
+        selectedMealType={meal.mealType}
+        dialogTitle={isReplacing ? "Replace meal" : "Add Meals"}
+        continueLabel={isReplacing ? "Use this meal" : "Continue"}
+        onMealSelected={handleMealSelected}
+        onCreateCustomMeal={openCustomMealForm}
+        onOpenCreateRecipe={openCreateRecipeModal}
+      >
+        <Button
+          type="button"
+          onClick={() => setAddMealSearchOpen(true)}
+          className="bg-transparent hover:bg-transparent w-full h-[120px] border-1 mt-4 flex items-center justify-center rounded-[8px]"
+          key={selectedPlan}
+        >
+          <PlusCircle className="min-w-[32px] min-h-[32px] text-[var(--accent-1)]" />
+        </Button>
+      </SelectMealCollection>
+      {pendingMealAction && (
+        <EditSelectedMealDetails
+          draftMode
+          recipe={pendingMealAction.recipe}
+          replaceIndex={pendingMealAction.replaceIndex}
+          selectedDay={selectedPlan}
+          selectedMealType={meal.mealType}
+          onDiscard={
+            pendingMealAction.replaceIndex != null ? endReplaceFlow : clearPendingMealAction
+          }
+          onMealAddFlowComplete={
+            pendingMealAction.replaceIndex != null ? endReplaceFlow : clearPendingMealAction
+          }
+          onBackToMealSearch={handleBackToMealSearch}
+        />
+      )}
     </CollapsibleContent>
   </Collapsible>
-}
-
-function InlineMealCard({
-  recipe,
-  recipeIndex,
-  selectedPlan,
-  selectedMealType,
-  onRemove,
-}) {
-  const { dispatch } = useCurrentStateContext();
-  const [isEditingDesc, setIsEditingDesc] = useState(false);
-  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
-  const [descriptionDraft, setDescriptionDraft] = useState(recipe?.description || "");
-  const [timeDraft, setTimeDraft] = useState(recipe?.time || "");
-  const [quantityDraft, setQuantityDraft] = useState(recipe?.quantity || 1);
-  const [measureDraft, setMeasureDraft] = useState(recipe?.selected_measure_name || recipe?.measure || "");
-
-  useEffect(() => {
-    setDescriptionDraft(recipe?.description || "");
-    setTimeDraft(recipe?.time || "");
-    setQuantityDraft(recipe?.quantity || 1);
-    setMeasureDraft(recipe?.selected_measure_name || recipe?.measure || "");
-  }, [recipe?.description, recipe?.time, recipe?.quantity, recipe?.selected_measure_name, recipe?.measure]);
-
-  function saveInlinePatch(patch) {
-    dispatch(saveRecipe(
-      { ...recipe, ...patch },
-      recipeIndex,
-      false,
-      selectedPlan,
-      selectedMealType
-    ));
-  }
-
-  function onTimeChange(value) {
-    setTimeDraft(value);
-    saveInlinePatch({ time: value, meal_time: value });
-  }
-
-  function onDescriptionSave() {
-    saveInlinePatch({ description: descriptionDraft });
-    setIsEditingDesc(false);
-  }
-
-  function onServingSave() {
-    const quantity = Number(quantityDraft);
-    const safeQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
-    saveInlinePatch({
-      quantity: safeQuantity,
-      measure: measureDraft || "",
-      selected_measure_name: measureDraft || "",
-      serving_size: `${safeQuantity} ${measureDraft || "serving"}`,
-    });
-  }
-
-  const calories = typeof recipe?.calories === "object" ? recipe?.calories?.total : recipe?.calories;
-  const protein = recipe?.protein ?? recipe?.calories?.proteins;
-  const carbs = recipe?.carbohydrates ?? recipe?.calories?.carbs;
-  const fats = recipe?.fats ?? recipe?.calories?.fats;
-
-  return (
-    <div className="rounded-xl border bg-slate-50 p-3">
-      <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowAdditionalInfo((prev) => !prev);
-          }}
-          className="mt-1 inline-flex h-8 items-center gap-1 rounded-full border bg-white px-2 text-[11px] font-medium text-slate-600 hover:bg-slate-100"
-          aria-label="Toggle additional information"
-        >
-          <Info className="h-3.5 w-3.5" />
-          More
-        </button>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-800 truncate">
-            {recipe?.dish_name || recipe?.title || recipe?.name || "Untitled meal"}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-            <MacroCircle label="Kcal" value={Number(calories || 0).toFixed(0)} className="border-blue-200 bg-blue-50 text-blue-700" />
-            <MacroCircle label="P" value={`${Number(protein || 0).toFixed(1)}g`} className="border-emerald-200 bg-emerald-50 text-emerald-700" />
-            <MacroCircle label="C" value={`${Number(carbs || 0).toFixed(1)}g`} className="border-rose-200 bg-rose-50 text-rose-700" />
-            <MacroCircle label="F" value={`${Number(fats || 0).toFixed(1)}g`} className="border-amber-200 bg-amber-50 text-amber-700" />
-          </div>
-        </div>
-        <button
-          type="button"
-          className="rounded-full bg-[var(--accent-2)] p-1 text-white hover:opacity-90"
-          onClick={onRemove}
-          aria-label="Remove meal"
-        >
-          <Minus className="h-3.5 w-3.5" strokeWidth={3} />
-        </button>
-      </div>
-
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[190px_1fr]">
-        <label className="flex min-h-[44px] items-center gap-2 rounded-md border bg-white px-3 py-2">
-          <Clock3 className="h-4 w-4 text-slate-500" />
-          <input
-            type="time"
-            className="w-full text-sm font-medium outline-none"
-            value={timeDraft}
-            onChange={(e) => onTimeChange(e.target.value)}
-          />
-        </label>
-
-        {!isEditingDesc ? (
-          <button
-            type="button"
-            className="rounded-md border bg-white px-2 py-1.5 text-left text-xs text-slate-600 hover:bg-slate-100"
-            onClick={() => setIsEditingDesc(true)}
-          >
-            {descriptionDraft ? descriptionDraft : "Add description"}
-          </button>
-        ) : (
-          <div className="rounded-md border bg-white p-2">
-            <textarea
-              value={descriptionDraft}
-              onChange={(e) => setDescriptionDraft(e.target.value)}
-              className="min-h-[60px] w-full resize-none text-xs outline-none"
-              placeholder="Add description"
-            />
-            <div className="mt-2 flex items-center justify-end gap-2">
-              <Button size="sm" variant="outline" onClick={() => setIsEditingDesc(false)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={onDescriptionSave}>
-                Save
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          showAdditionalInfo ? "mt-3 max-h-40 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
-        )}
-      >
-        <div className="grid grid-cols-1 gap-2 rounded-md border bg-white p-2 sm:grid-cols-[120px_1fr_auto]">
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={quantityDraft}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => setQuantityDraft(e.target.value)}
-            className="h-9 rounded-md border px-2 text-sm"
-            placeholder="Qty"
-          />
-          <input
-            type="text"
-            value={measureDraft}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => setMeasureDraft(e.target.value)}
-            className="h-9 rounded-md border px-2 text-sm"
-            placeholder="Measure / Serving size (e.g. bowl, cup)"
-          />
-          <Button
-            type="button"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onServingSave();
-            }}
-          >
-            Save
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MacroCircle({ label, value, className }) {
-  return (
-    <div className={cn("flex h-12 min-w-12 flex-col items-center justify-center rounded-full border px-2", className)}>
-      <span className="text-[9px] font-semibold uppercase leading-none opacity-80">{label}</span>
-      <span className="text-[10px] font-bold leading-tight">{value}</span>
-    </div>
-  );
-}
-
-function InlineRecipeSearch({ selectedPlan, mealType }) {
-  const { dispatch } = useCurrentStateContext();
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 250);
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showResults, setShowResults] = useState(false);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    const trimmed = debouncedQuery.trim();
-    if (trimmed.length < INLINE_RECIPE_SEARCH_MIN_QUERY) {
-      setResults([]);
-      setLoading(false);
-      setErrorMessage("");
-      return;
-    }
-
-    const cacheKey = trimmed.toLowerCase();
-    const cached = inlineRecipeSearchCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < INLINE_RECIPE_CACHE_TTL_MS) {
-      setResults(cached.data);
-      setLoading(false);
-      setErrorMessage("");
-      return;
-    }
-
-    const controller = new AbortController();
-    setLoading(true);
-    setErrorMessage("");
-
-    fetch(`/api/app/recipees?query=${encodeURIComponent(trimmed)}&page=1&limit=${INLINE_RECIPE_SEARCH_LIMIT}&priority=high`, {
-      method: "GET",
-      signal: controller.signal,
-      cache: "no-store",
-    })
-      .then(async (res) => {
-        const payload = await res.json();
-        if (payload?.status_code !== 200 || payload?.success === false) {
-          throw new Error(payload?.error || payload?.message || "Failed to search recipes");
-        }
-        const nextResults = Array.isArray(payload?.data) ? payload.data : [];
-        inlineRecipeSearchCache.set(cacheKey, {
-          timestamp: Date.now(),
-          data: nextResults,
-        });
-        setResults(nextResults);
-      })
-      .catch((error) => {
-        if (error?.name === "AbortError") return;
-        setResults([]);
-        setErrorMessage(error?.message || "Failed to search recipes");
-      })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, [debouncedQuery]);
-
-  function addRecipe(recipe) {
-    dispatch(saveRecipe(recipe, undefined, false, selectedPlan, mealType));
-    setShowResults(false);
-    setQuery("");
-    inputRef.current?.blur();
-  }
-
-  function addCustomMealInline() {
-    dispatch(saveRecipe({
-      dish_name: "New custom meal",
-      description: "",
-      ingredients: "",
-      method: "",
-      calories: "",
-      protein: "",
-      carbohydrates: "",
-      fats: "",
-    }, undefined, true, selectedPlan, mealType));
-    setShowResults(false);
-  }
-
-  function parseNum(value) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function getMacroSummary(recipe) {
-    const calories = typeof recipe?.calories === "object" ? recipe?.calories?.total : recipe?.calories;
-    const protein = recipe?.protein ?? recipe?.calories?.proteins;
-    const carbs = recipe?.carbohydrates ?? recipe?.calories?.carbs;
-    const fats = recipe?.fats ?? recipe?.calories?.fats;
-    return {
-      calories: parseNum(calories),
-      protein: parseNum(protein),
-      carbs: parseNum(carbs),
-      fats: parseNum(fats),
-    };
-  }
-
-  return (
-    <div className="mt-4 rounded-lg border bg-white p-3">
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onFocus={() => setShowResults(true)}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setShowResults(true);
-          }}
-          placeholder={`Search and add recipes to ${mealType}...`}
-          className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-1)]/30"
-        />
-        <Button
-          onClick={addCustomMealInline}
-          variant="outline"
-          className="shrink-0"
-        >
-          <PlusCircle className="mr-1 h-4 w-4" />
-          Custom
-        </Button>
-      </div>
-
-      {showResults && (
-        <div className="mt-3 max-h-[320px] overflow-y-auto space-y-2">
-          {query.trim().length < INLINE_RECIPE_SEARCH_MIN_QUERY && (
-            <p className="text-xs text-slate-500">Type at least 2 characters to search recipes.</p>
-          )}
-          {loading && <p className="text-xs text-slate-500">Searching recipes...</p>}
-          {!loading && errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
-          {!loading && !errorMessage && query.trim().length >= INLINE_RECIPE_SEARCH_MIN_QUERY && results.length === 0 && (
-            <p className="text-xs text-slate-500">No recipes found. Try another keyword.</p>
-          )}
-          {!loading && !errorMessage && results.map((recipe, index) => (
-            <button
-              key={`${recipe?._id || recipe?.id || recipe?.dish_name || "recipe"}-${index}`}
-              type="button"
-              onClick={() => addRecipe(recipe)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  addRecipe(recipe);
-                }
-              }}
-              className="flex w-full items-center gap-3 rounded-xl border bg-white px-3 py-2 text-left hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-1)]/30"
-            >
-              <div>
-                <p className="text-sm font-semibold text-slate-800">{recipe?.dish_name || recipe?.title || "Untitled recipe"}</p>
-                {(() => {
-                  const macro = getMacroSummary(recipe);
-                  return (
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      <MacroCircle label="Kcal" value={macro.calories.toFixed(0)} className="border-blue-200 bg-blue-50 text-blue-700" />
-                      <MacroCircle label="P" value={`${macro.protein.toFixed(1)}g`} className="border-emerald-200 bg-emerald-50 text-emerald-700" />
-                      <MacroCircle label="C" value={`${macro.carbs.toFixed(1)}g`} className="border-rose-200 bg-rose-50 text-rose-700" />
-                      <MacroCircle label="F" value={`${macro.fats.toFixed(1)}g`} className="border-amber-200 bg-amber-50 text-amber-700" />
-                    </div>
-                  );
-                })()}
-              </div>
-              <span className="ml-auto text-xs font-semibold text-[var(--accent-1)]">Add</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function SortableMealType({ selectedPlan, selectedMealType, setSelectMealPlanType, type, index }) {
@@ -684,7 +453,7 @@ function NutrientsBreakdown({ mealsForSelectedType }) {
       const parseNum = (val) => {
         if (typeof val === "number") return Number.isFinite(val) ? val : 0;
         if (typeof val === "string") {
-          const n = parseFloat(val.replace(/,/g, ""));
+          const n = parseFloat(String(val).replace(/,/g, ""));
           return Number.isFinite(n) ? n : 0;
         }
         return 0;
@@ -692,18 +461,11 @@ function NutrientsBreakdown({ mealsForSelectedType }) {
 
       return checkArray(mealsForSelectedType).reduce(
         (acc, meal) => {
-          const caloriesVal =
-            typeof meal?.calories === "object"
-              ? meal?.calories?.total
-              : meal?.calories;
-          const proteinVal = meal?.protein ?? meal?.calories?.proteins;
-          const carbsVal = meal?.carbohydrates ?? meal?.calories?.carbs;
-          const fatsVal = meal?.fats ?? meal?.calories?.fats;
-  
-          acc.calories += parseNum(caloriesVal);
-          acc.protein += parseNum(proteinVal);
-          acc.carbohydrates += parseNum(carbsVal);
-          acc.fats += parseNum(fatsVal);
+          const nutrition = getServingNutrition(meal);
+          acc.calories += parseNum(nutrition.calories);
+          acc.protein += parseNum(nutrition.protein);
+          acc.carbohydrates += parseNum(nutrition.carbohydrates);
+          acc.fats += parseNum(nutrition.fats);
           return acc;
         },
         { calories: 0, protein: 0, carbohydrates: 0, fats: 0 }

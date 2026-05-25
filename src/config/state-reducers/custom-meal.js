@@ -2,6 +2,10 @@ import { addDays, format, isBefore, isValid, parse } from "date-fns";
 import { DAYS } from "../data/ui";
 import { customMealInitialState } from "../state-data/custom-meal";
 import { checkArray } from "@/lib/formatter";
+import {
+  buildPer100gSnapshot,
+  normalizeRecipeForMealPlan,
+} from "@/lib/nutrition/per100g";
 
 const BASE_MEAL_TYPES = [
   "Breakfast",
@@ -23,6 +27,64 @@ export const createDefaultMealTypes = () =>
     meals: [],
     defaultMealTiming: defaultMealTiming ?? "",
   }));
+
+export function getMealsFromPlan(planValue) {
+  if (Array.isArray(planValue)) return planValue;
+  if (planValue && typeof planValue === "object" && Array.isArray(planValue.meals)) {
+    return planValue.meals;
+  }
+  return [];
+}
+
+export function resolveMealTime(recipe, defaultTiming = "") {
+  if (!recipe || typeof recipe !== "object") {
+    return typeof defaultTiming === "string" ? defaultTiming : "";
+  }
+
+  const time = typeof recipe.time === "string" ? recipe.time.trim() : "";
+  if (time) return time;
+
+  const mealTime = typeof recipe.meal_time === "string" ? recipe.meal_time.trim() : "";
+  if (mealTime) {
+    if (/[ap]m$/i.test(mealTime)) {
+      try {
+        return format(parse(mealTime.toUpperCase(), "hh:mm a", new Date()), "HH:mm");
+      } catch {
+        return mealTime;
+      }
+    }
+    if (/^\d{1,2}:\d{2}$/.test(mealTime)) return mealTime;
+  }
+
+  return typeof defaultTiming === "string" ? defaultTiming : "";
+}
+
+export function getMealTypeDefaultTiming(selectedPlans, selectedDay, selectedMealType) {
+  if (!selectedPlans || selectedDay == null || !selectedMealType) return "";
+
+  const getExplicitDefault = (planValue) => {
+    const meals = getMealsFromPlan(planValue);
+    const entry = meals.find((mealType) => mealType?.mealType === selectedMealType);
+    if (
+      typeof entry?.defaultMealTiming === "string" &&
+      entry.defaultMealTiming.length > 0
+    ) {
+      return entry.defaultMealTiming;
+    }
+    return "";
+  };
+
+  const currentDefault = getExplicitDefault(selectedPlans[selectedDay]);
+  if (currentDefault) return currentDefault;
+
+  for (const planKey of Object.keys(selectedPlans)) {
+    if (planKey === selectedDay) continue;
+    const explicitDefault = getExplicitDefault(selectedPlans[planKey]);
+    if (explicitDefault) return explicitDefault;
+  }
+
+  return "";
+}
 
 export function customMealReducer(state, action) {
   switch (action.type) {
@@ -247,55 +309,23 @@ export function customMealReducer(state, action) {
       };
     }
     case "SAVE_RECIPE": {
-      const { recipe, index, isNew, selectedDay, selectedMealType } = action.payload;
+      const { recipe, index, selectedDay, selectedMealType } = action.payload;
       const currentPlan = state.selectedPlans[selectedDay];
       const isArray = Array.isArray(currentPlan);
       const currentMeals = isArray ? currentPlan : currentPlan?.meals || [];
-      const selectedMealTypeEntry = currentMeals?.find(
-        (mealType) => mealType?.mealType === selectedMealType
+      const defaultMealTiming = getMealTypeDefaultTiming(
+        state.selectedPlans,
+        selectedDay,
+        selectedMealType
       );
-
-      const mealTypeDefaultTiming =
-        typeof selectedMealTypeEntry?.defaultMealTiming === "string" &&
-          selectedMealTypeEntry.defaultMealTiming.length > 0
-          ? selectedMealTypeEntry.defaultMealTiming
-          : undefined;
-
-      const firstMealTiming =
-        Array.isArray(selectedMealTypeEntry?.meals) &&
-          selectedMealTypeEntry.meals.length > 0 &&
-          typeof selectedMealTypeEntry.meals[0]?.time === "string"
-          ? selectedMealTypeEntry.meals[0]?.time
-          : undefined;
-
-      const defaultMealTiming = mealTypeDefaultTiming ?? firstMealTiming ?? "";
-      // Normalize method: API may return method (string) or recipe (array of steps), e.g. mostSearchedRecipes vs recipees search
-      const normalizedMethod = recipe.method || (Array.isArray(recipe.recipe) ? recipe.recipe.join("\n") : "") || "";
-      const dishesPayload = !isNew
-        ? {
-          ...recipe,
-          dish_name: recipe.dish_name || recipe.title || recipe.name,
-          image: recipe.image,
-          description: recipe.description || "",
-          ingredients: recipe.ingredients || "",
-          method: normalizedMethod,
-          fats: recipe.fats || recipe?.calories?.fats,
-          calories: recipe?.calories?.total || recipe.calories,
-          protein: recipe.protein || recipe?.calories?.proteins,
-          carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
-          measure: recipe.measure,
-          isNew: false,
-        }
-        : {
-          ...recipe,
-          dish_name: recipe.dish_name || recipe.title || recipe.name,
-          image: recipe.image,
-          description: recipe.description || "",
-          ingredients: recipe.ingredients || "",
-          method: normalizedMethod,
-          time: recipe.time ?? defaultMealTiming,
-          isNew: false,
-        };
+      const normalizedRecipe = normalizeRecipeForMealPlan(recipe);
+      const resolvedTime = resolveMealTime(normalizedRecipe, defaultMealTiming);
+      const dishesPayload = {
+        ...normalizedRecipe,
+        per_100g: normalizedRecipe.per_100g || buildPer100gSnapshot(normalizedRecipe),
+        time: resolvedTime,
+        isNew: !resolvedTime,
+      };
 
       if (index || index === 0) {
         const updatedMeals = currentMeals.map((mealType) =>
@@ -327,18 +357,8 @@ export function customMealReducer(state, action) {
             meals: [
               ...(mealType.meals || []),
               {
-                ...recipe,
-                dish_name: recipe.dish_name || recipe.title || recipe.name,
-                description: recipe.description || "",
-                ingredients: recipe.ingredients || "",
-                method: normalizedMethod,
-                fats: recipe.fats || recipe?.calories?.fats,
-                calories: recipe.calories || recipe?.calories?.total,
-                protein: recipe.protein || recipe?.calories?.proteins,
-                carbohydrates: recipe.carbohydrates || recipe?.calories?.carbs,
-                measure: recipe.measure,
-                isNew: Boolean(isNew),
-                time: recipe.time ?? defaultMealTiming
+                ...dishesPayload,
+                isNew: false,
               },
             ],
           }
@@ -589,207 +609,6 @@ export function customMealReducer(state, action) {
         },
         selectedPlan: action.payload.new,
       };
-    case "LOAD_AI_MEAL_PLAN": {
-      const ai = action.payload.mealPlan || action.payload;
-      const mode = ai.mode || "daily";
-      
-      // Map AI meal type keys to standard meal type names
-      const mealTypeMapping = {
-        breakfast: "Breakfast",
-        lunch: "Lunch",
-        dinner: "Dinner",
-        snacks: "Morning Snacks", // Default to Morning Snacks for snacks
-        "morning snacks": "Morning Snacks",
-        "evening snacks": "Evening Snacks",
-      };
-
-      // Transform AI plan structure to match expected format
-      // AI only generates breakfast, lunch, dinner (no snacks)
-      const transformAiPlan = (dayData, dayKey) => {
-        if (!dayData || typeof dayData !== "object") return [];
-        
-        // Check if it's already in the correct format (array of meal types)
-        if (Array.isArray(dayData)) {
-          // Filter to only include breakfast, lunch, dinner
-          return dayData.filter(mealType => 
-            ["Breakfast", "Lunch", "Dinner"].includes(mealType.mealType) &&
-            Array.isArray(mealType.meals) && mealType.meals.length > 0
-          );
-        }
-        if (Array.isArray(dayData.meals)) {
-          return dayData.meals.filter(mealType => 
-            ["Breakfast", "Lunch", "Dinner"].includes(mealType.mealType) &&
-            Array.isArray(mealType.meals) && mealType.meals.length > 0
-          );
-        }
-        
-        // Transform from AI format (breakfast, lunch, dinner keys) to array format
-        // AI only generates breakfast, lunch, dinner - no snacks
-        const mealTypes = [];
-        // Only check for breakfast, lunch, dinner (AI doesn't generate snacks)
-        const mealTypeOrder = ["breakfast", "lunch", "dinner"];
-        
-        mealTypeOrder.forEach(mealKey => {
-          const meals = dayData[mealKey];
-          if (Array.isArray(meals) && meals.length > 0) {
-            const standardMealType = mealTypeMapping[mealKey.toLowerCase()] || mealKey;
-            mealTypes.push({
-              mealType: standardMealType,
-              meals: meals.map(meal => ({
-                ...meal,
-                dish_name: meal.dish_name || meal.name || meal.dishName || "",
-                meal_time: meal.meal_time || meal.time || meal.mealTime || "",
-                calories: String(meal.calories || "0"),
-                protein: String(meal.protein || "0"),
-                carbohydrates: String(meal.carbohydrates || meal.carbs || "0"),
-                fats: String(meal.fats || "0"),
-                image: meal.image || "",
-                description: meal.description || "",
-              })),
-              defaultMealTiming: "",
-            });
-          }
-        });
-        
-        // Only return meal types that have actual data - don't create empty defaults
-        return mealTypes;
-      };
-
-      // Map day keys for daily vs weekly
-      const mapDayKey = (dayKey, mode) => {
-        if (mode === "daily") {
-          // For daily, map day_1, day_2, etc. to "daily"
-          if (dayKey.startsWith("day_")) return "daily";
-          return "daily";
-        } else if (mode === "weekly") {
-          // Map full day names to short names
-          const dayMapping = {
-            monday: "mon",
-            tuesday: "tue",
-            wednesday: "wed",
-            thursday: "thu",
-            friday: "fri",
-            saturday: "sat",
-            sunday: "sun",
-          };
-          const lowerKey = dayKey.toLowerCase();
-          return dayMapping[lowerKey] || lowerKey;
-        }
-        return dayKey;
-      };
-
-      const transformedPlans = {};
-      const planEntries = Object.entries(ai.plan || {});
-      
-      // Don't create default meal types for AI plans - only include what AI generated
-      if (planEntries.length === 0) {
-        // If no plan data, return empty structure (don't create defaults)
-        if (mode === "daily") {
-          transformedPlans.daily = [];
-        } else if (mode === "weekly") {
-          DAYS.forEach(day => {
-            transformedPlans[day] = [];
-          });
-        }
-      } else {
-        // For daily mode, merge all day entries into a single "daily" plan
-        if (mode === "daily") {
-          const allMealTypes = {};
-          planEntries.forEach(([dayKey, dayData]) => {
-            const transformed = transformAiPlan(dayData, dayKey);
-            // Merge meal types from all days - only include meal types with actual meals
-            transformed.forEach(mealType => {
-              if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return;
-              const key = mealType.mealType;
-              if (!allMealTypes[key]) {
-                allMealTypes[key] = {
-                  mealType: key,
-                  meals: [],
-                  defaultMealTiming: mealType.defaultMealTiming || "",
-                };
-              }
-              allMealTypes[key].meals.push(...mealType.meals);
-            });
-          });
-          // Only include meal types that have meals
-          transformedPlans.daily = Object.values(allMealTypes).filter(
-            mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
-          );
-        } else {
-          // For weekly mode, map each day separately
-          planEntries.forEach(([dayKey, dayData]) => {
-            const mappedKey = mapDayKey(dayKey, mode);
-            // If multiple days map to the same key, merge them
-            if (transformedPlans[mappedKey]) {
-              const existing = transformedPlans[mappedKey];
-              const newData = transformAiPlan(dayData, dayKey);
-              // Merge meal types - only include meal types with actual meals
-              const merged = {};
-              [...existing, ...newData].forEach(mealType => {
-                if (!Array.isArray(mealType.meals) || mealType.meals.length === 0) return;
-                const key = mealType.mealType;
-                if (!merged[key]) {
-                  merged[key] = {
-                    mealType: key,
-                    meals: [],
-                    defaultMealTiming: mealType.defaultMealTiming || "",
-                  };
-                }
-                merged[key].meals.push(...mealType.meals);
-              });
-              // Only include meal types that have meals
-              transformedPlans[mappedKey] = Object.values(merged).filter(
-                mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
-              );
-            } else {
-              const transformed = transformAiPlan(dayData, dayKey);
-              // Filter out empty meal types
-              transformedPlans[mappedKey] = transformed.filter(
-                mealType => Array.isArray(mealType.meals) && mealType.meals.length > 0
-              );
-            }
-          });
-        }
-      }
-
-      // Determine initial selected plan and meal type
-      let initialPlan = "daily";
-      let initialMealType = "Breakfast";
-      
-      if (mode === "weekly") {
-        initialPlan = DAYS[0] || "sun";
-        const firstPlan = transformedPlans[initialPlan];
-        if (Array.isArray(firstPlan) && firstPlan.length > 0) {
-          initialMealType = firstPlan[0].mealType || "Breakfast";
-        }
-      } else {
-        const firstPlan = transformedPlans.daily || transformedPlans[Object.keys(transformedPlans)[0]];
-        if (Array.isArray(firstPlan) && firstPlan.length > 0) {
-          initialMealType = firstPlan[0].mealType || "Breakfast";
-        }
-      }
-
-      // Extract the meal plan ID from the AI response (generate response or API fetch)
-      const mealPlanId = action.payload.mealPlan?.id || action.payload.mealPlan?._id || action.payload.id || action.payload._id;
-
-      return {
-        ...state,
-        title: ai.title || "",
-        description: ai.description || "",
-        guidelines: ai.guidelines || "",
-        supplements: ai.supplements || "",
-        mode: mode,
-        creationType: "new", // Keep as "new" but we'll check for ID in save function
-        stage: 2,
-        selectedPlan: initialPlan,
-        selectedMealType: initialMealType,
-        selectedPlans: transformedPlans,
-        isAiGenerated: true,
-        aiMealPlanId: mealPlanId, // Store the AI meal plan ID separately to use for PUT request
-        id: undefined, // Don't set id to avoid conflicts with edit flow
-        editPlans: undefined,
-      };
-    }
     case "REORDER_MEAL_TYPES": {
       const { oldIndex, newIndex } = action.payload;
       const currentPlan = state.selectedPlans[state.selectedPlan];
@@ -949,7 +768,8 @@ export function customMealReducer(state, action) {
           ...state.selectedPlans,
           [selectedDay]: state
           .selectedPlans[selectedDay]
-          .map(type => type.mealType === mealType ? { mealType, meals: [] } : type)
+          // .map(type => type.mealType === mealType ? { mealType, meals: [] } : type)
+          .map(type => type.mealType === mealType ? { ...type, meals: [] } : type)
         }
       }
     }
@@ -962,12 +782,19 @@ export function customMealReducer(state, action) {
         ...state,
         selectedPlans: checkArray(availableKeys)
           .reduce((acc, day) => {
-            const currentMeals = state.selectedPlans[day].map(({ mealType, meals }) => mealTypesSet.has(mealType)
-              ? { mealType, meals: [] }
-              : { mealType, meals })
+            // const currentMeals = state.selectedPlans[day].map(({ mealType, meals }) => mealTypesSet.has(mealType)
+            //   ? { mealType, meals: [] }
+            //   : { mealType, meals })
+             const currentDay = state.selectedPlans[day];
+
+             const filteredMeals = currentDay.filter(
+               ({ mealType }) => !mealTypesSet.has(mealType)
+             );
+
             return {
               ...acc,
-              [day]: currentMeals
+              // [day]: currentMeals
+              [day]: filteredMeals
             }
           }, {})
       }

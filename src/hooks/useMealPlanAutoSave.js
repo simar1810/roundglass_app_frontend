@@ -18,9 +18,7 @@ export default function useMealPlanAutoSave({
         return;
       }
       if (!mealPlanAutosaveEnabled) return;
-      const isAiPlan = Boolean(state.isAiGenerated || state.aiMealPlanId);
-      if (isAiPlan) return;
-  
+
       // setSaveStatus("pending");
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {

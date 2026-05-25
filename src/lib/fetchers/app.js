@@ -58,57 +58,77 @@ export function getRecipes() {
   return fetchData("app/getRecipes?person=coach");
 }
 
-/** Single recipe by id (includes ingredientLineItems.ingredient populated). */
-export function getRecipeById(id) {
-  if (!id) return Promise.resolve(null);
-  return fetchData(`app/recipees?id=${id}`);
+export function toggleFavoriteRecipe(recipeId) {
+  return sendData("app/favorite/toggle?person=coach", { recipeId }, "POST");
 }
 
-// --- Ingredients (ingredient-to-recipe) ---
-function ingredientsQueryParams(query = {}) {
-  const params = {};
-  if (query.category != null && query.category !== "") params.category = query.category;
-  if (query.q != null && query.q !== "") params.q = query.q;
-  if (query.limit != null) params.limit = query.limit;
-  if (query.skip != null) params.skip = query.skip;
-  return params;
+/** Single recipe by id (includes ingredientLineItems.ingredient populated). */
+export function getRecipeById(recipeId) {
+  const id = recipeId != null ? String(recipeId) : "";
+  if (!id) {
+    return Promise.reject(new Error("recipeId is required"));
+  }
+  return fetchData(buildUrlWithQueryParams("app/recipees", { id }));
+}
+
+function buildIngredientsQueryString(params) {
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    if (key === "q" && String(value).trim() === "") continue;
+    sp.set(key, String(value));
+  }
+  const qs = sp.toString();
+  return qs ? `?${qs}` : "";
+}
+
+function assertIngredientLookupValue(value, fieldName) {
+  const normalized = value != null ? String(value).trim() : "";
+  if (!normalized) {
+    throw new Error(`${fieldName} is required`);
+  }
+  return normalized;
+}
+
+export function searchIngredients(params = {}) {
+  const { q, category, limit, skip } = params;
+  const qs = buildIngredientsQueryString({ q, category, limit, skip });
+  return fetchData(`app/ingredients${qs}`);
 }
 
 export function getIngredients(query = {}) {
-  const params = ingredientsQueryParams(query);
-  const endpoint = Object.keys(params).length ? buildUrlWithQueryParams("app/ingredients", params) : "app/ingredients";
-  return fetchData(endpoint);
-}
-
-export function searchIngredients(query = {}) {
-  const params = ingredientsQueryParams(query);
-  const endpoint = Object.keys(params).length ? buildUrlWithQueryParams("app/ingredients/search", params) : "app/ingredients/search";
-  return fetchData(endpoint);
+  return searchIngredients(query);
 }
 
 export function getIngredientById(id) {
-  if (!id) return Promise.resolve(null);
-  return fetchData(`app/ingredients/${id}`);
+  const normalized = assertIngredientLookupValue(id, "Ingredient id");
+  return fetchData(`app/ingredients/${encodeURIComponent(normalized)}`);
 }
 
+export function getIngredientByCode(foodCode) {
+  const normalized = assertIngredientLookupValue(foodCode, "Food code");
+  return fetchData(
+    `app/ingredients/by-code/${encodeURIComponent(normalized)}`,
+  );
+}
+
+/** @deprecated use getIngredientByCode */
 export function getIngredientByFoodCode(foodCode) {
-  if (!foodCode) return Promise.resolve(null);
-  const encoded = encodeURIComponent(foodCode);
-  return fetchData(`app/ingredients/by-code/${encoded}`);
+  return getIngredientByCode(foodCode);
 }
 
-export function createIngredient(payload) {
-  return sendData("app/ingredients", payload, "POST");
+export function createIngredient(body) {
+  return sendData("app/ingredients", body, "POST");
 }
 
-export function updateIngredient(id, payload) {
-  if (!id) return Promise.resolve(null);
-  return sendData(`app/ingredients/${id}`, payload, "PUT");
+export function updateIngredient(id, body) {
+  const normalized = assertIngredientLookupValue(id, "Ingredient id");
+  return sendData(`app/ingredients/${encodeURIComponent(normalized)}`, body, "PUT");
 }
 
 export function deleteIngredient(id) {
-  if (!id) return Promise.resolve(null);
-  return sendData(`app/ingredients/${id}`, {}, "DELETE");
+  const normalized = assertIngredientLookupValue(id, "Ingredient id");
+  return sendData(`app/ingredients/${encodeURIComponent(normalized)}`, {}, "DELETE");
 }
 
 export function getPlans() {

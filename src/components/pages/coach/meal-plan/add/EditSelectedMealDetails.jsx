@@ -19,18 +19,72 @@ import {
 
 import SuggestFeatureModal from "@/components/modals/SuggestFeatureModal";
 import { Textarea } from "@/components/ui/textarea";
-import { saveRecipe } from "@/config/state-reducers/custom-meal";
+import {
+	getMealTypeDefaultTiming,
+	resolveMealTime,
+	saveRecipe,
+} from "@/config/state-reducers/custom-meal";
 import { uploadImage } from "@/lib/api";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { format, parse } from "date-fns";
-import { ListOrdered, Plus, Save, Scale, Search, X } from "lucide-react";
+import { ChevronLeft, ListOrdered, Plus, Save, Scale, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import SelectMealCollection from "./SelectMealCollection";
+import RecipeIngredientsDetailBlock from "@/components/recipes/RecipeIngredientsDetailBlock";
+import { shouldShowIngredientLineTable } from "@/lib/recipes/recipeIngredientsDisplay";
 import { cn } from "@/lib/utils";
 import { checkArray } from "@/lib/formatter";
+import {
+	applyDefaultServingNutrition,
+	buildPer100gSnapshot,
+	extractPer100gNutrition,
+	formatServingSizeLabel,
+	getServingNutrition,
+	normalizeRecipeForMealPlan,
+	scaleNutritionFromPer100g,
+} from "@/lib/nutrition/per100g";
+
+function buildFormStateFromRecipe(recipe, defaultMealTiming = "") {
+	const normalized = normalizeRecipeForMealPlan(recipe);
+	const servingState = applyDefaultServingNutrition(normalized);
+	const merged = { ...normalized, ...servingState };
+	return {
+		...merged,
+		time: resolveMealTime(merged, defaultMealTiming),
+		method: merged.method || getMethodFromRecipe(recipe),
+	};
+}
+
+const MEASURE_OPTIONS = [
+	{ value: "cup", label: "Cup" },
+	{ value: "tablespoon", label: "Tablespoon (tbsp)" },
+	{ value: "teaspoon", label: "Teaspoon (tsp)" },
+	{ value: "bowl", label: "Bowl (small/medium/large)" },
+	{ value: "katori", label: "Katori (standard Indian bowl, ~150 ml)" },
+	{ value: "glass", label: "Glass (small/medium/large)" },
+	{ value: "plate", label: "Plate (small/full/half)" },
+	{ value: "piece", label: "Piece" },
+	{ value: "slice", label: "Slice" },
+	{ value: "poha_serving", label: "Poha serving (1 medium bowl)" },
+	{ value: "rice_serving", label: "Rice serving (1 medium bowl)" },
+	{ value: "sabzi", label: "Sabzi (1 katori or ½ cup)" },
+	{ value: "dal", label: "Dal (1 katori)" },
+	{ value: "spoonful", label: "Spoonful (1 serving spoon, ~10 g)" },
+	{ value: "handful", label: "Handful" },
+	{ value: "pinch", label: "Pinch (spices, salt)" },
+	{ value: "scoop", label: "Scoop" },
+	{ value: "packet", label: "Packet" },
+	{ value: "bottle", label: "Bottle" },
+	{ value: "cup_240ml", label: "Cup (standard 240 ml)" },
+	{ value: "gram", label: "Gram (g)" },
+	{ value: "kilogram", label: "Kilogram (kg)" },
+	{ value: "millilitre", label: "Millilitre (ml)" },
+	{ value: "litre", label: "Litre (L)" },
+	{ value: "small_medium_large", label: "Small / Medium / Large piece" },
+	{ value: "serving", label: "Serving (customized portion)" },
+];
 
 // API may return method (string) or recipe (array of steps); e.g. mostSearchedRecipes vs recipees search
 function getMethodFromRecipe(recipe) {
@@ -82,20 +136,36 @@ function ServingQuantityInput({ quantity, onCommit }) {
 
 export default function EditSelectedMealDetails({
 	defaultOpen,
+	draftMode = false,
 	children,
 	recipe,
 	index,
+	replaceIndex,
 	selectedDay,
-	selectedMealType
+	selectedMealType,
+	onBackToMealSearch,
+	onReplaceRequest,
+	onMealAddFlowComplete,
+	onDiscard,
 }) {
-	const [open, setOpen] = useState(defaultOpen);
-	const { dispatch } = useCurrentStateContext();
-	const [formData, setFormData] = useState({
-		...recipe,
-		method: getMethodFromRecipe(recipe),
-	});
+	const [open, setOpen] = useState(defaultOpen ?? draftMode);
+	const { dispatch, selectedPlans } = useCurrentStateContext();
+	const savedRef = useRef(false);
+	const skipCloseSideEffectsRef = useRef(false);
+	const defaultMealTiming = useMemo(
+		() => getMealTypeDefaultTiming(selectedPlans, selectedDay, selectedMealType),
+		[selectedPlans, selectedDay, selectedMealType],
+	);
+
+	useEffect(() => {
+		if (defaultOpen || draftMode) setOpen(true);
+	}, [defaultOpen, draftMode]);
+	const [formData, setFormData] = useState(() =>
+		buildFormStateFromRecipe(recipe, defaultMealTiming),
+	);
+	const baseNutritionRef = useRef(extractPer100gNutrition(recipe));
 	const onChangeHandler = (e) =>
-		setFormData({ ...formData, [e.target.name]: e.target.value });
+		setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 	const closeBtnRef = useRef();
 	const fileRef = useRef();
 	const [uploading, setUploading] = useState(false);
@@ -104,51 +174,16 @@ export default function EditSelectedMealDetails({
 		formData.image || recipe.image || "/not-found.png",
 	);
 	useEffect(() => {
-		setFormData({
-			...recipe,
-			method: getMethodFromRecipe(recipe),
+		const normalized = normalizeRecipeForMealPlan(recipe);
+		const servingState = applyDefaultServingNutrition(normalized);
+		baseNutritionRef.current = extractPer100gNutrition({
+			...normalized,
+			per_100g: servingState.per_100g,
 		});
-		setPreviewImage(recipe.image || "/not-found.png");
-	}, [recipe]);
-
-	useEffect(() => {
-		if (formData?.default_measure?.name && !formData.selected_measure_name) {
-			setFormData((prev) => ({
-				...prev,
-				selected_measure_name: formData.default_measure.name,
-			}));
-			onMeasureChange(formData.default_measure.name, formData.quantity || 1);
-		}
-	}, [
-		formData.default_measure,
-		formData.selected_measure_name,
-		formData.quantity,
-	]);
-	useEffect(() => {
-		if (!formData.selected_measure_name) {
-			if (formData.default_measure?.name) {
-				setFormData((prev) => ({
-					...prev,
-					selected_measure_name: prev.default_measure.name,
-				}));
-				return;
-			}
-
-			if (formData.serving_size) {
-				const parts = formData.serving_size.split(" ");
-				if (parts.length > 1) {
-					setFormData((prev) => ({
-						...prev,
-						selected_measure_name: parts.slice(1).join(" "),
-					}));
-				}
-			}
-		}
-	}, [
-		formData.default_measure,
-		formData.serving_size,
-		formData.selected_measure_name,
-	]);
+		savedRef.current = false;
+		setFormData(buildFormStateFromRecipe(recipe, defaultMealTiming));
+		setPreviewImage(normalized.image || recipe.image || "/not-found.png");
+	}, [recipe, defaultMealTiming]);
 
 	async function handleImageUpload(e) {
 		const file = e.target.files?.[0];
@@ -173,47 +208,6 @@ export default function EditSelectedMealDetails({
 		}
 	}
 
-	function toNum(v) {
-		const n = parseFloat(v);
-		return Number.isFinite(n) ? n : 0;
-	}
-
-	function scaleFromPer100(per100, grams) {
-		const factor = grams / 100;
-
-		return {
-			calories: (toNum(per100.calories) * factor).toFixed(1),
-			protein: (toNum(per100.protein) * factor).toFixed(1),
-			carbohydrates: (toNum(per100.carbohydrates) * factor).toFixed(1),
-			fats: (toNum(per100.fats) * factor).toFixed(1),
-			dietary_fibre:
-				per100.dietary_fibre !== undefined
-					? (toNum(per100.dietary_fibre) * factor).toFixed(1)
-					: "",
-			sodium:
-				per100.sodium !== undefined
-					? (toNum(per100.sodium) * factor).toFixed(1)
-					: "",
-		};
-	}
-
-	function updateDish(open) {
-		if (open === true) return;
-		for (const field of ["dish_name", "time"]) {
-			if (!formData[field]) {
-				toast.error(`${field} is required.`);
-				return;
-			}
-		}
-		dispatch(saveRecipe(formData, index, false, selectedDay, selectedMealType));
-		closeBtnRef.current.click();
-		setOpen(false);
-	}
-
-	function onOpenChange() {
-		dispatch(saveRecipe(formData, index, true, selectedDay, selectedMealType));
-		setOpen(!open);
-	}
 	const backendMeasures = Array.isArray(formData?.measures)
 		? formData.measures
 		: [];
@@ -222,83 +216,93 @@ export default function EditSelectedMealDetails({
 		const m = backendMeasures.find((x) => x.name === measureName);
 		if (!m) return;
 
-		const totalGrams = m.grams * qty;
+		const quantity = qty > 0 ? qty : 1;
+		const totalGrams = m.grams * quantity;
+		const scaled = scaleNutritionFromPer100g(baseNutritionRef.current, totalGrams);
 
-		let next = {
+		setFormData((prev) => ({
+			...prev,
+			quantity,
 			selected_measure_name: m.name,
-			serving_size: `${qty} ${m.name} (${totalGrams}g)`,
-		};
-
-		if (formData.default_measure?.grams) {
-			const defaultGrams = formData.default_measure.grams;
-			const initialQty = Number(recipe.quantity) || 1;
-			const baseTotalGrams = defaultGrams * initialQty;
-
-			if (baseTotalGrams > 0) {
-				const factor = totalGrams / 100;
-
-				const getBaseVal = (key, altKey) => {
-					// Check flat simple property on recipe
-					if (recipe[key] !== undefined && recipe[key] !== null)
-						return toNum(recipe[key]);
-
-					// Check nested calories object
-					if (typeof recipe.calories === "object" && recipe.calories) {
-						if (key === "calories" && recipe.calories.total)
-							return toNum(recipe.calories.total);
-						if (altKey && recipe.calories[altKey])
-							return toNum(recipe.calories[altKey]);
-					}
-					// Fallback to formData initial values if recipe misses them (though recipe should have them)
-					return 0;
-				};
-
-				next = {
-					...next,
-					calories: (getBaseVal("calories") * factor).toFixed(1),
-					protein: (getBaseVal("protein", "proteins") * factor).toFixed(1),
-					carbohydrates: (
-						getBaseVal("carbohydrates", "carbs") * factor
-					).toFixed(1),
-					fats: (getBaseVal("fats", "fats") * factor).toFixed(1),
-				};
-			}
-		} else if (formData.per_100g) {
-			// Fallback to per_100g if default_measure is missing
-			next = {
-				...next,
-				...scaleFromPer100(formData.per_100g, totalGrams),
-			};
-		}
-
-		setFormData((prev) => ({ ...prev, ...next }));
+			serving_size: `${quantity} ${m.name} (${totalGrams}g)`,
+			...(scaled || {}),
+		}));
 	}
 
 	function updateQuantity(qty) {
 		const q =
 			typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
+		const measure =
+			formData.selected_measure_name || formData.default_measure?.name || "";
+		const hasBackendMeasure = backendMeasures.some((item) => item.name === measure);
 
-		setFormData((prev) => {
-			const measure = prev.selected_measure_name;
-
-			if (measure && backendMeasures.some((m) => m.name === measure)) {
-				return { ...prev, quantity: q };
-			}
-
-			return {
-				...prev,
-				quantity: q,
-				serving_size: measure ? `${q} ${measure}` : prev.serving_size,
-			};
-		});
-
-		const currentMeasure = formData.selected_measure_name;
-		if (
-			currentMeasure &&
-			backendMeasures.some((m) => m.name === currentMeasure)
-		) {
-			onMeasureChange(currentMeasure, q);
+		if (hasBackendMeasure) {
+			onMeasureChange(measure, q);
+			return;
 		}
+
+		setFormData((prev) => ({
+			...prev,
+			quantity: q,
+			serving_size: measure ? `${q} ${measure}` : prev.serving_size,
+		}));
+	}
+
+	function discardChanges() {
+		if (draftMode) {
+			onDiscard?.();
+		}
+		// Non-draft edits live in local form state until Save — cancel should not mutate the plan.
+	}
+
+	function getSaveIndex() {
+		if (replaceIndex != null) return replaceIndex;
+		if (draftMode) return undefined;
+		return index;
+	}
+
+	function updateDish() {
+		for (const field of ["dish_name", "time"]) {
+			if (!formData[field]) {
+				toast.error(`${field} is required.`);
+				return;
+			}
+		}
+		savedRef.current = true;
+		dispatch(
+			saveRecipe(
+				{
+					...formData,
+					per_100g: buildPer100gSnapshot({ per_100g: baseNutritionRef.current }),
+				},
+				getSaveIndex(),
+				false,
+				selectedDay,
+				selectedMealType
+			)
+		);
+		closeBtnRef.current?.click();
+		setOpen(false);
+	}
+
+	function goToRecipePicker(onNavigate) {
+		skipCloseSideEffectsRef.current = true;
+		setOpen(false);
+		onNavigate?.();
+	}
+
+	function handleOpenChange(nextOpen) {
+		if (!nextOpen) {
+			if (skipCloseSideEffectsRef.current) {
+				skipCloseSideEffectsRef.current = false;
+			} else if (savedRef.current) {
+				onMealAddFlowComplete?.();
+			} else {
+				discardChanges();
+			}
+			savedRef.current = false;
+		}
+		setOpen(nextOpen);
 	}
 
 	function addServingForRecipe(form) {
@@ -317,13 +321,13 @@ export default function EditSelectedMealDetails({
 	}
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			{!children && (
+		<Dialog open={open} onOpenChange={handleOpenChange}>
+			{!children && !draftMode && (
 				<DialogTrigger className="w-full">
 					<div className="mt-4 flex items-start gap-4">
 						<Image
 							alt=""
-							src={previewImage || "/not-found.png"}
+							src={previewImage}
 							height={100}
 							width={100}
 							className="rounded-lg max-h-[100px] bg-[var(--comp-1)] object-contain border-1"
@@ -356,7 +360,27 @@ export default function EditSelectedMealDetails({
 			)}
 			{children}
 			<DialogContent className="p-0 gap-0 max-h-[70vh] overflow-y-auto">
-				<DialogTitle className="p-4 border-b-1">Details</DialogTitle>
+				<div className="flex items-center gap-2 border-b px-4 py-3">
+					{onBackToMealSearch && (
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							onClick={() => goToRecipePicker(onBackToMealSearch)}
+							className="h-8 shrink-0 px-2 text-slate-600 hover:text-slate-900"
+						>
+							<ChevronLeft size={16} />
+							Back
+						</Button>
+					)}
+					<DialogTitle className="min-w-0 flex-1 text-base font-semibold leading-tight">
+						{replaceIndex != null
+							? "Replace meal"
+							: onBackToMealSearch
+								? "Add custom meal"
+								: "Meal details"}
+					</DialogTitle>
+				</div>
 				<div className="p-4">
 					<div
 						className="relative w-full h-[250px] bg-[var(--comp-1)] rounded-lg overflow-hidden border-1 cursor-pointer"
@@ -364,7 +388,7 @@ export default function EditSelectedMealDetails({
 					>
 						<Image
 							alt=""
-							src={previewImage || "/not-found.png"}
+							src={previewImage}
 							fill
 							sizes="100vw"
 							className="object-contain"
@@ -381,18 +405,8 @@ export default function EditSelectedMealDetails({
 							onChange={handleImageUpload}
 						/>
 					</div>
-					<div className="mt-2 mb-6 flex justify-between items-center">
-						<SelectMealCollection selectedMealType={selectedMealType} selectedDay={selectedDay} index={index}>
-							<DialogTrigger asChild>
-								<Button variant="outline">
-									<Search />
-									Search
-								</Button>
-							</DialogTrigger>
-						</SelectMealCollection>
-					</div>
 					<FormControl
-						value={formData.dish_name || formData.name || ""}
+						value={formData.dish_name || formData.name || formData.title || ""}
 						name="dish_name"
 						onChange={onChangeHandler}
 						placeholder="Dish Name"
@@ -411,15 +425,37 @@ export default function EditSelectedMealDetails({
 						/>
 					</div>
 					<div>
+						{shouldShowIngredientLineTable(formData) ? (
+							<div className="mb-4">
+								<label className="text-sm font-medium mb-2 block">
+									Ingredients (catalog)
+								</label>
+								<RecipeIngredientsDetailBlock
+									recipe={formData}
+									suppressLegacyNote
+								/>
+							</div>
+						) : null}
 						<label className="text-sm font-medium mb-2 block">
-							Ingredients
+							{shouldShowIngredientLineTable(formData)
+								? "Ingredients (free text, optional)"
+								: "Ingredients"}
 						</label>
+						{shouldShowIngredientLineTable(formData) ? (
+							<p className="text-xs text-muted-foreground mb-2 leading-snug">
+								Edit extra notes here if needed; the table above reflects catalog
+								line items from the recipe.
+							</p>
+						) : null}
 						<Textarea
 							value={formData.ingredients || ""}
 							name="ingredients"
 							onChange={onChangeHandler}
 							placeholder="Enter ingredients (e.g., 2 eggs, 1 cup flour, etc.)"
-							className="min-h-[100px] mb-4"
+							className={cn(
+								"min-h-[100px] mb-4",
+								shouldShowIngredientLineTable(formData) && "opacity-90",
+							)}
 						/>
 					</div>
 					<div>
@@ -523,9 +559,21 @@ export default function EditSelectedMealDetails({
 							onChange={onChangeHandler}
 						/>
 					</label>
-					<Button className="w-full mt-4" variant="wz" onClick={updateDish}>
-						Save
-					</Button>
+					<div className="mt-4 flex flex-col gap-2">
+						{onReplaceRequest && !draftMode && replaceIndex == null && (
+							<Button
+								type="button"
+								variant="outline"
+								className="w-full"
+								onClick={() => goToRecipePicker(onReplaceRequest)}
+							>
+								Replace with another dish
+							</Button>
+						)}
+						<Button className="w-full" variant="wz" onClick={updateDish}>
+							{replaceIndex != null ? "Confirm replacement" : "Save changes"}
+						</Button>
+					</div>
 					<p className="text-sm text-black/70 mt-4 text-left">
 						We're constantly improving our data. If you notice anything unusual,
 						please share your{" "}
@@ -632,24 +680,28 @@ function ServingAdder({ onSave }) {
 }
 
 function MealCalories({ recipe }) {
+	const nutrition = getServingNutrition(recipe);
+	const servingLabel =
+		recipe?.serving_size || formatServingSizeLabel(recipe);
+
 	return (
 		<div className="flex flex-row flex-wrap gap-1">
 			<Badge className="bg-[#EFEFEF] text-black">
 				<span className="text-black/40">Serving Size -</span>
-				{recipe?.serving_size}
+				{servingLabel}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
 				<span className="text-black/40">Kcal -</span>
-				{recipe?.calories}
+				{nutrition.calories}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Protien -</span> {recipe.protein}
+				<span className="text-black/40">Protien -</span> {nutrition.protein}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Carbs -</span> {recipe.carbohydrates}
+				<span className="text-black/40">Carbs -</span> {nutrition.carbohydrates}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Fats -</span> {recipe.fats}
+				<span className="text-black/40">Fats -</span> {nutrition.fats}
 			</Badge>
 			{recipe.measure !== undefined && (
 				<Badge className="bg-[#EFEFEF] text-black">
@@ -661,21 +713,22 @@ function MealCalories({ recipe }) {
 }
 
 function RecipeCalories({ recipe }) {
+	const nutrition = getServingNutrition(recipe);
+
 	return (
 		<div className="flex flex-row flex-wrap gap-1">
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Protien -</span>{" "}
-				{recipe?.calories?.proteins}
+				<span className="text-black/40">Protien -</span> {nutrition.protein}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Carbs -</span> {recipe?.calories?.carbs}
+				<span className="text-black/40">Carbs -</span> {nutrition.carbohydrates}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
-				<span className="text-black/40">Fats -</span> {recipe?.calories?.fats}
+				<span className="text-black/40">Fats -</span> {nutrition.fats}
 			</Badge>
 			<Badge className="bg-[#EFEFEF] text-black">
 				<span className="text-black/40">Kcal -</span>
-				{recipe?.calories?.total}
+				{nutrition.calories}
 			</Badge>
 		</div>
 	);

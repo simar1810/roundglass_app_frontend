@@ -203,3 +203,31 @@ export const checkArray = function (arr) {
     ? arr
     : []
 }
+
+export const parseMeasurementWithUncertainty = function (measurementValue) {
+  if (typeof measurementValue === "number") {
+    return {
+      number: measurementValue,
+      uncertainty: null,
+    };
+  }
+
+  if (typeof measurementValue !== "string") {
+    return { number: null, uncertainty: null };
+  }
+
+  const pattern = /-?\d+(\.\d+)?/g;
+  const matches = measurementValue.match(pattern);
+
+  if (!matches) {
+    return {
+      number: null,
+      uncertainty: null,
+    };
+  }
+
+  return {
+    number: parseFloat(matches[0]),
+    uncertainty: matches[1] ? parseFloat(matches[1]) : null,
+  };
+};

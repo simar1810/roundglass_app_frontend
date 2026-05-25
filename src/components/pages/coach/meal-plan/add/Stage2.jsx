@@ -1,7 +1,6 @@
 import { DisplayMealStats } from "@/app/(authorized)/coach/meals/list-custom/[id]/page";
 import { Button } from "@/components/ui/button";
 import {
-	AI_MEAL_PLAN_STORAGE_KEY,
 	DRAFT_PLAN_ID_STORAGE_KEY,
 	DRAFT_PLAN_MODE_STORAGE_KEY,
 	getMealPlanStorageKey,
@@ -20,7 +19,7 @@ import { _throwError, checkArray, format24hr_12hr } from "@/lib/formatter";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { useAppSelector } from "@/providers/global/hooks";
 import { format } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Clock, ListCollapse, PanelLeftClose, PanelLeftOpen, SquarePen, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Clock, ListCollapse, SquarePen, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -35,7 +34,6 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import useMealPlanAutoSave from "@/hooks/useMealPlanAutoSave";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 const DRAFT_API_DEBOUNCE_MS = 1500;
 /** When a draft PUT is already in flight, debounced saves skip; retry so bulk actions (e.g. copy meals) are not dropped. */
 const DRAFT_API_BUSY_RETRY_MS = 400;
@@ -64,7 +62,6 @@ export default function Stage2({
 	const onToggleViewType = () => setViewType(prev => prev === "horizontal" ? "vertical" : "horizontal")
 	const [loading, setLoading] = useState(false);
 	const [previewOpen, setPreviewOpen] = useState(false);
-	const [metaCollapsed, setMetaCollapsed] = useState(false);
 	const [lastSavedAt, setLastSavedAt] = useState(null); // Date or null
 	const isFirstMountRef = useRef(true);
 	const stateRef = useRef(null);
@@ -85,7 +82,6 @@ export default function Stage2({
 		savedKey,
 		setLastSavedAt
 	})
-	const aiKey = getMealPlanStorageKey(AI_MEAL_PLAN_STORAGE_KEY, coachId);
 	const draftIdKey = getMealPlanStorageKey(DRAFT_PLAN_ID_STORAGE_KEY, coachId);
 	const draftModeKey = getMealPlanStorageKey(DRAFT_PLAN_MODE_STORAGE_KEY, coachId);
 
@@ -94,10 +90,6 @@ export default function Stage2({
 			dispatch(changeStateDifferentCreationMeal(context));
 		}
 	}, [context, dispatch]);
-
-	// Debounced auto-save to localStorage for manual plans only (skip first mount to avoid flashing "Auto-saving..." on load).
-	// AI plans are already saved on the server; no autosave. Requires coach to enable autosave in Portfolio → Settings.
-	
 
 	const draftApiTimerRef = useRef(null);
 	const isDraftSavingRef = useRef(false);
@@ -108,13 +100,10 @@ export default function Stage2({
 	// edit + loaded plan id (published or server draft): skip first debounced tick, then silent draft PUT on same id.
 	const editExistingPlanBaselineRef = useRef({ planId: null, sig: null });
 
-	// Debounced auto-save to draft API only when draft-relevant content actually changed (manual plans only).
-	// Skip for AI plans. Requires coach to enable autosave in Portfolio → Settings.
+	// Debounced auto-save to draft API when draft-relevant content changes. Requires autosave in Portfolio → Settings.
 	useEffect(() => {
 		if (isFirstMountRef.current) return;
 		if (!mealPlanAutosaveEnabled) return;
-		const isAiPlan = Boolean(state.isAiGenerated || state.aiMealPlanId);
-		if (isAiPlan) return;
 
 		// Deterministic signature so copy-meal-plan, thumbnail & text changes trigger draft save
 		const selectedPlansOrdered = state.selectedPlans && typeof state.selectedPlans === "object"
@@ -148,10 +137,6 @@ export default function Stage2({
 				}, DRAFT_API_BUSY_RETRY_MS);
 				return;
 			}
-			// Never autosave AI-generated plans – those are managed via explicit saves only.
-			const isAiPlan = Boolean(s.isAiGenerated || s.aiMealPlanId);
-			if (isAiPlan) return;
-
 			// If we already have a draft id (created via a previous silent draft save),
 			// always autosave into that draft – never touch the original plan id.
 			if (draftIdRef.current) {
@@ -379,12 +364,9 @@ export default function Stage2({
 			const plans = {};
 			let toastId;
 
-			// Check if this is an AI-generated meal plan that already exists
-			const aiMealPlanId = state.aiMealPlanId;
-			const isUpdatingAiPlan = Boolean(aiMealPlanId);
 			const selectedPlans = updateMealPlanDishes(state.selectedPlans);
 			for (const key in selectedPlans) {
-				toastId = silent ? null : toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} Meal Plan - ${key}...`);
+				toastId = silent ? null : toast.loading(`Creating Meal Plan - ${key}...`);
 
 				// Normalize the plan data to ensure it's in the correct format
 				let planData = selectedPlans[key];
@@ -414,8 +396,6 @@ export default function Stage2({
 					_throwError(`No meals found for ${key}. Please add at least one meal.`);
 				}
 
-				// For AI plans, the day plans might already exist, but we'll still create/update them
-				// The backend will handle updating existing plans if needed
 				const createdMealPlan = await sendData(
 					"app/create-custom-plan",
 					mealPlanCreationRP(planData)
@@ -437,74 +417,48 @@ export default function Stage2({
 				if (uploadToastId) toast.dismiss(uploadToastId);
 			}
 
-			toastId = silent ? null : toast.loading(`${isUpdatingAiPlan ? 'Updating' : 'Creating'} The Custom Meal Plan...`);
+			toastId = silent ? null : toast.loading("Creating The Custom Meal Plan...");
 			const formData = dailyMealRP(state);
 
-			// If this is an AI-generated plan with an ID, use PUT to update instead of POST to create
-			if (isUpdatingAiPlan) {
-				const response = await sendData(
-					`app/meal-plan/custom`,
-					{
-						...formData,
-						image: thumbnail?.img || state.thumbnail || state.image,
-						plans: selectedPlans,
-						id: aiMealPlanId,
-						planIds: plans,
-						draft,
-						isAiGenerated: Boolean(state.isAiGenerated),
-					},
-					"PUT"
-				);
-				if (toastId) toast.dismiss(toastId);
-				if (loadingToastId) toast.dismiss(loadingToastId);
-				if (response.status_code !== 200) _throwError(response.message);
-				cache.delete("custom-meal-plans");
-				if (silent) return;
-				toast.success(response.message);
-				localStorage.removeItem(aiKey);
-				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
-			} else {
-				// POST create: backend expects "plans" to be day key -> plan ID string (from create-custom-plan), not the full meal structure
-				const response = await sendData(`app/meal-plan/custom`, {
-					...formData,
-					image: thumbnail?.img || state.thumbnail || state.image,
-					plans,
-					draft,
-					isAiGenerated: Boolean(state.isAiGenerated),
-				});
-				if (toastId) toast.dismiss(toastId);
-				if (loadingToastId) toast.dismiss(loadingToastId);
-				if (response.status_code !== 200) _throwError(response.message);
-				cache.delete("custom-meal-plans");
-				if (silent) {
-					const data = response?.data;
-					const newId =
-						data?._id ??
-						data?.id ??
-						data?.planId ??
-						data?.mealPlanId ??
-						response?._id ??
-						response?.id ??
-						(typeof data === "string" ? data : null);
-					if (newId) {
-						draftIdRef.current = newId;
-						dispatch(customWorkoutUpdateField("id", newId));
-						dispatch(customWorkoutUpdateField("editPlans", plans));
-						dispatch(customWorkoutUpdateField("creationType", "edit"));
-						if (typeof localStorage !== "undefined") {
-							localStorage.setItem(draftIdKey, newId);
-							localStorage.setItem(draftModeKey, state.mode || "daily");
-						}
-						setLastSavedAt(new Date());
+			// POST create: backend expects "plans" to be day key -> plan ID string (from create-custom-plan)
+			const response = await sendData(`app/meal-plan/custom`, {
+				...formData,
+				image: thumbnail?.img || state.thumbnail || state.image,
+				plans,
+				draft,
+			});
+			if (toastId) toast.dismiss(toastId);
+			if (loadingToastId) toast.dismiss(loadingToastId);
+			if (response.status_code !== 200) _throwError(response.message);
+			cache.delete("custom-meal-plans");
+			if (silent) {
+				const data = response?.data;
+				const newId =
+					data?._id ??
+					data?.id ??
+					data?.planId ??
+					data?.mealPlanId ??
+					response?._id ??
+					response?.id ??
+					(typeof data === "string" ? data : null);
+				if (newId) {
+					draftIdRef.current = newId;
+					dispatch(customWorkoutUpdateField("id", newId));
+					dispatch(customWorkoutUpdateField("editPlans", plans));
+					dispatch(customWorkoutUpdateField("creationType", "edit"));
+					if (typeof localStorage !== "undefined") {
+						localStorage.setItem(draftIdKey, newId);
+						localStorage.setItem(draftModeKey, state.mode || "daily");
 					}
-					return;
+					setLastSavedAt(new Date());
 				}
-				toast.success(response.message);
-				localStorage.removeItem(savedKey);
-				localStorage.removeItem(draftIdKey);
-				localStorage.removeItem(draftModeKey);
-				router.push(`/coach/meals/list-custom?mode=${state.mode}`);
+				return;
 			}
+			toast.success(response.message);
+			localStorage.removeItem(savedKey);
+			localStorage.removeItem(draftIdKey);
+			localStorage.removeItem(draftModeKey);
+			router.push(`/coach/meals/list-custom?mode=${state.mode}`);
 		} catch (error) {
 			if (loadingToastId) toast.dismiss(loadingToastId);
 			toast.error(error.message || "Something went wrong!");
@@ -525,24 +479,20 @@ export default function Stage2({
 	return (
 		<div className="flex flex-col gap-y-4 relative">
 			<div className={cn("md:flex items-center justify-between")}>
-				<DisplayMealStats meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }} />
-				<div className="px-4 py-2">
+				<DisplayMealStats
+					meals={{ plans: { [state.selectedPlan]: state.selectedPlans[state.selectedPlan] } ?? {} }}
+					tdee={
+						state.tdeeEnabled
+							? {
+								targetCalories: state.tdeeTargetCalories,
+								macroTargets: state.tdeeMacroTargets || null,
+							}
+							: null
+					}
+				/>
+				<div className="px-4 py-2 flex items-center gap-3">
 					<div className="flex items-center justify-between">
 						<div className="flex p-1 bg-slate-100 rounded-xl border border-gray-200 gap-2">
-							<button
-								onClick={() => setMetaCollapsed(prev => !prev)}
-								className={`p-2 rounded-[8px] transition-all duration-200 ${metaCollapsed
-									? 'bg-white shadow-sm border border-gray-100'
-									: 'opacity-70 hover:opacity-100'
-									}`}
-								title={metaCollapsed ? "Show plan details panel" : "Hide plan details panel"}
-							>
-								{metaCollapsed ? (
-									<PanelLeftOpen className="w-5 h-5 text-slate-600" />
-								) : (
-									<PanelLeftClose className="w-5 h-5 text-slate-600" />
-								)}
-							</button>
 							<button
 								onClick={() => onToggleViewType("horizontal")}
 								className={`p-2 rounded-[8px] transition-all duration-200 ${viewType === 'horizontal'
@@ -573,8 +523,8 @@ export default function Stage2({
 					</div>
 				</div>
 			</div>
-			<div className={cn("grid gap-6 md:gap-4", viewType === "vertical" || metaCollapsed ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:divide-x-2")}>
-				{!metaCollapsed && <CustomMealMetaData viewType={viewType} />}
+			<div className={cn("grid gap-6 md:gap-4 md:divide-x-2", viewType === "vertical" ? "grid-cols-1 md:grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
+				<CustomMealMetaData viewType={viewType} />
 				<div className={cn("", viewType === "horizontal" && "border-1 p-4 rounded-[10px] bg-slate-50/20")}>
 					{viewType === "vertical" && (
 						<div className="flex items-center justify-between grow mb-4">
@@ -687,6 +637,7 @@ export default function Stage2({
 					</div>
 				)}
 			</div>
+
 		</div>
 	);
 }
@@ -778,4 +729,13 @@ function parseImages(dish) {
 		image: dish.s3,
 		s3: undefined
 	}
+}
+
+function parseNum(val) {
+	if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+	if (typeof val === "string") {
+		const n = parseFloat(val.replace(/,/g, ""));
+		return Number.isFinite(n) ? n : 0;
+	}
+	return 0;
 }

@@ -64,8 +64,6 @@ function CustomWorkoutContainer() {
           // the assigned/original plan until explicit Save.
           originalPlanId: creationType === "edit" && !mealPlan.draft ? mealPlan._id : undefined,
           noOfDays: mealPlan.noOfDays,
-          isAiGenerated: Boolean(mealPlan.isAiGenerated),
-          aiMealPlanId: mealPlan.isAiGenerated ? mealPlan._id : undefined,
         }))
       } else if (["daily", "weekly", "monthly"].includes(mode)) {
         dispatch(selectWorkoutType(mode))

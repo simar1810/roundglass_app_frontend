@@ -6,7 +6,6 @@ export const DRAFT_PLAN_ID_STORAGE_KEY = "mealPlanDraftId";
 export const DRAFT_PLAN_MODE_STORAGE_KEY = "mealPlanDraftMode";
 
 /** Base key for AI-generated meal plan in localStorage */
-export const AI_MEAL_PLAN_STORAGE_KEY = "aiMealPlan";
 
 /**
  * Returns coach-scoped storage key so another coach doesn't see this one's autosave/draft.

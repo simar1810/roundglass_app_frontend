@@ -6,14 +6,55 @@ export function calorieCounterReducer(state, action) {
         query: action.payload
       }
 
-    case "UPDATE_SELECTED_RECIPES":
-      const length = state.selected.length
-      const selected = state.selected.filter(recipe => recipe !== action.payload);
-      if (selected.length === length) selected.push(action.payload)
+    case "UPDATE_SELECTED_RECIPES": {
+      // Prevent adding invalid IDs (null, undefined, empty string)
+      if (!action.payload || action.payload === "" || action.payload === null || action.payload === undefined) {
+        return state;
+      }
+      
+      const isSelected = state.selected.includes(action.payload);
+      let selected;
+      let quantities = { ...state.quantities };
+      let selectedMeasures = { ...state.selectedMeasures };
+
+      if (isSelected) {
+        selected = state.selected.filter(id => id !== action.payload);
+        delete quantities[action.payload];
+        delete selectedMeasures[action.payload];
+      } else {
+        selected = [...state.selected, action.payload];
+        quantities[action.payload] = 1;
+      }
+
       return {
         ...state,
-        selected
+        selected,
+        quantities,
+        selectedMeasures
       }
+    }
+
+    case "INCREASE_QUANTITY": {
+      return {
+        ...state,
+        quantities: {
+          ...state.quantities,
+          [action.payload]: (state.quantities[action.payload] || 1) + 1
+        }
+      }
+    }
+
+    case "DECREASE_QUANTITY": {
+      const currentQty = state.quantities[action.payload] || 1;
+      if (currentQty <= 1) return state;
+      return {
+        ...state,
+        quantities: {
+          ...state.quantities,
+          [action.payload]: currentQty - 1
+        }
+      }
+    }
 
     case "UPDATE_VIEW":
       if (state.selected.length <= 0) return state;
@@ -29,8 +70,18 @@ export function calorieCounterReducer(state, action) {
         view: 2
       }
 
+    case "UPDATE_MEASURE": {
+      return {
+        ...state,
+        selectedMeasures: {
+          ...state.selectedMeasures,
+          [action.payload.recipeId]: action.payload.measure
+        }
+      }
+    }
+
     default:
-      state;
+      return state;
   }
 }
 
@@ -59,5 +110,26 @@ export function setCalorieResult(dishesData) {
   return {
     type: "UPDATE_CALORIE_RESULT",
     payload: dishesData
+  }
+}
+
+export function increaseQuantity(recipeId) {
+  return {
+    type: "INCREASE_QUANTITY",
+    payload: recipeId
+  }
+}
+
+export function decreaseQuantity(recipeId) {
+  return {
+    type: "DECREASE_QUANTITY",
+    payload: recipeId
+  }
+}
+
+export function updateMeasure(recipeId, measure) {
+  return {
+    type: "UPDATE_MEASURE",
+    payload: { recipeId, measure }
   }
 }

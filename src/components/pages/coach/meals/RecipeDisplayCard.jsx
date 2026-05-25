@@ -1,140 +1,275 @@
 import RecipeModal from "@/components/modals/RecipeModal";
 import DeleteRecipeModal from "@/components/modals/tools/DeleteRecipeModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import RecipeIngredientsDetailBlock from "@/components/recipes/RecipeIngredientsDetailBlock";
 import CategoryBadge from "@/features/feature-categories/components/CategoryBadge";
-import { EllipsisVertical } from "lucide-react";
+import { useFeatureScope } from "@/hooks/useFeatureScope";
+import {
+  getRecipeIngredientsDisplayText,
+  hasIngredientLineItems,
+} from "@/lib/recipes/recipeIngredientsDisplay";
+import { cn } from "@/lib/utils";
+import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
 export default function RecipeDisplayCard({ plan }) {
+  const { hasAccess: canManageMeals } = useFeatureScope("meal_plans:manage");
   const [modal, setModal] = useState(false);
-  return <Card
-    className="p-0 rounded-[4px] shadow-none gap-2"
-  >
-    {modal && <DisplayRecipeDetails
-      recipe={plan}
-      setModal={setModal}
-    />}
-    <CardHeader className="relative aspect-video">
-      <Image
-        fill
-        src={plan.image || "/not-found.png"}
-        alt=""
-        className="object-cover bg-black"
-        onClick={() => setModal(true)}
-        onError={e => e.target.src = "/not-found.png"}
-      />
-      {plan.tag === "ADMIN"
-        ? <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Admin</Badge>
-        : <Badge variant="wz" className="text-[9px] font-semibold absolute top-2 left-2">Custom</Badge>}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild className="text-white w-[16px] !absolute top-2 right-2">
-          {!plan.admin && <EllipsisVertical className="cursor-pointer" />}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="font-semibold">
-          <RecipeModal type="edit" recipe={plan} />
-          <DropdownMenuSeparator className="mx-1" />
-          <DropdownMenuLabel className="!text-[12px]  font-semibold py-0">
-            <DeleteRecipeModal _id={plan._id} />
-          </DropdownMenuLabel>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </CardHeader>
-    <CardContent onClick={() => setModal(true)} className="p-2 pt-1">
-      <div className="flex items-start justify-between gap-1">
-        <h5 className="text-[14px]">{plan.title}</h5>
-        {/* <Button variant="wz" size="sm" className="h-auto p-1">Assign</Button> */}
-      </div>
-      <p className="text-[12px] mb-4 text-[var(--dark-1)]/25 leading-tight mt-1">
-        {plan.ingredients}
-      </p>
-      <CategoryBadge
-        category={plan.category}
-        subcategory={plan.subCategory}
-        className="scale-[0.9]"
-      />
-    </CardContent>
-  </Card>
+  const ingredientsPreview = getRecipeIngredientsDisplayText(plan);
+  const isCustom = !plan.admin;
+
+  return (
+    <Card
+      tabIndex={0}
+      aria-label={`View recipe: ${plan.title}`}
+      onClick={() => setModal(true)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setModal(true);
+        }
+      }}
+      className={cn(
+        "group relative gap-0 overflow-hidden rounded-xl border border-border/80 bg-card p-0 shadow-sm transition-all",
+        "cursor-pointer hover:border-[var(--accent-1)]/45 hover:shadow-md",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-1)]/40",
+      )}
+    >
+      {modal && (
+        <DisplayRecipeDetails recipe={plan} setModal={setModal} />
+      )}
+      <CardHeader className="relative aspect-video shrink-0 p-0">
+        <Image
+          fill
+          src={plan.image || "/not-found.png"}
+          alt=""
+          className="object-cover bg-black transition-transform duration-300 group-hover:scale-[1.02]"
+          sizes="(max-width: 768px) 100vw, 25vw"
+          onError={(e) => {
+            e.currentTarget.src = "/not-found.png";
+          }}
+        />
+        {/* Readability + click hint */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"
+          aria-hidden
+        />
+        <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
+          <span className="text-[11px] font-medium text-white/95 drop-shadow-md">
+            Click card to view details
+          </span>
+          <span className="flex items-center gap-0.5 rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+            View
+            <ChevronRight className="size-3 opacity-90" aria-hidden />
+          </span>
+        </div>
+        <Badge
+          variant="wz"
+          className="absolute top-2 left-2 z-10 text-[9px] font-semibold shadow-sm"
+        >
+          {plan.tag === "ADMIN" ? "Admin" : "Custom"}
+        </Badge>
+        {canManageMeals && isCustom ? (
+          <div
+            className="absolute top-2 right-2 z-20 flex flex-wrap items-center justify-end gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <RecipeModal
+              type="edit"
+              recipe={plan}
+              editTrigger={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 gap-1 border border-border/60 bg-white/95 text-[11px] font-semibold text-[var(--dark-1)] shadow-sm backdrop-blur-sm hover:bg-white dark:bg-zinc-900/95 dark:hover:bg-zinc-900"
+                >
+                  <Pencil className="size-3.5 shrink-0" aria-hidden />
+                  Edit
+                </Button>
+              }
+            />
+            <DeleteRecipeModal
+              _id={plan._id}
+              trigger={
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-8 gap-1 px-2.5 text-[11px] font-semibold shadow-sm"
+                >
+                  <Trash2 className="size-3.5 shrink-0" aria-hidden />
+                  Delete
+                </Button>
+              }
+            />
+          </div>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-2 p-3 pt-2">
+        <div className="flex items-start justify-between gap-2">
+          <h5 className="line-clamp-2 text-left text-[14px] font-semibold leading-snug text-[var(--dark-1)]">
+            {plan.title}
+          </h5>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {hasIngredientLineItems(plan) ? (
+            <Badge
+              variant="outline"
+              className="h-5 border-[var(--accent-1)]/50 px-1.5 py-0 text-[9px] font-semibold text-[var(--dark-1)]/80"
+            >
+              Catalog
+            </Badge>
+          ) : null}
+        </div>
+        <p className="line-clamp-3 text-left text-[12px] leading-snug text-[var(--dark-1)]/65">
+          {ingredientsPreview || "—"}
+        </p>
+        <CategoryBadge
+          category={plan.category}
+          subcategory={plan.subCategory}
+          className="scale-[0.9] origin-left"
+        />
+      </CardContent>
+    </Card>
+  );
 }
 
-function DisplayRecipeDetails({
-  recipe,
-  setModal
-}) {
-  return <Dialog
-    open={true}
-    onOpenChange={() => setModal(false)}
-  >
-    <DialogContent className="p-0 max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogTitle className="p-6 border-b text-2xl font-bold text-balance">{recipe.title}</DialogTitle>
+function DisplayRecipeDetails({ recipe, setModal }) {
+  return (
+    <Dialog open onOpenChange={(open) => !open && setModal(false)}>
+      <DialogContent
+        showCloseButton
+        className="max-h-[90vh] max-w-2xl gap-0 overflow-hidden rounded-xl border border-border/70 p-0 shadow-lg sm:max-w-2xl"
+      >
+        <DialogHeader className="shrink-0 space-y-1 border-b border-[var(--accent-1)]/15 bg-[var(--comp-1)]/60 px-6 py-5 text-left">
+          <DialogTitle className="text-balance text-xl font-semibold text-[var(--dark-1)] pr-8">
+            {recipe.title}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-[var(--dark-1)]/55">
+            Recipe details and nutrition per serving.
+          </DialogDescription>
+        </DialogHeader>
 
-      <div className="p-6 space-y-6">
-        {recipe.image && (
-          <div className="w-full h-48 bg-muted rounded-lg overflow-hidden">
-            <img src={recipe.image || "/placeholder.svg"} alt={recipe.title} className="w-full h-full object-contain" />
+        <div className="max-h-[calc(90vh-6rem)] overflow-y-auto px-6 py-6">
+          <div className="space-y-6">
+            {recipe.image ? (
+              <div className="relative h-52 w-full overflow-hidden rounded-lg border border-border/60 bg-muted">
+                <Image
+                  src={recipe.image || "/placeholder.svg"}
+                  alt={recipe.title || "Recipe"}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 42rem"
+                />
+              </div>
+            ) : null}
+
+            <Card className="gap-0 overflow-hidden rounded-lg border border-border/70 shadow-none">
+              <CardHeader className="border-b border-border/60 bg-[var(--comp-1)]/40 px-4 py-3">
+                <CardTitle className="text-base font-semibold text-[var(--dark-1)]">
+                  Nutrition
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                  <MacroTile
+                    label="Calories"
+                    value={recipe.calories?.total}
+                    unit="kcal"
+                    emphasis
+                  />
+                  <MacroTile
+                    label="Protein"
+                    value={recipe.calories?.proteins}
+                    unit="g"
+                  />
+                  <MacroTile
+                    label="Carbs"
+                    value={recipe.calories?.carbs}
+                    unit="g"
+                  />
+                  <MacroTile
+                    label="Fat"
+                    value={recipe.calories?.fats}
+                    unit="g"
+                  />
+                  <MacroTile
+                    label="Fibre"
+                    value={recipe.calories?.fibers}
+                    unit="g"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="gap-0 overflow-hidden rounded-lg border border-border/70 shadow-none">
+              <CardHeader className="border-b border-border/60 bg-[var(--comp-1)]/40 px-4 py-3">
+                <CardTitle className="text-base font-semibold text-[var(--dark-1)]">
+                  Ingredients
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <RecipeIngredientsDetailBlock recipe={recipe} />
+              </CardContent>
+            </Card>
+
+            <Card className="gap-0 overflow-hidden rounded-lg border border-border/70 shadow-none">
+              <CardHeader className="border-b border-border/60 bg-[var(--comp-1)]/40 px-4 py-3">
+                <CardTitle className="text-base font-semibold text-[var(--dark-1)]">
+                  Method
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="whitespace-pre-line text-sm leading-relaxed text-[var(--dark-1)]/90">
+                  {recipe.method?.trim() ? recipe.method : "—"}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Nutritional Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-primary">{recipe.calories.total}</div>
-                <div className="text-sm text-muted-foreground">Total Calories</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-xl font-semibold text-blue-600">{recipe.calories.proteins}g</div>
-                <div className="text-sm text-muted-foreground">Proteins</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-xl font-semibold text-green-600">{recipe.calories.carbs}g</div>
-                <div className="text-sm text-muted-foreground">Carbs</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-xl font-semibold text-yellow-600">{recipe.calories.fats}g</div>
-                <div className="text-sm text-muted-foreground">Fats</div>
-              </div>
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <div className="text-xl font-semibold text-orange-600">{recipe.calories.fibers}g</div>
-                <div className="text-sm text-muted-foreground">Fibers</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Ingredients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="whitespace-pre-line text-foreground leading-relaxed">{recipe.ingredients}</div>
-          </CardContent>
-        </Card>
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Method</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="whitespace-pre-line text-foreground leading-relaxed">{recipe.method}</div>
-          </CardContent>
-        </Card>
+function MacroTile({ label, value, unit, emphasis }) {
+  const display =
+    value != null && value !== "" ? `${value}${unit ? ` ${unit}` : ""}` : "—";
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-border/50 bg-[var(--comp-1)]/35 p-3 text-center",
+        emphasis && "border-[var(--accent-1)]/25 bg-[var(--accent-1)]/8",
+      )}
+    >
+      <div
+        className={cn(
+          "text-lg font-bold tabular-nums text-[var(--dark-1)]",
+          emphasis && "text-[var(--accent-1)]",
+        )}
+      >
+        {display}
       </div>
-    </DialogContent>
-  </Dialog>
+      <div className="mt-1 text-xs font-medium text-[var(--dark-1)]/55">
+        {label}
+      </div>
+    </div>
+  );
 }

@@ -17,13 +17,12 @@ import {
   SAVED_MEAL_PLAN_STORAGE_KEY,
   DRAFT_PLAN_ID_STORAGE_KEY,
   DRAFT_PLAN_MODE_STORAGE_KEY,
-  AI_MEAL_PLAN_STORAGE_KEY,
   getMealPlanStorageKey,
 } from "@/config/state-data/custom-meal";
 import { sendData } from "@/lib/api";
 import { getCustomMealPlans } from "@/lib/fetchers/app";
 import { cn } from "@/lib/utils";
-import { Pencil, Plus, SquarePen, X } from "lucide-react";
+import { Package, Pencil, Plus, SquarePen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -32,16 +31,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FiFilter } from "react-icons/fi";
 import { IoIosArrowDropdown, IoMdAddCircle } from "react-icons/io";
 import { LuTrash } from "react-icons/lu";
-import { PiSparkleFill } from "react-icons/pi";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
+import { useFeatureScope } from "@/hooks/useFeatureScope";
+import CalculatorWrapper from "@/features/meals/tdee-calculator/components/CalculatorWrapper";
 
 export default function Page() {
+  const { hasAccess: canManageMealPlans } = useFeatureScope("meal_plans:manage")
+  const { hasAccess: canManageIngredients } = useFeatureScope(["ingredients:manage", "ingredients:read"])
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "daily";
   const router = useRouter();
 
   const [query, setQuery] = useState("");
+  // typeFilter: "all" | "admin" | "manual" | "draft"
   const typeFilter = searchParams.get("type") || "all";
   const tagFilter = searchParams.get("tag") || "all";
   const [showFilters, setShowFilters] = useState(false);
@@ -60,27 +63,11 @@ export default function Page() {
   const [editingTagId, setEditingTagId] = useState("");
   const [tagDraft, setTagDraft] = useState("");
   const [savingTagId, setSavingTagId] = useState("");
-  const [aiPlanReady, setAiPlanReady] = useState({ ready: false, mode: "daily" });
   const [plansState, setPlansState] = useState([]);
   const coachId = useAppSelector((s) => s.coach?.data?._id) ?? null;
-  const aiKey = getMealPlanStorageKey(AI_MEAL_PLAN_STORAGE_KEY, coachId);
   const savedKey = getMealPlanStorageKey(SAVED_MEAL_PLAN_STORAGE_KEY, coachId);
   const draftIdKey = getMealPlanStorageKey(DRAFT_PLAN_ID_STORAGE_KEY, coachId);
   const draftModeKey = getMealPlanStorageKey(DRAFT_PLAN_MODE_STORAGE_KEY, coachId);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(aiKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object" && (parsed.plan || parsed.mode)) {
-          setAiPlanReady({ ready: true, mode: parsed.mode || "daily" });
-          return;
-        }
-      }
-    } catch (_) { }
-    setAiPlanReady({ ready: false, mode: "daily" });
-  }, [aiKey]);
 
   const setTypeFilter = (value) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -127,7 +114,6 @@ export default function Page() {
     if (typeFilter === "admin") return Boolean(meal.admin);
     if (typeFilter === "manual") return !meal.admin;
     if (typeFilter === "draft") return Boolean(meal.draft);
-    if (typeFilter === "ai") return Boolean(meal.isAiGenerated);
     return true;
   };
   const applyTagFilter = (meal) => {
@@ -271,50 +257,24 @@ export default function Page() {
     <>
       <main className="content-container flex flex-col">
         <div>
-          {aiPlanReady.ready && (
-            <div className="flex flex-wrap items-center justify-between gap-3 py-3 px-4 mb-2 rounded-lg bg-green-50 border border-green-200">
-              <p className="text-sm font-medium text-green-800">
-                <PiSparkleFill className="inline w-4 h-4 mr-1.5 text-[#67BC2A]" />
-                You have an AI meal plan ready to view
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => router.push(`/coach/meals/add-custom/${aiPlanReady.mode}?source=ai`)}
-                  className="px-3 py-1.5 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white text-sm font-medium transition"
-                >
-                  View {aiPlanReady.mode === "weekly" ? "weekly" : aiPlanReady.mode === "monthly" ? "monthly" : "daily"} plan
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    try {
-                      localStorage.removeItem(aiKey);
-                      setAiPlanReady({ ready: false, mode: "daily" });
-                    } catch (_) { }
-                  }}
-                  className="p-1.5 rounded-md text-green-700 hover:bg-green-200/60 transition"
-                  aria-label="Dismiss"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
           <div className="flex flex-col lg:flex-row items-start md:items-center md:justify-between py-3 border-b border-gray-200 relative gap-4">
-            <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <h2 className="text-2xl font-bold text-gray-800">Meals & Recipes</h2>
+              {/* {canManageIngredients && (
+                <Link
+                  href="/coach/meals/ingredients-catalog"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#67BC2A] px-3 py-1.5 text-xs font-semibold text-[#2d5016] bg-white hover:bg-green-50 transition w-fit"
+                >
+                  <Package className="size-3.5 shrink-0" aria-hidden />
+                  Ingredient catalog
+                </Link>
+              )} */}
+            </div>
             <div className="flex gap-3 items-center">
               {/* TDEE calculator temporarily hidden
               <CalculatorWrapper />
               */}
-               <button
-                onClick={() => router.push("/coach/meals/ai")}
-                className="px-2 md:px-3 py-3 md:py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-[10px] md:text-xs"
-              >
-                <PiSparkleFill size={14} className="text-white" />
-                Create AI Meal Plan
-              </button>
-              <div className="relative" ref={dropdownRef}>
+              {canManageMealPlans && <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown((prev) => !prev)}
                   className="px-2 md:px-3 py-2 md:py-3 flex items-center justify-around gap-1 rounded-lg bg-[#67BC2A] hover:bg-green-700 text-white font-semibold text-[10px] md:text-xs"
@@ -342,7 +302,7 @@ export default function Page() {
                     ))}
                   </div>
                 )}
-              </div>
+              </div>}
             </div>
           </div>
           <div className="flex flex-wrap gap-2 items-center justify-between ">
@@ -394,7 +354,6 @@ export default function Page() {
                         { value: "admin", label: "Admin only" },
                         { value: "manual", label: "Manual only" },
                         { value: "draft", label: "Draft only" },
-                        { value: "ai", label: "AI generated only" },
                       ].map(({ value, label }) => (
                         <button
                           key={value}
@@ -535,7 +494,7 @@ export default function Page() {
                       </Tooltip>
                     </>
                   )}
-                  {!meal.admin && !getTagValue(meal) && (
+                  {!meal.admin && !getTagValue(meal) && canManageMealPlans && (
                     <button
                       type="button"
                       onClick={() => openTagModal(meal)}
@@ -551,14 +510,8 @@ export default function Page() {
                       Draft
                     </Badge>
                   )}
-                  {meal.isAiGenerated && (
-                    <Badge className="text-xs font-normal bg-violet-600 hover:bg-violet-700 text-white px-2 py-0.5">
-                      <PiSparkleFill className="w-3 h-3" />
-                      AI
-                    </Badge>
-                  )}
                 </div>
-                {!meal.admin && (
+                {!meal.admin && canManageMealPlans && (
                   <button
                     onClick={() => handleDeleteMeal(meal._id)}
                     className="absolute z-10 top-[-2px] right-[-2px] bg-red-600 hover:bg-red-700 text-white pl-2 pr-3 pt-3 pb-2 rounded-md"
@@ -582,7 +535,7 @@ export default function Page() {
                       Continue to draft
                     </Link>
                   )}
-                  {!meal.draft && (
+                  {!meal.draft && canManageMealPlans && (
                     <AssignMealModal plan={meal} planId={meal._id} type="custom" />
                   )}
                 </div>

@@ -5,6 +5,7 @@ import { checkArray } from "@/lib/formatter";
 import useCurrentStateContext from "@/providers/CurrentStateContext";
 import { Minus, Plus, UtensilsCrossed, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function MealTypeBulkDelete({
   trigger,
@@ -20,12 +21,12 @@ export default function MealTypeBulkDelete({
     </DialogTrigger>}
     <DialogContent className="gap-0 space-y-0 p-0 max-h-[70vh] overflow-y-auto">
       <DialogTitle className="p-4 border-b-1">Bulk Delete Recipes</DialogTitle>
-      <Container />
+      <Container  onOpenChange={onOpenChange}/>
     </DialogContent>
   </Dialog>
 }
 
-function Container() {
+function Container({ onOpenChange }) {
   const closeRef = useRef();
   const [selectedMealTypes, setSelectedMealTypes] = useState([]);
   const { selectedPlans, dispatch } = useCurrentStateContext();
@@ -34,6 +35,17 @@ function Container() {
 
   const handleRemove = (item) => {
     setSelectedMealTypes(prev => prev.filter(opt => opt !== item));
+  };
+
+  const handleSave = () => {
+    dispatch({
+      type: "BULK_DELETE_MEAL_TYPES",
+      payload: { mealTypes: selectedMealTypes }
+    });
+
+    toast.success("Meal type deleted successfully");
+
+     onOpenChange?.(false);
   };
 
   return (
@@ -87,10 +99,7 @@ function Container() {
         <Button 
           variant="wz" 
           className="bg-[var(--accent-1)]/90 hover:bg-[var(--accent-1)] text-white shadow-md shadow-blue-100 transition-transform active:scale-95"
-          onClick={() => dispatch({
-            type: "BULK_DELETE_MEAL_TYPES",
-            payload: { mealTypes: selectedMealTypes }
-          })}
+          onClick={handleSave}
         >
           Save Changes
         </Button>

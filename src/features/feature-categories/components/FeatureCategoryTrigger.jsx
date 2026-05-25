@@ -2,9 +2,12 @@ import { Layers } from "lucide-react";
 import Link from "next/link";
 import { featuresList } from "../config";
 import { useMemo } from "react";
+import { useFeatureScope } from "@/hooks/useFeatureScope";
 
 export default function FeatureCategoryTrigger({ feature }) {
   const featureData = useMemo(() => featuresList[feature], [feature])
+  const { hasAccess } = useFeatureScope(featureData.requiredScope)
+  if (!hasAccess) return <></>
   return <Link
     href={featureData.href}
     className="group flex items-center gap-2 px-4 py-3 bg-white border border-zinc-200 rounded-lg hover:border-[#70C041] hover:bg-[#70C041]/5 transition-all duration-200 shadow-sm"

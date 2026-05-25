@@ -1,410 +1,436 @@
 "use client";
 
-import { ImagePlus, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import RecipeIngredientLineItems from "@/components/pages/coach/meals/IngredientPicker";
 import FormControl from "@/components/FormControl";
-import useCurrentStateContext, { CurrentStateProvider } from "@/providers/CurrentStateContext";
-import { Textarea } from "../ui/textarea";
+import Loader from "@/components/common/Loader";
+import BasicPopoverSelect from "@/components/common/selects/BasicPopoverSelect";
+import { Button } from "@/components/ui/button";
 import {
-  changeFieldvalue,
-  generateRequestPayload,
-  init,
-  newRecipeeReducer,
-  setLineItems,
-  setMode,
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
+	changeFieldvalue,
+	generateRequestPayload,
+	init,
+	isLineItemMode,
+	newRecipeeReducer,
+	validateRecipeForm,
 } from "@/config/state-reducers/new-recipe";
-import { Button } from "../ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sendDataWithFormData } from "@/lib/api";
+import { useFeatureScope } from "@/hooks/useFeatureScope";
+import { mapFeatureCategories } from "@/features/feature-categories/config/helpers";
+import { checkArray } from "@/lib/formatter";
+import { fetchData, sendDataWithFormData } from "@/lib/api";
+import {
+	getRecipeMutationErrorMessage,
+	revalidateRecipeListCaches,
+} from "@/lib/swr/revalidateRecipeCaches";
+import { cn, getObjectUrl } from "@/lib/utils";
+import useCurrentStateContext, {
+	CurrentStateProvider,
+} from "@/providers/CurrentStateContext";
+import { ImagePlus } from "lucide-react";
 import Image from "next/image";
-import { getObjectUrl } from "@/lib/utils";
-import { useRef, useState } from "react";
+import { cloneElement, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
-import useDebounce from "@/hooks/useDebounce";
-import { searchIngredients, getRecipeById } from "@/lib/fetchers/app";
-import { getIngredientRecipeErrorMessage } from "@/lib/utils/ingredientRecipeErrors";
+import useSWR from "swr";
 
-const calorieFields = [
-  { id: 1, label: "Calories", name: "total", unit: "Kcal" },
-  { id: 2, label: "Protein", name: "proteins", unit: "gm" },
-  { id: 3, label: "Carbs", name: "carbs", unit: "gm" },
-  { id: 4, label: "Fat", name: "fats", unit: "gm" },
-  { id: 5, label: "Fibres", name: "fibers", unit: "gm" },
+const MACRO_FIELDS = [
+	{ id: 1, label: "Calories", name: "total", unit: "kcal" },
+	{ id: 2, label: "Protein", name: "proteins", unit: "g" },
+	{ id: 3, label: "Carbs", name: "carbs", unit: "g" },
+	{ id: 4, label: "Fat", name: "fats", unit: "g" },
+	{ id: 5, label: "Fibre", name: "fibers", unit: "g" },
 ];
 
-export default function RecipeModal({ type, recipe }) {
-  const isEdit = type === "edit";
-  const recipeId = recipe?._id;
+const COPY = {
+	new: {
+		title: "Create recipe",
+		save: "Save recipe",
+		defaultTrigger: "Add recipe",
+	},
+	edit: {
+		title: "Edit recipe",
+		save: "Save changes",
+		defaultTrigger: "Edit",
+	},
+};
 
-  const { data: detailData, isLoading: isDetailLoading } = useSWR(
-    isEdit && recipeId ? ["recipe-by-id", recipeId] : null,
-    () => getRecipeById(recipeId)
-  );
-
-  const effectiveRecipe =
-    isEdit && detailData?.data && detailData?.success ? detailData.data : recipe;
-
-  return (
-    <Dialog>
-      {type === "new"
-        ? (
-          <DialogTrigger className="bg-[var(--accent-1)] text-[var(--primary-1)] text-xs md:text-[14px] font-[600] px-4 py-2 rounded-[8px]">
-            Add New Recipe
-          </DialogTrigger>
-        )
-        : (
-          <DialogTrigger className="text-[12px] font-[ 400] px-2">
-            Edit
-          </DialogTrigger>
-        )}
-      <DialogContent className="!max-w-[500px] max-h-[85vh] border-0 p-0 overflow-y-auto gap-0">
-        <DialogHeader className="py-4 px-6 border-b">
-          <DialogTitle className="text-lg font-semibold">{type === "new" ? "New Recipe" : "Edit Recipe"}</DialogTitle>
-        </DialogHeader>
-        {isEdit && recipeId && isDetailLoading && !detailData?.data ? (
-          <div className="px-6 py-6 text-sm text-[var(--dark-1)]/60">
-            Loading recipe details…
-          </div>
-        ) : (
-          <CurrentStateProvider state={init(type, effectiveRecipe)} reducer={newRecipeeReducer}>
-            <NewRecipeContainer type={type} />
-          </CurrentStateProvider>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
+export default function RecipeModal({
+	type,
+	recipe,
+	editTrigger,
+	open,
+	onOpenChange,
+	onTriggerClick,
+}) {
+	const { hasAccess } = useFeatureScope("meal_plans:manage");
+	if (!hasAccess) return null;
+	return (
+		<Container
+			type={type}
+			recipe={recipe}
+			editTrigger={editTrigger}
+			open={open}
+			onOpenChange={onOpenChange}
+			onTriggerClick={onTriggerClick}
+		/>
+	);
 }
 
-async function getLink(type, payload, _id) {
-  if (type === "new") {
-    const response = await sendDataWithFormData("app/addRecipes", payload);
-    return response;
-  }
-  const response = await sendDataWithFormData(`app/editRecipes?id=${_id}`, payload, "PUT");
-  return response;
+function Container({ type, recipe, editTrigger, open, onOpenChange, onTriggerClick }) {
+	const copy = COPY[type === "new" ? "new" : "edit"];
+	const isControlled = open !== undefined;
+
+	const hasTrigger = !isControlled || Boolean(editTrigger);
+
+	return (
+		<Dialog
+			open={isControlled ? open : undefined}
+			onOpenChange={isControlled ? onOpenChange : undefined}
+		>
+			{hasTrigger && type === "new" ? (
+				editTrigger ? (
+					<DialogTrigger asChild>
+						{onTriggerClick
+							? cloneTriggerWithClick(editTrigger, onTriggerClick)
+							: editTrigger}
+					</DialogTrigger>
+				) : (
+					<DialogTrigger
+						className="inline-flex items-center justify-center rounded-lg bg-[var(--accent-1)] px-4 py-2 text-sm font-semibold text-[var(--primary-1)] shadow-sm transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-1)]/50"
+						onClick={() => onTriggerClick?.()}
+					>
+						{copy.defaultTrigger}
+					</DialogTrigger>
+				)
+			) : hasTrigger && editTrigger ? (
+				<DialogTrigger asChild>
+					{onTriggerClick
+						? cloneTriggerWithClick(editTrigger, onTriggerClick)
+						: editTrigger}
+				</DialogTrigger>
+			) : hasTrigger ? (
+				<DialogTrigger className="rounded-md px-2 py-1.5 text-xs font-medium text-[var(--accent-1)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-1)]/40">
+					{copy.defaultTrigger}
+				</DialogTrigger>
+			) : null}
+			<DialogContent className="flex max-h-[min(92vh,820px)] w-[min(96vw,42rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-border/70 p-0 shadow-xl">
+				<DialogHeader className="shrink-0 border-b border-border/60 bg-white px-5 py-4 text-left sm:px-6">
+					<DialogTitle className="text-lg font-semibold tracking-tight text-[var(--dark-1)]">
+						{copy.title}
+					</DialogTitle>
+					<DialogDescription className="sr-only">{copy.title}</DialogDescription>
+				</DialogHeader>
+				<div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--comp-1)]/40">
+					<CurrentStateProvider
+						state={init(type, recipe)}
+						reducer={newRecipeeReducer}
+					>
+						<RecipeForm type={type} saveLabel={copy.save} />
+					</CurrentStateProvider>
+				</div>
+			</DialogContent>
+		</Dialog>
+	);
 }
 
-function NewRecipeContainer({ type }) {
-  const { dispatch, ...state } = useCurrentStateContext();
-  const [loading, setLoading] = useState(false);
-  const closeBtnRef = useRef();
-  const fileRef = useRef();
+function RecipeForm({ type, saveLabel }) {
+	const { isLoading, data } = useSWR("app/feature-categories/recipes", () =>
+		fetchData("app/feature-categories/recipes"),
+	);
+	const { hasAccess: canManageIngredients } = useFeatureScope([
+		"ingredients:read",
+		"ingredients:manage",
+	]);
+	const { dispatch, ...state } = useCurrentStateContext();
+	const [loading, setLoading] = useState(false);
+	const [categories, subCategories] = useMemo(
+		() => mapFeatureCategories(checkArray(data?.data)),
+		[data],
+	);
 
-  const isLineItemsMode = state.mode === "lineItems";
-  const lineItems = Array.isArray(state.lineItems) ? state.lineItems : [];
-  const hasValidLineItems = lineItems.some(
-    (item) => item && (item.ingredientId || item.ingredient) && Number(item.quantityGrams) > 0
-  );
+	const closeBtnRef = useRef(null);
+	const fileRef = useRef(null);
+	const lineItemMode = isLineItemMode(state);
 
-  async function createNewRecipee() {
-    if (!state.title?.trim()) {
-      toast.error("Recipe name is required.");
-      return;
-    }
-    if (!state.method?.trim()) {
-      toast.error("Method is required.");
-      return;
-    }
-    if (isLineItemsMode) {
-      if (!hasValidLineItems) {
-        toast.error("Add at least one ingredient with quantity (grams).");
-        return;
-      }
-    } else {
-      if (!state.ingredients?.trim()) {
-        toast.error("Please provide ingredients (or switch to “Build from ingredients”).");
-        return;
-      }
-    }
+	async function handleSave() {
+		if (loading) return;
+		try {
+			const validation = validateRecipeForm(state);
+			if (!validation.ok) {
+				toast.error(validation.message);
+				return;
+			}
+			setLoading(true);
+			const payload = generateRequestPayload(state);
+			const response = await saveRecipe(type, payload, state._id);
 
-    try {
-      setLoading(true);
-      const rawLineItems = Array.isArray(state.lineItems) ? state.lineItems : [];
-      const transformedLineItems = rawLineItems
-        .map((item) => {
-          const rawId = item?.ingredientId ?? item?.ingredient;
-          let ingredientId = "";
-          if (typeof rawId === "string") ingredientId = rawId;
-          else if (rawId && typeof rawId === "object") {
-            ingredientId = rawId._id || rawId.$oid || rawId?._id?.$oid || "";
-          }
-          const quantityGrams = Number(item?.quantityGrams);
-          return { ingredientId, quantityGrams };
-        })
-        .filter((item) => item.ingredientId && Number.isFinite(item.quantityGrams) && item.quantityGrams > 0);
+			if (response instanceof Error) {
+				toast.error(response.message || "Could not save recipe.");
+				return;
+			}
+			if (!response || typeof response !== "object") {
+				toast.error("Could not save recipe.");
+				return;
+			}
+			if (response.status_code !== 200) {
+				toast.error(getRecipeMutationErrorMessage(response));
+				return;
+			}
 
-      console.log("[RecipeModal] raw selected ingredients", rawLineItems);
-      console.log("[RecipeModal] transformed ingredientLineItems", transformedLineItems);
+			const successMsg =
+				(response.message != null && String(response.message).trim()) ||
+				"Recipe saved.";
+			toast.success(successMsg);
+			await revalidateRecipeListCaches();
+			closeBtnRef.current?.click();
+		} catch (error) {
+			const msg =
+				error?.message ||
+				(typeof error === "string" ? error : "Could not save recipe.");
+			toast.error(msg);
+		} finally {
+			setLoading(false);
+		}
+	}
 
-      const payload = generateRequestPayload(state);
-      const formEntries = [];
-      for (const [key, value] of payload.entries()) {
-        formEntries.push([key, value instanceof File ? `[File:${value.name}]` : value]);
-      }
-      console.log("[RecipeModal] final request FormData entries", formEntries);
+	if (isLoading) {
+		return (
+			<div className="flex h-48 items-center justify-center">
+				<Loader />
+			</div>
+		);
+	}
 
-      const response = await getLink(type, payload, state._id);
-      console.log("[RecipeModal] save response calories", response?.data?.calories);
-      console.log("[RecipeModal] save response ingredientLineItems", response?.data?.ingredientLineItems);
-      if (response?.status_code !== 200) {
-        const context = type === "new" ? "recipe_add" : "recipe_edit";
-        const msg = getIngredientRecipeErrorMessage(response, context);
-        throw new Error(msg);
-      }
-      toast.success(response.message);
-      mutate("getRecipes");
-      closeBtnRef.current.click();
-    } catch (error) {
-      toast.error(error?.message ?? "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  }
+	return (
+		<div
+			className="flex min-h-0 flex-1 flex-col"
+			onWheel={(e) => e.stopPropagation()}
+		>
+			<DialogClose ref={closeBtnRef} />
+			<div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-y-contain px-5 py-5 sm:px-6 sm:py-6">
+				<FormControl
+					placeholder="e.g. Grilled chicken bowl"
+					className="w-full [&_.input]:bg-white"
+					value={state.title}
+					onChange={(e) => dispatch(changeFieldvalue("title", e.target.value))}
+					label="Recipe name"
+				/>
 
-  return (
-    <>
-      <DialogClose ref={closeBtnRef} />
-      <div className="px-6 pt-4 pb-6 space-y-4">
-        <div>
-          <p className="font-medium">Recipe Name</p>
-          <FormControl
-            placeholder="Enter Recipe Name"
-            className="w-full"
-            value={state.title}
-            onChange={(e) => dispatch(changeFieldvalue("title", e.target.value))}
-          />
-        </div>
+				{canManageIngredients ? (
+					<FormSection title="Ingredients">
+						<div className="rounded-xl border border-border/60 bg-white p-3 sm:p-4">
+							<RecipeIngredientLineItems
+								lineItems={state.ingredientLineItems}
+								onLineItemsChange={(next) =>
+									dispatch(changeFieldvalue("ingredientLineItems", next))
+								}
+								disabled={loading}
+								compactHeader
+							/>
+						</div>
+					</FormSection>
+				) : null}
 
-        <div>
-          <p className="font-medium mb-2">Ingredients</p>
-          <Tabs
-            value={state.mode || "legacy"}
-            onValueChange={(v) => dispatch(setMode(v))}
-            className="w-full"
-          >
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="legacy">Free-text ingredients</TabsTrigger>
-              <TabsTrigger value="lineItems">Build from ingredients</TabsTrigger>
-            </TabsList>
-            <TabsContent value="legacy" className="mt-2">
-              <Textarea
-                placeholder="Enter Ingredients"
-                className="w-full min-h-[120px]"
-                value={state.ingredients}
-                onChange={(e) => dispatch(changeFieldvalue("ingredients", e.target.value))}
-              />
-            </TabsContent>
-            <TabsContent value="lineItems" className="mt-2">
-              <RecipeLineItemsBuilder lineItems={lineItems} dispatch={dispatch} />
-            </TabsContent>
-          </Tabs>
-        </div>
+				<FormSection
+					title="Ingredient notes"
+					hint={
+						lineItemMode
+							? "Optional — catalog lines above are used for nutrition."
+							: "List ingredients and amounts as plain text."
+					}
+				>
+					<Textarea
+						placeholder="e.g. 150g chicken breast, 1 cup rice, 1 tbsp olive oil…"
+						className={cn(
+							"min-h-[88px] resize-y border-border/70 bg-white text-sm",
+							lineItemMode && "opacity-80",
+						)}
+						value={state.ingredients}
+						onChange={(e) =>
+							dispatch(changeFieldvalue("ingredients", e.target.value))
+						}
+					/>
+				</FormSection>
 
-        <div>
-          <p className="font-medium">Thumbnail</p>
-          <div className="border-2 border-dashed border-gray-200 rounded-lg">
-            {state.file || state.image
-              ? (
-                <Image
-                  src={getObjectUrl(state.file) || state.image}
-                  alt=""
-                  height={200}
-                  width={200}
-                  className="w-full h-[200px] object-contain"
-                  onClick={() => fileRef.current?.click()}
-                />
-              )
-              : (
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="h-[120px] flex flex-col items-center justify-center text-gray-400 cursor-pointer"
-                >
-                  <ImagePlus size={24} className="mb-2" />
-                  <span>Add Image</span>
-                </div>
-              )}
-            <input
-              ref={fileRef}
-              onChange={(e) => dispatch(changeFieldvalue("file", e.target.files?.[0]))}
-              type="file"
-              hidden
-            />
-          </div>
-        </div>
+				<div className="grid gap-6 sm:grid-cols-2">
+					<FormSection title="Photo" hint="Optional cover image.">
+						<button
+							type="button"
+							onClick={() => fileRef.current?.click()}
+							className="group relative flex w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-white transition-colors hover:border-[var(--accent-1)]/50 hover:bg-[var(--accent-1)]/[0.03]"
+						>
+							{state.file || state.image ? (
+								<Image
+									src={getObjectUrl(state.file) || state.image}
+									alt=""
+									height={160}
+									width={160}
+									className="h-36 w-full object-contain p-2"
+								/>
+							) : (
+								<div className="flex h-36 w-full flex-col items-center justify-center gap-2 text-[var(--dark-1)]/40">
+									<ImagePlus className="size-7" aria-hidden />
+									<span className="text-xs font-medium">Upload photo</span>
+								</div>
+							)}
+							<span className="absolute inset-x-0 bottom-0 bg-black/50 py-1.5 text-center text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+								Change photo
+							</span>
+						</button>
+						<input
+							ref={fileRef}
+							type="file"
+							accept="image/*"
+							hidden
+							onChange={(e) =>
+								dispatch(changeFieldvalue("file", e.target.files?.[0]))
+							}
+						/>
+					</FormSection>
 
-        <div>
-          <p className="font-medium mb-2">Method</p>
-          <Textarea
-            placeholder="Enter Method"
-            className="w-full min-h-[120px]"
-            value={state.method}
-            onChange={(e) => dispatch(changeFieldvalue("method", e.target.value))}
-          />
-        </div>
+					<FormSection title="Method" hint="Steps to prepare this dish.">
+						<Textarea
+							placeholder={"1. Marinate…\n2. Grill…"}
+							className="min-h-[144px] resize-y border-border/70 bg-white text-sm sm:min-h-[9rem]"
+							value={state.method}
+							onChange={(e) =>
+								dispatch(changeFieldvalue("method", e.target.value))
+							}
+						/>
+					</FormSection>
+				</div>
 
-        {!isLineItemsMode && (
-          <div className="grid grid-cols-3 gap-x-4 gap-y-2">
-            {calorieFields.map((field) => (
-              <FormControl
-                key={field.id}
-                value={state[field.name]}
-                onChange={(e) => dispatch(changeFieldvalue(field.name, e.target.value))}
-                className="[&_.label]:font-[400] [&_.label]:text-[14px] [&_.input]:text-[14px]"
-                placeholder="required"
-                type="number"
-                {...field}
-                label={`${field.label} - ${field.unit}`}
-              />
-            ))}
-          </div>
-        )}
-        {isLineItemsMode && (
-          <p className="text-sm text-[var(--dark-1)]/50">Calories will be computed from ingredients.</p>
-        )}
+				<FormSection
+					title="Nutrition"
+					hint={
+						lineItemMode
+							? "Calculated from catalog ingredients when you save."
+							: "Per serving — required when not using catalog lines."
+					}
+				>
+					<div
+						className={cn(
+							"rounded-xl border border-border/60 bg-white p-3 sm:p-4",
+							lineItemMode && "opacity-90",
+						)}
+					>
+						{lineItemMode ? (
+							<p className="mb-3 text-xs leading-snug text-[var(--dark-1)]/50">
+								Manual values are disabled while catalog ingredients are set.
+								{type === "edit"
+									? " Shown numbers reflect your last save until you save again."
+									: null}
+							</p>
+						) : null}
+						<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+							{MACRO_FIELDS.map((field) => (
+								<FormControl
+									key={field.id}
+									value={state[field.name]}
+									onChange={(e) =>
+										dispatch(changeFieldvalue(field.name, e.target.value))
+									}
+									className="[&_.input]:bg-[var(--comp-1)]/50 [&_.input]:text-sm [&_.label]:text-xs [&_.label]:font-medium [&_.label]:text-[var(--dark-1)]/70"
+									placeholder="0"
+									type="number"
+									disabled={lineItemMode}
+									label={`${field.label} (${field.unit})`}
+								/>
+							))}
+							<FormControl
+								value={state.defaultMeasure}
+								onChange={(e) =>
+									dispatch(changeFieldvalue("defaultMeasure", e.target.value))
+								}
+								className="[&_.input]:bg-[var(--comp-1)]/50 [&_.input]:text-sm [&_.label]:text-xs [&_.label]:font-medium [&_.label]:text-[var(--dark-1)]/70"
+								placeholder="0"
+								type="number"
+								disabled={lineItemMode}
+								label="Serving size (g)"
+							/>
+						</div>
+					</div>
+				</FormSection>
 
-        <div className="pt-4">
-          <Button disabled={loading} onClick={createNewRecipee} variant="wz">
-            Save Recipe
-          </Button>
-        </div>
-      </div>
-    </>
-  );
+				<FormSection title="Classification" hint="Helps organize recipes in your library.">
+					<div className="grid gap-3 sm:grid-cols-2">
+						<BasicPopoverSelect
+							options={categories.map((opt) => ({ value: opt, label: opt }))}
+							selectLabel="Category"
+							value={state.category}
+							onValueChange={(value) =>
+								dispatch(changeFieldvalue("category", value))
+							}
+							className="w-full"
+						/>
+						<BasicPopoverSelect
+							options={subCategories.map((opt) => ({ value: opt, label: opt }))}
+							selectLabel="Subcategory"
+							value={state.subCategory}
+							onValueChange={(value) =>
+								dispatch(changeFieldvalue("subCategory", value))
+							}
+							className="w-full"
+						/>
+					</div>
+				</FormSection>
+			</div>
+
+			<div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-white px-5 py-3 sm:px-6">
+				<DialogClose asChild>
+					<Button type="button" variant="outline" className="min-w-[5.5rem]">
+						Cancel
+					</Button>
+				</DialogClose>
+				<Button
+					type="button"
+					variant="wz"
+					className="min-w-[7.5rem]"
+					disabled={loading}
+					onClick={handleSave}
+				>
+					{loading ? "Saving…" : saveLabel}
+				</Button>
+			</div>
+		</div>
+	);
 }
 
-function RecipeLineItemsBuilder({ lineItems, dispatch }) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const debouncedQuery = useDebounce(query, 300);
-  const closeTimeoutRef = useRef(null);
+function FormSection({ title, hint, children }) {
+	return (
+		<section className="space-y-2.5">
+			<div>
+				<h3 className="text-sm font-semibold text-[var(--dark-1)]">{title}</h3>
+				{hint ? (
+					<p className="mt-0.5 text-xs leading-snug text-[var(--dark-1)]/50">{hint}</p>
+				) : null}
+			</div>
+			{children}
+		</section>
+	);
+}
 
-  const { data, isLoading } = useSWR(
-    debouncedQuery && debouncedQuery.trim().length >= 2
-      ? ["ingredients-search", debouncedQuery.trim()]
-      : null,
-    () => searchIngredients({ q: debouncedQuery.trim(), limit: 20 }),
-    { keepPreviousData: true }
-  );
+function cloneTriggerWithClick(trigger, onClick) {
+	if (!trigger || !onClick) return trigger;
+	return cloneElement(trigger, {
+		onClick: (e) => {
+			onClick(e);
+			trigger.props?.onClick?.(e);
+		},
+	});
+}
 
-  const options = Array.isArray(data?.data) ? data.data : [];
-
-  function addIngredient(ingredient) {
-    const newItem = {
-      ingredientId: ingredient._id,
-      quantityGrams: 100,
-      ingredient: { _id: ingredient._id, foodName: ingredient.foodName, foodCode: ingredient.foodCode },
-    };
-    dispatch(setLineItems([...lineItems, newItem]));
-    setQuery("");
-    setOpen(false);
-  }
-
-  function updateQuantity(index, value) {
-    const n = Number(value);
-    const next = lineItems.map((item, i) =>
-      i === index ? { ...item, quantityGrams: Number.isFinite(n) && n >= 0 ? n : item.quantityGrams } : item
-    );
-    dispatch(setLineItems(next));
-  }
-
-  function removeAt(index) {
-    dispatch(setLineItems(lineItems.filter((_, i) => i !== index)));
-  }
-
-  function scheduleClose() {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = setTimeout(() => setOpen(false), 200);
-  }
-
-  function handleFocus() {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    setOpen(true);
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="relative">
-        <FormControl
-          placeholder="Search ingredients (min 2 characters)…"
-          className="w-full"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={handleFocus}
-          onBlur={scheduleClose}
-        />
-        {open && query.trim().length >= 2 && (
-          <div
-            className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[var(--dark-1)]/10 rounded-md shadow-lg max-h-[200px] overflow-y-auto"
-            role="listbox"
-          >
-            {isLoading && <div className="p-3 text-sm text-[var(--dark-1)]/50">Searching…</div>}
-            {!isLoading && options.length === 0 && (
-              <div className="p-3 text-sm text-[var(--dark-1)]/50">No ingredients found.</div>
-            )}
-            {!isLoading &&
-              options.map((ing) => (
-                <button
-                  key={ing._id}
-                  type="button"
-                  className="w-full text-left px-3 py-2 hover:bg-[var(--comp-1)] text-sm"
-                  onClick={() => addIngredient(ing)}
-                  role="option"
-                >
-                  {ing.foodName}
-                  {ing.foodCode ? ` (${ing.foodCode})` : ""}
-                </button>
-              ))}
-          </div>
-        )}
-      </div>
-
-      {lineItems.length > 0 && (
-        <ul className="space-y-2 mt-2">
-          {lineItems.map((item, index) => (
-            <li
-              key={`${item.ingredientId}-${index}`}
-              className="flex items-center gap-2 p-2 rounded-md bg-[var(--comp-1)] border border-[var(--dark-1)]/10"
-            >
-              <span className="flex-1 min-w-0 truncate text-sm">
-                {item.ingredient?.foodName ?? item.ingredientId ?? "—"}
-              </span>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                className="w-20 px-2 py-1 text-sm border border-[var(--dark-1)]/20 rounded"
-                value={item.quantityGrams ?? ""}
-                onChange={(e) => updateQuantity(index, e.target.value)}
-              />
-              <span className="text-xs text-[var(--dark-1)]/50">g</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-[var(--accent-2)]"
-                onClick={() => removeAt(index)}
-                aria-label="Remove"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+async function saveRecipe(type, payload, id) {
+	if (type === "new") {
+		return sendDataWithFormData("app/addRecipes", payload);
+	}
+	return sendDataWithFormData(`app/editRecipes?id=${id}`, payload, "PUT");
 }
