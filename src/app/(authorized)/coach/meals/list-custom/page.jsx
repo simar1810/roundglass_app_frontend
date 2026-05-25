@@ -34,8 +34,6 @@ import { LuTrash } from "react-icons/lu";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 import { useFeatureScope } from "@/hooks/useFeatureScope";
-import CalculatorWrapper from "@/features/meals/tdee-calculator/components/CalculatorWrapper";
-
 export default function Page() {
   const { hasAccess: canManageMealPlans } = useFeatureScope("meal_plans:manage")
   const { hasAccess: canManageIngredients } = useFeatureScope(["ingredients:manage", "ingredients:read"])
@@ -271,9 +269,6 @@ export default function Page() {
               )} */}
             </div>
             <div className="flex gap-3 items-center">
-              {/* TDEE calculator temporarily hidden
-              <CalculatorWrapper />
-              */}
               {canManageMealPlans && <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown((prev) => !prev)}

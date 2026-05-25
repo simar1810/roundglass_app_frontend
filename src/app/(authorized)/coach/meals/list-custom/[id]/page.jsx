@@ -753,7 +753,6 @@ export function DeleteCustomMealPlan({ id }) {
 
 export function DisplayMealStats({
   meals: { plans = {} } = {},
-  tdee = null,
 }) {
   const allMeals = useMemo(() => {
     const arr = []
@@ -834,57 +833,6 @@ export function DisplayMealStats({
     );
   }, [allMeals]);
 
-  const calorieTarget = parseNum(tdee?.targetCalories);
-  const macroTargets = tdee?.macroTargets || {};
-  const showTdeeProgress = calorieTarget > 0;
-
-  if (showTdeeProgress) {
-    const cards = [
-      {
-        key: "calories",
-        label: "Cal",
-        current: totals.calories,
-        target: calorieTarget,
-        unit: "cal",
-      },
-      {
-        key: "protein",
-        label: "Protein",
-        current: totals.protein,
-        target: parseNum(macroTargets?.proteins),
-        unit: "g",
-      },
-      {
-        key: "fats",
-        label: "Fats",
-        current: totals.fats,
-        target: parseNum(macroTargets?.fats),
-        unit: "g",
-      },
-      {
-        key: "carbs",
-        label: "Carbs",
-        current: totals.carbohydrates,
-        target: parseNum(macroTargets?.carbohydrates),
-        unit: "g",
-      },
-    ];
-
-    return <div className="grow bg-white rounded-[10px] border px-3 py-3">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {cards.map((card) => (
-          <MetricRingCard
-            key={card.key}
-            label={card.label}
-            current={card.current}
-            target={card.target}
-            unit={card.unit}
-          />
-        ))}
-      </div>
-    </div>
-  }
-
   return <div className="grow bg-white rounded-[10px]">
     <div className="rounded-lg border px-4 py-2 text-sm text-muted-foreground grid grid-cols-4 gap-6">
       <div>{totals.calories.toFixed(2)} Calories</div>
@@ -902,64 +850,4 @@ function parseNum(val) {
     return Number.isFinite(n) ? n : 0;
   }
   return 0;
-}
-
-function MetricRingCard({ label, current, target, unit }) {
-  const radius = 26;
-  const circumference = 2 * Math.PI * radius;
-  const hasTarget = target > 0;
-  const clampedProgress = hasTarget ? Math.min(current / target, 1) : 0;
-  const strokeDashoffset = circumference - clampedProgress * circumference;
-
-  return (
-    <div className="rounded-xl border bg-slate-50/70 p-2.5">
-      <div className="flex items-center gap-2">
-        <div className="relative h-[62px] w-[62px] shrink-0">
-          <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90">
-            <circle
-              cx="32"
-              cy="32"
-              r={radius}
-              stroke="currentColor"
-              strokeWidth="6"
-              className="text-slate-200"
-              fill="transparent"
-            />
-            {hasTarget && (
-              <circle
-                cx="32"
-                cy="32"
-                r={radius}
-                stroke="currentColor"
-                strokeWidth="6"
-                className={current > target ? "text-red-500" : "text-emerald-500"}
-                fill="transparent"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-              />
-            )}
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-700">
-            {hasTarget ? `${Math.round(Math.min((current / target) * 100, 999))}%` : "NA"}
-          </div>
-        </div>
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
-          {hasTarget ? (
-            <p className="text-sm font-black text-slate-800 tabular-nums">
-              {Math.round(current)}/{Math.round(target)} {unit}
-            </p>
-          ) : (
-            <p className="text-sm font-black text-slate-800 tabular-nums">
-              {Math.round(current)} {unit}
-            </p>
-          )}
-          {!hasTarget && (
-            <p className="text-[10px] text-slate-400">No target</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
