@@ -13,6 +13,20 @@ function normalizeQuantity(value) {
   return num;
 }
 
+function extractIngredientIdFromLine(line) {
+  if (!line || typeof line !== "object") return "";
+  if (line.ingredientId != null && String(line.ingredientId).trim()) {
+    return String(line.ingredientId).trim();
+  }
+  const ing = line.ingredient;
+  if (typeof ing === "string" && ing.trim()) return ing.trim();
+  if (ing && typeof ing === "object") {
+    const id = ing._id ?? ing.$oid ?? ing.id;
+    if (id != null && String(id).trim()) return String(id).trim();
+  }
+  return "";
+}
+
 /** @param {Record<string, unknown> | undefined} recipe */
 export function normalizeIngredientLineItemsFromRecipe(recipe) {
   const raw = recipe?.ingredientLineItems;
@@ -20,18 +34,13 @@ export function normalizeIngredientLineItemsFromRecipe(recipe) {
   return raw
     .map((line) => {
       const ing = line?.ingredient;
-      let ingredientId = "";
-      if (typeof ing === "object" && ing !== null && ing._id != null) {
-        ingredientId = String(ing._id);
-      } else if (line?.ingredientId != null) {
-        ingredientId = String(line.ingredientId);
-      } else if (typeof line?.ingredient === "string") {
-        ingredientId = line.ingredient;
-      }
+      const ingredientId = extractIngredientIdFromLine(line);
       const foodName =
         typeof ing === "object" && ing !== null && ing.foodName
-          ? ing.foodName
-          : line?.foodName || "";
+          ? String(ing.foodName)
+          : line?.foodName
+            ? String(line.foodName)
+            : "";
       const foodCode =
         typeof ing === "object" && ing !== null && ing.foodCode != null
           ? String(ing.foodCode)
@@ -46,7 +55,7 @@ export function normalizeIngredientLineItemsFromRecipe(recipe) {
         ...(foodCode ? { foodCode } : {}),
       };
     })
-    .filter((row) => row.ingredientId);
+    .filter((row) => row.ingredientId && OBJECT_ID_HEX.test(row.ingredientId));
 }
 
 export function newRecipeeReducer(state, action) {

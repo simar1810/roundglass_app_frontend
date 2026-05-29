@@ -27,6 +27,7 @@ import { useFeatureScope } from "@/hooks/useFeatureScope";
 import { mapFeatureCategories } from "@/features/feature-categories/config/helpers";
 import { checkArray } from "@/lib/formatter";
 import { fetchData, sendDataWithFormData } from "@/lib/api";
+import { getRecipeById } from "@/lib/fetchers/app";
 import {
 	getRecipeMutationErrorMessage,
 	revalidateRecipeListCaches,
@@ -87,6 +88,23 @@ export default function RecipeModal({
 function Container({ type, recipe, editTrigger, open, onOpenChange, onTriggerClick }) {
 	const copy = COPY[type === "new" ? "new" : "edit"];
 	const isControlled = open !== undefined;
+	const isEdit = type === "edit";
+	const recipeId = recipe?._id != null ? String(recipe._id) : "";
+
+	const { data: recipeDetail, isLoading: loadingRecipeDetail } = useSWR(
+		isEdit && recipeId ? ["recipe-detail", recipeId] : null,
+		() => getRecipeById(recipeId),
+	);
+
+	const recipeForForm = useMemo(() => {
+		if (!isEdit) return recipe;
+		if (recipeDetail?.status_code === 200 && recipeDetail?.data) {
+			return recipeDetail.data;
+		}
+		return recipe;
+	}, [isEdit, recipe, recipeDetail]);
+
+	const formReady = !isEdit || (!loadingRecipeDetail && Boolean(recipeForForm));
 
 	const hasTrigger = !isControlled || Boolean(editTrigger);
 
@@ -129,12 +147,19 @@ function Container({ type, recipe, editTrigger, open, onOpenChange, onTriggerCli
 					<DialogDescription className="sr-only">{copy.title}</DialogDescription>
 				</DialogHeader>
 				<div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--comp-1)]/40">
-					<CurrentStateProvider
-						state={init(type, recipe)}
-						reducer={newRecipeeReducer}
-					>
-						<RecipeForm type={type} saveLabel={copy.save} />
-					</CurrentStateProvider>
+					{!formReady ? (
+						<div className="flex h-48 items-center justify-center">
+							<Loader />
+						</div>
+					) : (
+						<CurrentStateProvider
+							key={isEdit ? `edit-${recipeId}-${recipeDetail?.data?.updatedAt ?? "list"}` : "new"}
+							state={init(type, recipeForForm)}
+							reducer={newRecipeeReducer}
+						>
+							<RecipeForm type={type} saveLabel={copy.save} />
+						</CurrentStateProvider>
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>
@@ -181,7 +206,13 @@ function RecipeForm({ type, saveLabel }) {
 				return;
 			}
 			if (response.status_code !== 200) {
-				toast.error(getRecipeMutationErrorMessage(response));
+				const detail =
+					(response.error != null && String(response.error).trim()) || "";
+				toast.error(
+					detail
+						? `${getRecipeMutationErrorMessage(response)} (${detail})`
+						: getRecipeMutationErrorMessage(response),
+				);
 				return;
 			}
 
