@@ -6,14 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useIngredientCatalogSearch from "@/hooks/useIngredientCatalogSearch";
 import {
-	filterIngredientsBySource,
 	INGREDIENT_SOURCE_TABS,
 } from "@/lib/ingredients/ingredientSource";
 import { INGREDIENTS_CATALOG_KEY } from "@/lib/swr/revalidateIngredientCatalogCaches";
 import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/providers/global/hooks";
 import { Plus, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 function IngredientSourceTabs({ value, onChange }) {
 	return (
@@ -48,7 +46,6 @@ function IngredientSourceTabs({ value, onChange }) {
  * @param {{ onSelect: (ingredient: Record<string, unknown>) => void, className?: string }} props
  */
 export function IngredientCatalogSearch({ onSelect, className }) {
-	const { _id: coachId } = useAppSelector((state) => state.coach.data);
 	const [sourceFilter, setSourceFilter] = useState("all");
 	const {
 		query,
@@ -66,12 +63,8 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 	} = useIngredientCatalogSearch({
 		namespace: INGREDIENTS_CATALOG_KEY,
 		pageSize: 50,
+		source: sourceFilter,
 	});
-
-	const displayRows = useMemo(
-		() => filterIngredientsBySource(rows, coachId, sourceFilter),
-		[rows, coachId, sourceFilter],
-	);
 
 	const requestOk =
 		!error &&
@@ -121,16 +114,16 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 						{error?.message || data?.message || "Could not load ingredients."}
 					</p>
 				) : null}
-				{!showInitialLoader && requestOk && displayRows.length === 0 ? (
+				{!showInitialLoader && requestOk && rows.length === 0 ? (
 					<p className="p-4 text-center text-sm text-muted-foreground">
-						{rows.length > 0
-							? "No ingredients in this tab. Try All or load more."
-							: "No ingredients match. Try another search."}
+						{sourceFilter === "all"
+							? "No ingredients match. Try another search."
+							: `No ${sourceFilter} ingredients match. Try All or another search.`}
 					</p>
 				) : null}
-				{!showInitialLoader && displayRows.length > 0 ? (
+				{!showInitialLoader && rows.length > 0 ? (
 					<ul className="divide-y divide-border/60">
-						{displayRows.map((item) => (
+						{rows.map((item) => (
 							<li key={String(item._id)}>
 								<button
 									type="button"

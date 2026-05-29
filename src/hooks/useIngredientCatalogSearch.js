@@ -5,14 +5,15 @@ import { searchIngredients } from "@/lib/fetchers/app";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 
-function keyFactory(namespace, q, category, skip) {
-	return [namespace, q, category, skip];
+function keyFactory(namespace, q, category, source, skip) {
+	return [namespace, q, category, source, skip];
 }
 
 export default function useIngredientCatalogSearch({
 	namespace,
 	pageSize = 50,
 	debounceMs = 400,
+	source = "all",
 }) {
 	const [query, setQuery] = useState("");
 	const [category, setCategory] = useState("");
@@ -21,15 +22,17 @@ export default function useIngredientCatalogSearch({
 
 	const debouncedQ = useDebounce(query, debounceMs);
 	const debouncedCategory = useDebounce(category, debounceMs);
+	const normalizedSource = source === "admin" || source === "manual" ? source : "all";
 
 	useEffect(() => {
 		setSkip(0);
 		setRows([]);
-	}, [debouncedQ, debouncedCategory]);
+	}, [debouncedQ, debouncedCategory, normalizedSource]);
 
 	const swrKey = useMemo(
-		() => keyFactory(namespace, debouncedQ, debouncedCategory, skip),
-		[namespace, debouncedQ, debouncedCategory, skip],
+		() =>
+			keyFactory(namespace, debouncedQ, debouncedCategory, normalizedSource, skip),
+		[namespace, debouncedQ, debouncedCategory, normalizedSource, skip],
 	);
 
 	const { data, isLoading, isValidating, error } = useSWR(swrKey, () =>
@@ -38,6 +41,7 @@ export default function useIngredientCatalogSearch({
 			category: debouncedCategory.trim() || undefined,
 			limit: pageSize,
 			skip,
+			source: normalizedSource !== "all" ? normalizedSource : undefined,
 		}),
 	);
 
@@ -85,7 +89,7 @@ export default function useIngredientCatalogSearch({
 		loadMore: () => setSkip((value) => value + pageSize),
 		reset: () => {
 			setSkip(0);
-			// setRows([]);
+			setRows([]);
 		},
 	};
 }

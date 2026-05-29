@@ -91,8 +91,8 @@ function assertIngredientLookupValue(value, fieldName) {
 }
 
 export function searchIngredients(params = {}) {
-  const { q, category, limit, skip } = params;
-  const qs = buildIngredientsQueryString({ q, category, limit, skip });
+  const { q, category, limit, skip, source } = params;
+  const qs = buildIngredientsQueryString({ q, category, limit, skip, source });
   return fetchData(`app/ingredients${qs}`);
 }
 

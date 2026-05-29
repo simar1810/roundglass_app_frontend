@@ -35,6 +35,10 @@ import {
 	INGREDIENTS_ADMIN_KEY,
 	revalidateIngredientCatalogCaches,
 } from "@/lib/swr/revalidateIngredientCatalogCaches";
+import {
+	getAppCoachId,
+	isCoachOwnedIngredient,
+} from "@/lib/ingredients/ingredientSource";
 import { parseMeasurementWithUncertainty } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/providers/global/hooks";
@@ -46,7 +50,7 @@ import {
 	Trash2,
 	UtensilsCrossed,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const TYPE_TABS = [
@@ -54,11 +58,6 @@ const TYPE_TABS = [
 	{ value: "admin", label: "Admin" },
 	{ value: "manual", label: "Manual" },
 ];
-
-function isCoachOwnedIngredient(row, coachId) {
-	if (!coachId || row?.coach == null) return false;
-	return String(row.coach) === String(coachId);
-}
 
 function formatNutritionValue(value) {
 	if (value == null || value === "") return "—";
@@ -326,8 +325,9 @@ export default function IngredientsCatalogPage() {
 }
 
 function IngredientsCatalogContainer() {
-	const { _id: coachId } = useAppSelector((state) => state.coach.data);
+	const coachId = getAppCoachId(useAppSelector((state) => state.coach.data));
 	const { hasAccess: canManage } = useFeatureScope("ingredients:manage");
+	const [typeFilter, setTypeFilter] = useState("all");
 	const {
 		query,
 		setQuery,
@@ -344,6 +344,7 @@ function IngredientsCatalogContainer() {
 	} = useIngredientCatalogSearch({
 		namespace: INGREDIENTS_ADMIN_KEY,
 		pageSize: 50,
+		source: typeFilter,
 	});
 
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -353,18 +354,7 @@ function IngredientsCatalogContainer() {
 	const [saving, setSaving] = useState(false);
 	const [deleteTarget, setDeleteTarget] = useState(null);
 	const [deleting, setDeleting] = useState(false);
-	const [typeFilter, setTypeFilter] = useState("all");
 	const [viewTarget, setViewTarget] = useState(null);
-
-	const displayRows = useMemo(() => {
-		return rows.filter((row) => {
-			const manual = isCoachOwnedIngredient(row, coachId);
-			if (typeFilter === "all") return true;
-			if (typeFilter === "admin") return !manual;
-			if (typeFilter === "manual") return manual;
-			return true;
-		});
-	}, [rows, coachId, typeFilter]);
 
 	function openCreate() {
 		setDialogMode("create");
@@ -407,6 +397,11 @@ function IngredientsCatalogContainer() {
 			}
 			toast.success(getIngredientMutationSuccessMessage(response, operation));
 			setDialogOpen(false);
+			if (dialogMode === "create") {
+				const savedName = String(form.foodName || "").trim();
+				setTypeFilter("manual");
+				if (savedName) setQuery(savedName);
+			}
 			await revalidateIngredientCatalogCaches();
 			reset();
 		} catch (e) {
@@ -503,10 +498,18 @@ function IngredientsCatalogContainer() {
 					/>
 				) : rows.length === 0 ? (
 					<EmptyState
-						title="No ingredients found"
-						description="Try a different search or category. You can add your own ingredient if you have access."
+						title={
+							typeFilter === "all"
+								? "No ingredients found"
+								: `No ${typeFilter === "admin" ? "admin" : "manual"} ingredients`
+						}
+						description={
+							typeFilter === "all"
+								? "Try a different search or category. You can add your own ingredient if you have access."
+								: "Switch to another tab or clear your search filters."
+						}
 						action={
-							canManage ? (
+							canManage && typeFilter !== "admin" ? (
 								<Button variant="wz" className="gap-2" onClick={openCreate}>
 									<Plus className="size-4" />
 									Add your first ingredient
@@ -514,14 +517,9 @@ function IngredientsCatalogContainer() {
 							) : null
 						}
 					/>
-				) : displayRows.length === 0 ? (
-					<EmptyState
-						title={`No ${typeFilter === "admin" ? "admin" : "manual"} ingredients`}
-						description="Switch to another tab or clear your search filters."
-					/>
 				) : (
 					<ul className="flex flex-col gap-3">
-						{displayRows.map((row) => (
+						{rows.map((row) => (
 							<IngredientRow
 								key={String(row._id)}
 								row={row}
