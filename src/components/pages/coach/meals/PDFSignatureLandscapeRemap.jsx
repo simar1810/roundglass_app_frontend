@@ -103,7 +103,6 @@ function createCoverStyles() {
       width: "100%",
       minHeight: 340,
       borderRadius: 14,
-      borderWidth: 0,
       backgroundColor: COVER_GLASS_FILL,
       alignItems: "center",
       paddingTop: 44,

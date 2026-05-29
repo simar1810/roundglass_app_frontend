@@ -18,6 +18,7 @@ import PDFDailyMealSchedule from "../pages/coach/meals/PDFDailyMealSchedule";
 import PDFInvoice from "../pages/coach/meals/PDFInvoice";
 import PDFMealPlan from "../pages/coach/meals/PDFMealPlan";
 import PDFSalesReport from "../pages/coach/retail/PDFSalesReport";
+import PDFSignatureLandscapeRemap from "../pages/coach/meals/PDFSignatureLandscapeRemap";
 
 const Templates = {
   PDFComparison,
@@ -29,6 +30,7 @@ const Templates = {
   PDFCustomMealLandscape,
   PDFCustomMealCompactLandscape,
   PDFCustomMealCompactPortrait,
+  PDFSignatureLandscapeRemap,
   MembershipInvoicePDF,
   PDFSalesReport
 }
@@ -47,10 +49,14 @@ export default function PDFRenderer({ children, pdfTemplate, data, open, onOpenC
         <DialogTitle className="text-[24px]" />
         <DialogDescription className="sr-only">PDF Document Viewer</DialogDescription>
       </DialogHeader>
-      <Container
-        Component={Component}
-        pdfData={data}
-      />
+      {Component ? (
+        <Container
+          Component={Component}
+          pdfData={data}
+        />
+      ) : (
+        <ContentError title={`PDF template "${pdfTemplate}" is not available.`} />
+      )}
     </DialogContent>
   </Dialog>
 }
