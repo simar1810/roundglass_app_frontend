@@ -27,6 +27,20 @@ function extractIngredientIdFromLine(line) {
   return "";
 }
 
+function extractDishIdFromLine(line) {
+  if (!line || typeof line !== "object") return "";
+  if (line.dishId != null && String(line.dishId).trim()) {
+    return String(line.dishId).trim();
+  }
+  const dish = line.dish;
+  if (typeof dish === "string" && dish.trim()) return dish.trim();
+  if (dish && typeof dish === "object") {
+    const id = dish._id ?? dish.$oid ?? dish.id;
+    if (id != null && String(id).trim()) return String(id).trim();
+  }
+  return "";
+}
+
 /** @param {Record<string, unknown> | undefined} recipe */
 export function normalizeIngredientLineItemsFromRecipe(recipe) {
   const raw = recipe?.ingredientLineItems;
@@ -58,6 +72,30 @@ export function normalizeIngredientLineItemsFromRecipe(recipe) {
     .filter((row) => row.ingredientId && OBJECT_ID_HEX.test(row.ingredientId));
 }
 
+/** @param {Record<string, unknown> | undefined} recipe */
+export function normalizeMealLineItemsFromRecipe(recipe) {
+  const raw = recipe?.mealLineItems;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  return raw
+    .map((line) => {
+      const dish = line?.dish;
+      const dishId = extractDishIdFromLine(line);
+      const dishName =
+        typeof dish === "object" && dish !== null && dish.dish_name
+          ? String(dish.dish_name)
+          : line?.dishName
+            ? String(line.dishName)
+            : "";
+      const quantityGrams = Number(line?.quantityGrams);
+      return {
+        dishId: safeText(dishId).trim(),
+        quantityGrams: normalizeQuantity(quantityGrams),
+        ...(dishName ? { dishName } : {}),
+      };
+    })
+    .filter((row) => row.dishId && OBJECT_ID_HEX.test(row.dishId));
+}
+
 export function newRecipeeReducer(state, action) {
   switch (action.type) {
     case "CHANGE_FIELD_VALUE":
@@ -81,9 +119,13 @@ export function changeFieldvalue(name, value) {
   }
 }
 
-/** Non-empty `ingredientLineItems` ⇒ Mode A (catalog line items). */
+/** Catalog line items (ingredients and/or meals) ⇒ server computes macros. */
 export function isLineItemMode(state) {
-  return Array.isArray(state.ingredientLineItems) && state.ingredientLineItems.length > 0;
+  const hasIngredients =
+    Array.isArray(state.ingredientLineItems) && state.ingredientLineItems.length > 0;
+  const hasMeals =
+    Array.isArray(state.mealLineItems) && state.mealLineItems.length > 0;
+  return hasIngredients || hasMeals;
 }
 
 /**
@@ -95,12 +137,12 @@ export function validateRecipeForm(state) {
   }
 
   if (isLineItemMode(state)) {
-    for (const row of state.ingredientLineItems) {
+    for (const row of state.ingredientLineItems || []) {
       const id = safeText(row?.ingredientId).trim();
       if (!OBJECT_ID_HEX.test(id)) {
         return {
           ok: false,
-          message: "Each row must use a catalog ingredient (valid id).",
+          message: "Each ingredient row must use a valid catalog ingredient.",
         };
       }
       const g = Number(row?.quantityGrams);
@@ -111,11 +153,36 @@ export function validateRecipeForm(state) {
         };
       }
     }
+    for (const row of state.mealLineItems || []) {
+      const id = safeText(row?.dishId).trim();
+      if (!OBJECT_ID_HEX.test(id)) {
+        return {
+          ok: false,
+          message: "Each meal row must use a valid meal from the database.",
+        };
+      }
+      const g = Number(row?.quantityGrams);
+      if (!Number.isFinite(g) || g <= 0) {
+        return {
+          ok: false,
+          message: "Each meal needs a quantity greater than 0 g.",
+        };
+      }
+    }
+    if (
+      !(state.ingredientLineItems?.length > 0) &&
+      !(state.mealLineItems?.length > 0)
+    ) {
+      return {
+        ok: false,
+        message: "Add at least one ingredient or meal from the database.",
+      };
+    }
     return { ok: true };
   }
 
   if (!String(state.ingredients || "").trim()) {
-    // return { ok: false, message: "Ingredients are required." };
+    // optional free-text when manual macros provided
   }
   for (const name of MACRO_FIELD_NAMES) {
     const v = state[name];
@@ -146,8 +213,7 @@ export function generateRequestPayload(state) {
 
     if (field === "ingredientLineItems") {
       if (lineMode) {
-        const rawRows = Array.isArray(value) ? value : [];
-        const lines = rawRows
+        const lines = (Array.isArray(value) ? value : [])
           .map((row) => ({
             ingredientId: safeText(row?.ingredientId).trim(),
             quantityGrams: normalizeQuantity(row?.quantityGrams),
@@ -157,6 +223,21 @@ export function generateRequestPayload(state) {
               OBJECT_ID_HEX.test(row.ingredientId) && Number(row.quantityGrams) > 0,
           );
         payload.append("ingredientLineItems", JSON.stringify(lines));
+      }
+      continue;
+    }
+
+    if (field === "mealLineItems") {
+      if (lineMode) {
+        const lines = (Array.isArray(value) ? value : [])
+          .map((row) => ({
+            dishId: safeText(row?.dishId).trim(),
+            quantityGrams: normalizeQuantity(row?.quantityGrams),
+          }))
+          .filter(
+            (row) => OBJECT_ID_HEX.test(row.dishId) && Number(row.quantityGrams) > 0,
+          );
+        payload.append("mealLineItems", JSON.stringify(lines));
       }
       continue;
     }
@@ -192,7 +273,7 @@ export function generateRequestPayload(state) {
 
 export function init(type, recipe) {
   if (type === "new") {
-    return { ...newRecipeInitialState, ingredientLineItems: [] };
+    return { ...newRecipeInitialState, ingredientLineItems: [], mealLineItems: [] };
   }
   const source = recipe && typeof recipe === "object" ? recipe : {};
   const payload = {}
@@ -209,6 +290,7 @@ export function init(type, recipe) {
   payload.subCategory = safeText(source.subCategory);
   payload.defaultMeasure = source?.default_measure?.grams ?? 0;
   payload.ingredientLineItems = normalizeIngredientLineItemsFromRecipe(source);
+  payload.mealLineItems = normalizeMealLineItemsFromRecipe(source);
   payload.file = null;
   return payload
 }

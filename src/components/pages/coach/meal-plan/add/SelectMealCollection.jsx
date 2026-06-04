@@ -127,6 +127,23 @@ function isRecipeListCacheKey(key) {
   );
 }
 
+/** Inline meal search (no dialog) — for meal recall and other embedded flows. */
+export function MealSearchPanel({
+  onMealSelected,
+  continueLabel = "Next",
+  className,
+}) {
+  return (
+    <div className={cn("text-left", className)}>
+      <RecipeesContainer
+        embedded
+        onMealSelected={onMealSelected}
+        continueLabel={continueLabel}
+      />
+    </div>
+  );
+}
+
 function RecipeesContainer({
   index,
   selectedDay,
@@ -135,6 +152,7 @@ function RecipeesContainer({
   onOpenCreateRecipe,
   onMealSelected,
   continueLabel = "Continue",
+  embedded = false,
 }) {
   const [query, setQuery] = useState("");
   const [recipeSource, setRecipeSource] = useState("browse");
@@ -299,13 +317,13 @@ function RecipeesContainer({
           mealPlanAddFlow={Boolean(onCreateCustomMeal)}
           onOpenCreateRecipe={onOpenCreateRecipe}
         />
-        <DialogClose ref={closeRef} />
+        {!embedded && <DialogClose ref={closeRef} />}
       </div>
     );
   }
 
   return (
-    <div className="p-4">
+    <div className={embedded ? "" : "p-4"}>
       {searchHeader}
     {showInitialLoader && !isSearching && <ContentLoader />}
     {isSearching && <SearchLoadingTip />}
@@ -361,7 +379,7 @@ function RecipeesContainer({
             ...servingState,
             per_100g: selected.per_100g || buildPer100gSnapshot(selected),
           });
-          closeRef.current?.click();
+          if (!embedded) closeRef.current?.click();
         }}
         variant="wz"
         className="w-full"
@@ -375,7 +393,7 @@ function RecipeesContainer({
         className="mt-3"
       />
     </>}
-    <DialogClose ref={closeRef} />
+    {!embedded && <DialogClose ref={closeRef} />}
   </div>
   );
 }

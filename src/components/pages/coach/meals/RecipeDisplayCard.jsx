@@ -19,6 +19,7 @@ import RecipeIngredientsDetailBlock from "@/components/recipes/RecipeIngredients
 import CategoryBadge from "@/features/feature-categories/components/CategoryBadge";
 import { useFeatureScope } from "@/hooks/useFeatureScope";
 import {
+  computeCompositionTotalsFromRecipe,
   getRecipeIngredientsDisplayText,
   hasIngredientLineItems,
 } from "@/lib/recipes/recipeIngredientsDisplay";
@@ -152,6 +153,19 @@ export default function RecipeDisplayCard({ plan }) {
 }
 
 function DisplayRecipeDetails({ recipe, setModal }) {
+  const compositionTotals = hasIngredientLineItems(recipe)
+    ? computeCompositionTotalsFromRecipe(recipe)
+    : null;
+  const nutrition = compositionTotals
+    ? {
+        total: compositionTotals.total,
+        proteins: compositionTotals.proteins,
+        carbs: compositionTotals.carbs,
+        fats: compositionTotals.fats,
+        fibers: compositionTotals.fibers,
+      }
+    : recipe.calories;
+
   return (
     <Dialog open onOpenChange={(open) => !open && setModal(false)}>
       <DialogContent
@@ -191,28 +205,28 @@ function DisplayRecipeDetails({ recipe, setModal }) {
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   <MacroTile
                     label="Calories"
-                    value={recipe.calories?.total}
+                    value={nutrition?.total}
                     unit="kcal"
                     emphasis
                   />
                   <MacroTile
                     label="Protein"
-                    value={recipe.calories?.proteins}
+                    value={nutrition?.proteins}
                     unit="g"
                   />
                   <MacroTile
                     label="Carbs"
-                    value={recipe.calories?.carbs}
+                    value={nutrition?.carbs}
                     unit="g"
                   />
                   <MacroTile
                     label="Fat"
-                    value={recipe.calories?.fats}
+                    value={nutrition?.fats}
                     unit="g"
                   />
                   <MacroTile
                     label="Fibre"
-                    value={recipe.calories?.fibers}
+                    value={nutrition?.fibers}
                     unit="g"
                   />
                 </div>

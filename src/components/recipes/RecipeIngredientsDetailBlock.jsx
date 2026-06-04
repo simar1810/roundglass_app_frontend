@@ -39,7 +39,8 @@ export default function RecipeIngredientsDetailBlock({
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead className="min-w-[8rem]">Ingredient</TableHead>
+								<TableHead className="w-[5.5rem]">Type</TableHead>
+								<TableHead className="min-w-[8rem]">Item</TableHead>
 								<TableHead className="w-[5rem]">Code</TableHead>
 								<TableHead className="w-[4rem] text-right">g</TableHead>
 								<TableHead className="w-[5rem] text-right">kcal (est.)</TableHead>
@@ -48,12 +49,15 @@ export default function RecipeIngredientsDetailBlock({
 						</TableHeader>
 						<TableBody>
 							{rows.map((row, i) => (
-								<TableRow key={`${row.name}-${i}`}>
+								<TableRow key={`${row.kind}-${row.name}-${i}`}>
+									<TableCell className="text-[11px] text-muted-foreground">
+										{row.kind}
+									</TableCell>
 									<TableCell className="font-medium text-[13px] max-w-[14rem] whitespace-normal">
 										{row.name}
 									</TableCell>
 									<TableCell className="text-muted-foreground text-[12px]">
-										{row.foodCode}
+										{row.code}
 									</TableCell>
 									<TableCell className="text-right tabular-nums">{row.grams}</TableCell>
 									<TableCell className="text-right tabular-nums text-muted-foreground">
@@ -68,8 +72,8 @@ export default function RecipeIngredientsDetailBlock({
 					</Table>
 				</div>
 				<p className="text-[11px] text-muted-foreground leading-snug">
-					Per-line calories and protein are estimated from catalog values per 100 g and
-					your gram amounts.
+					Per-line calories and protein are estimated from catalog values per 100 g
+					(ingredients and meals) and your gram amounts.
 				</p>
 				{combinedNote ? (
 					<div>

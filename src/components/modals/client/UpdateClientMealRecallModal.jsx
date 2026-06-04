@@ -1,11 +1,20 @@
 import FormControl from "@/components/FormControl";
+import MealRecallRecipeServingPanel from "@/components/modals/client/MealRecallRecipeServingPanel";
+import { MealSearchPanel } from "@/components/pages/coach/meal-plan/add/SelectMealCollection";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchData, sendData } from "@/lib/api";
+import {
+  buildManualMealRecallRow,
+  computeMealRecallTotals,
+  totalsToPractitionerNotes,
+} from "@/lib/mealRecallNutrition";
+import { applyDefaultServingNutrition, buildPer100gSnapshot, getServingNutrition } from "@/lib/nutrition/per100g";
+import { cn } from "@/lib/utils";
 import { format, parse, compareDesc } from "date-fns";
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Database, Pencil, PenLine, Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -23,8 +32,23 @@ export default function UpdateClientMealRecallModal({ id, clientData = {} }) {
   const [entries, setEntries] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [mainModalOpen, setMainModalOpen] = useState(false);
+  const [screen, setScreen] = useState("list");
+  const [editingEntry, setEditingEntry] = useState(null);
 
   const closeBtnRef = useRef(null);
+
+  function openEditScreen(entry = null) {
+    setEditingEntry(entry);
+    setScreen("edit");
+  }
+
+  function handleMainModalChange(open) {
+    setMainModalOpen(open);
+    if (!open) {
+      setScreen("list");
+      setEditingEntry(null);
+    }
+  }
 
   // Load entries when modal opens or data changes
   useEffect(() => {
@@ -39,7 +63,10 @@ export default function UpdateClientMealRecallModal({ id, clientData = {} }) {
           fatG: "",
           commentsKeyObservations: "",
         },
-        meals: recall.meals || [],
+        meals: (recall.meals || []).map((meal) => ({
+          ...meal,
+          entryMode: meal.entryMode || (meal.recipeId ? "recipe" : "manual"),
+        })),
       }));
       setEntries(loadedEntries);
     } else {
@@ -98,47 +125,88 @@ export default function UpdateClientMealRecallModal({ id, clientData = {} }) {
   }
 
   return (
-    <Dialog open={mainModalOpen} onOpenChange={setMainModalOpen}>
+    <Dialog open={mainModalOpen} onOpenChange={handleMainModalChange}>
       <DialogTrigger className="text-[var(--accent-1)] text-[14px] font-semibold pr-3">
         Edit
       </DialogTrigger>
-      <DialogContent className="!max-w-[800px] max-h-[90vh] text-center border-0 px-4 lg:px-10 overflow-y-auto gap-0">
-        <DialogTitle className="text-[24px] mb-4">24-Hour Meal Recall</DialogTitle>
-        <div className="mt-4">
-          <MealRecallModalDisplay 
-            entries={entries}
-            id={id}
-            loading={loading}
-            onDelete={deleteEntry}
-            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
-          />
-            
-          <div className="mt-4">
-            <MealRecallEntryEditModal
-              id={id}
-              entry={null}
-              onSuccess={() => setRefreshTrigger(prev => prev + 1)}
-              trigger={
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] text-center border-0 px-4 lg:px-10 overflow-y-auto gap-0",
+          screen === "edit" ? "!max-w-[820px]" : "!max-w-[800px]"
+        )}
+      >
+        {screen === "list" ? (
+          <>
+            <DialogTitle className="text-[24px] mb-4">24-Hour Meal Recall</DialogTitle>
+            <div className="mt-4">
+              <MealRecallModalDisplay
+                entries={entries}
+                id={id}
+                loading={loading}
+                onDelete={deleteEntry}
+                onEditEntry={openEditScreen}
+                onRefresh={() => setRefreshTrigger((prev) => prev + 1)}
+              />
+              <div className="mt-4">
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2"
                   disabled={loading}
+                  onClick={() => openEditScreen(null)}
                 >
                   <Plus className="w-4 h-4" />
                   Add Meal Recall Entry
                 </Button>
-              }
-            />
-          </div>
-          <DialogClose ref={closeBtnRef} />
-        </div>
+              </div>
+              <DialogClose ref={closeBtnRef} />
+            </div>
+          </>
+        ) : (
+          <MealRecallEntryForm
+            id={id}
+            entry={editingEntry}
+            onBack={() => setScreen("list")}
+            onSuccess={() => {
+              setRefreshTrigger((prev) => prev + 1);
+              setScreen("list");
+              setEditingEntry(null);
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function MealRecallModalDisplay({ entries, id, loading, onDelete, onRefresh }) {
+function MealRecallScreenHeader({ title, subtitle, onBack }) {
+  return (
+    <div className="flex items-start gap-2 mb-4 text-left w-full">
+      {onBack && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 mt-0.5"
+          onClick={onBack}
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+      )}
+      <div className="min-w-0 flex-1">
+        <DialogTitle className="text-[20px] leading-tight mb-0 text-left">
+          {title}
+        </DialogTitle>
+        {subtitle && (
+          <p className="text-xs text-[var(--dark-1)]/60 mt-1 text-left">{subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MealRecallModalDisplay({ entries, id, loading, onDelete, onEditEntry, onRefresh }) {
   const [showAll, setShowAll] = useState(false);
   const INITIAL_DISPLAY_COUNT = 7;
 
@@ -181,12 +249,14 @@ function MealRecallModalDisplay({ entries, id, loading, onDelete, onRefresh }) {
             className="p-4 border-1 rounded-[8px] bg-[var(--comp-1)] space-y-3 relative"
           >
             <div className="flex items-center justify-end gap-2 absolute top-2 right-2">
-              <MealRecallEntryEditModal
-                id={id}
-                entry={entry}
-                index={originalIndex >= 0 ? originalIndex : index}
-                onSuccess={onRefresh}
-              />
+              <button
+                type="button"
+                onClick={() => onEditEntry?.(entry)}
+                className="text-blue-500 hover:text-blue-700 p-1"
+                title="Edit entry"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
               <button
                 type="button"
                 onClick={() => onDelete(entry._id, originalIndex >= 0 ? originalIndex : index)}
@@ -292,6 +362,9 @@ function MealRecallModalDisplay({ entries, id, loading, onDelete, onRefresh }) {
                             <p className="text-[var(--dark-2)] text-xs break-words">{meal.comments}</p>
                           </div>
                         )}
+                        {meal.entryMode === "recipe" && (
+                          <MealRecallMealMacrosDisplay meal={meal} />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -332,9 +405,77 @@ function MealRecallModalDisplay({ entries, id, loading, onDelete, onRefresh }) {
   );
 }
 
-function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
+function MealRecallMealMacrosDisplay({ meal }) {
+  const nutrition = useMemo(() => getServingNutrition(meal), [meal]);
+  const hasMacros =
+    nutrition.calories || nutrition.protein || nutrition.carbohydrates || nutrition.fats;
+
+  if (!hasMacros) return null;
+
+  return (
+    <div className="flex flex-wrap gap-3 mt-2 pt-2 border-t border-dashed">
+      {[
+        { label: "Cal", value: nutrition.calories, unit: "kcal" },
+        { label: "Protein", value: nutrition.protein, unit: "g" },
+        { label: "Carbs", value: nutrition.carbohydrates, unit: "g" },
+        { label: "Fat", value: nutrition.fats, unit: "g" },
+      ].map((stat) =>
+        stat.value ? (
+          <span key={stat.label} className="text-[10px] text-[var(--dark-2)]">
+            <span className="text-[var(--dark-1)]/60">{stat.label}: </span>
+            {stat.value}
+            {stat.unit}
+          </span>
+        ) : null
+      )}
+      {meal.entryMode === "recipe" && (
+        <span className="text-[10px] text-[var(--accent-1)] font-medium">From meal DB</span>
+      )}
+    </div>
+  );
+}
+
+function MealRecallNutrientsBreakdown({ meals }) {
+  const totals = useMemo(() => computeMealRecallTotals(meals), [meals]);
+  const hasData =
+    totals.calories > 0 ||
+    totals.protein > 0 ||
+    totals.carbohydrates > 0 ||
+    totals.fats > 0;
+
+  if (!hasData) return null;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-4">
+      {[
+        { label: "Calories", value: totals.calories, unit: "kcal", color: "text-blue-600" },
+        { label: "Protein", value: totals.protein, unit: "g", color: "text-emerald-600" },
+        { label: "Fats", value: totals.fats, unit: "g", color: "text-amber-600" },
+        { label: "Carbs", value: totals.carbohydrates, unit: "g", color: "text-rose-600" },
+      ].map((stat) => (
+        <div key={stat.label} className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+            {stat.label}
+          </span>
+          <span className={`text-sm font-black ${stat.color}`}>
+            {stat.value.toFixed(1)}
+            <span className="ml-0.5 text-[10px] opacity-70">{stat.unit}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MealRecallEntryForm({ id, entry, onBack, onSuccess }) {
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
+  /** @type {'form' | 'search' | 'serving'} */
+  const [step, setStep] = useState("form");
+  const [pendingRecipe, setPendingRecipe] = useState(null);
+  const [editingMealIndex, setEditingMealIndex] = useState(null);
+  const [showManualMealForm, setShowManualMealForm] = useState(false);
+  const [manualMealDraft, setManualMealDraft] = useState(buildManualMealRecallRow());
+  const [autoCalculateSummary, setAutoCalculateSummary] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
     entry?.date ? (() => {
       try {
@@ -356,8 +497,6 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
     }
   );
 
-  const closeBtnRef = useRef(null);
-
   const mealTypes = [
     "Breakfast",
     "Brunch",
@@ -371,7 +510,12 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
   ];
 
   useEffect(() => {
-    if (open && entry) {
+    setStep("form");
+    setPendingRecipe(null);
+    setEditingMealIndex(null);
+    setShowManualMealForm(false);
+
+    if (entry) {
       setSelectedDate(() => {
         try {
           const parsed = parse(entry.date, "dd-MM-yyyy", new Date());
@@ -380,15 +524,22 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
           return format(new Date(), "yyyy-MM-dd");
         }
       });
-      setMeals(entry.meals || []);
-      setPractitionerNotes(entry.practionerNotes || {
-        totalEnergyIntake: "",
-        proteinG: "",
-        carbohydrateG: "",
-        fatG: "",
-        commentsKeyObservations: "",
-      });
-    } else if (open && !entry) {
+      setMeals(
+        (entry.meals || []).map((meal) => ({
+          ...meal,
+          entryMode: meal.entryMode || (meal.recipeId ? "recipe" : "manual"),
+        }))
+      );
+      setPractitionerNotes(
+        entry.practionerNotes || {
+          totalEnergyIntake: "",
+          proteinG: "",
+          carbohydrateG: "",
+          fatG: "",
+          commentsKeyObservations: "",
+        }
+      );
+    } else {
       setSelectedDate(format(new Date(), "yyyy-MM-dd"));
       setMeals([]);
       setPractitionerNotes({
@@ -398,17 +549,70 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
         fatG: "",
         commentsKeyObservations: "",
       });
+      setManualMealDraft(buildManualMealRecallRow());
+      setAutoCalculateSummary(true);
     }
-  }, [open, entry]);
+  }, [entry]);
 
-  function addMeal() {
-    setMeals([...meals, {
-      mealType: "",
-      foodBeverage: "",
-      quantity: "",
-      location: "",
-      comments: "",
-    }]);
+  const mealTotals = useMemo(() => computeMealRecallTotals(meals), [meals]);
+
+  useEffect(() => {
+    if (!autoCalculateSummary) return;
+    const hasRecipeMeals = meals.some((m) => m.entryMode === "recipe");
+    if (!hasRecipeMeals && mealTotals.calories <= 0) return;
+
+    const computed = totalsToPractitionerNotes(mealTotals);
+    setPractitionerNotes((prev) => ({
+      ...prev,
+      ...computed,
+    }));
+  }, [meals, mealTotals, autoCalculateSummary]);
+
+  function handleRecipeSelected(recipe) {
+    const servingState = applyDefaultServingNutrition(recipe);
+    setPendingRecipe({
+      ...recipe,
+      ...servingState,
+      per_100g: recipe.per_100g || buildPer100gSnapshot(recipe),
+    });
+    setStep("serving");
+  }
+
+  function handleRecipeMealConfirmed(mealRow) {
+    if (editingMealIndex != null) {
+      const updated = [...meals];
+      updated[editingMealIndex] = mealRow;
+      setMeals(updated);
+      setEditingMealIndex(null);
+    } else {
+      setMeals([...meals, mealRow]);
+    }
+    setPendingRecipe(null);
+    setStep("form");
+  }
+
+  function startEditRecipeMeal(mealIndex) {
+    const meal = meals[mealIndex];
+    if (!meal || meal.entryMode !== "recipe") return;
+    setEditingMealIndex(mealIndex);
+    setPendingRecipe(meal);
+    setStep("serving");
+  }
+
+  function cancelAddMealFlow() {
+    setPendingRecipe(null);
+    setEditingMealIndex(null);
+    setStep("form");
+  }
+
+  function addManualMeal() {
+    if (!manualMealDraft.mealType?.trim() && !manualMealDraft.foodBeverage?.trim()) {
+      toast.error("Please enter at least meal type or food/beverage");
+      return;
+    }
+    setMeals([...meals, buildManualMealRecallRow(manualMealDraft)]);
+    setManualMealDraft(buildManualMealRecallRow());
+    setShowManualMealForm(false);
   }
 
   function updateMeal(index, field, value) {
@@ -458,13 +662,7 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
           fatG: practitionerNotes.fatG.trim() || "",
           commentsKeyObservations: practitionerNotes.commentsKeyObservations.trim() || "",
         },
-        meals: meals.map(meal => ({
-          mealType: meal.mealType.trim() || "",
-          foodBeverage: meal.foodBeverage.trim() || "",
-          quantity: meal.quantity.trim() || "",
-          location: meal.location.trim() || "",
-          comments: meal.comments.trim() || "",
-        })),
+        meals: meals.map((meal) => serializeMealRecallRow(meal)),
       };
 
       // If editing, preserve _id and update the specific entry
@@ -498,9 +696,7 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
       mutate(`clientDetails/${id}`, undefined, { revalidate: true });
       mutate(`app/roundglass/client-preference?person=coach&clientId=${id}`, undefined, { revalidate: true });
       
-      if (onSuccess) onSuccess();
-      setOpen(false);
-      closeBtnRef.current?.click();
+      onSuccess?.();
     } catch (error) {
       toast.error(error.message || "Failed to save entry");
     } finally {
@@ -508,21 +704,56 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
     }
   }
 
+  const stepTitles = {
+    form: entry?._id ? "Edit recall entry" : "Add recall entry",
+    search: "Find meal",
+    serving: editingMealIndex != null ? "Edit serving" : "Configure serving",
+  };
+
+  const stepSubtitles = {
+    form: "Add meals from the database or enter them manually.",
+    search: "Browse, search, or pick from your recipes.",
+    serving: "Set meal type and portion — macros update automatically.",
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {trigger ? (
-        <DialogTrigger asChild>{trigger}</DialogTrigger>
-      ) : (
-        <DialogTrigger className="text-blue-500 hover:text-blue-700 p-1" title="Edit entry">
-          <Pencil className="w-4 h-4" />
-        </DialogTrigger>
+    <div className="mt-2">
+      <MealRecallScreenHeader
+        title={stepTitles[step]}
+        subtitle={stepSubtitles[step]}
+        onBack={
+          step === "form"
+            ? onBack
+            : step === "serving"
+              ? () => {
+                  if (editingMealIndex != null) cancelAddMealFlow();
+                  else setStep("search");
+                }
+              : () => setStep("form")
+        }
+      />
+
+      {step === "search" && (
+        <MealSearchPanel
+          continueLabel="Next: serving size"
+          onMealSelected={handleRecipeSelected}
+          className="pb-2"
+        />
       )}
-      <DialogContent className="!max-w-[700px] max-h-[90vh] text-center border-0 px-4 lg:px-10 overflow-y-auto gap-0">
-        <DialogTitle className="text-[24px] mb-4">
-          {entry?._id ? "Edit Meal Recall Entry" : "Add Meal Recall Entry"}
-        </DialogTitle>
-        <div className="mt-4">
-          <div className="text-left space-y-4">
+
+      {step === "serving" && (
+        <MealRecallRecipeServingPanel
+          recipe={pendingRecipe}
+          initialMeal={editingMealIndex != null ? meals[editingMealIndex] : null}
+          mealTypes={mealTypes}
+          onConfirm={handleRecipeMealConfirmed}
+          onCancel={cancelAddMealFlow}
+          confirmLabel={editingMealIndex != null ? "Save changes" : "Add meal"}
+        />
+      )}
+
+      {step === "form" && (
+        <div className="text-left space-y-4">
             {/* Date Selection */}
             <div>
               <label className="block text-sm font-medium mb-1">Date *</label>
@@ -537,120 +768,281 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
 
             {/* Meals Section */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                 <label className="block text-sm font-medium">Meals</label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addMeal}
-                  className="flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add Meal
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => {
+                      setEditingMealIndex(null);
+                      setStep("search");
+                    }}
+                  >
+                    <Database className="w-3 h-3" />
+                    From meal DB
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowManualMealForm((v) => !v)}
+                    className="flex items-center gap-1"
+                  >
+                    <PenLine className="w-3 h-3" />
+                    Manual entry
+                  </Button>
+                </div>
               </div>
+
+              {showManualMealForm && (
+                <div className="p-3 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 mb-3">
+                  <p className="text-xs font-medium text-[var(--dark-1)]/70">Manual meal</p>
+                  <Select
+                    value={manualMealDraft.mealType}
+                    onValueChange={(value) =>
+                      setManualMealDraft((prev) => ({ ...prev, mealType: value }))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Meal Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mealTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormControl
+                    placeholder="Food/Beverage"
+                    value={manualMealDraft.foodBeverage}
+                    onChange={(e) =>
+                      setManualMealDraft((prev) => ({
+                        ...prev,
+                        foodBeverage: e.target.value,
+                      }))
+                    }
+                  />
+                  <FormControl
+                    placeholder="Quantity"
+                    value={manualMealDraft.quantity}
+                    onChange={(e) =>
+                      setManualMealDraft((prev) => ({
+                        ...prev,
+                        quantity: e.target.value,
+                      }))
+                    }
+                  />
+                  <FormControl
+                    placeholder="Location"
+                    value={manualMealDraft.location}
+                    onChange={(e) =>
+                      setManualMealDraft((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }))
+                    }
+                  />
+                  <Textarea
+                    placeholder="Comments (optional)"
+                    value={manualMealDraft.comments}
+                    onChange={(e) =>
+                      setManualMealDraft((prev) => ({
+                        ...prev,
+                        comments: e.target.value,
+                      }))
+                    }
+                    className="min-h-[60px]"
+                  />
+                  <div className="flex gap-2">
+                    <Button type="button" variant="wz" size="sm" onClick={addManualMeal}>
+                      Add manual meal
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowManualMealForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {meals.length > 0 ? (
                 <div className="space-y-3">
                   {meals.map((meal, mealIndex) => (
                     <div key={mealIndex} className="p-3 border-1 rounded-lg bg-[var(--comp-1)] space-y-2 relative">
-                      <button
-                        type="button"
-                        onClick={() => removeMeal(mealIndex)}
-                        className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
-                        title="Remove meal"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                      <Select
-                        value={meal.mealType}
-                        onValueChange={(value) => updateMeal(mealIndex, "mealType", value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Meal Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mealTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormControl
-                        placeholder="Food/Beverage"
-                        value={meal.foodBeverage}
-                        onChange={(e) => updateMeal(mealIndex, "foodBeverage", e.target.value)}
-                      />
-                      <FormControl
-                        placeholder="Quantity"
-                        value={meal.quantity}
-                        onChange={(e) => updateMeal(mealIndex, "quantity", e.target.value)}
-                      />
-                      <FormControl
-                        placeholder="Location"
-                        value={meal.location}
-                        onChange={(e) => updateMeal(mealIndex, "location", e.target.value)}
-                      />
-                      <Textarea
-                        placeholder="Comments (optional)"
-                        value={meal.comments}
-                        onChange={(e) => updateMeal(mealIndex, "comments", e.target.value)}
-                        className="min-h-[60px]"
-                      />
+                      <div className="absolute top-2 right-2 flex items-center gap-1">
+                        {meal.entryMode === "recipe" && (
+                          <button
+                            type="button"
+                            onClick={() => startEditRecipeMeal(mealIndex)}
+                            className="text-blue-500 hover:text-blue-700 p-1"
+                            title="Edit serving"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeMeal(mealIndex)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title="Remove meal"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      {meal.entryMode === "recipe" ? (
+                        <>
+                          <p className="text-xs text-[var(--accent-1)] font-semibold pr-16">
+                            From meal database
+                          </p>
+                          {meal.mealType && (
+                            <p className="text-sm font-medium pr-16">{meal.mealType}</p>
+                          )}
+                          {meal.foodBeverage && (
+                            <p className="text-sm text-[var(--dark-2)] pr-16">{meal.foodBeverage}</p>
+                          )}
+                          {meal.quantity && (
+                            <p className="text-xs text-[var(--dark-1)]/70 pr-16">
+                              Serving: {meal.quantity}
+                            </p>
+                          )}
+                          {meal.location && (
+                            <p className="text-xs text-[var(--dark-1)]/70 pr-16">
+                              Location: {meal.location}
+                            </p>
+                          )}
+                          {meal.comments && (
+                            <p className="text-xs text-[var(--dark-2)] pr-16">{meal.comments}</p>
+                          )}
+                          <MealRecallMealMacrosDisplay meal={meal} />
+                        </>
+                      ) : (
+                        <>
+                          <Select
+                            value={meal.mealType}
+                            onValueChange={(value) => updateMeal(mealIndex, "mealType", value)}
+                          >
+                            <SelectTrigger className="w-full pr-16">
+                              <SelectValue placeholder="Select Meal Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {mealTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormControl
+                            placeholder="Food/Beverage"
+                            value={meal.foodBeverage}
+                            onChange={(e) =>
+                              updateMeal(mealIndex, "foodBeverage", e.target.value)
+                            }
+                          />
+                          <FormControl
+                            placeholder="Quantity"
+                            value={meal.quantity}
+                            onChange={(e) => updateMeal(mealIndex, "quantity", e.target.value)}
+                          />
+                          <FormControl
+                            placeholder="Location"
+                            value={meal.location}
+                            onChange={(e) => updateMeal(mealIndex, "location", e.target.value)}
+                          />
+                          <Textarea
+                            placeholder="Comments (optional)"
+                            value={meal.comments}
+                            onChange={(e) => updateMeal(mealIndex, "comments", e.target.value)}
+                            className="min-h-[60px]"
+                          />
+                        </>
+                      )}
                     </div>
                   ))}
+                  <MealRecallNutrientsBreakdown meals={meals} />
                 </div>
               ) : (
                 <p className="text-sm italic text-[#808080] text-center py-2">
-                  No meals added yet. Click "Add Meal" to add one.
+                  No meals added yet. Search the meal database or use manual entry.
                 </p>
               )}
             </div>
 
             {/* Practitioner Notes Section */}
             <div className="pt-4 border-t-1">
-              <label className="block text-sm font-medium mb-2">Nutritional Summary (Optional)</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <label className="block text-sm font-medium">Nutritional Summary</label>
+                <label className="flex items-center gap-2 text-xs text-[var(--dark-1)]/70 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoCalculateSummary}
+                    onChange={(e) => setAutoCalculateSummary(e.target.checked)}
+                    className="rounded"
+                  />
+                  Auto-calculate from meals
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
                 <FormControl
                   label="Total Energy Intake (kcal)"
                   type="text"
                   placeholder="e.g., 2500"
                   value={practitionerNotes.totalEnergyIntake}
-                  onChange={(e) => setPractitionerNotes({
-                    ...practitionerNotes,
-                    totalEnergyIntake: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    setAutoCalculateSummary(false);
+                    setPractitionerNotes({
+                      ...practitionerNotes,
+                      totalEnergyIntake: e.target.value,
+                    });
+                  }}
                 />
                 <FormControl
                   label="Protein (g)"
                   type="text"
                   placeholder="e.g., 150"
                   value={practitionerNotes.proteinG}
-                  onChange={(e) => setPractitionerNotes({
-                    ...practitionerNotes,
-                    proteinG: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    setAutoCalculateSummary(false);
+                    setPractitionerNotes({
+                      ...practitionerNotes,
+                      proteinG: e.target.value,
+                    });
+                  }}
                 />
                 <FormControl
                   label="Carbohydrates (g)"
                   type="text"
                   placeholder="e.g., 300"
                   value={practitionerNotes.carbohydrateG}
-                  onChange={(e) => setPractitionerNotes({
-                    ...practitionerNotes,
-                    carbohydrateG: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    setAutoCalculateSummary(false);
+                    setPractitionerNotes({
+                      ...practitionerNotes,
+                      carbohydrateG: e.target.value,
+                    });
+                  }}
                 />
                 <FormControl
                   label="Fat (g)"
                   type="text"
                   placeholder="e.g., 80"
                   value={practitionerNotes.fatG}
-                  onChange={(e) => setPractitionerNotes({
-                    ...practitionerNotes,
-                    fatG: e.target.value,
-                  })}
+                  onChange={(e) => {
+                    setAutoCalculateSummary(false);
+                    setPractitionerNotes({
+                      ...practitionerNotes,
+                      fatG: e.target.value,
+                    });
+                  }}
                 />
               </div>
               <Textarea
@@ -664,19 +1056,53 @@ function MealRecallEntryEditModal({ id, entry, index, onSuccess, trigger }) {
                 className="mt-3 min-h-[80px]"
               />
             </div>
+
+          <div className="flex gap-2 mt-6">
+            <Button type="button" variant="outline" className="flex-1" onClick={onBack}>
+              Cancel
+            </Button>
+            <Button
+              variant="wz"
+              onClick={saveEntry}
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? "Saving..." : entry?._id ? "Save entry" : "Add entry"}
+            </Button>
           </div>
-          <Button
-            variant="wz"
-            onClick={saveEntry}
-            disabled={loading}
-            className="mt-6"
-          >
-            {loading ? "Saving..." : entry?._id ? "Update Entry" : "Add Entry"}
-          </Button>
-          <DialogClose ref={closeBtnRef} />
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </div>
   );
+}
+
+function serializeMealRecallRow(meal) {
+  const base = {
+    entryMode: meal.entryMode === "recipe" ? "recipe" : "manual",
+    mealType: (meal.mealType || "").trim(),
+    foodBeverage: (meal.foodBeverage || "").trim(),
+    quantity: (meal.quantity || "").trim(),
+    location: (meal.location || "").trim(),
+    comments: (meal.comments || "").trim(),
+  };
+
+  if (meal.entryMode !== "recipe") return base;
+
+  return {
+    ...base,
+    recipeId: meal.recipeId || "",
+    serving_size: meal.serving_size || "",
+    servingQuantity: meal.servingQuantity,
+    selected_measure_name: meal.selected_measure_name || "",
+    per_100g: meal.per_100g,
+    measures: meal.measures,
+    default_measure: meal.default_measure,
+    image: meal.image,
+    dish_name: meal.dish_name || meal.foodBeverage,
+    calories: meal.calories != null ? String(meal.calories) : "",
+    protein: meal.protein != null ? String(meal.protein) : "",
+    carbohydrates: meal.carbohydrates != null ? String(meal.carbohydrates) : "",
+    fats: meal.fats != null ? String(meal.fats) : "",
+  };
 }
 

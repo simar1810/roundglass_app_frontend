@@ -1,6 +1,6 @@
 "use client";
 
-import RecipeIngredientLineItems from "@/components/pages/coach/meals/IngredientPicker";
+import RecipeCompositionPicker from "@/components/pages/coach/meals/RecipeCompositionPicker";
 import FormControl from "@/components/FormControl";
 import Loader from "@/components/common/Loader";
 import BasicPopoverSelect from "@/components/common/selects/BasicPopoverSelect";
@@ -38,6 +38,10 @@ import useCurrentStateContext, {
 } from "@/providers/CurrentStateContext";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
+import {
+	buildRecipeForCompositionTotals,
+	computeCompositionTotalsFromRecipe,
+} from "@/lib/recipes/recipeIngredientsDisplay";
 import { cloneElement, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -157,7 +161,11 @@ function Container({ type, recipe, editTrigger, open, onOpenChange, onTriggerCli
 							state={init(type, recipeForForm)}
 							reducer={newRecipeeReducer}
 						>
-							<RecipeForm type={type} saveLabel={copy.save} />
+							<RecipeForm
+								type={type}
+								saveLabel={copy.save}
+								populatedRecipe={recipeForForm}
+							/>
 						</CurrentStateProvider>
 					)}
 				</div>
@@ -166,7 +174,7 @@ function Container({ type, recipe, editTrigger, open, onOpenChange, onTriggerCli
 	);
 }
 
-function RecipeForm({ type, saveLabel }) {
+function RecipeForm({ type, saveLabel, populatedRecipe }) {
 	const { isLoading, data } = useSWR("app/feature-categories/recipes", () =>
 		fetchData("app/feature-categories/recipes"),
 	);
@@ -184,6 +192,23 @@ function RecipeForm({ type, saveLabel }) {
 	const closeBtnRef = useRef(null);
 	const fileRef = useRef(null);
 	const lineItemMode = isLineItemMode(state);
+
+	const compositionTotals = useMemo(() => {
+		if (!lineItemMode) return null;
+		const merged = buildRecipeForCompositionTotals(populatedRecipe, state);
+		if (
+			!merged?.ingredientLineItems?.length &&
+			!merged?.mealLineItems?.length
+		) {
+			return null;
+		}
+		return computeCompositionTotalsFromRecipe(merged);
+	}, [
+		lineItemMode,
+		populatedRecipe,
+		state.ingredientLineItems,
+		state.mealLineItems,
+	]);
 
 	async function handleSave() {
 		if (loading) return;
@@ -256,15 +281,18 @@ function RecipeForm({ type, saveLabel }) {
 				/>
 
 				{canManageIngredients ? (
-					<FormSection title="Ingredients">
+					<FormSection title="Recipe composition">
 						<div className="rounded-xl border border-border/60 bg-white p-3 sm:p-4">
-							<RecipeIngredientLineItems
-								lineItems={state.ingredientLineItems}
-								onLineItemsChange={(next) =>
+							<RecipeCompositionPicker
+								ingredientLineItems={state.ingredientLineItems}
+								mealLineItems={state.mealLineItems}
+								onIngredientsChange={(next) =>
 									dispatch(changeFieldvalue("ingredientLineItems", next))
 								}
+								onMealsChange={(next) =>
+									dispatch(changeFieldvalue("mealLineItems", next))
+								}
 								disabled={loading}
-								compactHeader
 							/>
 						</div>
 					</FormSection>
@@ -274,7 +302,7 @@ function RecipeForm({ type, saveLabel }) {
 					title="Ingredient notes"
 					hint={
 						lineItemMode
-							? "Optional — catalog lines above are used for nutrition."
+							? "Optional — catalog ingredients and meals above are used for nutrition."
 							: "List ingredients and amounts as plain text."
 					}
 				>
@@ -343,7 +371,7 @@ function RecipeForm({ type, saveLabel }) {
 					title="Nutrition"
 					hint={
 						lineItemMode
-							? "Calculated from catalog ingredients when you save."
+							? "Calculated from ingredients and meals when you save."
 							: "Per serving — required when not using catalog lines."
 					}
 				>
@@ -353,19 +381,52 @@ function RecipeForm({ type, saveLabel }) {
 							lineItemMode && "opacity-90",
 						)}
 					>
+						{lineItemMode && compositionTotals ? (
+							<div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+								{[
+									{ label: "Calories", value: compositionTotals.total, unit: "kcal" },
+									{ label: "Protein", value: compositionTotals.proteins, unit: "g" },
+									{ label: "Carbs", value: compositionTotals.carbs, unit: "g" },
+									{ label: "Fat", value: compositionTotals.fats, unit: "g" },
+									{ label: "Fibre", value: compositionTotals.fibers, unit: "g" },
+								].map((stat) => (
+									<div
+										key={stat.label}
+										className="rounded-lg border border-[var(--accent-1)]/20 bg-[var(--accent-1)]/5 px-2 py-2 text-center"
+									>
+										<p className="text-base font-bold tabular-nums text-[var(--dark-1)]">
+											{stat.value}
+											<span className="ml-0.5 text-[10px] font-normal text-muted-foreground">
+												{stat.unit}
+											</span>
+										</p>
+										<p className="text-[10px] font-medium text-muted-foreground">
+											{stat.label}
+										</p>
+									</div>
+								))}
+							</div>
+						) : lineItemMode ? (
+							<p className="mb-3 text-xs text-muted-foreground">
+								Totals update when ingredient and meal data are loaded. Save to
+								persist.
+							</p>
+						) : null}
 						{lineItemMode ? (
 							<p className="mb-3 text-xs leading-snug text-[var(--dark-1)]/50">
-								Manual values are disabled while catalog ingredients are set.
-								{type === "edit"
-									? " Shown numbers reflect your last save until you save again."
-									: null}
+								Calculated from your catalog lines below. Save to store these
+								values.
 							</p>
 						) : null}
 						<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
 							{MACRO_FIELDS.map((field) => (
 								<FormControl
 									key={field.id}
-									value={state[field.name]}
+									value={
+										lineItemMode && compositionTotals
+											? String(compositionTotals[field.name] ?? "")
+											: state[field.name]
+									}
 									onChange={(e) =>
 										dispatch(changeFieldvalue(field.name, e.target.value))
 									}

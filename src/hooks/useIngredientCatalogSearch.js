@@ -5,15 +5,18 @@ import { searchIngredients } from "@/lib/fetchers/app";
 import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 
-function keyFactory(namespace, q, category, source, skip) {
-	return [namespace, q, category, source, skip];
+const MIN_QUERY_LEN = 2;
+
+function keyFactory(namespace, q, category, source, skip, enabled) {
+	return enabled ? [namespace, q, category, source, skip] : null;
 }
 
 export default function useIngredientCatalogSearch({
 	namespace,
-	pageSize = 50,
-	debounceMs = 400,
+	pageSize = 30,
+	debounceMs = 280,
 	source = "all",
+	minQueryLength = MIN_QUERY_LEN,
 }) {
 	const [query, setQuery] = useState("");
 	const [category, setCategory] = useState("");
@@ -24,25 +27,46 @@ export default function useIngredientCatalogSearch({
 	const debouncedCategory = useDebounce(category, debounceMs);
 	const normalizedSource = source === "admin" || source === "manual" ? source : "all";
 
+	const trimmedQ = debouncedQ.trim();
+	const trimmedCategory = debouncedCategory.trim();
+	const canFetch =
+		trimmedQ.length >= minQueryLength ||
+		trimmedCategory.length > 0 ||
+		normalizedSource === "manual";
+
 	useEffect(() => {
 		setSkip(0);
 		setRows([]);
-	}, [debouncedQ, debouncedCategory, normalizedSource]);
+	}, [trimmedQ, trimmedCategory, normalizedSource]);
 
 	const swrKey = useMemo(
 		() =>
-			keyFactory(namespace, debouncedQ, debouncedCategory, normalizedSource, skip),
-		[namespace, debouncedQ, debouncedCategory, normalizedSource, skip],
+			keyFactory(
+				namespace,
+				trimmedQ,
+				trimmedCategory,
+				normalizedSource,
+				skip,
+				canFetch,
+			),
+		[namespace, trimmedQ, trimmedCategory, normalizedSource, skip, canFetch],
 	);
 
-	const { data, isLoading, isValidating, error } = useSWR(swrKey, () =>
-		searchIngredients({
-			q: debouncedQ.trim() || undefined,
-			category: debouncedCategory.trim() || undefined,
-			limit: pageSize,
-			skip,
-			source: normalizedSource !== "all" ? normalizedSource : undefined,
-		}),
+	const { data, isLoading, isValidating, error } = useSWR(
+		swrKey,
+		() =>
+			searchIngredients({
+				q: trimmedQ || undefined,
+				category: trimmedCategory || undefined,
+				limit: pageSize,
+				skip,
+				source: normalizedSource !== "all" ? normalizedSource : undefined,
+			}),
+		{
+			keepPreviousData: true,
+			dedupingInterval: 5000,
+			revalidateOnFocus: false,
+		},
 	);
 
 	useEffect(() => {
@@ -85,6 +109,8 @@ export default function useIngredientCatalogSearch({
 		error,
 		data,
 		total,
+		canFetch,
+		minQueryLength,
 		canLoadMore,
 		loadMore: () => setSkip((value) => value + pageSize),
 		reset: () => {

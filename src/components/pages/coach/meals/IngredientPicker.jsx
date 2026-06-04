@@ -60,9 +60,11 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 		error,
 		canLoadMore,
 		loadMore,
+		canFetch,
+		minQueryLength,
 	} = useIngredientCatalogSearch({
 		namespace: INGREDIENTS_CATALOG_KEY,
-		pageSize: 50,
+		pageSize: 30,
 		source: sourceFilter,
 	});
 
@@ -72,7 +74,8 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 		(data.status_code === 200 ||
 			data.status_code === "200" ||
 			data.success === true);
-	const showInitialLoader = isLoading && skip === 0 && rows.length === 0;
+	const showInitialLoader = canFetch && isLoading && skip === 0 && rows.length === 0;
+	const needsQuery = !canFetch && !category.trim();
 
 	return (
 		<div className={cn("flex flex-col gap-3 p-3", className)}>
@@ -83,12 +86,18 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 				/>
 				<Input
 					className="pl-9"
-					placeholder="Search ingredients…"
+					placeholder={`Search ingredients (min ${minQueryLength} chars)…`}
 					value={query}
 					onChange={(e) => setQuery(e.target.value)}
 					aria-label="Search ingredients"
 				/>
 			</div>
+			{needsQuery ? (
+				<p className="text-[11px] text-muted-foreground leading-snug">
+					Type at least {minQueryLength} characters to search the catalog, pick a category
+					filter, or switch to <strong>My ingredients</strong>.
+				</p>
+			) : null}
 			<IngredientSourceTabs value={sourceFilter} onChange={setSourceFilter} />
 			<div>
 				<p className="mb-1 text-[11px] text-muted-foreground">Category (optional)</p>
@@ -109,19 +118,24 @@ export function IngredientCatalogSearch({ onSelect, className }) {
 						<Loader />
 					</div>
 				) : null}
-				{!showInitialLoader && !requestOk ? (
+				{needsQuery ? (
+					<p className="p-4 text-center text-sm text-muted-foreground">
+						Start typing to load ingredients faster.
+					</p>
+				) : null}
+				{!needsQuery && !showInitialLoader && !requestOk ? (
 					<p className="p-4 text-center text-sm text-destructive">
 						{error?.message || data?.message || "Could not load ingredients."}
 					</p>
 				) : null}
-				{!showInitialLoader && requestOk && rows.length === 0 ? (
+				{!needsQuery && !showInitialLoader && requestOk && rows.length === 0 ? (
 					<p className="p-4 text-center text-sm text-muted-foreground">
 						{sourceFilter === "all"
 							? "No ingredients match. Try another search."
 							: `No ${sourceFilter} ingredients match. Try All or another search.`}
 					</p>
 				) : null}
-				{!showInitialLoader && rows.length > 0 ? (
+				{!needsQuery && !showInitialLoader && rows.length > 0 ? (
 					<ul className="divide-y divide-border/60">
 						{rows.map((item) => (
 							<li key={String(item._id)}>

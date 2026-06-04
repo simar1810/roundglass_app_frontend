@@ -1,4 +1,5 @@
 /** @typedef {{ ingredientId: string, quantityGrams: number, foodName?: string, foodCode?: string }} RecipeIngredientLineRow */
+/** @typedef {{ dishId: string, quantityGrams: number, dishName?: string }} RecipeMealLineRow */
 
 export const newRecipeInitialState = {
   title: "",
@@ -14,8 +15,11 @@ export const newRecipeInitialState = {
   subCategory: "",
   defaultMeasure: "",
 
-  /** Mode A when non-empty: server computes macros + ingredients text from catalog lines. */
+  /** Catalog ingredients (per 100g nutrition DB). */
   ingredientLineItems: /** @type {RecipeIngredientLineRow[]} */ ([]),
+
+  /** Meals/dishes from meal database (per 100g in catalog). */
+  mealLineItems: /** @type {RecipeMealLineRow[]} */ ([]),
 
   image: "",
   _id: ""
