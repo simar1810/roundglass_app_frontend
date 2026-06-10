@@ -1,5 +1,10 @@
 /** Backend macro fields are per 100g. Scale to a serving with: value * (grams / 100). */
 
+import {
+	hasIngredientLineItems,
+	resolveRecipeNutrition,
+} from "@/lib/recipes/recipeIngredientsDisplay";
+
 export function toNutritionNum(value) {
 	const n = parseFloat(value);
 	return Number.isFinite(n) ? n : 0;
@@ -20,6 +25,20 @@ export function extractPer100gNutrition(recipe) {
 			fats: toNutritionNum(per100.fats),
 			dietary_fibre: toNutritionNum(per100.dietary_fibre),
 			sodium: toNutritionNum(per100.sodium),
+		};
+	}
+
+	if (
+		(recipe?.calories && typeof recipe.calories === "object") ||
+		hasIngredientLineItems(recipe)
+	) {
+		const resolved = resolveRecipeNutrition(recipe);
+		return {
+			calories: resolved.total,
+			protein: resolved.proteins,
+			carbohydrates: resolved.carbs,
+			fats: resolved.fats,
+			dietary_fibre: resolved.fibers,
 		};
 	}
 

@@ -94,6 +94,13 @@ export default function RecipeCompositionPicker({
 			quantityGrams: 100,
 			foodName: ing.foodName,
 			foodCode: ing.foodCode,
+			nutritionSnapshot: {
+				protein: ing.protein,
+				carbohydrate: ing.carbohydrate,
+				totalFat: ing.totalFat,
+				energyKJ: ing.energyKJ,
+				dietaryFibre: ing.dietaryFibre,
+			},
 		};
 		if (replaceTarget?.type === "ingredient") {
 			const next = [...ingredientLineItems];
@@ -110,6 +117,13 @@ export default function RecipeCompositionPicker({
 			dishId: normalizeDishId(meal),
 			quantityGrams: defaultMealGrams(meal),
 			dishName: meal.dish_name || meal.title || "",
+			nutritionSnapshot: {
+				protein: meal.protein,
+				carbohydrates: meal.carbohydrates,
+				fats: meal.fats,
+				calories: meal.calories,
+				dietary_fibre: meal.dietary_fibre,
+			},
 		};
 		if (replaceTarget?.type === "meal") {
 			const next = [...mealLineItems];

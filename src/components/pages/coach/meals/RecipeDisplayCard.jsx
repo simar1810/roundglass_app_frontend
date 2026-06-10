@@ -19,9 +19,9 @@ import RecipeIngredientsDetailBlock from "@/components/recipes/RecipeIngredients
 import CategoryBadge from "@/features/feature-categories/components/CategoryBadge";
 import { useFeatureScope } from "@/hooks/useFeatureScope";
 import {
-  computeCompositionTotalsFromRecipe,
   getRecipeIngredientsDisplayText,
   hasIngredientLineItems,
+  resolveRecipeNutrition,
 } from "@/lib/recipes/recipeIngredientsDisplay";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Pencil, Trash2 } from "lucide-react";
@@ -153,18 +153,7 @@ export default function RecipeDisplayCard({ plan }) {
 }
 
 function DisplayRecipeDetails({ recipe, setModal }) {
-  const compositionTotals = hasIngredientLineItems(recipe)
-    ? computeCompositionTotalsFromRecipe(recipe)
-    : null;
-  const nutrition = compositionTotals
-    ? {
-        total: compositionTotals.total,
-        proteins: compositionTotals.proteins,
-        carbs: compositionTotals.carbs,
-        fats: compositionTotals.fats,
-        fibers: compositionTotals.fibers,
-      }
-    : recipe.calories;
+  const nutrition = resolveRecipeNutrition(recipe);
 
   return (
     <Dialog open onOpenChange={(open) => !open && setModal(false)}>

@@ -113,6 +113,89 @@ export function getRecipeIngredientsDisplayText(recipeLike) {
 	return String(recipeLike.ingredients ?? "").trim();
 }
 
+function ingredientFromLineRow(row, populatedIngredient) {
+	if (populatedIngredient && typeof populatedIngredient === "object") {
+		return populatedIngredient;
+	}
+	const snap = row?.nutritionSnapshot;
+	if (snap && typeof snap === "object") {
+		return {
+			protein: snap.protein,
+			carbohydrate: snap.carbohydrate,
+			totalFat: snap.totalFat,
+			energyKJ: snap.energyKJ,
+			dietaryFibre: snap.dietaryFibre,
+		};
+	}
+	return null;
+}
+
+function dishFromLineRow(row, populatedDish) {
+	if (populatedDish && typeof populatedDish === "object") {
+		return populatedDish;
+	}
+	const snap = row?.nutritionSnapshot;
+	if (snap && typeof snap === "object") {
+		return {
+			protein: snap.protein,
+			carbohydrates: snap.carbohydrates,
+			fats: snap.fats,
+			calories: snap.calories,
+			dietary_fibre: snap.dietary_fibre,
+		};
+	}
+	return null;
+}
+
+function hasNonZeroNutrition(calories) {
+	if (!calories || typeof calories !== "object") return false;
+	return ["total", "proteins", "carbs", "fats", "fibers"].some(
+		(key) => Number(calories[key]) > 0,
+	);
+}
+
+function compositionTotalsToCaloriesShape(totals) {
+	if (!totals) return null;
+	return {
+		total: totals.total ?? 0,
+		proteins: totals.proteins ?? 0,
+		carbs: totals.carbs ?? 0,
+		fats: totals.fats ?? 0,
+		fibers: totals.fibers ?? 0,
+	};
+}
+
+/**
+ * Prefer server-stored macros; recompute from populated lines when saved values are missing.
+ */
+export function resolveRecipeNutrition(recipe) {
+	const saved = recipe?.calories;
+	if (hasNonZeroNutrition(saved)) {
+		return {
+			total: Number(saved.total) || 0,
+			proteins: Number(saved.proteins) || 0,
+			carbs: Number(saved.carbs) || 0,
+			fats: Number(saved.fats) || 0,
+			fibers: Number(saved.fibers) || 0,
+		};
+	}
+
+	if (hasIngredientLineItems(recipe)) {
+		const computed = compositionTotalsToCaloriesShape(
+			computeCompositionTotalsFromRecipe(recipe),
+		);
+		if (hasNonZeroNutrition(computed)) return computed;
+	}
+
+	return compositionTotalsToCaloriesShape(saved) ?? {
+		total: 0,
+		proteins: 0,
+		carbs: 0,
+		fats: 0,
+		fibers: 0,
+	};
+}
+
 export function hasIngredientLineItems(recipe) {
 	const ing = recipe?.ingredientLineItems;
 	const meals = recipe?.mealLineItems;
@@ -126,33 +209,39 @@ export function hasIngredientLineItems(recipe) {
  * Merge form state (grams + ids) with populated recipe refs for live totals in edit modal.
  */
 export function buildRecipeForCompositionTotals(populatedRecipe, state) {
-	if (!populatedRecipe || !state) return populatedRecipe;
+	if (!state) return populatedRecipe;
 
 	const ingredientLineItems = (state.ingredientLineItems || [])
 		.map((row) => {
-			const pop = (populatedRecipe.ingredientLineItems || []).find(
+			const pop = (populatedRecipe?.ingredientLineItems || []).find(
 				(line) => String(line?.ingredient?._id) === String(row.ingredientId),
 			);
-			if (!pop?.ingredient) return null;
+			const ingredient = ingredientFromLineRow(row, pop?.ingredient);
+			if (!ingredient) return null;
 			return {
 				quantityGrams: row.quantityGrams,
-				ingredient: pop.ingredient,
+				ingredient,
 			};
 		})
 		.filter(Boolean);
 
 	const mealLineItems = (state.mealLineItems || [])
 		.map((row) => {
-			const pop = (populatedRecipe.mealLineItems || []).find(
+			const pop = (populatedRecipe?.mealLineItems || []).find(
 				(line) => String(line?.dish?._id) === String(row.dishId),
 			);
-			if (!pop?.dish) return null;
+			const dish = dishFromLineRow(row, pop?.dish);
+			if (!dish) return null;
 			return {
 				quantityGrams: row.quantityGrams,
-				dish: pop.dish,
+				dish,
 			};
 		})
 		.filter(Boolean);
+
+	if (!ingredientLineItems.length && !mealLineItems.length) {
+		return populatedRecipe;
+	}
 
 	return { ingredientLineItems, mealLineItems };
 }
