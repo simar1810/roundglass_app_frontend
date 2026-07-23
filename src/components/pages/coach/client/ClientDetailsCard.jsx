@@ -43,7 +43,6 @@ import {
 } from "@/lib/client/clientRosterCoach";
 import useClickOutside from "@/hooks/useClickOutside";
 import { sendData } from "@/lib/api";
-import { generateWeightStandard } from "@/lib/client/statistics";
 import { nameInitials } from "@/lib/formatter";
 import { permit } from "@/lib/permit";
 import { extractNumber } from "@/lib/utils";
@@ -58,9 +57,21 @@ import InjuryAnalyticsDashboard from "./InjuryAnalyticsDashboard";
 import ClientUpdateCategories from "./ClientUpdateCategories";
 
 function getClientHeightStr(healthMatrix) {
-  if (["cm", "cms"].includes(healthMatrix.heightUnit?.toLowerCase()))
-    return `${healthMatrix?.height} ${healthMatrix?.heightUnit}`;
-  const [feet, inches] = healthMatrix?.height?.split(".");
+  if (!healthMatrix) return "—";
+  const unit = String(healthMatrix.heightUnit || "").toLowerCase();
+  const height = healthMatrix.height;
+  if (height == null || height === "") return "—";
+
+  if (["cm", "cms"].includes(unit)) {
+    return `${height} ${healthMatrix.heightUnit}`;
+  }
+
+  const heightStr = String(height);
+  if (!heightStr.includes(".")) {
+    return unit ? `${heightStr} ${healthMatrix.heightUnit}` : heightStr;
+  }
+
+  const [feet, inches = "0"] = heightStr.split(".");
   return `${feet} Ft ${inches} In`;
 }
 
@@ -73,17 +84,23 @@ export default function ClientDetailsCard({ clientData }) {
 }
 
 function findClientLatestWeight(matrices = []) {
-  const lastIndex = findClientLatestWeight.length - 1;
+  if (!Array.isArray(matrices) || matrices.length === 0) return null;
+
   const latestWeightMatrix = matrices
     .map((matrix) => ({
       ...matrix,
-      date: parse(matrix.createdDate, "dd-MM-yyyy", new Date()),
+      date: parse(matrix.createdDate || "", "dd-MM-yyyy", new Date()),
     }))
+    .filter((matrix) => matrix.date instanceof Date && !Number.isNaN(matrix.date.getTime()))
     .sort((dateA, dateB) =>
       isBefore(new Date(dateB.date), new Date(dateA.date)) ? -1 : 1,
     )
     ?.at(0);
-  return `${extractNumber(latestWeightMatrix?.weight)} ${latestWeightMatrix?.weightUnit}`;
+
+  if (!latestWeightMatrix?.weight && latestWeightMatrix?.weight !== 0) return null;
+  const weight = extractNumber(latestWeightMatrix.weight);
+  if (weight == null || weight === "") return null;
+  return `${weight}${latestWeightMatrix?.weightUnit ? ` ${latestWeightMatrix.weightUnit}` : ""}`;
 }
 
 function ClientDetails({ clientData }) {
@@ -197,14 +214,9 @@ function ClientDetails({ clientData }) {
       toast.error(error.message || "Failed to delete meal recall entry");
     }
   }
-  const clienthealthMatrix = clientData?.healthMatrix?.healthMatrix || [{}];
-  const healthMatricesLength = clienthealthMatrix.length
-    ? false
-    : (
-      generateWeightStandard(clienthealthMatrix?.at(0)) -
-      generateWeightStandard(clienthealthMatrix?.at(healthMatricesLength - 1))
-    ).toFixed(2);
-
+  const clienthealthMatrix = Array.isArray(clientData?.healthMatrix?.healthMatrix)
+    ? clientData.healthMatrix.healthMatrix
+    : [];
   const latestWeight = findClientLatestWeight(clienthealthMatrix);
 
   return (
@@ -695,23 +707,31 @@ function ClientDetails({ clientData }) {
 }
 
 function ClientActivities({ activities }) {
+  const dailyActivities = Array.isArray(activities?.dailyActivities)
+    ? activities.dailyActivities
+    : [];
+
+  const totalSteps = dailyActivities.reduce(
+    (acc, activity) => acc + (Number(activity?.steps) || 0),
+    0,
+  );
+  const totalCalories = dailyActivities.reduce(
+    (acc, activity) => acc + (Number(activity?.calories) || 0),
+    0,
+  );
+
   return (
     <div className="p-4 rounded-lg border-1 bg-[var(--comp-1)]">
       <div className="font-semibold pb-3 flex items-center gap-6 border-b-1">
         <div>
           <p className="text-[var(--accent-1)] text-xl font-bold">
-            {activities.dailyActivities.reduce(
-              (acc, activity) => acc + activity.steps,
-              0,
-            )}
+            {totalSteps}
           </p>
           <p className="text-sm text-[var(--dark-2)]">Steps</p>
         </div>
         <div>
           <p className="text-[var(--accent-1)] text-xl font-bold">
-            {activities.dailyActivities
-              .reduce((acc, activity) => acc + activity.calories, 0)
-              .toFixed(2)}
+            {totalCalories.toFixed(2)}
           </p>
           <p className="text-sm text-[var(--dark-2)]">Calories</p>
         </div>
@@ -732,7 +752,7 @@ function ClientActivities({ activities }) {
 
 function Header({ clientData }) {
   const [modalOpened, setModalOpened] = useState(false);
-  const { roles, coachRefUrl } = useAppSelector((state) => state.coach.data);
+  const { roles, coachRefUrl } = useAppSelector((state) => state.coach.data || {});
 
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setModalOpened(false));
@@ -999,11 +1019,11 @@ function ClientClubStatus({ status, _id }) {
 
 function ClientCategoriesList({ clientData }) {
   const { client_categories = [] } = useAppSelector(
-    (state) => state.coach.data,
+    (state) => state.coach.data || {},
   );
-  const set = new Set(clientData.categories);
-  const selectedCategories = client_categories.filter((category) =>
-    set.has(category._id),
+  const set = new Set(Array.isArray(clientData?.categories) ? clientData.categories : []);
+  const selectedCategories = (Array.isArray(client_categories) ? client_categories : []).filter(
+    (category) => set.has(category._id),
   );
   return (
     <div className="space-y-2">
